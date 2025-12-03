@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Hexo</title>
+  
+  
+  <link href="http://example.com/atom.xml" rel="self"/>
+  
+  <link href="http://example.com/"/>
+  <updated>2025-12-03T08:06:47.744Z</updated>
+  <id>http://example.com/</id>
+  
+  <author>
+    <name>John Doe</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>测试3</title>
+    <link href="http://example.com/2025/12/03/%E6%B5%8B%E8%AF%953/"/>
+    <id>http://example.com/2025/12/03/%E6%B5%8B%E8%AF%953/</id>
+    <published>2025-12-03T08:06:25.000Z</published>
+    <updated>2025-12-03T08:06:47.744Z</updated>
+    
+    
+    
+    
+    <category term="测试" scheme="http://example.com/categories/%E6%B5%8B%E8%AF%95/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>测试2.md</title>
+    <link href="http://example.com/2025/12/03/%E6%B5%8B%E8%AF%952-md/"/>
+    <id>http://example.com/2025/12/03/%E6%B5%8B%E8%AF%952-md/</id>
+    <published>2025-12-03T07:50:09.000Z</published>
+    <updated>2025-12-03T08:05:34.669Z</updated>
+    
+    
+    
+    
+    <category term="测试" scheme="http://example.com/categories/%E6%B5%8B%E8%AF%95/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>测试文档.md</title>
+    <link href="http://example.com/2025/12/03/%E6%B5%8B%E8%AF%95%E6%96%87%E6%A1%A3-md/"/>
+    <id>http://example.com/2025/12/03/%E6%B5%8B%E8%AF%95%E6%96%87%E6%A1%A3-md/</id>
+    <published>2025-12-03T07:39:09.000Z</published>
+    <updated>2025-12-03T08:05:34.669Z</updated>
+    
+    
+    
+    
+    <category term="测试" scheme="http://example.com/categories/%E6%B5%8B%E8%AF%95/"/>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>stm32-支持串口通信</title>
+    <link href="http://example.com/2025/12/03/stm32-%E6%94%AF%E6%8C%81%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1/"/>
+    <id>http://example.com/2025/12/03/stm32-%E6%94%AF%E6%8C%81%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1/</id>
+    <published>2025-12-03T06:56:32.000Z</published>
+    <updated>2025-12-03T08:05:34.669Z</updated>
+    
+    
+    
+    
+    <category term="嵌入式" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="mcu" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/mcu/"/>
+    
+    
+    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="mcu" scheme="http://example.com/tags/mcu/"/>
+    
+    <category term="stm32" scheme="http://example.com/tags/stm32/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>RK3399-android10-适配xxx模块.md</title>
+    <link href="http://example.com/2025/12/03/RK3399-android10-%E9%80%82%E9%85%8Dxxx%E6%A8%A1%E5%9D%97-md/"/>
+    <id>http://example.com/2025/12/03/RK3399-android10-%E9%80%82%E9%85%8Dxxx%E6%A8%A1%E5%9D%97-md/</id>
+    <published>2025-12-03T06:54:43.000Z</published>
+    <updated>2025-12-03T08:05:34.669Z</updated>
+    
+    
+    
+    
+    <category term="嵌入式" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="linux" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux/"/>
+    
+    
+    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="Android10" scheme="http://example.com/tags/Android10/"/>
+    
+    <category term="linux" scheme="http://example.com/tags/linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>RK3399_Android10_支持xxx功能</title>
+    <link href="http://example.com/2025/12/03/RK3399-Android10-%E6%94%AF%E6%8C%81xxx%E5%8A%9F%E8%83%BD/"/>
+    <id>http://example.com/2025/12/03/RK3399-Android10-%E6%94%AF%E6%8C%81xxx%E5%8A%9F%E8%83%BD/</id>
+    <published>2025-12-03T06:47:56.000Z</published>
+    <updated>2025-12-03T08:05:34.669Z</updated>
+    
+    
+    
+    
+    <category term="嵌入式" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="linux" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux/"/>
+    
+    
+    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="rk3399" scheme="http://example.com/tags/rk3399/"/>
+    
+    <category term="android10" scheme="http://example.com/tags/android10/"/>
+    
+  </entry>
+  
+</feed>
