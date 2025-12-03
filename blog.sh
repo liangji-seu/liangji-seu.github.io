@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# 博客管理脚本：支持 pull/push/deploy/first-pull/test/help 命令
+# 博客管理脚本：支持 first-pull/pull/push/test/deploy/new/help 命令
 # 使用方法：
 # ./blog.sh first-pull    # 首次克隆后：切换source分支+安装依赖（仅需执行1次）
 # ./blog.sh pull          # 同步远程 source 分支的最新源文件
 # ./blog.sh push [备注]   # 提交本地变更到 source 分支（备注可选，默认"更新博客"）
+# ./blog.sh new "标题"    # 新建Hexo文章（自动生成.md文件，可不带后缀）
 # ./blog.sh test          # 本地预览：清理缓存→编译→启动本地服务器（localhost:4000）
 # ./blog.sh deploy        # 编译并部署到 main 分支（GitHub Pages）
 # ./blog.sh help          # 查看帮助
@@ -27,6 +28,7 @@ check_command() {
 check_command git
 check_command node
 check_command npm
+check_command hexo
 
 # 处理参数
 case "$1" in
@@ -53,7 +55,7 @@ case "$1" in
     npm install
     if [ $? -eq 0 ]; then
       echo -e "${GREEN}✅ 依赖安装成功！首次配置完成～${NC}"
-      echo -e "${YELLOW}下一步：可执行 ./blog.sh new 标题 或直接编辑 source/_posts 文件夹写文章${NC}"
+      echo -e "${YELLOW}下一步：执行 ./blog.sh new '文章标题' 开始写文章${NC}"
     else
       echo -e "${RED}错误：依赖安装失败，请检查网络或package.json文件${NC}"
     fi
@@ -84,6 +86,30 @@ case "$1" in
       echo -e "${GREEN}✅ 提交推送成功！${NC}"
     else
       echo -e "${RED}错误：提交或推送失败，请检查命令输出！${NC}"
+    fi
+    ;;
+
+  # 新建Hexo文章
+  new)
+    # 检查是否传入文章标题
+    if [ -z "$2" ]; then
+      echo -e "${RED}错误：请输入文章标题！${NC}"
+      echo -e "${YELLOW}示例：./blog.sh new '2025年技术总结' 或 ./blog.sh new 'Hexo使用指南.md'${NC}"
+      exit 1
+    fi
+
+    # 处理标题：去除末尾的.md后缀（避免生成 xxx.md.md）
+    article_title=$2
+    article_title=${article_title%.md}  # 兼容带.md和不带.md的输入
+
+    echo -e "${GREEN}=== 开始新建Hexo文章：$article_title ===" ${NC}
+    hexo new "$article_title"  # 调用Hexo新建文章命令
+
+    if [ $? -eq 0 ]; then
+      echo -e "${GREEN}✅ 文章创建成功！${NC}"
+      echo -e "${YELLOW}文件路径：source/_posts/$article_title.md（直接编辑该文件即可）${NC}"
+    else
+      echo -e "${RED}错误：文章创建失败，请检查Hexo配置！${NC}"
     fi
     ;;
 
@@ -120,10 +146,12 @@ case "$1" in
     echo "2. 同步远程源文件：./blog.sh pull"
     echo "3. 提交本地变更：./blog.sh push [可选备注]"
     echo "   示例：./blog.sh push '新增文章：Hexo 脚本使用指南'"
-    echo "4. 本地预览博客：./blog.sh test"
+    echo "4. 新建文章：./blog.sh new '文章标题'"
+    echo "   示例：./blog.sh new '2025年学习总结'（自动生成.md文件）"
+    echo "5. 本地预览博客：./blog.sh test"
     echo "   → 启动本地服务器：http://localhost:4000（按Ctrl+C停止）"
-    echo "5. 编译部署到GitHub Pages：./blog.sh deploy"
-    echo "6. 查看帮助：./blog.sh help"
+    echo "6. 编译部署到GitHub Pages：./blog.sh deploy"
+    echo "7. 查看帮助：./blog.sh help"
     ;;
 
   # 无效参数
@@ -132,6 +160,7 @@ case "$1" in
     echo "./blog.sh first-pull - 首次配置（切换分支+安装依赖）"
     echo "./blog.sh pull       - 同步远程 source 分支"
     echo "./blog.sh push       - 提交变更到 source 分支（可加备注）"
+    echo "./blog.sh new        - 新建文章（示例：./blog.sh new '我的文章'）"
     echo "./blog.sh test       - 本地预览博客（localhost:4000）"
     echo "./blog.sh deploy     - 编译部署到 GitHub Pages"
     echo "./blog.sh help       - 查看使用说明"
