@@ -1,20 +1,11 @@
-{% extends '_layout.njk' %}
-{% import '_macro/sidebar.njk' as sidebar_template with context %}
-
-{% block title %}{{ title }}{% if theme.index_with_subtitle and subtitle %} - {{ subtitle }}{% endif %}{% endblock %}
-
-{% block class %}index posts-expand{% endblock %}
-
-{% block content %}
-
-  {%- for post in page.posts.toArray() %}
-    {{ partial('_macro/post.njk', {post: post, is_index: true}) }}
-  {%- endfor %}
-
-  {%- include '_partials/pagination.njk' -%}
-
-{% endblock %}
-
-{% block sidebar %}
-  {{ sidebar_template.render(false) }}
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Refresh" content="0; url=/categories/" />  <!-- 0 秒跳转，url 为分类页路径 -->
+  <meta charset="utf-8">
+  <title>跳转到分类页...</title>
+</head>
+<body>
+  正在跳转到分类页... 若未自动跳转，请点击 <a href="/categories/">这里</a>。
+</body>
+</html>

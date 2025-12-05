@@ -3,12 +3,12 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
+title: ji的博客
 subtitle: ''
-description: ''
+description: 'welcome to my blog'
 keywords:
-author: John Doe
-language: en
+author: liangji
+language: zh-CN
 timezone: ''
 
 # URL
