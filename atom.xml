@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2025-12-03T08:06:47.744Z</updated>
+  <updated>2025-12-12T06:21:53.364Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,38 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>IMX6U RGBLCD 学习笔记</title>
+    <link href="http://example.com/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    <id>http://example.com/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</id>
+    <published>2025-12-12T06:14:23.000Z</published>
+    <updated>2025-12-12T06:21:53.364Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="lcd屏幕的分辨率"><a href="#lcd屏幕的分辨率" class="headerlink" title="lcd屏幕的分辨率"></a>lcd屏幕的分辨率</h2><p><strong>定义</strong>：<br>分辨率指的是绝对像素尺寸，比如</p><ol><li>1080p &#x3D; 1920 px (x)* 1080px(y)</li></ol><p>所以</p><ol><li>同尺寸，分辨率越高越清晰</li><li>同分辨率，屏幕尺寸越小月清晰</li></ol><h2 id="lcd像素格式"><a href="#lcd像素格式" class="headerlink" title="lcd像素格式"></a>lcd像素格式</h2><p>一个像素px，由r,g,b三个小灯控制，每个小灯8bit<br>所以一个像素 为 3*8&#x3D;24bit &#x3D; 3byte. 成为 RGB888</p><p>若再加一个8bit的透明通道A，则变成32bit的 4byte的 ARGB8888</p><h2 id="lcd屏幕的信号线接口"><a href="#lcd屏幕的信号线接口" class="headerlink" title="lcd屏幕的信号线接口"></a>lcd屏幕的信号线接口</h2><p>我们所使用的imx6ull + ATK屏幕1024*600. 采用的是RGB接口，接口连线有：</p><ol><li>R[0:7]</li><li>G[0:7]</li><li>B[0:7]</li><li>DE 数据使能</li><li>VSYNC 垂直同步信号（表示新的一帧画面）</li><li>HSYNC 行同步信号 （表示新的一行）</li><li>PCLK 时钟信号</li></ol><ul><li>我们目前的LCD屏幕有两种驱动模式：<ul><li>DE模式（用DE线， 可以不用HSYNC线）</li><li>HV模式（不用DE线）</li></ul></li></ul><h2 id="外设接口原理图"><a href="#外设接口原理图" class="headerlink" title="外设接口原理图"></a>外设接口原理图</h2><p><img src="/../images/3.1.png" alt="alt text"></p><h2 id="LCD屏幕的时间参数-协议"><a href="#LCD屏幕的时间参数-协议" class="headerlink" title="LCD屏幕的时间参数(协议)"></a>LCD屏幕的时间参数(协议)</h2><p><img src="/../images/3.2.png" alt="alt text"></p><p>每一帧图像的渲染，是按照从左到右，从上到下的顺序进行扫描的。所以是一行一行组成的。</p><p><strong>时间参数</strong>：</p><ol><li><p><strong>HSYNC</strong>：（信号线）<br> 行同步信号，产生表示显示新行</p></li><li><p><strong>VSYNC</strong>：（信号线）<br> 帧同步信号，产生表示显示新一帧图像</p></li><li><p><strong>HBP</strong>：（时间）<br> 当显示完一行后会发出HSYNC信号，电子枪关闭，移动到屏幕左边，从HSYNC信号结束，到等待电子枪重新打开的这段延时&#x3D;HBP</p></li><li><p><strong>HFP</strong>：（时间）<br> 当显示完一行之后，电子枪关闭，到HSYNC信号产生之间的延时&#x3D;HFP。</p></li><li><p><strong>VFP</strong>：（时间）<br> 当显示完一帧图像之后，电子枪关闭，到VSYNC信号产生之间的延时</p></li><li><p><strong>VBP</strong>：（时间）<br> 当VSYNC信号结束，到电子枪打开的这段延时</p></li></ol><p>HBP，HFP，VFP，VBP，这四个屏幕的参数，具体多少，需要参考LCD数据手册。</p><ol start="7"><li><p><strong>HSPW</strong>：（时间）<br> 这个是HSYNC信号的时钟宽度</p></li><li><p><strong>VSPW</strong>：（时间）<br> 这个是VSYNC信号的时钟宽度</p></li><li><p><strong>LINE</strong>：（时间）<br> 显示完一帧图像所需时间</p></li><li><p><strong>HOZVAL</strong>：（时间）<br>显示完一行数据所需时间</p></li><li><p><strong>像素时钟</strong>：<br>就是LCD的时钟信号，即显示一帧图片需要多少个时钟数（因为频率已经确定了）<br>所以pxclk &#x3D; (VSPW+VSB+LINE+VFP)*（HSPW+HBP+HOZVAL+HFP）&#x3D; 853440个时钟。</p><p>所以要保持60hz，就需要51.2Mhz时钟信号。</p></li></ol><ul><li>所以需要配置LCD屏幕的时钟源</li></ul><h2 id="LCD屏幕的显存"><a href="#LCD屏幕的显存" class="headerlink" title="LCD屏幕的显存"></a>LCD屏幕的显存</h2><p>一个px &#x3D; 4byte(ARGB8888)<br>所以一帧图片就是1024<em>600</em>4byte &#x3D; 2.4MB</p><p>因为这款LCD内部没有存储器。所以需要从DDR3（我们板子的外置ROM）中分配。</p><h2 id="LCD屏幕的eLCDIF接口"><a href="#LCD屏幕的eLCDIF接口" class="headerlink" title="LCD屏幕的eLCDIF接口"></a>LCD屏幕的eLCDIF接口</h2><p>这个eLCDIF是IMX6U自带的液晶屏接口，用于连接RGB LCD（可以把他想成是SOC上的连接至CA核心的外设）</p><p>eLCDIF支持3种接口：</p><ol><li>MPU接口（SOC和LCD屏幕直接传输数据和指令，如STM32的MCU屏幕）</li><li>VSYNC接口</li><li><strong>DOTCLK接口</strong>（这个接口是用来连接RGBLCD的，包括VSYNC，HSYNC，DOTCLK，ENABLE这4个信号。也叫做RGB接口）</li></ol><p><strong>所以配置LCD驱动的关键，在于配置SOC上的eLCDIF的相关寄存器，配置好上面的一些时间参数。</strong></p><p>主要配置一些：</p><ol><li>eLCDIF软复位（复位LCD，不是复位eLCDIF接口寄存器）</li><li>工作模式（DOTCLK）</li><li>数据大端小端</li><li>数据总线宽度</li><li>像素数据格式</li><li>eLCDIF工作模式</li><li>使能位</li><li>数据线极性位</li><li>数据线使能位</li><li>脉冲宽度位</li><li>像素个数等等</li></ol><h2 id="LCD-屏幕驱动配置"><a href="#LCD-屏幕驱动配置" class="headerlink" title="LCD 屏幕驱动配置"></a>LCD 屏幕驱动配置</h2><ol><li>初始化LCD的IO<br>配置所有IO，复用为eLCDIF的IO口</li><li>设置LCD的时钟源</li><li>配置eLCDIF接口（SOC的接口外设，所有外设驱动适配，本质都是设置SOC的内置外设寄存器）、</li><li>编写对外使用接口</li></ol><h2 id="总结：驱动配置思路"><a href="#总结：驱动配置思路" class="headerlink" title="总结：驱动配置思路"></a>总结：驱动配置思路</h2><p>我们所有<strong>配置驱动</strong>，都是在配置SOC内部连接在外设总线上的<strong>SOC外设</strong>，也叫资源</p><ol><li><strong>时钟</strong></li><li><strong>IO</strong></li><li><strong>协议-&gt;SOC内部寄存器-&gt;</strong><ol><li>CR</li><li>DR</li><li>SR</li></ol></li></ol><p>所以，在适配外设的时候，要先搞清楚，外部设备是什么，实际的SOC外设资源是什么<br>比如</p><p>SOC内部外设资源—————————–实际的外部设备<br>eLCDIF———————————————-LCD<br>uart————————————————uart<br>gpio————————————————led,beep,key<br>exti————————————————key</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;h2 id=&quot;lcd屏幕的分辨率&quot;&gt;&lt;a href=&quot;#lcd屏幕的分辨率&quot; class=&quot;headerlink&quot; title=&quot;lcd屏幕的分辨率&quot;&gt;&lt;/a&gt;lcd屏幕的分辨率&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;定义&lt;/strong&gt;：&lt;br&gt;分辨率指的是绝对像素尺寸，比如&lt;/p</summary>
+      
+    
+    
+    
+    <category term="学习笔记" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    <category term="嵌入式" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="LINUX" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/"/>
+    
+    
+    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="linux" scheme="http://example.com/tags/linux/"/>
+    
+    <category term="驱动" scheme="http://example.com/tags/%E9%A9%B1%E5%8A%A8/"/>
+    
+  </entry>
   
   <entry>
     <title>测试3</title>
