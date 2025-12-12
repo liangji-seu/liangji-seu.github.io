@@ -154,11 +154,11 @@
     <category term="linux" scheme="http://example.com/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux/"/>
     
     
+    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
     <category term="rk3399" scheme="http://example.com/tags/rk3399/"/>
     
     <category term="android10" scheme="http://example.com/tags/android10/"/>
-    
-    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
     
   </entry>
   
