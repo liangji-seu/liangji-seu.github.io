@@ -4,6 +4,336 @@
   
     
     <entry>
+      <title>stm32 printf实现</title>
+      <link href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/"/>
+      <url>/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/</url>
+      
+        <content type="html"><![CDATA[<h1 id="1-标准库-printf-原理"><a href="#1-标准库-printf-原理" class="headerlink" title="1. 标准库 printf 原理"></a>1. 标准库 printf 原理</h1><p>2.1.1 printf函数的C标准库实现原理</p><p>printf 函数是 C 语言标准库中实现输入输出功能的一个核心函数。它通过可变参数列表（variadic function）的方式，允许开发者传递不同类型和数量的参数，并将这些参数格式化输出到标准输出设备。在内部， printf 利用格式化字符串来定义输出的格式，这个字符串包含了文本内容以及转换说明符（如 %d , %f , %s 等）。</p><p>在 C 标准库中， printf 的实现通常涉及以下几个关键步骤：</p><ol><li>通过格式化字符串解析出转换说明符。</li><li>根据转换说明符确定对应参数的类型。</li><li>根据参数类型进行相应的数据解析和格式化处理。</li><li>将格式化后的数据输出到标准输出。</li></ol><p>printf 在实际输出之前，通常会使用缓冲机制暂存输出数据，以减少实际的 I&#x2F;O 操作次数，提高效率。<br>2.1.2 标准输出的缓冲机制</p><p>标准输出的缓冲机制是一种常见的优化手段，它使得数据在写入到输出设备之前可以先存储在缓冲区中。缓冲区的大小和策略会影响程序的性能，例如， printf 默认使用的是行缓冲（line buffering），这意味着当输出数据包含换行符（ \n ）或者缓冲区满时，缓冲区中的数据会被刷新（flush）到真正的输出设备。</p><p>缓冲机制的设计对程序性能有着极大的影响。对于嵌入式系统而言，正确的管理缓冲区能有效减少 CPU 的使用率和内存的开销。 </p><h1 id="2-stm32中的printf实现"><a href="#2-stm32中的printf实现" class="headerlink" title="2. stm32中的printf实现"></a>2. stm32中的printf实现</h1><p>由标准库的printf的实现原理，唯一的不同就在于，最后一步用fputc来将数据输出到标准输出，由于我们stm32里面没有标准输出。所以我们只有在main中初始化好usart，之后覆写fputc函数来将输出重定向到我们的usart串口中。</p><h1 id="3-为什么是否使用微库都能成功？"><a href="#3-为什么是否使用微库都能成功？" class="headerlink" title="3. 为什么是否使用微库都能成功？"></a>3. 为什么是否使用微库都能成功？</h1><p>在STM32中，无论是使用<strong>微库（Micro LIB）</strong> 还是<strong>标准C库（Standard C Library）</strong>，都能通过重写<code>fputc</code>函数实现<code>printf</code>到串口的输出，核心原因是两者都遵循C语言标准库的<strong>接口约定</strong>，且<code>printf</code>的底层实现逻辑对“输出设备”的依赖性较弱。具体原因如下：</p><h3 id="1-微库（Micro-LIB）与标准库的共性：依赖fputc作为输出入口"><a href="#1-微库（Micro-LIB）与标准库的共性：依赖fputc作为输出入口" class="headerlink" title="1. 微库（Micro LIB）与标准库的共性：依赖fputc作为输出入口"></a>1. 微库（Micro LIB）与标准库的共性：依赖<code>fputc</code>作为输出入口</h3><p><code>printf</code>函数的本质是“格式化字符串输出”，其核心逻辑是将格式化后的字符序列通过一个底层函数逐个输出。在C标准中，这个底层输出函数就是<code>fputc</code>（用于向指定的<code>FILE</code>流写入单个字符）。</p><p>无论是微库还是标准库，<code>printf</code>的实现都会<strong>最终调用<code>fputc</code></strong> 来完成字符的实际输出。因此，只要重写<code>fputc</code>函数，将其指向串口发送，<code>printf</code>的输出就会被“劫持”到串口，与使用哪种库无关。</p><h3 id="2-微库与标准库的差异不影响fputc的重写逻辑"><a href="#2-微库与标准库的差异不影响fputc的重写逻辑" class="headerlink" title="2. 微库与标准库的差异不影响fputc的重写逻辑"></a>2. 微库与标准库的差异不影响<code>fputc</code>的重写逻辑</h3><p>两者的主要区别体现在<strong>功能完整性、代码体积、底层实现细节</strong>上，但这些差异不影响对<code>fputc</code>的重写：</p><ul><li><p><strong>微库（Micro LIB）</strong>：<br>是为嵌入式系统优化的轻量级库，功能简化（如不支持完整的文件I&#x2F;O、多线程安全等），代码体积小，直接运行在裸机环境中。其<code>fputc</code>的默认实现可能是“空操作”或指向一个无效设备，但允许用户通过重写函数来替换默认行为。</p></li><li><p><strong>标准C库（如GNU C Library, Newlib）</strong>：<br>功能完整，支持复杂的I&#x2F;O操作（如文件、管道等），但代码体积较大。在嵌入式环境中，标准库通常需要“移植层”（如<code>syscalls.c</code>）来适配硬件，其中<code>fputc</code>的默认实现可能依赖底层的<code>write</code>系统调用，但用户仍可通过重写<code>fputc</code>（或<code>write</code>）来覆盖默认行为，将输出定向到串口。</p></li></ul><h3 id="3-重写fputc的本质：覆盖默认输出目标"><a href="#3-重写fputc的本质：覆盖默认输出目标" class="headerlink" title="3. 重写fputc的本质：覆盖默认输出目标"></a>3. 重写<code>fputc</code>的本质：覆盖默认输出目标</h3><p>无论是哪种库，<code>fputc</code>都是一个<strong>可重定义的弱函数</strong>（或通过链接优先级被用户实现覆盖）。用户重写的<code>fputc</code>会取代库中的默认实现，成为<code>printf</code>调用的实际输出函数。</p><p>例如：</p><ul><li>微库中，<code>fputc</code>的默认实现可能直接返回（无输出），用户重写后，<code>printf</code>会使用用户定义的串口发送逻辑。</li><li>标准库中，<code>fputc</code>可能默认尝试向“标准输出设备（stdout）”写入，但在嵌入式系统中“stdout”无实际硬件对应，用户重写后，输出会被强制转向串口。</li></ul><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>微库和标准库都能支持<code>printf</code>重定向到串口，核心原因是：<br><strong>两者都遵循<code>printf</code>依赖<code>fputc</code>输出字符的标准逻辑，而<code>fputc</code>的实现可以被用户重写，从而将输出目标从默认设备（无实际意义）改为串口</strong>。  </p><p>差异仅在于库的底层实现细节（如是否需要额外的移植层文件），但不影响重定向的核心原理。因此，无论选择哪种库，只要正确重写<code>fputc</code>，就能实现串口输出。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 delay实现</title>
+      <link href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/"/>
+      <url>/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/</url>
+      
+        <content type="html"><![CDATA[<h1 id="stm32-计时"><a href="#stm32-计时" class="headerlink" title="stm32 计时"></a>stm32 计时</h1><ol><li>hal_init()里面HAL_InitTick（）会设置好CM3内部的systick模块的时钟源头,为sysclk的&#x2F;8，和节拍中断优先级。</li><li>stm32 在设置好时钟树之后,sysclk &#x3D; 72MHZ</li><li>delay的初始化delay_init()，也就是设置按照当前的sysclk来说，计算得出1us要多少个时钟周期计数。或运行OS，则设置好LOAD为系统节拍（之后就不会变了）</li><li>之后就可以开始使用delay_us, delay_ms这些延时函数了</li></ol><h2 id="systick模块，sysclk时钟源-和-tick节拍"><a href="#systick模块，sysclk时钟源-和-tick节拍" class="headerlink" title="systick模块，sysclk时钟源 和 tick节拍"></a>systick模块，sysclk时钟源 和 tick节拍</h2><p><img src="/../images/12.1.png" alt="alt text"></p><p>systick是一个模块，是CM3内部的固有硬件，负责给整个系统提供一个简易的定时。</p><p><img src="/../images/12.2.png" alt="alt text"></p><p>1次节拍 &#x3D; LOAD次 计数<br>1次计数 &#x3D; 1&#x2F;（9M）s 或者 1&#x2F;（72M）s<br>       &#x3D; 1&#x2F;9  us  或者  1&#x2F;72   us</p><h2 id="delay-us"><a href="#delay-us" class="headerlink" title="delay_us"></a>delay_us</h2><h3 id="无OS"><a href="#无OS" class="headerlink" title="无OS"></a>无OS</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">delay_us</span><span class="params">(<span class="type">uint32_t</span> nus)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="type">uint32_t</span> temp;</span><br><span class="line">SysTick-&gt;LOAD = nus * g_fac_us;</span><br><span class="line"><span class="comment">/* 时间加载 */</span></span><br><span class="line">SysTick-&gt;VAL = <span class="number">0x00</span>;</span><br><span class="line"><span class="comment">/* 清空计数器 */</span></span><br><span class="line">SysTick-&gt;CTRL |= <span class="number">1</span> &lt;&lt; <span class="number">0</span> ;</span><br><span class="line"><span class="comment">/* 开始倒数 */</span></span><br><span class="line"><span class="keyword">do</span></span><br><span class="line">&#123;</span><br><span class="line">temp = SysTick-&gt;CTRL;</span><br><span class="line">&#125; <span class="keyword">while</span> ((temp &amp; <span class="number">0x01</span>) &amp;&amp; !(temp &amp; (<span class="number">1</span> &lt;&lt; <span class="number">16</span>)));</span><br><span class="line"><span class="comment">/* CTRL.ENABLE 位必须为 1, 并等待时间到达 */</span></span><br><span class="line">SysTick-&gt;CTRL &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">0</span>) ;</span><br><span class="line">SysTick-&gt;VAL = <span class="number">0X00</span>;</span><br><span class="line"><span class="comment">/* 关闭 SYSTICK */</span></span><br><span class="line"><span class="comment">/* 清空计数器 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>直接设置一个节拍的LOAD计数 &#x3D;  总共的计数（根据n us * g_per_us）</p><p>通过读systick是否完成LOAD的计数来判断</p><h3 id="有OS"><a href="#有OS" class="headerlink" title="有OS"></a>有OS</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">delay_us</span><span class="params">(<span class="type">uint32_t</span> nus)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="type">uint32_t</span> ticks;</span><br><span class="line"><span class="type">uint32_t</span> told, tnow, tcnt = <span class="number">0</span>;</span><br><span class="line"><span class="type">uint32_t</span> reload;</span><br><span class="line">reload = SysTick-&gt;LOAD;</span><br><span class="line"><span class="comment">/* LOAD 的值 */</span></span><br><span class="line">ticks = nus * g_fac_us;</span><br><span class="line"><span class="comment">/* 需要的节拍数 */</span></span><br><span class="line">delay_osschedlock();</span><br><span class="line"><span class="comment">/* 阻止 OS 调度，防止打断 us 延时 */</span></span><br><span class="line">told = SysTick-&gt;VAL;</span><br><span class="line"><span class="comment">/* 刚进入时的计数器值 */</span></span><br><span class="line"><span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">tnow = SysTick-&gt;VAL;</span><br><span class="line"><span class="keyword">if</span> (tnow != told)</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">if</span> (tnow &lt; told)</span><br><span class="line">&#123;</span><br><span class="line">tcnt += told - tnow; <span class="comment">/* 这里注意一下 SYSTICK 是一个递减的计数器就可以了 */</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">tcnt += reload - tnow + told;</span><br><span class="line">&#125;</span><br><span class="line">told = tnow;</span><br><span class="line"><span class="keyword">if</span> (tcnt &gt;= ticks) <span class="keyword">break</span>;</span><br><span class="line"><span class="comment">/* 时间超过/等于要延迟的时间,则退出. */</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;;</span><br><span class="line">delay_osschedunlock();</span><br><span class="line"><span class="comment">/* 恢复 OS 调度 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>通过数总的计数，不能修改systick的LOAD。</p><h2 id="delay-ms"><a href="#delay-ms" class="headerlink" title="delay_ms"></a>delay_ms</h2><h3 id="无OS-1"><a href="#无OS-1" class="headerlink" title="无OS"></a>无OS</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">delay_ms</span><span class="params">(<span class="type">uint16_t</span> nms)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">/*这里用 1000,是考虑到可能有超频应用,如 128Mhz 时,delay_us 最大只能延时 1048576us 左右*/</span></span><br><span class="line"><span class="type">uint32_t</span> repeat = nms / <span class="number">1000</span>;</span><br><span class="line"><span class="type">uint32_t</span> remain = nms % <span class="number">1000</span>;</span><br><span class="line"><span class="keyword">while</span> (repeat)</span><br><span class="line">&#123;</span><br><span class="line">delay_us(<span class="number">1000</span> * <span class="number">1000</span>);</span><br><span class="line">repeat--;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (remain)</span><br><span class="line">&#123;</span><br><span class="line">delay_us(remain * <span class="number">1000</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* 利用 delay_us 实现 1000ms 延时 */</span></span><br><span class="line"><span class="comment">/* 利用 delay_us, 把尾数延时(remain ms)给做了 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id="有OS-1"><a href="#有OS-1" class="headerlink" title="有OS"></a>有OS</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">delay_ms</span><span class="params">(<span class="type">uint16_t</span> nms)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">/* 如果 OS 已经在跑了,并且不是在中断里面(中断里面不能任务调度) */</span></span><br><span class="line"><span class="keyword">if</span> (delay_osrunning &amp;&amp; delay_osintnesting == <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">if</span> (nms &gt;= g_fac_ms)</span><br><span class="line"><span class="comment">/* 延时的时间大于 OS 的最少时间周期 */</span></span><br><span class="line">&#123;</span><br><span class="line">delay_ostimedly(nms / g_fac_ms);</span><br><span class="line"><span class="comment">/* OS 延时 */</span></span><br><span class="line">&#125;</span><br><span class="line">nms %= g_fac_ms;</span><br><span class="line"><span class="comment">/* OS 已经无法提供这么小的延时了,采用普通方式延时 */</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* 普通方式延时 */</span></span><br><span class="line">delay_us((<span class="type">uint32_t</span>)(nms * <span class="number">1000</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>大于OS延时的用OS内部的延时，不足的部分，用delay_us来凑。不过此时任务无法调度，因为OS的delay_us下锁调度。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 中断与事件</title>
+      <link href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/"/>
+      <url>/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/</url>
+      
+        <content type="html"><![CDATA[<h1 id="stm32中断和事件"><a href="#stm32中断和事件" class="headerlink" title="stm32中断和事件"></a>stm32中断和事件</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>中断和事件是两个东西</p><p>中断是指的，cpu的中断控制器在收到中断请求后，停止当前任务，转去处理中断事件，运行中断处理函数，根据IVT中定义的函数策略，都是WEAK定义，你可以自己覆写。</p><p>事件则指的，外部的输入信号，不输入NVIC， 直接到脉冲产生模块，从而产生一个脉冲事件，这个脉冲信号会发给你想要发给的设备。</p><p><img src="/../images/11.1.png" alt="alt text"></p><p><img src="/../images/11.2.png" alt="alt text"></p><h2 id="中断产生流程"><a href="#中断产生流程" class="headerlink" title="中断产生流程"></a>中断产生流程</h2><ol><li>外设输入端gpio产生信号（比如下降沿，上升沿）</li><li>EXTI起到路由的作用，<ol><li>既可以产生软件中断（内部设置软件中断寄存器把或门置1），</li><li>也可以产生硬件中断（判定上升沿触发，边沿检测输出1,自动把请求挂起寄存器置1,之后只要把中断屏蔽寄存器置1开中断即可让NVIC产生中断，NVIC会通知CM3内核去按照IVT执行相应的中断处理函数）</li><li>产生事件（脉冲信号，直接发给其他的设备）</li></ol></li><li>NVIC接收到中断请求，开始通知CM3产生中断</li><li>CM3保存当前堆栈，然后跳转到IVT指定的中断处理函数。</li><li>EXTI4_IRQHandler中断处理函数内，清除挂起位，表面CM3已经知道并且正在处理此中断，并调用对应的回调函数来处理中断。处理完之后，再次清中断，防止多次处理。</li><li>CM3恢复现场</li></ol><h2 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h2><p>CM3内核内部的模块，具体定义在ARM中。<br>帮助设置所有中断的优先级组，同时设置一个中断的抢占式优先级和子优先级。</p><h2 id="EXTI"><a href="#EXTI" class="headerlink" title="EXTI"></a>EXTI</h2><p>可以看成是一个输入信号的路由模块，把我们输入的输入信号，帮助NVIC判断是什么方式触发，是想要软件触发还是外部硬件触发，是想要触发中断还是触发事件。</p><h2 id="实现流程思路"><a href="#实现流程思路" class="headerlink" title="实现流程思路"></a>实现流程思路</h2><p>总共设置4个部分<br>输入gpio –&gt; EXTI –&gt; NVIC –&gt; 输出GPIO</p><p>NVIC部分：</p><ol><li>设置优先级组</li><li>设置抢占式优先级和子优先级</li><li>使能NVIC</li><li>找到IVT对应的想要的中断处理函数入口名称</li></ol><p>EXTI：</p><ol><li>设置下降沿触发</li><li>关闭软件中断（可有可无）</li><li>开中断（IMR）</li></ol><p>GPIO输入：</p><ol><li>设置gpio相关</li><li>与EXTI绑定</li></ol><p>（hal_gpio库中，已经将输入GPIO和EXTI合并，可以直接像设置gpio一样选择AFIO复用EXTI输入）</p><p>GPIO输出：</p><ol><li>重写回调函数，gpio中断的回调函数，hal库中已经写好了weak定义。</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 时钟</title>
+      <link href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/"/>
+      <url>/2025/12/24/stm32-%E6%97%B6%E9%92%9F/</url>
+      
+        <content type="html"><![CDATA[<h1 id="stm32-时钟系统"><a href="#stm32-时钟系统" class="headerlink" title="stm32 时钟系统"></a>stm32 时钟系统</h1><h2 id="1-时钟存在意义"><a href="#1-时钟存在意义" class="headerlink" title="1. 时钟存在意义"></a>1. 时钟存在意义</h2><p>mcu是基于时序控制的系统，任意复杂的电路控制系统都可以经由门电路组成的组合电路实<br>现，STM32 内部也是由多种多样的电路模块组合在一起实现的，当一个电路越复杂，在达到正确的输出结果前，它可能因为延时会有一些短暂的中间状态，而这些中间状态有时会导致输出结果会有一个短暂的错误，这叫做<br>电路中的“毛刺现象”，如果电路需要运行得足够快，那么这些错误状态会被其它电路作为输入<br>采样，最终形成一系列的系统错误</p><p>为了解决这个问题，在单片机系统中，设计时以时序电路<br>控制替代纯粹的组合电路，在每一级输出结果前对各个信号进行采样，从而使得电路中某些信<br>号即使出现延时也可以保证各个信号的同步，可以避免电路中发生的“毛刺现象”，达到精确控<br>制输出的效果。</p><p>由于时序电路的重要性，因此在 MCU 设计时就设计了专门用于控制时序的电路，在芯片<br>设计中称为时钟树设计。由此设计出来的时钟，可以精确控制我们的单片机系统，这也是我们<br>这节要展开分析的时钟分析</p><p>为什么是时钟树而不是时钟呢？一个 MCU 越复杂，时钟系统也<br>会相应地变得复杂，如 STM32F1 的时钟系统比较复杂，各个外设模块所需要的时钟不一样。</p><p>所以你可以把时钟树想象成通往全身各个器官的血管，有的器官需要静脉，有的器官需要动脉。然后源头就是心脏（时钟源头）。</p><p>至于这个具体要怎么配置选择这些血管，有一个统一的RCC模块（reset and clock controller）来设置他。</p><h2 id="2-时钟树硬件架构"><a href="#2-时钟树硬件架构" class="headerlink" title="2. 时钟树硬件架构"></a>2. 时钟树硬件架构</h2><p><img src="/../images/10.1.png" alt="alt text"><br><img src="/../images/10.2.png" alt="alt text"></p><h2 id="3-时钟源"><a href="#3-时钟源" class="headerlink" title="3. 时钟源"></a>3. 时钟源</h2><ol><li>HSE</li><li>HSI</li><li>LSE</li><li>LSI</li></ol><p>E表示外部，是指的外围电路，SOC之外<br>I表示内部，指的SOC内部</p><p>HSI（高速<strong>内部时钟</strong>）：是芯片内部集成的高速 RC 振荡器，频率通常为 8MHz（不同型号可能有差异，如有些为 16MHz）。</p><p>硬件位置：位于 STM32 <strong>内核附近的专用模拟电路区域，属于芯片内部的固有模块</strong>。</p><h2 id="4-时钟树软件架构"><a href="#4-时钟树软件架构" class="headerlink" title="4. 时钟树软件架构"></a>4. 时钟树软件架构</h2><p><img src="/../images/10.3.png" alt="alt text"></p><h2 id="启动流程"><a href="#启动流程" class="headerlink" title="启动流程"></a>启动流程</h2><p>在startup.s中，正常情况是CM3运行到Reseet Handler 里面：</p><ol><li>SystemInit<ol><li>拓展外部SRAM</li><li>配置用户向量表（user_IVT）</li></ol></li></ol><p>(这两个我们都没有用到)<br>2. Main</p><p>所以我们要在Main中</p><ol><li>先进行hal层的初始化（使能需要用到的设备的hal库）</li><li>设置时钟树（这里使用的是SYSTEM层中的sys里面的函数，调用hal库来设置时钟树）</li><li>其余设备初始化。</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 启动流程</title>
+      <link href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/"/>
+      <url>/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/</url>
+      
+        <content type="html"><![CDATA[<ul><li><a href="#stm32f1-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90">STM32f1 启动流程分析</a><ul><li><a href="#1-stm32f1xx-%E8%8A%AF%E7%89%87%E6%9E%B6%E6%9E%84">1. STM32F1xx 芯片架构</a></li><li><a href="#2-%E7%BC%96%E8%AF%91%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B">2. 编译文件类型</a></li><li><a href="#3-%E5%90%AF%E5%8A%A8%E6%96%87%E4%BB%B6startups">3. 启动文件startup.s</a></li><li><a href="#4-stm32f1xx%E5%9B%BA%E4%BB%B6%E7%83%A7%E5%BD%95%E5%AD%98%E5%82%A8%E5%99%A8map">4. STM32F1xx固件烧录（存储器map）</a></li><li><a href="#5-%E4%B8%8A%E7%94%B5%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B">5. 上电启动流程</a></li><li><a href="#6-map%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90">6. map文件解析</a></li><li><a href="#7-%E6%B1%87%E7%BC%96%E4%BB%A3%E7%A0%81%E4%B8%AD%E7%9A%84%E5%90%84%E7%A7%8D%E6%AE%B5%E7%A8%8B%E5%BA%8F%E6%89%A7%E8%A1%8C%E7%9A%84%E5%8A%A0%E8%BD%BD%E5%9F%9F%E8%BF%90%E8%A1%8C%E5%9F%9F">7. 汇编代码中的各种段，程序执行的加载域运行域</a></li></ul></li></ul><h1 id="STM32f1-启动流程分析"><a href="#STM32f1-启动流程分析" class="headerlink" title="STM32f1 启动流程分析"></a>STM32f1 启动流程分析</h1><h2 id="1-STM32F1xx-芯片架构"><a href="#1-STM32F1xx-芯片架构" class="headerlink" title="1. STM32F1xx 芯片架构"></a>1. STM32F1xx 芯片架构</h2><p><img src="/../images/9.1.png" alt="alt text"><br>关于启动流程，我们只需要关注</p><ol><li>CM3内核</li><li>内核通用寄存器R0-R15（尤其是SP寄存器和PC寄存器）（均为32位 4byte寄存器）</li><li>RAM（SRAM）</li><li>ROM（FLASH）<br><img src="/../images/9.2.png" alt="alt text"></li></ol><h2 id="2-编译文件类型"><a href="#2-编译文件类型" class="headerlink" title="2. 编译文件类型"></a>2. 编译文件类型</h2><p><img src="/../images/9.3.png" alt="alt text"><br>我们主要关注以下几种编译类型：</p><ol><li>.o （由编译器编译.c&#x2F;.s文件产生的可重定向文件）</li><li>.axf (由armlink链接器，将整个工程参与编译的.o链接成一个可执行文件，是不可重定向的，然后通过仿真器下载调试)</li><li>.hex （由axf转换而来的一个可执行对象文件，除了可执行代码，还有地址信息，知道烧写的地址）</li><li>.bin 正常gcc链接起来的可执行代码</li><li>.map文件（表示函数调用关系，地址关系等。方便调试）</li></ol><h2 id="3-启动文件startup-s"><a href="#3-启动文件startup-s" class="headerlink" title="3. 启动文件startup.s"></a>3. 启动文件startup.s</h2><p>STM32 上电复位后，<strong>CM3 内核的执行起点由中断向量表（IVT） 决定</strong>，而<strong>startup.s的核心作用就是定义中断向量表</strong>，并将复位后首先执行的代码（Reset_Handler）放入向量表的指定位置。</p><p>这个文件的作用就是被编译器编译，然后烧写到flash的开头，是的CM3内核一开始知道初始化的东西是什么。可以理解为IVT的描述，最终，编译器会把startup.s编译成IVT。</p><h2 id="4-STM32F1xx固件烧录（存储器map）"><a href="#4-STM32F1xx固件烧录（存储器map）" class="headerlink" title="4. STM32F1xx固件烧录（存储器map）"></a>4. STM32F1xx固件烧录（存储器map）</h2><p>最终烧录的是一个镜像文件，全部烧写到FLASH中，我们在STlink中指定了起始的烧录地址为0x0800 0000.</p><p><strong>以前的内核复位后的操作</strong><br>在以前的ARM7&#x2F;ARM9 内核控制器的复位后， 内核会直接默认从绝对地址0x0000 0000开始取第一条指令执行复位中断。（即固定了PC初始&#x3D;0x0000 0000）</p><p><strong>CM3内核复位操作</strong><br>依赖boot方式，支持起始执行地址的重定位</p><p>CM3有三种启动方式：</p><ol><li>flash启动<br> CM3起始地址为0x0800 0000</li><li>SRAM启动<br> CM3起始地址为0x2000 0000</li><li>Bootloader启动<br> CM3起始地址为内置BootLoader区</li></ol><h2 id="5-上电启动流程"><a href="#5-上电启动流程" class="headerlink" title="5. 上电启动流程"></a>5. 上电启动流程</h2><ol><li><strong>上电</strong>，CM3启动，（SP，PC未初始化）</li><li>（<strong>初始化SP</strong>）CM3硬件机制读取0x0800 0000开始的32位&#x3D;4字节（0x da da da da）写入SP</li><li>（<strong>初始化PC</strong>）CM3硬件机制读取0x0800 0004开始的32位&#x3D;4byte （0x da da da da）写入PC</li><li>（CM3 联合SP， PC， 按照正常的<strong>取指令，译指令，执行指令</strong>。）<ol><li>（取指令）CM3按照PC只是的下一条指令的地址，用总线在flash中取出指令（0x da da da da）</li><li>（译指令）CM3翻译这4byte的指令为自己的ARM&#x2F;THUMB指令 按照地址最后是否是0&#x2F;1来区分arm&#x2F;thumb指令集</li><li>（执行指令）执行指令，完毕后更新PC指向下一条指令（+2&#x2F;+4）。</li></ol></li><li>CM3跳转<strong>RESET_HANDLER</strong>, 执行初始化<ol><li>CM3执行初始化内部的SystemInit函数，<strong>初始化时钟</strong>，执行完毕跳转回来。（函数名即函数段的入口地址）</li><li>CM3执行__main，<strong>初始化用户堆栈</strong>（因为我们没有用microlib，所以是标准的编译器，所以需要告知c语言的堆栈的起始地址和大小）和C语言环境，完成后不再回来，进入C的世界。</li></ol></li></ol><h2 id="6-map文件解析"><a href="#6-map文件解析" class="headerlink" title="6. map文件解析"></a>6. map文件解析</h2><ol><li>程序段交叉引用关系（Section Cross References）<br> <code>main.o(i.main) refers to sys.o(i.sys_stm32_clock_init) for sys_stm32_clock_init 表示：main.c 文件中的 main 函数，调用了 sys.c 中的 sys_stm32_clock_init 函数。其中：i.main 表示 main 函数的入口地址</code></li><li>删除映像未使用的程序段（Removing Unused input sections from the image）<br> <code>216 unused section(s) (total 15556bytes) removed from the image. 表示总共移除了 216 个程序段（函数/数据），大小为 15556 字节。即给我们的 MCU 节省了 15556 字节的程序空间。</code></li><li>映像符号表（Image Symbol Table）<br><code>本地符号（Local Symbols）记录了用 static 声明的全局变量地址和大小，c 文件中函数的 地址和用 static 声明的函数代码大小，汇编文件中的标号地址（作用域：限本文件）。 全局符号（Global Symbols）记录了全局变量的地址和大小，C 文件中函数的地址及其代 码大小，汇编文件中的标号地址（作用域：全工程）</code></li><li>映像内存分布图（Memory Map of the image）<br><code>加载域（Load Region）和运行域（Execution Region）</code></li><li>映像组件大小（Image component sizes）<br><code>整个映像所有代码（.o）占用空间的汇总 信息</code></li></ol><h2 id="7-汇编代码中的各种段，程序执行的加载域运行域"><a href="#7-汇编代码中的各种段，程序执行的加载域运行域" class="headerlink" title="7. 汇编代码中的各种段，程序执行的加载域运行域"></a>7. 汇编代码中的各种段，程序执行的加载域运行域</h2><p><strong>加载域</strong><br><code>程序（代码、数据）被永久存储的区域，通常是Flash（或 ROM）。加载域中包含程序运行所需的所有原始数据</code></p><ol><li>代码指令</li><li>全局变量的初始值</li></ol><p><strong>运行域</strong><br>程序实际执行时所在的区域，可以是Flash，也可以是RAM。</p><pre><code>代码的运行域：如果代码在 Flash 中直接执行（大部分情况），则运行域 = 加载域（均为 Flash）；如果代码需要在 RAM 中执行（如高速访问、自修改代码），则运行域是 RAM，加载域仍是 Flash（代码需从 Flash 拷贝到 RAM 后再执行）。数据的运行域：全局变量、栈、堆等需要读写的区域，运行域一定是 RAM（Flash 只读，无法修改），而它们的初始值（如.data段的初始值）的加载域是 Flash。</code></pre><p><strong>程序中常见的段</strong><br>.text、.data、.bss<br><img src="/../images/9.4.png" alt="alt text"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 看门狗</title>
+      <link href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/"/>
+      <url>/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/</url>
+      
+        <content type="html"><![CDATA[<h1 id="STM32-看门狗"><a href="#STM32-看门狗" class="headerlink" title="STM32 看门狗"></a>STM32 看门狗</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>WD， 说白了就是一个递减的计数器</p><p>IWDG， 独立看门狗，倒计时结束就会触发复位重启<br>WWDG， 窗口看门狗，有一个窗口值， 高于窗口上限feed，会导致复位；到0x3f也会导致复位，只有在窗口间feed才能成功恢复看门狗计数。</p><h2 id="WWDG"><a href="#WWDG" class="headerlink" title="WWDG"></a>WWDG</h2><h3 id="时钟"><a href="#时钟" class="headerlink" title="时钟"></a>时钟</h3><p>WWDG属于APB1总线的设备，所以是36M的时钟</p><h3 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h3><ol><li>WWDG_CR<ol><li>WDGA位 （启用，使能WWDG）</li><li>T[6:0]位 当前计数器</li></ol></li><li>WWDG_CFR<ol><li>EWI位 (0x40时提前唤醒中断使能)</li><li>TB[1:0] (分频系数)</li><li>W[6:0] （窗口上限）</li></ol></li><li>WWDG_SR  （记录是否有提前唤醒，0x40时 SR&#x3D;1）</li></ol><p>(注意：你既然使用中断，就要记得使能NVIC来响应中断)</p><h3 id="为什么Tr设置大于Wr"><a href="#为什么Tr设置大于Wr" class="headerlink" title="为什么Tr设置大于Wr"></a>为什么Tr设置大于Wr</h3><p>为什么 “Tr&gt; Wr” 是合理的？<br>以你的配置为例：Tr&#x3D;0x7F（127），Wr&#x3D;0x5F（95），计数器的工作过程如下：</p><pre><code>初始化后，计数器从 0x7F（127）开始向下计数：    127 → 126 → ... → 96（这些值都 &gt; Wr=95）。    此时如果喂狗（重装载 Tr），会因为 “计数器值&gt; Wr” 触发复位（这是窗口机制的保护作用，防止过早喂狗）。    但不喂狗的话，计数器会继续正常递减，不会复位（复位只在计数器到 0x3F 时发生）。当计数器减到 95（= Wr）及以下（95 → 94 → ... → 65（0x41））：    此时进入 “允许喂狗区间”（计数器值 ≤ Wr 且 &gt; 0x40），喂狗操作会被正常执行（计数器重新装载为 Tr=127，重复上述过程）。若一直不喂狗，计数器会继续减到 64（0x40）时触发 EWI 中断（如果使能），再减到 63（0x3F）时触发复位。</code></pre><p>一开始设置的Tr是一个重装载的值，你feed dog的时间要在W和0x40之间，feed成功后，Tr有可以重装载进去</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 定时器</title>
+      <link href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/"/>
+      <url>/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/</url>
+      
+        <content type="html"><![CDATA[<h1 id="STM32-定时器"><a href="#STM32-定时器" class="headerlink" title="STM32 定时器"></a>STM32 定时器</h1><h2 id="硬件总线分布"><a href="#硬件总线分布" class="headerlink" title="硬件总线分布"></a>硬件总线分布</h2><p>APB1：TIM2-7<br>APB2：TIM1, TIM8</p><h2 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h2><ol><li>2个基本定时器（TIM6, TIM7）</li><li>4个通用定时器（TIM2-5）</li><li>2个高级控制定时器（TIM1, TIM8）</li></ol><p>这些定时器属于独立外设</p><h2 id="基本定时器（6，7）"><a href="#基本定时器（6，7）" class="headerlink" title="基本定时器（6，7）"></a>基本定时器（6，7）</h2><p>16位自动重载<strong>递增</strong>计数器</p><p>16位可编程分频器(倍频<br><img src="/../images/8.1.png" alt="alt text"></p><p>预分频器-影子寄存器：<br>    预分频器作为缓冲作用，等更新事件发生，送入影子寄存器</p><p>重装载寄存器-影子寄存器：</p><ol><li>ARPE位 &#x3D; 0：不缓冲，直接更新</li><li>ARPE位 &#x3D; 1：等更新事件发生才写入。</li></ol><p>更新事件的产生：</p><ol><li>软件产生:<ol><li>UG位 &#x3D;1, 产生更新事件</li></ol></li><li>硬件产生 <ol><li>计数器的值 &#x3D; TIMx_ARR设定值， 产生 DMA 请求、产生更新事件，比如中断信号或者触发 DAC 同步电路， 此时叫定时器上溢，定时器溢<br>出就伴随着更新事件的发生</li></ol></li></ol><h3 id="配置逻辑"><a href="#配置逻辑" class="headerlink" title="配置逻辑"></a>配置逻辑</h3><p>一定记得</p><ol><li><p>使能时钟</p></li><li><p>找到HAL库的寄存器描述</p><ol><li>配置设备寄存器基地址</li><li>配置设备描述</li></ol></li><li><p>HAL_init 配置设备</p></li><li><p>使能设备</p></li><li><p>使能设备中断</p></li><li><p>使能NVIC中断响应</p></li><li><p>初始化完成</p></li><li><p>覆写IRQ原本的中断处理函数，指向HAL的中断处理函数（他内部会实现关中断，判断中断类型，调用回调函数，开中断，清标志位等）</p></li><li><p>回调函数callback里面实现具体的业务逻辑，所以放在main里面</p></li></ol><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">TIM_HandleTypeDef init_TIM;</span><br><span class="line"></span><br><span class="line">#define liangji_TIM6_IRQHandler TIM6_IRQHandler</span><br><span class="line">void liangji_init_TIM6(uint32_t psc, uint32_t period)</span><br><span class="line">&#123;</span><br><span class="line">//enable clk</span><br><span class="line">__HAL_RCC_TIM6_CLK_ENABLE();</span><br><span class="line"></span><br><span class="line">//enable NVIC</span><br><span class="line">HAL_NVIC_SetPriority(TIM6_IRQn,2,3);</span><br><span class="line">HAL_NVIC_EnableIRQ(TIM6_IRQn);</span><br><span class="line"></span><br><span class="line">//config tim reg</span><br><span class="line">init_TIM.Instance = TIM6;</span><br><span class="line">init_TIM.Init.Prescaler=psc;//7200 divf</span><br><span class="line">init_TIM.Init.CounterMode=TIM_COUNTERMODE_UP;</span><br><span class="line">init_TIM.Init.Period=period;//5000 ~ 500ms</span><br><span class="line">//init_TIM.Init.ClockDivision=TIM_CLOCKDIVISION_DIV2;//72M</span><br><span class="line">init_TIM.Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;</span><br><span class="line"></span><br><span class="line">HAL_TIM_Base_Init(&amp;init_TIM);</span><br><span class="line"></span><br><span class="line">//enable TIM6, and enable TIM6_IT</span><br><span class="line">HAL_TIM_Base_Start_IT(&amp;init_TIM);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void liangji_TIM6_IRQHandler(void)</span><br><span class="line">&#123;</span><br><span class="line">HAL_TIM_IRQHandler(&amp;init_TIM);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line">void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)</span><br><span class="line">&#123;</span><br><span class="line">__HAL_TIM_DISABLE(htim);</span><br><span class="line">__HAL_TIM_DISABLE_IT (htim, TIM_IT_UPDATE);</span><br><span class="line"></span><br><span class="line">//do your thing</span><br><span class="line">LED1_TOGGLE();</span><br><span class="line">__HAL_TIM_ENABLE(htim);</span><br><span class="line">__HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);</span><br><span class="line">&#125;</span><br><span class="line">*/</span><br><span class="line"></span><br></pre></td></tr></table></figure><h2 id="通用定时器（2-5）"><a href="#通用定时器（2-5）" class="headerlink" title="通用定时器（2-5）"></a>通用定时器（2-5）</h2><p>和基本定时器区别：多了输入捕获，PWM输出，输出比较，单脉冲模式</p><p>下面是组成部分</p><h3 id="1-时钟源选择"><a href="#1-时钟源选择" class="headerlink" title="1. 时钟源选择"></a>1. 时钟源选择</h3><ol><li><p>内部时钟(CK_INT)</p></li><li><p>外部时钟模式 1：外部输入引脚(TIx)，x&#x3D;1，2（即只能来自于通道 1 或者通道 2）</p><pre><code> 外部时钟源信号→IO→TIMx_CH1（或者 TIMx_CH2）</code></pre></li><li><p>外部时钟模式 2：外部触发输入(ETR)</p></li><li><p>内部触发输入(ITRx)：使用一个定时器作为另一定时器的预分频器</p></li></ol><h3 id="2-控制器"><a href="#2-控制器" class="headerlink" title="2. 控制器"></a>2. 控制器</h3><h3 id="3-时基单元"><a href="#3-时基单元" class="headerlink" title="3. 时基单元"></a>3. 时基单元</h3><h3 id="4-输入捕获"><a href="#4-输入捕获" class="headerlink" title="4. 输入捕获"></a>4. 输入捕获</h3><h3 id="5-输入捕获和输出比较公用部分"><a href="#5-输入捕获和输出比较公用部分" class="headerlink" title="5. 输入捕获和输出比较公用部分"></a>5. 输入捕获和输出比较公用部分</h3><h3 id="6-输出比较"><a href="#6-输出比较" class="headerlink" title="6. 输出比较"></a>6. 输出比较</h3><h3 id="定时器中断实验"><a href="#定时器中断实验" class="headerlink" title="定时器中断实验"></a>定时器中断实验</h3><ol><li>TIMx_CR1   （时基单元）<ol><li>APRE（选择是否自动重载缓冲）</li><li>CMS 和 DIR (选择计数模式)</li><li>CEN 使能计数器</li></ol></li><li>TIMx_SMCR（从模式控制）  （时钟源选择）<ol><li>SMS （配置输入时钟来源）</li></ol></li><li>TIMx_DIER （DMA&#x2F;中断使能寄存器）  （配置溢出更新中断使能）<ol><li>UIE</li></ol></li><li>TIMx_SR  （状态寄存器） （显示中断标志位，通知产生了中断，需要手动清除）<ol><li>UIF</li></ol></li><li>TIMx_CNT  （计数寄存器）</li><li>TIMx_PSC  （预分频）</li><li>TIMx_ARR  （自动重载）</li></ol><p>通用定时器（TIM2-TIM5 等）虽然支持 4 种时钟源（内部时钟、外部 TIx、外部 ETR、内部触发 ITRx），但复位后默认选择的是 “内部时钟（CK_INT）”，这是由硬件寄存器的复位值决定的</p><p>可以尝试自己直接实现中断处理，最后清除中断flag即可</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">void liangji_TIM3_IRQHandler(void)</span><br><span class="line">&#123;</span><br><span class="line">//HAL_TIM_IRQHandler(&amp;init_TIM3);</span><br><span class="line">if(__HAL_TIM_GET_FLAG(&amp;init_TIM3, TIM_FLAG_UPDATE))</span><br><span class="line">&#123;</span><br><span class="line">LED1_TOGGLE();</span><br><span class="line">__HAL_TIM_CLEAR_FLAG(&amp;init_TIM3, TIM_FLAG_UPDATE);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h3 id="定时器输出PWM波实验"><a href="#定时器输出PWM波实验" class="headerlink" title="定时器输出PWM波实验"></a>定时器输出PWM波实验</h3><p>实现原理<br><img src="/../images/8.2.png" alt="alt text"></p><p>使用寄存器，除了上面的中断用到的基本定时器相关寄存器之外<br>还有</p><ol><li>TIMx_CCMR1&#x2F;2 （捕获 &#x2F;比较模式寄 存器）</li><li>TIMx_CCER   （捕获&#x2F;比较使能寄存器）</li><li>TIMx_CCR1~4   （捕获&#x2F;比较寄存器）</li></ol><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">TIM_HandleTypeDef init_TIM3;</span><br><span class="line">TIM_OC_InitTypeDef init_TIM3_OC;</span><br><span class="line">GPIO_InitTypeDef init_gpio7;</span><br><span class="line">void liangji_init_TIM3_PWM(uint32_t psc, uint32_t period)</span><br><span class="line">&#123;</span><br><span class="line">//enable clk</span><br><span class="line">__HAL_RCC_TIM3_CLK_ENABLE();</span><br><span class="line"></span><br><span class="line">//enable NVIC</span><br><span class="line">HAL_NVIC_SetPriority(TIM3_IRQn,2,3);</span><br><span class="line">HAL_NVIC_EnableIRQ(TIM3_IRQn);</span><br><span class="line"></span><br><span class="line">//io mux, PA7-&gt;TIM3_CH2, REMAP</span><br><span class="line">__HAL_RCC_GPIOB_CLK_ENABLE();</span><br><span class="line">init_gpio7.Pin = GPIO_PIN_5;</span><br><span class="line">init_gpio7.Mode = GPIO_MODE_AF_PP;</span><br><span class="line">init_gpio7.Speed = GPIO_SPEED_FREQ_HIGH;</span><br><span class="line">init_gpio7.Pull = GPIO_PULLUP;</span><br><span class="line">HAL_GPIO_Init(GPIOB, &amp;init_gpio7);</span><br><span class="line"></span><br><span class="line">//GTIM_TIMX_PWM_CHY_GPIO_REMAP();</span><br><span class="line">__HAL_RCC_AFIO_CLK_ENABLE();</span><br><span class="line">__HAL_AFIO_REMAP_TIM3_PARTIAL();</span><br><span class="line">//AFIO_BASE</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//CLK src sel, default choose ck_int</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//config TIM BASE</span><br><span class="line">init_TIM3.Instance = TIM3;</span><br><span class="line">init_TIM3.Init.Prescaler=psc;</span><br><span class="line">init_TIM3.Init.CounterMode=TIM_COUNTERMODE_UP;</span><br><span class="line">init_TIM3.Init.Period=period;</span><br><span class="line">init_TIM3.Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;</span><br><span class="line">//init_TIM3.Channel = HAL_TIM_ACTIVE_CHANNEL_2;</span><br><span class="line">HAL_TIM_PWM_Init(&amp;init_TIM3);</span><br><span class="line"></span><br><span class="line">//config TIM compare and output</span><br><span class="line">init_TIM3_OC.OCMode=TIM_OCMODE_PWM1;</span><br><span class="line">init_TIM3_OC.Pulse=period/2;</span><br><span class="line">init_TIM3_OC.OCPolarity=TIM_OCPOLARITY_LOW;</span><br><span class="line">HAL_TIM_PWM_ConfigChannel(&amp;init_TIM3, &amp;init_TIM3_OC, TIM_CHANNEL_2);</span><br><span class="line"></span><br><span class="line">//TIM3 IT</span><br><span class="line">//HAL_TIM_Base_Start_IT(&amp;init_TIM3);</span><br><span class="line">HAL_TIM_PWM_Start(&amp;init_TIM3, TIM_CHANNEL_2);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void liangji_pwm_led(void)</span><br><span class="line">&#123;</span><br><span class="line">static uint8_t dir = 1;</span><br><span class="line">static uint16_t ledrpwmval = 0;</span><br><span class="line"></span><br><span class="line">if (dir)</span><br><span class="line">ledrpwmval++;</span><br><span class="line">else</span><br><span class="line">ledrpwmval--;</span><br><span class="line"></span><br><span class="line">//switch</span><br><span class="line">if (ledrpwmval &gt; 300)</span><br><span class="line">dir = 0;</span><br><span class="line">if (ledrpwmval == 0)</span><br><span class="line">dir = 1;</span><br><span class="line"></span><br><span class="line">__HAL_TIM_SET_COMPARE(&amp;init_TIM3, TIM_CHANNEL_2, ledrpwmval);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><p>注意：关于引脚复用，和引脚重映射，最终你用到那个IO，你就配置那个IO就行了，重映射的原来的那个IO不需要配置了。</p><p>TIM3方面</p><p><img src="/../images/8.3.png" alt="alt text"><br><img src="/../images/8.4.png" alt="alt text"><br><img src="/../images/8.5.png" alt="alt text"><br>主要配置：<br>时基<br>时钟源（无需配置，默认就行）<br>比较主电路<br>输出部分</p><h3 id="输入捕获实验"><a href="#输入捕获实验" class="headerlink" title="输入捕获实验"></a>输入捕获实验</h3><p><img src="/../images/8.6.png" alt="alt text"><br><img src="/../images/8.7.png" alt="alt text"></p><p>要做的事情</p><ol><li>给TIM时钟</li><li>配置时钟源</li><li>配置输入IO</li><li>配置时基</li><li>配置输入通道</li><li>配置捕获主电路</li><li>配置捕获中断</li></ol><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">//TIM COMMON - Capture Project</span><br><span class="line">//PA0 -&gt; TIM5_CH1</span><br><span class="line">TIM_HandleTypeDef init_TIM5;</span><br><span class="line">GPIO_InitTypeDef init_gpio_capture;</span><br><span class="line">TIM_IC_InitTypeDef init_IC;</span><br><span class="line">#define liangji_TIM5_IRQHandler TIM5_IRQHandler</span><br><span class="line">uint8_t g_timxchy_cap_sta = 0; //this count N</span><br><span class="line">uint16_t g_timxchy_cap_val = 0; //count Once cnt &lt; arr</span><br><span class="line">uint16_t count_up = 0;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">void liangji_init_TIM5_CAPTURE(uint32_t psc, uint32_t period)</span><br><span class="line">&#123;</span><br><span class="line">//NVIC</span><br><span class="line">HAL_NVIC_SetPriority(TIM5_IRQn,2,3);</span><br><span class="line">HAL_NVIC_EnableIRQ(TIM5_IRQn);</span><br><span class="line"></span><br><span class="line">//IO</span><br><span class="line">__HAL_RCC_GPIOA_CLK_ENABLE();</span><br><span class="line">init_gpio_capture.Pin = GPIO_PIN_0;</span><br><span class="line">init_gpio_capture.Mode = GPIO_MODE_AF_PP;</span><br><span class="line">init_gpio_capture.Speed = GPIO_SPEED_FREQ_HIGH;</span><br><span class="line">init_gpio_capture.Pull = GPIO_PULLUP;</span><br><span class="line">HAL_GPIO_Init(GPIOA, &amp;init_gpio_capture);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//enable TIM5 CLK</span><br><span class="line">__HAL_RCC_TIM5_CLK_ENABLE();</span><br><span class="line"></span><br><span class="line">//TIM5 CLK SOURCE SEL</span><br><span class="line">//stay Default</span><br><span class="line"></span><br><span class="line">//TIM5 TIM BASE</span><br><span class="line">init_TIM5.Instance = TIM5;</span><br><span class="line">init_TIM5.Init.Prescaler=psc;</span><br><span class="line">init_TIM5.Init.CounterMode=TIM_COUNTERMODE_UP;</span><br><span class="line">init_TIM5.Init.Period=period;</span><br><span class="line">init_TIM5.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;</span><br><span class="line">init_TIM5.Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;</span><br><span class="line">init_TIM5.Channel = HAL_TIM_ACTIVE_CHANNEL_1;</span><br><span class="line">HAL_TIM_IC_Init(&amp;init_TIM5);</span><br><span class="line"></span><br><span class="line">//TIM5 Capture</span><br><span class="line">init_IC.ICFilter = 0;//dont use filter</span><br><span class="line">init_IC.ICPrescaler = TIM_ICPSC_DIV1;</span><br><span class="line">init_IC.ICSelection = TIM_ICSELECTION_DIRECTTI;</span><br><span class="line">init_IC.ICPolarity = TIM_ICPOLARITY_RISING;</span><br><span class="line">HAL_TIM_IC_ConfigChannel(&amp;init_TIM5, &amp;init_IC, TIM_CHANNEL_1);</span><br><span class="line"></span><br><span class="line">//TIM5 Capture IT and IT</span><br><span class="line">HAL_TIM_IC_Start_IT(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">HAL_TIM_Base_Start_IT(&amp;init_TIM5);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void liangji_TIM5_Capture(void)</span><br><span class="line">&#123;</span><br><span class="line">if((g_timxchy_cap_sta &amp; 0x80)!= 0)</span><br><span class="line">&#123;</span><br><span class="line">//we get a pulse</span><br><span class="line">uint16_t N = g_timxchy_cap_sta &amp; 0x3F;</span><br><span class="line">N*= 65536;</span><br><span class="line">N+=g_timxchy_cap_val;</span><br><span class="line">printf(&quot;HIGH PULSE : %d us \r\n&quot;, N);</span><br><span class="line">g_timxchy_cap_sta = 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//just LED0 TOGGLE</span><br><span class="line">static uint8_t t = 0;</span><br><span class="line">t++;</span><br><span class="line">if(t&gt;20)&#123;</span><br><span class="line">t=0;</span><br><span class="line">LED0_TOGGLE();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">void liangji_TIM5_IRQHandler(void)</span><br><span class="line">&#123;</span><br><span class="line">HAL_TIM_IRQHandler(&amp;init_TIM5);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line">Update IT callback</span><br><span class="line">impel in main, toggle led1, and count up ++</span><br><span class="line">      HAL_TIM_PeriodElapsedCallback(htim);</span><br><span class="line">*/</span><br><span class="line"></span><br><span class="line">void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)</span><br><span class="line">&#123;</span><br><span class="line">if (htim-&gt;Instance == TIM6)&#123;</span><br><span class="line">//LED1_TOGGLE();</span><br><span class="line">&#125; else if (htim-&gt;Instance == TIM3)&#123;</span><br><span class="line">//LED1_TOGGLE();</span><br><span class="line">&#125; else if (htim-&gt;Instance == TIM5) &#123;</span><br><span class="line">if((g_timxchy_cap_sta &amp; 0X80) == 0)&#123;</span><br><span class="line">if(g_timxchy_cap_sta &amp; 0X40)&#123;</span><br><span class="line">if ((g_timxchy_cap_sta &amp; 0X3F) == 0X3F)&#123;</span><br><span class="line">//  wait for falling, over the N max, is too long,think it is success, so re-wait for up, give up wait falling</span><br><span class="line">TIM_RESET_CAPTUREPOLARITY(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">TIM_SET_CAPTUREPOLARITY(&amp;init_TIM5, TIM_CHANNEL_1, TIM_ICPOLARITY_RISING);</span><br><span class="line">g_timxchy_cap_sta |= 0x80;     </span><br><span class="line">g_timxchy_cap_val = 0xffff; //mean: N(max)*arr + N(max)</span><br><span class="line">&#125;</span><br><span class="line">else &#123;</span><br><span class="line">g_timxchy_cap_sta++;  //N +1</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/*</span><br><span class="line">      HAL_TIM_IC_CaptureCallback(htim);</span><br><span class="line">*/</span><br><span class="line">void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)</span><br><span class="line">&#123;</span><br><span class="line">//get up cnt</span><br><span class="line">//set fall detect</span><br><span class="line">if((g_timxchy_cap_sta &amp; 0X80) == 0)&#123;</span><br><span class="line">if(g_timxchy_cap_sta &amp; 0X40)&#123; //now 0 1, but now capture falling because when capture up, we detect falling</span><br><span class="line">g_timxchy_cap_sta |= 0x80;</span><br><span class="line">g_timxchy_cap_val = HAL_TIM_ReadCapturedValue(&amp;init_TIM5, TIM_CHANNEL_1);//get falling cnt t2 (t2&lt;arr)</span><br><span class="line">//reset detect up</span><br><span class="line">TIM_RESET_CAPTUREPOLARITY(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">TIM_SET_CAPTUREPOLARITY(&amp;init_TIM5, TIM_CHANNEL_1, TIM_ICPOLARITY_RISING);</span><br><span class="line">&#125; else &#123; //now 0 0, wait for up edge, but now capture interupt, so start a new detect</span><br><span class="line">g_timxchy_cap_sta = 0;</span><br><span class="line">g_timxchy_cap_val = 0;</span><br><span class="line">g_timxchy_cap_sta |= 0x40;   // set 0 1, we have get up edge</span><br><span class="line">//set polo falling detect, no need to record now cnt t1, because t1 + N*arr + t2 = now</span><br><span class="line">__HAL_TIM_DISABLE(&amp;init_TIM5);</span><br><span class="line">__HAL_TIM_SET_COUNTER(&amp;init_TIM5, 0); </span><br><span class="line">TIM_RESET_CAPTUREPOLARITY(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">TIM_SET_CAPTUREPOLARITY(&amp;init_TIM5, TIM_CHANNEL_1, TIM_ICPOLARITY_RISING);</span><br><span class="line">__HAL_TIM_ENABLE(&amp;init_TIM5);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure><p><img src="/../images/8.8.png" alt="alt text"><br>重点在于在捕获中断和更新事件中断中，统计溢出次数N和上升下降沿。</p><h3 id="脉冲计数实验"><a href="#脉冲计数实验" class="headerlink" title="脉冲计数实验"></a>脉冲计数实验</h3><p>这次我们使用外部时钟模式1, 多一个配置控制器。</p><p><img src="/../images/8.9.png" alt="alt text"></p><p>注意所有功能的使能， 中断的使能</p><ol><li>时钟的使能</li><li>输入通道的使能（如果有）</li><li>更新事件中断使能</li></ol><h2 id="高级定时器（1-8）"><a href="#高级定时器（1-8）" class="headerlink" title="高级定时器（1,8）"></a>高级定时器（1,8）</h2>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 hal库</title>
+      <link href="/2025/12/24/stm32-hal%E5%BA%93/"/>
+      <url>/2025/12/24/stm32-hal%E5%BA%93/</url>
+      
+        <content type="html"><![CDATA[<ul><li><a href="#1-stm32%E7%9A%84%E4%B8%8D%E5%90%8C%E5%BA%93">1. STM32的不同库</a><ul><li><a href="#11-%E6%A0%87%E5%87%86%E5%BA%93">1.1 标准库</a></li><li><a href="#12-hal%E5%BA%93%E7%A1%AC%E4%BB%B6%E6%8A%BD%E8%B1%A1%E5%B1%82">1.2 hal库（硬件抽象层）</a></li><li><a href="#13-ll%E5%BA%93">1.3 LL库</a></li><li><a href="#14-hal%E5%BA%93%E5%92%8Cll%E5%BA%93%E7%9A%84%E6%A1%86%E5%9B%BE%E5%85%B3%E7%B3%BB">1.4 hal库和ll库的框图关系</a></li></ul></li><li><a href="#2-stm32%E5%B7%A5%E7%A8%8B%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84">2. STM32工程项目结构</a><ul><li><a href="#21-%E6%9C%AC%E5%9C%B0%E5%B7%A5%E7%A8%8B%E6%A0%B9%E7%9B%AE%E5%BD%95">2.1 本地工程根目录</a><ul><li><a href="#211-drivers">2.1.1 Drivers</a><ul><li><a href="#2111-cmsis">2.1.1.1 CMSIS</a></li><li><a href="#2112-hal">2.1.1.2 HAL</a></li><li><a href="#2113-system">2.1.1.3 SYSTEM</a></li><li><a href="#2114-bsp">2.1.1.4 BSP</a></li></ul></li><li><a href="#212-middlewares">2.1.2 Middlewares</a></li><li><a href="#213-user">2.1.3 User</a></li></ul></li><li><a href="#22-mdk">2.2 MDK</a></li></ul></li></ul><h1 id="1-STM32的不同库"><a href="#1-STM32的不同库" class="headerlink" title="1. STM32的不同库"></a>1. STM32的不同库</h1><p>标准库和 HAL 库、LL 库完全相互独立。</p><ol><li><code>标准库</code><br>主要是寄存器操作的一些封装。本质还是操作寄存器</li><li><code>HAL库</code><br>HAL 库更倾向于外设通用化，扩展组件中解决芯片差异操作部分，是硬件抽象层</li><li><code>LL库</code><br>LL 倾向于最简单的寄存器操作，属于是HAL的一些高效的补充</li></ol><h2 id="1-1-标准库"><a href="#1-1-标准库" class="headerlink" title="1.1 标准库"></a>1.1 标准库</h2><p>即类似使用宏定义和结构体进行裸机编程，其操作仍然是访问寄存器。</p><h2 id="1-2-hal库（硬件抽象层）"><a href="#1-2-hal库（硬件抽象层）" class="headerlink" title="1.2 hal库（硬件抽象层）"></a>1.2 hal库（硬件抽象层）</h2><p>即将应用软件功能和硬件分离，更方便移植到不同的平台。</p><h2 id="1-3-LL库"><a href="#1-3-LL库" class="headerlink" title="1.3 LL库"></a>1.3 LL库</h2><p>比 HAL 库更接近于硬件底层的操作，代码更轻量级，代码执行效率更高的库函数组件</p><p>但 LL库不匹配复杂的外设，如 USB 等。所以 LL 库并不是每个外设都有对应的完整驱动配置程序。</p><h2 id="1-4-hal库和ll库的框图关系"><a href="#1-4-hal库和ll库的框图关系" class="headerlink" title="1.4 hal库和ll库的框图关系"></a>1.4 hal库和ll库的框图关系</h2><p><img src="/../images/13.1.png" alt="alt text"></p><p>由图可见，总共有三层，上层是应用层User, 中层是Middlewares,下层是驱动层（硬件抽象层）（省略了CMSIS的底层芯片定义）</p><h1 id="2-STM32工程项目结构"><a href="#2-STM32工程项目结构" class="headerlink" title="2. STM32工程项目结构"></a>2. STM32工程项目结构</h1><p><img src="/../images/13.2.png" alt="alt text"></p><p>新建一个stm32的工程项目的步骤：</p><ol><li>创建本地文件夹作为工程根目录，并拷贝准备好必须的全部文件。（<code>芯片硬件相关</code>）</li><li>用keil来指定好实际需要编译的对象。（<code>实际编译环境需要相关</code>）</li></ol><p>下面逐一介绍</p><h2 id="2-1-本地工程根目录"><a href="#2-1-本地工程根目录" class="headerlink" title="2.1 本地工程根目录"></a>2.1 本地工程根目录</h2><p><img src="/../images/13.3.png" alt="alt text"><br>下面从下往上以此讲解每一层的作用</p><h3 id="2-1-1-Drivers"><a href="#2-1-1-Drivers" class="headerlink" title="2.1.1 Drivers"></a>2.1.1 Drivers</h3><p>这一层作为驱动底层可以具体细分为<br><img src="/../images/13.4.png" alt="alt text"></p><h4 id="2-1-1-1-CMSIS"><a href="#2-1-1-1-CMSIS" class="headerlink" title="2.1.1.1 CMSIS"></a>2.1.1.1 CMSIS</h4><p>存放最低层硬件相关资源<br><img src="/../images/13.5.png" alt="alt text"></p><p>可以看到，CMSIS下一共两个文件夹：Device, Include.</p><p><code>CMSIS/Include</code><br>里面存放了底层定义的编译器相关工具</p><p><code>CMSIS/Device</code><br>里面，指定了ST芯片公司的F1系列芯片具体系列设备。<br>然后Device下又细分为Source&#x2F;, Include&#x2F;。</p><p><code>CMSIS/Device/Include</code>：<br>存放该系列芯片的base基础芯片定义和e型号的<strong>芯片定义</strong>。（同时包含了f1系列芯片<strong>初始化的头文件</strong>）<br><code>CMSIS/Device/Source</code>:<br>包含了f1系列芯片初始化的c文件。同时指明了项目名：Templates&#x2F;<br>我们使用arm里面的<strong>startup启动汇编文件</strong>。</p><h4 id="2-1-1-2-HAL"><a href="#2-1-1-2-HAL" class="headerlink" title="2.1.1.2 HAL"></a>2.1.1.2 HAL</h4><p><img src="/../images/13.6.png" alt="alt text"><br><img src="/../images/13.7.png" alt="alt text"></p><p><code>Drivers/HAL</code><br>文件夹里面包含了所有的<strong>hal驱动库</strong>，硬件抽象层，所有和硬件平台相关的都在CMSIS中定义。我们在之后的构建编译MDK中选择我们需要的驱动加入项目编译选项</p><h4 id="2-1-1-3-SYSTEM"><a href="#2-1-1-3-SYSTEM" class="headerlink" title="2.1.1.3 SYSTEM"></a>2.1.1.3 SYSTEM</h4><p><img src="/../images/13.8.png" alt="alt text"></p><p>SYSTEM 文件夹中也是存放<strong>系统功能的一些驱动库</strong>，和HAL独立开来，以表示和系统最根本的功能强相关。</p><h4 id="2-1-1-4-BSP"><a href="#2-1-1-4-BSP" class="headerlink" title="2.1.1.4 BSP"></a>2.1.1.4 BSP</h4><p>这个暂时不需要</p><h3 id="2-1-2-Middlewares"><a href="#2-1-2-Middlewares" class="headerlink" title="2.1.2 Middlewares"></a>2.1.2 Middlewares</h3><p>这个存放一些中间件，包括FreeRTOS, uORB,等协议，组件等。</p><h3 id="2-1-3-User"><a href="#2-1-3-User" class="headerlink" title="2.1.3 User"></a>2.1.3 User</h3><p>这个存放系统主程序</p><h2 id="2-2-MDK"><a href="#2-2-MDK" class="headerlink" title="2.2 MDK"></a>2.2 MDK</h2><p><strong>Keil</strong><br>这个你可以把他理解为实际需要编译的一个编译选项。<br>我们已经把全部相关的资源都准备在本地的工程根目录，我们现在在这个根目录上开发，新建了一个项目。</p><p>选择我们需要的文件加入编译选项，比如<br><strong>startup</strong>： 启动文件<br><strong>user</strong>： 这是我们的用户主程序</p><p>下面两个是我们的驱动层代码<br><strong>Driver&#x2F;SYSTEM</strong><br><strong>Driver&#x2F;HAL</strong></p><p>(硬件相关的我们在魔棒的c++配置中加入头文件索引即可直接include)<br><img src="/../images/13.9.png" alt="alt text"></p><p>最终编译文件结构为：<br><img src="/../images/13.10.png" alt="alt text"></p><p><strong>注意</strong>：<br><code>system_stm32f1xx.c</code> 里面是定义<code>SystemInit</code>函数的，这个初始化函数是在<code>start_up.s</code>中调用，所以可以将<code>system_stm32f1xx.c</code>放到<code>startup</code>文件夹中也行。</p><p>另外，<code>stm32f1xx_it.c</code>是定义回调函数的，这里面我们只将<code>SysTick</code>的回调绑定成<code>hal库的回调</code>，实际就是计数加一。我试着将他在MDK中的位置放到<code>Driver/HAL</code>中也是一样的。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 project结构</title>
+      <link href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/"/>
+      <url>/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/</url>
+      
+        <content type="html"><![CDATA[<h1 id="新建project的目录结构理解"><a href="#新建project的目录结构理解" class="headerlink" title="新建project的目录结构理解"></a>新建project的目录结构理解</h1><p><img src="/../images/14.1.png" alt="alt text"></p><h2 id="Drivers"><a href="#Drivers" class="headerlink" title="Drivers"></a>Drivers</h2><p><img src="/../images/14.2.png" alt="alt text"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>stm32 架构与定位</title>
+      <link href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/"/>
+      <url>/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/</url>
+      
+        <content type="html"><![CDATA[<ul><li><a href="#1-arm">1. ARM</a></li><li><a href="#2-stm32%E5%AE%9A%E4%B9%89">2. STM32定义</a><ul><li><a href="#21-soc%E5%92%8Ccotex%E5%86%85%E6%A0%B8%E7%9A%84%E5%85%B3%E7%B3%BB">2.1 soc和cotex内核的关系</a></li><li><a href="#22-stm32%E7%9A%84soc%E5%86%85%E9%83%A8%E5%85%B7%E4%BD%93%E8%AE%BE%E8%AE%A1%E5%85%B3%E7%B3%BB">2.2 stm32的soc内部具体设计关系</a></li></ul></li><li><a href="#3-stm32%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99">3. stm32命名规则</a></li><li><a href="#4-soc%E8%8A%AF%E7%89%87%E4%B8%BB%E8%A6%81%E5%85%B3%E5%BF%83%E7%9A%84%E5%8F%82%E6%95%B0">4. soc芯片主要关心的参数</a></li><li><a href="#5-%E5%A4%96%E8%AE%BE%E8%B5%84%E6%BA%90">5. 外设资源</a></li><li><a href="#6-%E6%9C%AC%E4%BA%BA%E4%BD%BF%E7%94%A8%E6%9D%BF%E5%8D%A1%E5%9E%8B%E5%8F%B7">6. 本人使用板卡型号</a></li><li><a href="#7-stm32%E6%9E%B6%E6%9E%84">7. STM32架构</a><ul><li><a href="#71-soc%E6%9E%B6%E6%9E%84%E5%9B%BE">7.1 soc架构图</a></li><li><a href="#72-%E5%90%84%E9%83%A8%E5%88%86%E8%A7%A3%E9%87%8A">7.2 各部分解释</a></li></ul></li><li><a href="#8-%E5%BC%95%E8%84%9A%E5%AE%9A%E4%B9%89">8. 引脚定义</a></li><li><a href="#9-%E5%AD%98%E5%82%A8%E5%99%A8%E6%98%A0%E5%B0%84memory-map">9. 存储器映射（memory map）</a><ul><li><a href="#91-%E5%9C%B0%E5%9D%80%E6%A6%82%E5%BF%B5%E5%85%B3%E7%B3%BB">9.1 地址概念关系</a></li><li><a href="#92-%E8%BF%9B%E5%88%B6%E5%8D%95%E4%BD%8D">9.2 进制单位</a></li></ul></li></ul><h1 id="1-ARM"><a href="#1-ARM" class="headerlink" title="1. ARM"></a>1. ARM</h1><p><img src="/../images/16.1.png" alt="alt text"></p><h1 id="2-STM32定义"><a href="#2-STM32定义" class="headerlink" title="2. STM32定义"></a>2. STM32定义</h1><h2 id="2-1-soc和cotex内核的关系"><a href="#2-1-soc和cotex内核的关系" class="headerlink" title="2.1 soc和cotex内核的关系"></a>2.1 soc和cotex内核的关系</h2><p>（arm公司-&gt;芯片soc厂商：ST,TI,NXP,RK）<br><img src="/../images/16.2.png" alt="alt text"></p><h2 id="2-2-stm32的soc内部具体设计关系"><a href="#2-2-stm32的soc内部具体设计关系" class="headerlink" title="2.2 stm32的soc内部具体设计关系"></a>2.2 stm32的soc内部具体设计关系</h2><p><img src="/../images/16.3.png" alt="alt text"></p><h1 id="3-stm32命名规则"><a href="#3-stm32命名规则" class="headerlink" title="3. stm32命名规则"></a>3. stm32命名规则</h1><p><img src="/../images/16.4.png" alt="alt text"></p><h1 id="4-soc芯片主要关心的参数"><a href="#4-soc芯片主要关心的参数" class="headerlink" title="4. soc芯片主要关心的参数"></a>4. soc芯片主要关心的参数</h1><p><img src="/../images/16.5.png" alt="alt text"><br>RAM 是 运行内存（实际的存储介质是SRAM）</p><p>ROM 是 程序存储器（实际的存储介质是FLASH闪存）</p><p>如果自己要画板子，则需要了解封装</p><h1 id="5-外设资源"><a href="#5-外设资源" class="headerlink" title="5. 外设资源"></a>5. 外设资源</h1><p><img src="/../images/16.6.png" alt="alt text"></p><h1 id="6-本人使用板卡型号"><a href="#6-本人使用板卡型号" class="headerlink" title="6. 本人使用板卡型号"></a>6. 本人使用板卡型号</h1><p>板卡型号：ATK-DNF103<br>芯片型号：STM32F103ZET6</p><h1 id="7-STM32架构"><a href="#7-STM32架构" class="headerlink" title="7. STM32架构"></a>7. STM32架构</h1><h2 id="7-1-soc架构图"><a href="#7-1-soc架构图" class="headerlink" title="7.1 soc架构图"></a>7.1 soc架构图</h2><p><img src="/../images/16.7.png" alt="alt text"></p><h2 id="7-2-各部分解释"><a href="#7-2-各部分解释" class="headerlink" title="7.2 各部分解释"></a>7.2 各部分解释</h2><p><strong>Flash</strong>里面存的我们的固件，程序</p><p>Cotex-M3内核出来有三个总线</p><ol><li>Icode总线（加载程序指令）</li><li>Dcode总线（加载数据）</li><li>System总线</li></ol><p>（System总线连接其他的东西<br>比如SRAM（SRAM是存储程序运行时的变量数据）</p><p>AHB系统总线（即先进高性能总线，挂在主要的，最基本的，性能较高的外设，比如复位和时钟控制这些最基本的电路</p><p>SDIO, 之后通过桥接，接到APB1,APB2两个外设总线上。</p><p>（APB&#x3D;先进外设总线，连接一般的外设））</p><p>）</p><p>AHB总线和APB总线协议，速度，数据格式的差异，所以中间需要加两个桥接来实现数据缓存和转换。</p><p><strong>总线性能</strong>：AHB(72mHZ)&gt;APB2(72MHZ)&gt;APB1(36MHZ)</p><p>所以APB2连接的都是较为重要的外设：USART1, SPI1, TIM1, TIM8（高级定时器），ADC,EXTI..</p><p>次要的外设都分到APB1.</p><p>具体只要知道是挂载到那个总线上就行了。</p><p>左下角是DMA：DMA可以当作内核M3的小秘书，大量的数据搬运的活。（ADC转换数据的转运，无需CPU，用DMA来进行数据搬运。）所以DMA也连接到总线矩阵，和SYSTEM总线有一样的控制权。</p><h1 id="8-引脚定义"><a href="#8-引脚定义" class="headerlink" title="8. 引脚定义"></a>8. 引脚定义</h1><p>一般看完芯片的引脚定义，基本就知道芯片怎么用的了</p><h1 id="9-存储器映射（memory-map）"><a href="#9-存储器映射（memory-map）" class="headerlink" title="9. 存储器映射（memory map）"></a>9. 存储器映射（memory map）</h1><p>整个STM32， 32位，总共可以访问4GB的存储空间，我们把所有的存储器全部映射到一张表上，并给他们命名地址，就叫存储器映射。</p><p>stm32的存储器地址全部可以划分为8个block的地址。<br>Block0 : FLASH<br>Block1 : SRAM<br>Block2 : 外设<br>……<br><img src="/../images/16.8.png" alt="alt text"><br><img src="/../images/16.9.png" alt="alt text"><br><img src="/../images/16.10.png" alt="alt text"></p><p>这样我们就可以通过查表找到所要的区域的基地址和偏移，来找到对应的外设的寄存器来进行操作外设</p><p><img src="/../images/16.11.png" alt="alt text"><br>stm32官方也已经像IMX一样，给好了寄存器的映射表，里面的结构，地址都是一层层推进的，<br>我们直接拿来使用就行了，以后就无需关注具体的地址，只需要理清楚一层层地址的推进关系就行了。</p><h2 id="9-1-地址概念关系"><a href="#9-1-地址概念关系" class="headerlink" title="9.1 地址概念关系"></a>9.1 地址概念关系</h2><p>我们STM32 是32位置，他说总共可以寻址4GB的大小</p><p>0x040C 55C1 表示一个该存储器的一个地址，其指代一个byte，可以把他想象成是这一个字节的存储的的门牌号编码。</p><p>所以MCU总共可以寻址访问 0xffff ffff 个字节大小。</p><p>一个设备寄存器一般32位，即4byte。所以要占用4个存储器的字节存储块。所以偏移地址都是逐步加4个字节，也就是+ 0x0000 0004 &#x3D; 0x04<br>所以就容易看到寄存器的地址偏移：（0x00  0x04 0x08 0x0C ….）</p><h2 id="9-2-进制单位"><a href="#9-2-进制单位" class="headerlink" title="9.2 进制单位"></a>9.2 进制单位</h2><p>0xa5 一个byte &#x3D;&#x3D; 1101 0010 八位二进制数 &#x3D;&#x3D; 2^8 bit</p><p>kbyte, bit, byte, mbyte, GB 都是二进制为基础的单位<br>0xffffffff是16进制的一个数字，是一个数字</p><p>0xffff ffff 个字节byte块<br>&#x3D; 0xffff ffff byte(16进制)<br>&#x3D;2^(8+8+8+8) byte（10进制）<br>&#x3D;2^32 byte<br>&#x3D;2^22 kb<br>&#x3D;2^12 MB<br>&#x3D;2^2 GB</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> MCU </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> mcu </tag>
+            
+            <tag> stm32 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>imx6ull uboot 学习</title>
       <link href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/"/>
       <url>/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/</url>
@@ -169,75 +499,20 @@
     
     
     <entry>
-      <title>测试3</title>
-      <link href="/2025/12/03/%E6%B5%8B%E8%AF%953/"/>
-      <url>/2025/12/03/%E6%B5%8B%E8%AF%953/</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-      
-      <categories>
-          
-          <category> 测试 </category>
-          
-      </categories>
-      
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>测试2.md</title>
-      <link href="/2025/12/03/%E6%B5%8B%E8%AF%952-md/"/>
-      <url>/2025/12/03/%E6%B5%8B%E8%AF%952-md/</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-      
-      <categories>
-          
-          <category> 测试 </category>
-          
-      </categories>
-      
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>测试文档.md</title>
-      <link href="/2025/12/03/%E6%B5%8B%E8%AF%95%E6%96%87%E6%A1%A3-md/"/>
-      <url>/2025/12/03/%E6%B5%8B%E8%AF%95%E6%96%87%E6%A1%A3-md/</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-      
-      <categories>
-          
-          <category> 测试 </category>
-          
-      </categories>
-      
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>stm32-支持串口通信</title>
       <link href="/2025/12/03/stm32-%E6%94%AF%E6%8C%81%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1/"/>
       <url>/2025/12/03/stm32-%E6%94%AF%E6%8C%81%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1/</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[<h1 id="STM32-usart总结"><a href="#STM32-usart总结" class="headerlink" title="STM32 usart总结"></a>STM32 usart总结</h1><h2 id="1-架构"><a href="#1-架构" class="headerlink" title="1. 架构"></a>1. 架构</h2><p><img src="/../images/15.1.png" alt="alt text"></p><h2 id="GPIO"><a href="#GPIO" class="headerlink" title="GPIO"></a>GPIO</h2><p>IO：</p><ol><li>GPIO（通用）<ol><li>CRL&#x2F;CRH （配置寄存器）<ol><li>输入&#x2F;输出&#x2F;复用</li><li>速度</li></ol></li><li>IDR&#x2F;ODR<ol><li>输入输出数据</li></ol></li><li>BSRR<ol><li>设置输出</li></ol></li><li>BRR<ol><li>清输出</li></ol></li><li>LCKR<ol><li>锁定配置</li></ol></li></ol></li><li>AFIO（复用功能与调试配置）<ol><li>引脚重映射</li><li>外部中断配置</li></ol></li></ol><h2 id="2-usart串口协议"><a href="#2-usart串口协议" class="headerlink" title="2. usart串口协议"></a>2. usart串口协议</h2><p>全称：通用同步异步收发器</p><p>数据帧格式：</p><ol><li>起始位</li><li>数据位（8-9位）（最低有效位在前）</li><li>校验位</li><li>停止位（0.5，1.5，2个的停止位）</li></ol><p>波特率（由波特率发生装置产生）</p><p>引脚：（前两个是异步需要，后面是同步需要）</p><ol><li>TX</li><li>RX</li><li>CLK</li><li>CTS</li><li>RTS</li></ol><p>支持中断：<br><img src="/../images/15.2.png" alt="alt text"></p><h2 id="3-使用方法"><a href="#3-使用方法" class="headerlink" title="3. 使用方法"></a>3. 使用方法</h2><p>参见usart_init()</p><ol><li>配置IO复用（复用为USART1）</li><li>配置USART1寄存器，设置波特率，帧格式</li><li>设置USART1的接受中断（打开USART1的中断使能，指定缓存地址，一般串口一次刚好传1byte）</li><li>设置NVIC响应USART1的中断</li><li>编写自己的中断回调函数（内部可以实现自己的一些特定接受协议）</li></ol>]]></content>
       
       
       <categories>
           
+          <category> 学习笔记 </category>
+          
           <category> 嵌入式 </category>
           
-          <category> mcu </category>
+          <category> MCU </category>
           
       </categories>
       
@@ -306,11 +581,11 @@
       
         <tags>
             
+            <tag> 嵌入式 </tag>
+            
             <tag> rk3399 </tag>
             
             <tag> android10 </tag>
-            
-            <tag> 嵌入式 </tag>
             
         </tags>
       
