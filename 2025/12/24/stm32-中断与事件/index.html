@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="stm32中断和事件定义中断和事件是两个东西 中断是指的，cpu的中断控制器在收到中断请求后，停止当前任务，转去处理中断事件，运行中断处理函数，根据IVT中定义的函数策略，都是WEAK定义，你可以自己覆写。 事件则指的，外部的输入信号，不输入NVIC， 直接到脉冲产生模块，从而产生一个脉冲事件，这个脉冲信号会发给你想要发给的设备。   中断产生流程 外设输入端gpio产生信号（比如下降沿，上升沿）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 中断与事件">
+<meta property="og:url" content="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="stm32中断和事件定义中断和事件是两个东西 中断是指的，cpu的中断控制器在收到中断请求后，停止当前任务，转去处理中断事件，运行中断处理函数，根据IVT中定义的函数策略，都是WEAK定义，你可以自己覆写。 事件则指的，外部的输入信号，不输入NVIC， 直接到脉冲产生模块，从而产生一个脉冲事件，这个脉冲信号会发给你想要发给的设备。   中断产生流程 外设输入端gpio产生信号（比如下降沿，上升沿）">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/11.1.png">
+<meta property="og:image" content="http://example.com/images/11.2.png">
+<meta property="article:published_time" content="2025-12-24T15:14:54.000Z">
+<meta property="article:modified_time" content="2026-01-21T09:24:54.448Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/11.1.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/","path":"2025/12/24/stm32-中断与事件/","title":"stm32 中断与事件"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 中断与事件 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#stm32%E4%B8%AD%E6%96%AD%E5%92%8C%E4%BA%8B%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">stm32中断和事件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E4%BA%A7%E7%94%9F%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">中断产生流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NVIC"><span class="nav-number">1.3.</span> <span class="nav-text">NVIC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EXTI"><span class="nav-number">1.4.</span> <span class="nav-text">EXTI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%B5%81%E7%A8%8B%E6%80%9D%E8%B7%AF"><span class="nav-number">1.5.</span> <span class="nav-text">实现流程思路</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">22</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 中断与事件 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 中断与事件
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-24 23:14:54" itemprop="dateCreated datePublished" datetime="2025-12-24T23:14:54+08:00">2025-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-01-21 17:24:54" itemprop="dateModified" datetime="2026-01-21T17:24:54+08:00">2026-01-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="stm32中断和事件"><a href="#stm32中断和事件" class="headerlink" title="stm32中断和事件"></a>stm32中断和事件</h1><h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>中断和事件是两个东西</p>
+<p>中断是指的，cpu的中断控制器在收到中断请求后，停止当前任务，转去处理中断事件，运行中断处理函数，根据IVT中定义的函数策略，都是WEAK定义，你可以自己覆写。</p>
+<p>事件则指的，外部的输入信号，不输入NVIC， 直接到脉冲产生模块，从而产生一个脉冲事件，这个脉冲信号会发给你想要发给的设备。</p>
+<p><img src="/../images/11.1.png" alt="alt text"></p>
+<p><img src="/../images/11.2.png" alt="alt text"></p>
+<h2 id="中断产生流程"><a href="#中断产生流程" class="headerlink" title="中断产生流程"></a>中断产生流程</h2><ol>
+<li>外设输入端gpio产生信号（比如下降沿，上升沿）</li>
+<li>EXTI起到路由的作用，<ol>
+<li>既可以产生软件中断（内部设置软件中断寄存器把或门置1），</li>
+<li>也可以产生硬件中断（判定上升沿触发，边沿检测输出1,自动把请求挂起寄存器置1,之后只要把中断屏蔽寄存器置1开中断即可让NVIC产生中断，NVIC会通知CM3内核去按照IVT执行相应的中断处理函数）</li>
+<li>产生事件（脉冲信号，直接发给其他的设备）</li>
+</ol>
+</li>
+<li>NVIC接收到中断请求，开始通知CM3产生中断</li>
+<li>CM3保存当前堆栈，然后跳转到IVT指定的中断处理函数。</li>
+<li>EXTI4_IRQHandler中断处理函数内，清除挂起位，表面CM3已经知道并且正在处理此中断，并调用对应的回调函数来处理中断。处理完之后，再次清中断，防止多次处理。</li>
+<li>CM3恢复现场</li>
+</ol>
+<h2 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h2><p>CM3内核内部的模块，具体定义在ARM中。<br>帮助设置所有中断的优先级组，同时设置一个中断的抢占式优先级和子优先级。</p>
+<h2 id="EXTI"><a href="#EXTI" class="headerlink" title="EXTI"></a>EXTI</h2><p>可以看成是一个输入信号的路由模块，把我们输入的输入信号，帮助NVIC判断是什么方式触发，是想要软件触发还是外部硬件触发，是想要触发中断还是触发事件。</p>
+<h2 id="实现流程思路"><a href="#实现流程思路" class="headerlink" title="实现流程思路"></a>实现流程思路</h2><p>总共设置4个部分<br>输入gpio –&gt; EXTI –&gt; NVIC –&gt; 输出GPIO</p>
+<p>NVIC部分：</p>
+<ol>
+<li>设置优先级组</li>
+<li>设置抢占式优先级和子优先级</li>
+<li>使能NVIC</li>
+<li>找到IVT对应的想要的中断处理函数入口名称</li>
+</ol>
+<p>EXTI：</p>
+<ol>
+<li>设置下降沿触发</li>
+<li>关闭软件中断（可有可无）</li>
+<li>开中断（IMR）</li>
+</ol>
+<p>GPIO输入：</p>
+<ol>
+<li>设置gpio相关</li>
+<li>与EXTI绑定</li>
+</ol>
+<p>（hal_gpio库中，已经将输入GPIO和EXTI合并，可以直接像设置gpio一样选择AFIO复用EXTI输入）</p>
+<p>GPIO输出：</p>
+<ol>
+<li>重写回调函数，gpio中断的回调函数，hal库中已经写好了weak定义。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/" rel="prev" title="stm32 时钟">
+                  <i class="fa fa-angle-left"></i> stm32 时钟
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/" rel="next" title="stm32 delay实现">
+                  stm32 delay实现 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
