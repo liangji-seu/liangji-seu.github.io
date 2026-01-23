@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用    XV6 启动过程概述XV">
+    <meta name="description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用   关于文件系统 文件系统的两">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6 lab2">
 <meta property="og:url" content="http://example.com/2026/01/23/xv6-lab2/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用    XV6 启动过程概述XV">
+<meta property="og:description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用   关于文件系统 文件系统的两">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-23T01:58:17.000Z">
-<meta property="article:modified_time" content="2026-01-23T02:30:46.925Z">
+<meta property="article:modified_time" content="2026-01-23T02:42:06.062Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="OS">
 <meta property="article:tag" content="XV6">
@@ -125,7 +125,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#XV6-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">XV6 启动过程概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E7%AE%A1%E7%90%86%E5%91%98%E6%A8%A1%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E5%90%97"><span class="nav-number">2.</span> <span class="nav-text">机器模式和管理员模式有什么区别吗</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%A1%B5%E8%A1%A8%EF%BC%8C%E6%AF%8F%E4%B8%AA%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%8C%E5%86%85%E6%A0%B8%E6%A0%88%E5%8F%88%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%BB%96%E4%BB%AC%E5%9C%A8%E5%AE%9E%E9%99%85%E7%9A%84ddr-ram%E4%B8%AD%E6%98%AF%E5%A6%82%E4%BD%95%E6%8E%92%E5%B8%83%E7%9A%84"><span class="nav-number">3.</span> <span class="nav-text">进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98-DDR-RAM-%E7%9A%84%E6%95%B4%E4%BD%93%E5%B8%83%E5%B1%80"><span class="nav-number">3.1.</span> <span class="nav-text">一、物理内存(DDR RAM)的整体布局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%86%85%E6%A0%B8%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.</span> <span class="nav-text">二、内核的虚拟地址空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.1.</span> <span class="nav-text">三、用户进程的虚拟地址空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E9%A1%B5%E8%A1%A8%E7%BB%93%E6%9E%84-%E4%B8%89%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="nav-number">3.3.</span> <span class="nav-text">四、页表结构 (三级页表)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E6%A0%B8%E6%A0%88%E8%AF%A6%E8%A7%A3"><span class="nav-number">3.4.</span> <span class="nav-text">五、内核栈详解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%AE%8C%E6%95%B4%E7%9A%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E6%8E%92%E5%B8%83%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.5.</span> <span class="nav-text">六、完整的物理内存排布示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.6.</span> <span class="nav-text">七、关键数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E5%9B%BE%E8%A7%A3%EF%BC%9A%E4%B8%80%E6%AC%A1%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E7%9A%84%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8"><span class="nav-number">3.7.</span> <span class="nav-text">八、图解：一次系统调用的内存使用</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#XV6-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">XV6 启动过程概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E7%AE%A1%E7%90%86%E5%91%98%E6%A8%A1%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E5%90%97"><span class="nav-number">2.</span> <span class="nav-text">机器模式和管理员模式有什么区别吗</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%A1%B5%E8%A1%A8%EF%BC%8C%E6%AF%8F%E4%B8%AA%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%8C%E5%86%85%E6%A0%B8%E6%A0%88%E5%8F%88%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%BB%96%E4%BB%AC%E5%9C%A8%E5%AE%9E%E9%99%85%E7%9A%84ddr-ram%E4%B8%AD%E6%98%AF%E5%A6%82%E4%BD%95%E6%8E%92%E5%B8%83%E7%9A%84"><span class="nav-number">3.</span> <span class="nav-text">进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98-DDR-RAM-%E7%9A%84%E6%95%B4%E4%BD%93%E5%B8%83%E5%B1%80"><span class="nav-number">3.1.</span> <span class="nav-text">一、物理内存(DDR RAM)的整体布局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%86%85%E6%A0%B8%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.</span> <span class="nav-text">二、内核的虚拟地址空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.1.</span> <span class="nav-text">三、用户进程的虚拟地址空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E9%A1%B5%E8%A1%A8%E7%BB%93%E6%9E%84-%E4%B8%89%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="nav-number">3.3.</span> <span class="nav-text">四、页表结构 (三级页表)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E6%A0%B8%E6%A0%88%E8%AF%A6%E8%A7%A3"><span class="nav-number">3.4.</span> <span class="nav-text">五、内核栈详解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%AE%8C%E6%95%B4%E7%9A%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E6%8E%92%E5%B8%83%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.5.</span> <span class="nav-text">六、完整的物理内存排布示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.6.</span> <span class="nav-text">七、关键数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E5%9B%BE%E8%A7%A3%EF%BC%9A%E4%B8%80%E6%AC%A1%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E7%9A%84%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8"><span class="nav-number">3.7.</span> <span class="nav-text">八、图解：一次系统调用的内存使用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.</span> <span class="nav-text">关于文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%A4%E5%B1%82%E5%90%AB%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text">文件系统的两层含义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%A0%E7%90%86%E8%A7%A3%E7%9A%84%E6%B5%81%E7%A8%8B%E5%9F%BA%E6%9C%AC%E6%AD%A3%E7%A1%AE"><span class="nav-number">4.2.</span> <span class="nav-text">你理解的流程基本正确</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E7%B1%BB%E6%AF%94"><span class="nav-number">4.3.</span> <span class="nav-text">一个类比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E5%85%B3%E4%BA%8E%E7%BC%93%E5%AD%98"><span class="nav-number">4.4.</span> <span class="nav-text">补充：关于缓存</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -219,7 +219,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2026-01-23 09:58:17 / 修改时间：10:30:46" itemprop="dateCreated datePublished" datetime="2026-01-23T09:58:17+08:00">2026-01-23</time>
+      <time title="创建时间：2026-01-23 09:58:17 / 修改时间：10:42:06" itemprop="dateCreated datePublished" datetime="2026-01-23T09:58:17+08:00">2026-01-23</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -262,6 +262,13 @@
 <li><a href="#%E5%85%AD%E5%AE%8C%E6%95%B4%E7%9A%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E6%8E%92%E5%B8%83%E7%A4%BA%E4%BE%8B">六、完整的物理内存排布示例</a></li>
 <li><a href="#%E4%B8%83%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84">七、关键数据结构</a></li>
 <li><a href="#%E5%85%AB%E5%9B%BE%E8%A7%A3%E4%B8%80%E6%AC%A1%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E7%9A%84%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8">八、图解：一次系统调用的内存使用</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%B3%E4%BA%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F">关于文件系统</a><ul>
+<li><a href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%A4%E5%B1%82%E5%90%AB%E4%B9%89">文件系统的两层含义</a></li>
+<li><a href="#%E4%BD%A0%E7%90%86%E8%A7%A3%E7%9A%84%E6%B5%81%E7%A8%8B%E5%9F%BA%E6%9C%AC%E6%AD%A3%E7%A1%AE">你理解的流程基本正确</a></li>
+<li><a href="#%E4%B8%80%E4%B8%AA%E7%B1%BB%E6%AF%94">一个类比</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85%E5%85%B3%E4%BA%8E%E7%BC%93%E5%AD%98">补充：关于缓存</a></li>
 </ul>
 </li>
 </ul>
@@ -359,6 +366,26 @@
 <li>每个进程有独立的虚拟地址空间，互不干扰；</li>
 <li>用户态和内核态使用不同的栈，保证安全。</li>
 </ul>
+<h1 id="关于文件系统"><a href="#关于文件系统" class="headerlink" title="关于文件系统"></a>关于文件系统</h1><h2 id="文件系统的两层含义"><a href="#文件系统的两层含义" class="headerlink" title="文件系统的两层含义"></a>文件系统的两层含义</h2><p><strong>1. 文件系统代码（在内核中）</strong></p>
+<p>文件系统的实现代码确实在内核代码段里。在 xv6 中主要是这些文件：</p>
+<ul>
+<li><code>fs.c</code> - 文件系统核心逻辑</li>
+<li><code>bio.c</code> - 块缓存层</li>
+<li><code>log.c</code> - 日志层</li>
+</ul>
+<p>这些代码在<strong>内核启动后就加载到 RAM 中</strong>，作为<strong>内核的一部分</strong>运行。</p>
+<p><strong>2. 文件系统结构（在磁盘上）</strong><br>磁盘上按特定格式组织的数据结构：</p>
+<p><code>磁盘布局</code>:</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">+-------+-------+-------+--------+--------+--------+</span><br><span class="line">| boot  | super | <span class="built_in">log</span>   | inode  | bitmap | data   |</span><br><span class="line">| block | block | blocks| blocks | blocks | blocks |</span><br><span class="line">+-------+-------+-------+--------+--------+--------+</span><br></pre></td></tr></table></figure>
+<p>这是持久化存储的数据，不是代码。</p>
+<h2 id="你理解的流程基本正确"><a href="#你理解的流程基本正确" class="headerlink" title="你理解的流程基本正确"></a>你理解的流程基本正确</h2><p>当执行 <code>ls</code> 程序时：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">1.</span> shell 调用 exec(<span class="string">&quot;ls&quot;</span>, ...)</span><br><span class="line">          ↓</span><br><span class="line"><span class="number">2.</span> 内核的文件系统代码（在RAM中）解析路径 <span class="string">&quot;/bin/ls&quot;</span></span><br><span class="line">          ↓</span><br><span class="line"><span class="number">3.</span> 查找 inode，获取文件在磁盘上的位置</span><br><span class="line">          ↓</span><br><span class="line"><span class="number">4.</span> 通过磁盘驱动读取 ls 的二进制到 RAM</span><br><span class="line">          ↓</span><br><span class="line"><span class="number">5.</span> 创建新进程，设置页表，跳转执行</span><br></pre></td></tr></table></figure>
+<h2 id="一个类比"><a href="#一个类比" class="headerlink" title="一个类比"></a>一个类比</h2><p>可以这样理解：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">概念	类比</span><br><span class="line">文件系统代码	图书管理员（知道如何查找书籍）</span><br><span class="line">磁盘上的文件系统结构	图书馆的索引卡片系统</span><br><span class="line">磁盘上的文件数据	实际的书籍</span><br></pre></td></tr></table></figure>
+<p>图书管理员（代码）使用索引系统（磁盘结构）来定位和取出书籍（文件数据）。</p>
+<h2 id="补充：关于缓存"><a href="#补充：关于缓存" class="headerlink" title="补充：关于缓存"></a>补充：关于缓存</h2><p>你提到”先到 RAM 中找”——xv6 确实有 buffer cache（<code>bio.c</code>），会缓存最近访问的磁盘块。但这是块级别的缓存，不是文件级别的。流程是：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">读文件 → 检查 buffer cache → 命中则直接返回</span><br><span class="line">                          → 未命中则从磁盘读取并缓存</span><br></pre></td></tr></table></figure>
+<p>所以你的理解方向是对的，只是缓存的粒度是磁盘块而不是整个文件。</p>
 
     </div>
 
