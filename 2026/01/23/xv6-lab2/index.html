@@ -27,17 +27,13 @@
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用    XV6 启动过程概述XV">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/18.1.png">
-<meta property="og:image" content="http://example.com/images/18.2.png">
-<meta property="og:image" content="http://example.com/images/18.3.png">
 <meta property="article:published_time" content="2026-01-23T01:58:17.000Z">
-<meta property="article:modified_time" content="2026-01-23T02:17:48.883Z">
+<meta property="article:modified_time" content="2026-01-23T02:30:46.925Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="OS">
 <meta property="article:tag" content="XV6">
 <meta property="article:tag" content="嵌入式">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/18.1.png">
 
 
 <link rel="canonical" href="http://example.com/2026/01/23/xv6-lab2/">
@@ -223,7 +219,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2026-01-23 09:58:17 / 修改时间：10:17:48" itemprop="dateCreated datePublished" datetime="2026-01-23T09:58:17+08:00">2026-01-23</time>
+      <time title="创建时间：2026-01-23 09:58:17 / 修改时间：10:30:46" itemprop="dateCreated datePublished" datetime="2026-01-23T09:58:17+08:00">2026-01-23</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -301,9 +297,10 @@
 <p>init 进程执行 <code>initcode.S</code>，调用 <code>exec(&quot;/init&quot;)</code></p>
 <p>&#x2F;init 程序打开控制台，fork出shell<br>系统启动完成，等待用户输入</p>
 <p><strong>启动流程图</strong></p>
-<p><img src="/../images/18.1.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">硬件上电 → ROM引导 → entry.S → start() → main() → scheduler()</span><br><span class="line">                                              ↓</span><br><span class="line">                                         userinit()</span><br><span class="line">                                              ↓</span><br><span class="line">                                         init进程</span><br><span class="line">                                              ↓</span><br><span class="line">                                           shell</span><br></pre></td></tr></table></figure>
 <h1 id="机器模式和管理员模式有什么区别吗"><a href="#机器模式和管理员模式有什么区别吗" class="headerlink" title="机器模式和管理员模式有什么区别吗"></a>机器模式和管理员模式有什么区别吗</h1><p>这是RISC-V架构中的<strong>特权级别设计</strong>，两者有明显区别：</p>
-<p><img src="/../images/18.2.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">RISC-V 三种特权模式</span><br><span class="line">模式	  缩写	特权级别	用途</span><br><span class="line">机器模式	M-mode	最高 (<span class="number">3</span>)	固件/引导程序</span><br><span class="line">监管模式	S-mode	中等 (<span class="number">1</span>)	操作系统内核</span><br><span class="line">用户模式	U-mode	最低 (<span class="number">0</span>)	用户程序</span><br></pre></td></tr></table></figure>
+
 <p><strong>主要区别</strong></p>
 <ol>
 <li><strong>权限范围</strong></li>
@@ -326,7 +323,7 @@
 </ol>
 <p>M-mode: 不受分页机制约束，可以访问任意物理地址<br>S-mode: 受 satp 寄存器控制的页表约束，通过虚拟地址访问内存</p>
 <p><strong>实际用途</strong></p>
-<p><img src="/../images/18.3.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│  用户程序 (U-mode)                   │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│  操作系统内核 (S-mode) - XV6运行在这里 │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│  固件/SBI (M-mode) - OpenSBI/BBL    │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│  硬件                                │</span><br><span class="line">└─────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
 <p><strong>XV6中的体现<br>XV6启动时</strong>：</p>
 <p>entry.S 和 start() 在 M-mode 运行，完成最基本的硬件配置</p>
 <p>通过 mret 指令切换到 S-mode，然后 main() 及之后的内核代码都在S-mode运行</p>
