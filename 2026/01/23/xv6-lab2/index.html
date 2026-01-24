@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用   关于文件系统 文件系统的两">
+    <meta name="description" content="XV6 启动过程概述 启动过程的一些答疑 1. 为什么 C 语言必须要有栈？机器分得清吗？ 2. _entry.S 里的栈：申请、大小与分布 3. mret 特性与 satp 的理解 4. 中断委派（Delegation）：如何做到？ 5. userinit 创建的进程：内核还是用户空间？ 6. 从管理模式（S）切换到用户模式（U）的时机     机器模式和管理员模式有什么区别吗 进程的页表，每">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6 lab2">
 <meta property="og:url" content="http://example.com/2026/01/23/xv6-lab2/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="XV6 启动过程概述 机器模式和管理员模式有什么区别吗 进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的 一、物理内存(DDR RAM)的整体布局 二、内核的虚拟地址空间 三、用户进程的虚拟地址空间   四、页表结构 (三级页表) 五、内核栈详解 六、完整的物理内存排布示例 七、关键数据结构 八、图解：一次系统调用的内存使用   关于文件系统 文件系统的两">
+<meta property="og:description" content="XV6 启动过程概述 启动过程的一些答疑 1. 为什么 C 语言必须要有栈？机器分得清吗？ 2. _entry.S 里的栈：申请、大小与分布 3. mret 特性与 satp 的理解 4. 中断委派（Delegation）：如何做到？ 5. userinit 创建的进程：内核还是用户空间？ 6. 从管理模式（S）切换到用户模式（U）的时机     机器模式和管理员模式有什么区别吗 进程的页表，每">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-01-23T01:58:17.000Z">
-<meta property="article:modified_time" content="2026-01-23T02:42:06.062Z">
+<meta property="article:modified_time" content="2026-01-24T05:36:43.051Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="OS">
 <meta property="article:tag" content="XV6">
@@ -125,7 +125,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#XV6-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">XV6 启动过程概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E7%AE%A1%E7%90%86%E5%91%98%E6%A8%A1%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E5%90%97"><span class="nav-number">2.</span> <span class="nav-text">机器模式和管理员模式有什么区别吗</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%A1%B5%E8%A1%A8%EF%BC%8C%E6%AF%8F%E4%B8%AA%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%8C%E5%86%85%E6%A0%B8%E6%A0%88%E5%8F%88%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%BB%96%E4%BB%AC%E5%9C%A8%E5%AE%9E%E9%99%85%E7%9A%84ddr-ram%E4%B8%AD%E6%98%AF%E5%A6%82%E4%BD%95%E6%8E%92%E5%B8%83%E7%9A%84"><span class="nav-number">3.</span> <span class="nav-text">进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98-DDR-RAM-%E7%9A%84%E6%95%B4%E4%BD%93%E5%B8%83%E5%B1%80"><span class="nav-number">3.1.</span> <span class="nav-text">一、物理内存(DDR RAM)的整体布局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%86%85%E6%A0%B8%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.</span> <span class="nav-text">二、内核的虚拟地址空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.1.</span> <span class="nav-text">三、用户进程的虚拟地址空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E9%A1%B5%E8%A1%A8%E7%BB%93%E6%9E%84-%E4%B8%89%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="nav-number">3.3.</span> <span class="nav-text">四、页表结构 (三级页表)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E6%A0%B8%E6%A0%88%E8%AF%A6%E8%A7%A3"><span class="nav-number">3.4.</span> <span class="nav-text">五、内核栈详解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%AE%8C%E6%95%B4%E7%9A%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E6%8E%92%E5%B8%83%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.5.</span> <span class="nav-text">六、完整的物理内存排布示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.6.</span> <span class="nav-text">七、关键数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E5%9B%BE%E8%A7%A3%EF%BC%9A%E4%B8%80%E6%AC%A1%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E7%9A%84%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8"><span class="nav-number">3.7.</span> <span class="nav-text">八、图解：一次系统调用的内存使用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.</span> <span class="nav-text">关于文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%A4%E5%B1%82%E5%90%AB%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text">文件系统的两层含义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%A0%E7%90%86%E8%A7%A3%E7%9A%84%E6%B5%81%E7%A8%8B%E5%9F%BA%E6%9C%AC%E6%AD%A3%E7%A1%AE"><span class="nav-number">4.2.</span> <span class="nav-text">你理解的流程基本正确</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E7%B1%BB%E6%AF%94"><span class="nav-number">4.3.</span> <span class="nav-text">一个类比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E5%85%B3%E4%BA%8E%E7%BC%93%E5%AD%98"><span class="nav-number">4.4.</span> <span class="nav-text">补充：关于缓存</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#XV6-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">XV6 启动过程概述</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E7%AD%94%E7%96%91"><span class="nav-number">1.1.</span> <span class="nav-text">启动过程的一些答疑</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88-C-%E8%AF%AD%E8%A8%80%E5%BF%85%E9%A1%BB%E8%A6%81%E6%9C%89%E6%A0%88%EF%BC%9F%E6%9C%BA%E5%99%A8%E5%88%86%E5%BE%97%E6%B8%85%E5%90%97%EF%BC%9F"><span class="nav-number">1.1.1.</span> <span class="nav-text">1. 为什么 C 语言必须要有栈？机器分得清吗？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-entry-S-%E9%87%8C%E7%9A%84%E6%A0%88%EF%BC%9A%E7%94%B3%E8%AF%B7%E3%80%81%E5%A4%A7%E5%B0%8F%E4%B8%8E%E5%88%86%E5%B8%83"><span class="nav-number">1.1.2.</span> <span class="nav-text">2. _entry.S 里的栈：申请、大小与分布</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-mret-%E7%89%B9%E6%80%A7%E4%B8%8E-satp-%E7%9A%84%E7%90%86%E8%A7%A3"><span class="nav-number">1.1.3.</span> <span class="nav-text">3. mret 特性与 satp 的理解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%B8%AD%E6%96%AD%E5%A7%94%E6%B4%BE%EF%BC%88Delegation%EF%BC%89%EF%BC%9A%E5%A6%82%E4%BD%95%E5%81%9A%E5%88%B0%EF%BC%9F"><span class="nav-number">1.1.4.</span> <span class="nav-text">4. 中断委派（Delegation）：如何做到？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-userinit-%E5%88%9B%E5%BB%BA%E7%9A%84%E8%BF%9B%E7%A8%8B%EF%BC%9A%E5%86%85%E6%A0%B8%E8%BF%98%E6%98%AF%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%EF%BC%9F"><span class="nav-number">1.1.5.</span> <span class="nav-text">5. userinit 创建的进程：内核还是用户空间？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E4%BB%8E%E7%AE%A1%E7%90%86%E6%A8%A1%E5%BC%8F%EF%BC%88S%EF%BC%89%E5%88%87%E6%8D%A2%E5%88%B0%E7%94%A8%E6%88%B7%E6%A8%A1%E5%BC%8F%EF%BC%88U%EF%BC%89%E7%9A%84%E6%97%B6%E6%9C%BA"><span class="nav-number">1.1.6.</span> <span class="nav-text">6. 从管理模式（S）切换到用户模式（U）的时机</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E7%AE%A1%E7%90%86%E5%91%98%E6%A8%A1%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E5%90%97"><span class="nav-number">2.</span> <span class="nav-text">机器模式和管理员模式有什么区别吗</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%A1%B5%E8%A1%A8%EF%BC%8C%E6%AF%8F%E4%B8%AA%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%8C%E5%86%85%E6%A0%B8%E6%A0%88%E5%8F%88%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E4%BB%96%E4%BB%AC%E5%9C%A8%E5%AE%9E%E9%99%85%E7%9A%84ddr-ram%E4%B8%AD%E6%98%AF%E5%A6%82%E4%BD%95%E6%8E%92%E5%B8%83%E7%9A%84"><span class="nav-number">3.</span> <span class="nav-text">进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98-DDR-RAM-%E7%9A%84%E6%95%B4%E4%BD%93%E5%B8%83%E5%B1%80"><span class="nav-number">3.1.</span> <span class="nav-text">一、物理内存(DDR RAM)的整体布局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%86%85%E6%A0%B8%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.</span> <span class="nav-text">二、内核的虚拟地址空间</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">3.2.1.</span> <span class="nav-text">三、用户进程的虚拟地址空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E9%A1%B5%E8%A1%A8%E7%BB%93%E6%9E%84-%E4%B8%89%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="nav-number">3.3.</span> <span class="nav-text">四、页表结构 (三级页表)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E5%86%85%E6%A0%B8%E6%A0%88%E8%AF%A6%E8%A7%A3"><span class="nav-number">3.4.</span> <span class="nav-text">五、内核栈详解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%AE%8C%E6%95%B4%E7%9A%84%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98%E6%8E%92%E5%B8%83%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.5.</span> <span class="nav-text">六、完整的物理内存排布示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.6.</span> <span class="nav-text">七、关键数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB%E3%80%81%E5%9B%BE%E8%A7%A3%EF%BC%9A%E4%B8%80%E6%AC%A1%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E7%9A%84%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8"><span class="nav-number">3.7.</span> <span class="nav-text">八、图解：一次系统调用的内存使用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">4.</span> <span class="nav-text">关于文件系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%B8%A4%E5%B1%82%E5%90%AB%E4%B9%89"><span class="nav-number">4.1.</span> <span class="nav-text">文件系统的两层含义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%A0%E7%90%86%E8%A7%A3%E7%9A%84%E6%B5%81%E7%A8%8B%E5%9F%BA%E6%9C%AC%E6%AD%A3%E7%A1%AE"><span class="nav-number">4.2.</span> <span class="nav-text">你理解的流程基本正确</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E7%B1%BB%E6%AF%94"><span class="nav-number">4.3.</span> <span class="nav-text">一个类比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E5%85%B3%E4%BA%8E%E7%BC%93%E5%AD%98"><span class="nav-number">4.4.</span> <span class="nav-text">补充：关于缓存</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -217,9 +217,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-01-23 09:58:17 / 修改时间：10:42:06" itemprop="dateCreated datePublished" datetime="2026-01-23T09:58:17+08:00">2026-01-23</time>
+      <time title="创建时间：2026-01-23 09:58:17" itemprop="dateCreated datePublished" datetime="2026-01-23T09:58:17+08:00">2026-01-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-01-24 13:36:43" itemprop="dateModified" datetime="2026-01-24T13:36:43+08:00">2026-01-24</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -249,7 +255,18 @@
     
     
     <div class="post-body" itemprop="articleBody"><ul>
-<li><a href="#xv6-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0">XV6 启动过程概述</a></li>
+<li><a href="#xv6-%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%A6%82%E8%BF%B0">XV6 启动过程概述</a><ul>
+<li><a href="#%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E7%AD%94%E7%96%91">启动过程的一些答疑</a><ul>
+<li><a href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88-c-%E8%AF%AD%E8%A8%80%E5%BF%85%E9%A1%BB%E8%A6%81%E6%9C%89%E6%A0%88%E6%9C%BA%E5%99%A8%E5%88%86%E5%BE%97%E6%B8%85%E5%90%97">1. 为什么 C 语言必须要有栈？机器分得清吗？</a></li>
+<li><a href="#2-_entrys-%E9%87%8C%E7%9A%84%E6%A0%88%E7%94%B3%E8%AF%B7%E5%A4%A7%E5%B0%8F%E4%B8%8E%E5%88%86%E5%B8%83">2. _entry.S 里的栈：申请、大小与分布</a></li>
+<li><a href="#3-mret-%E7%89%B9%E6%80%A7%E4%B8%8E-satp-%E7%9A%84%E7%90%86%E8%A7%A3">3. mret 特性与 satp 的理解</a></li>
+<li><a href="#4-%E4%B8%AD%E6%96%AD%E5%A7%94%E6%B4%BEdelegation%E5%A6%82%E4%BD%95%E5%81%9A%E5%88%B0">4. 中断委派（Delegation）：如何做到？</a></li>
+<li><a href="#5-userinit-%E5%88%9B%E5%BB%BA%E7%9A%84%E8%BF%9B%E7%A8%8B%E5%86%85%E6%A0%B8%E8%BF%98%E6%98%AF%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4">5. userinit 创建的进程：内核还是用户空间？</a></li>
+<li><a href="#6-%E4%BB%8E%E7%AE%A1%E7%90%86%E6%A8%A1%E5%BC%8Fs%E5%88%87%E6%8D%A2%E5%88%B0%E7%94%A8%E6%88%B7%E6%A8%A1%E5%BC%8Fu%E7%9A%84%E6%97%B6%E6%9C%BA">6. 从管理模式（S）切换到用户模式（U）的时机</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#%E6%9C%BA%E5%99%A8%E6%A8%A1%E5%BC%8F%E5%92%8C%E7%AE%A1%E7%90%86%E5%91%98%E6%A8%A1%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%E5%90%97">机器模式和管理员模式有什么区别吗</a></li>
 <li><a href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%A1%B5%E8%A1%A8%E6%AF%8F%E4%B8%AA%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%86%85%E6%A0%B8%E6%A0%88%E5%8F%88%E6%98%AF%E4%BB%80%E4%B9%88%E4%BB%96%E4%BB%AC%E5%9C%A8%E5%AE%9E%E9%99%85%E7%9A%84ddr-ram%E4%B8%AD%E6%98%AF%E5%A6%82%E4%BD%95%E6%8E%92%E5%B8%83%E7%9A%84">进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的</a><ul>
 <li><a href="#%E4%B8%80%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98ddr-ram%E7%9A%84%E6%95%B4%E4%BD%93%E5%B8%83%E5%B1%80">一、物理内存(DDR RAM)的整体布局</a></li>
@@ -305,6 +322,91 @@
 <p>&#x2F;init 程序打开控制台，fork出shell<br>系统启动完成，等待用户输入</p>
 <p><strong>启动流程图</strong></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">硬件上电 → ROM引导 → entry.S → start() → main() → scheduler()</span><br><span class="line">                                              ↓</span><br><span class="line">                                         userinit()</span><br><span class="line">                                              ↓</span><br><span class="line">                                         init进程</span><br><span class="line">                                              ↓</span><br><span class="line">                                           shell</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动过程的一些答疑"><a href="#启动过程的一些答疑" class="headerlink" title="启动过程的一些答疑"></a>启动过程的一些答疑</h2><h3 id="1-为什么-C-语言必须要有栈？机器分得清吗？"><a href="#1-为什么-C-语言必须要有栈？机器分得清吗？" class="headerlink" title="1. 为什么 C 语言必须要有栈？机器分得清吗？"></a>1. 为什么 C 语言必须要有栈？机器分得清吗？</h3><p><strong>机器确实分不清</strong>。</p>
+<p>你说的没错，无论是 C 还是汇编，最后都是二进制指令。<br><strong>机器只负责执行 add、ld（加载）、st（存储）等指令</strong>。</p>
+<p><strong>汇编不需要栈吗？</strong>：并非绝对。</p>
+<p>汇编可以完全不用栈（如果你只用寄存器完成所有逻辑），但<strong>一旦你需要函数调用（保存返回地址）或局部变量过多</strong>寄存器放不下，汇编也得手动操作栈。</p>
+<p>C 语言为什么必须有？：<strong>C 语言的执行模型是基于堆栈的</strong>。</p>
+<p><strong>函数嵌套</strong>与递归：当你调用 funcA 时，机器<strong>需要记住从哪里跳回来的</strong>。这个返回地址必须存起来，<strong>最方便的地方就是栈</strong>。</p>
+<p><strong>局部变量</strong>：每个函数内部定义的变量，其生命周期仅在函数内。C 编译器（如 <strong>GCC）会将这些变量分配在 sp（栈指针）寄存器所指向的内存空间</strong>。</p>
+<blockquote>
+<p>结论：如果 _entry.S 不给 sp 寄存器赋值一个有效的内存地址，C 代码里的第一行函数调用或变量声明就会导致程序往一个随机的地址写数据，直接导致系统崩溃。</p>
+</blockquote>
+<h3 id="2-entry-S-里的栈：申请、大小与分布"><a href="#2-entry-S-里的栈：申请、大小与分布" class="headerlink" title="2. _entry.S 里的栈：申请、大小与分布"></a>2. _entry.S 里的栈：申请、大小与分布</h3><ul>
+<li><p><strong>申请标准与大小</strong>：在 kernel&#x2F;start.c 中，xv6 声明了 char stack0[4096 * NCPU]。</p>
+<ul>
+<li><p>大小：<strong>每个 CPU 核心（Hart）分配 4096 字节（4KB）</strong>。这在内核启动初期完全够用，因为此时没有复杂的深度递归。</p>
+</li>
+<li><p>位置：它是<strong>内核数据段的一部分</strong>。当引导加载程序将 kernel 固件拷贝到 0x80000000 时，这个 stack0 数组也就随之存在于内存中了。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>内存分布</strong>： 由于 <strong>RISC-V 的栈是向下增长</strong>的（从高地址向低地址跑），_entry.S 的逻辑如下：</p>
+<ul>
+<li><p>获取当前 CPU 的编号（0, 1, 2…）。</p>
+</li>
+<li><p>计算地址：sp &#x3D; stack0 + (hartid + 1) * 4096。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>存在多久</strong>？：这个 stack0 在内核生命周期内一直存在。但要注意：一旦系统进入多进程调度阶段，每个用户进程都会有自己独立的 内核栈（kstack），stack0 主要用于系统启动和某些特定的中断处理。</p>
+</li>
+</ul>
+<h3 id="3-mret-特性与-satp-的理解"><a href="#3-mret-特性与-satp-的理解" class="headerlink" title="3. mret 特性与 satp 的理解"></a>3. mret 特性与 satp 的理解</h3><p>你的理解基本完全正确，补充几个技术细节：</p>
+<ul>
+<li><p><strong>mret指令</strong>：它是一个<strong>硬件指令</strong>，操作是：</p>
+<ul>
+<li><p>将特权级切换为 mstatus 中记录的模式（xv6 设置为 S 模式）。</p>
+</li>
+<li><p>将 PC 指针跳转到 mepc 寄存器的值。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>satp寄存器</strong> (Supervisor Address Translation and Protection)：</p>
+<ul>
+<li><p>它就是 MMU 的开关和控制中心。</p>
+</li>
+<li><p>当 satp &#x3D; 0 时，禁用页表&#x2F;MMU，此时 CPU 使用的是物理地址。</p>
+</li>
+<li><p>xv6 在 start 函数里关闭它是为了确保进入 main 时，内存访问是简单直接的，直到 main 后期手动初始化页表并再次开启它</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-中断委派（Delegation）：如何做到？"><a href="#4-中断委派（Delegation）：如何做到？" class="headerlink" title="4. 中断委派（Delegation）：如何做到？"></a>4. 中断委派（Delegation）：如何做到？</h3><p>在 RISC-V 中，<strong>默认情况下，所有异常和中断</strong>都会跳转到<strong>机器模式</strong>（M-Mode）处理。但内核通常运行在 管理模式（S-Mode），<strong>如果每次时钟中断都要先跳进 M 模式再转手给 S 模式，太慢了</strong>。</p>
+<ul>
+<li><p><strong>怎么做到</strong>？：通过设置两个寄存器：<strong>medeleg</strong> (Machine Exception Delegation) 和 <strong>mideleg</strong> (Machine Interrupt Delegation)。</p>
+</li>
+<li><p><strong>原理</strong>：你只需要往这些寄存器的特定位<strong>写 1</strong>。</p>
+<ul>
+<li>比如，将“时钟中断”对应的位置 1，硬件就会在发生中断时，直接修改 S 模式的状态寄存器并跳转到 S 模式的中断向量表，完全绕过 M 模式。</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-userinit-创建的进程：内核还是用户空间？"><a href="#5-userinit-创建的进程：内核还是用户空间？" class="headerlink" title="5. userinit 创建的进程：内核还是用户空间？"></a>5. userinit 创建的进程：内核还是用户空间？</h3><p>这是一个很好的哲学问题。此时该进程处于 “胚胎期”：</p>
+<ul>
+<li><p><strong>内存空间</strong>：它占用的物理内存在内核初始化时划拨，但其内部存放的是用户代码（initcode）。所以从内容上看，它属于用户空间。</p>
+</li>
+<li><p><strong>当前特权级</strong>：此时 CPU 正在执行 userinit() 函数，依然处于 管理模式（S-Mode）。内核正在“通过上帝视角”为第一个进程配置环境。</p>
+</li>
+</ul>
+<blockquote>
+<p>结论：它是一个拥有用户空间内容、但尚未被剥离内核控制权的实体。</p>
+</blockquote>
+<h3 id="6-从管理模式（S）切换到用户模式（U）的时机"><a href="#6-从管理模式（S）切换到用户模式（U）的时机" class="headerlink" title="6. 从管理模式（S）切换到用户模式（U）的时机"></a>6. 从管理模式（S）切换到用户模式（U）的时机</h3><p>在 <strong>main.c 的最后</strong>，你会看到 scheduler()（<strong>调度器</strong>）被调用。</p>
+<ul>
+<li><p><strong>调度</strong>：调度器选中 userinit 创建的这个进程。</p>
+</li>
+<li><p><strong>恢复上下文</strong>：调度器会调用 swtch 进入该进程的内核态。</p>
+</li>
+<li><p><strong>关键指令 sret</strong>：在 kernel&#x2F;trampoline.S 中，内核会执行 <strong>sret 指令</strong>。</p>
+<ul>
+<li>sret 与 mret 类似：它会把特权级<strong>从 S 模式降级到 用户模式（U-Mode）</strong>，并根据 <strong>sepc 寄存器</strong>的值跳转到用户代码的第一行（即 initcode 的起点）。</li>
+</ul>
+</li>
+</ul>
+<p>总结：切换时机就在调度器第一次“恢复”该进程执行的那一刻。</p>
 <h1 id="机器模式和管理员模式有什么区别吗"><a href="#机器模式和管理员模式有什么区别吗" class="headerlink" title="机器模式和管理员模式有什么区别吗"></a>机器模式和管理员模式有什么区别吗</h1><p>这是RISC-V架构中的<strong>特权级别设计</strong>，两者有明显区别：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">RISC-V 三种特权模式</span><br><span class="line">模式	  缩写	特权级别	用途</span><br><span class="line">机器模式	M-mode	最高 (<span class="number">3</span>)	固件/引导程序</span><br><span class="line">监管模式	S-mode	中等 (<span class="number">1</span>)	操作系统内核</span><br><span class="line">用户模式	U-mode	最低 (<span class="number">0</span>)	用户程序</span><br></pre></td></tr></table></figure>
 
