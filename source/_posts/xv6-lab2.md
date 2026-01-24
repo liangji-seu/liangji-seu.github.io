@@ -13,6 +13,11 @@ tags: [嵌入式, OS, XV6]
     - [5. userinit 创建的进程：内核还是用户空间？](#5-userinit-创建的进程内核还是用户空间)
     - [6. 从管理模式（S）切换到用户模式（U）的时机](#6-从管理模式s切换到用户模式u的时机)
     - [7. 什么是 Page（页）？](#7-什么是-page页)
+    - [8. initcode.S是如何实现第一个exec系统调用的](#8-initcodes是如何实现第一个exec系统调用的)
+      - [1. 触发者：用户态执行 ecall 指令](#1-触发者用户态执行-ecall-指令)
+      - [2. 第一站：kernel/trampoline.S (汇编入口)](#2-第一站kerneltrampolines-汇编入口)
+      - [3. 第二站：kernel/trap.c (C 语言逻辑)](#3-第二站kerneltrapc-c-语言逻辑)
+      - [4. 终点站：kernel/syscall.c (查表执行)](#4-终点站kernelsyscallc-查表执行)
 - [机器模式和管理员模式有什么区别吗](#机器模式和管理员模式有什么区别吗)
 - [进程的页表，每个进程的内存结构，内核栈又是什么，他们在实际的ddr ram中是如何排布的](#进程的页表每个进程的内存结构内核栈又是什么他们在实际的ddr-ram中是如何排布的)
   - [一、物理内存(DDR RAM)的整体布局](#一物理内存ddr-ram的整体布局)
@@ -199,6 +204,87 @@ C 语言为什么必须有？：**C 语言的执行模型是基于堆栈的**。
 - **作用**：内核不会按“字节”来给进程分配内存，而是按“页”来分配。
 
 - **联系**：你在代码中看到的 PGSIZE 宏就代表 4096。p->sz = PGSIZE 意味着第一个进程目前只占用了一个页的虚拟内存空间。
+
+
+### 8. initcode.S是如何实现第一个exec系统调用的
+`initcode.S`
+``` sh
+# exec(init, argv)
+.globl start
+start:
+        la a0, init
+        la a1, argv
+        li a7, SYS_exec
+        ecall
+```
+> ecall 根本不是一个软件实现的函数，而是一条 RISC-V 硬件指令
+
+我们可以把这个过程拆解为**四个关键步骤**：
+
+#### 1. 触发者：用户态执行 ecall 指令
+当用户程序（比如 initcode.S 或你写的 C 程序）需要系统服务时，它会将系统调用号（如 SYS_exec）放入 a7 寄存器，然后执行 ecall。
+
+- 硬件反应：一旦 CPU 执行了 ecall 指令，硬件会自动完成以下动作：
+
+  - 将当前特权级从 用户模式 (U-mode) 提升到 **管理模式** (S-mode)。
+
+  - 把当前的程序计数器（PC）保存在 **sepc** 寄存器中（为了以后能跳回来）。
+
+  - 跳转到 **stvec** (Supervisor Trap Vector Base Address Register) 寄存器所**指向的地址**。
+
+#### 2. 第一站：kernel/trampoline.S (汇编入口)
+内核在启动时，已经预先把 stvec 寄存器的值设置好了，它指向内核中一段叫 uservec 的汇编代码。
+
+- **代码位置**：kernel/trampoline.S 里的 uservec 标号处。
+
+- **作用**：因为刚从用户态跳进来，寄存器里全是用户的数据。这段汇编代码负责**把用户的所有寄存器保存到该进程的 trapframe 页面中**，并**切换到内核栈**，然后调用 C 函数 usertrap()。
+
+
+
+#### 3. 第二站：kernel/trap.c (C 语言逻辑)
+现在，我们终于从汇编进入了 C 语言的世界。
+
+- 代码位置：`kernel/trap.c` 里的 `usertrap(void)` 函数。
+
+- 关键逻辑：
+
+```c
+if(r_scause() == 8){ // 8 代表这是来自 U-mode 的 ecall
+  if(p->killed) exit(-1);
+  p->trapframe->epc += 4; // 将返回地址加4，跳过ecall指令本身，否则回来又执行一遍ecall
+  intr_on();
+  syscall(); // 真正的系统调用分发函数
+}
+```
+内核通过读取 `scause` 寄存器发现：哦！是因为执行了 ecall 才进来的。
+
+#### 4. 终点站：kernel/syscall.c (查表执行)
+`usertrap` 会调用 `syscall()` 函数。
+
+- **代码位置**：`kernel/syscall.c` 里的 `syscall(void)` 函数。
+
+- **逻辑**：
+
+  - 它从该进程的 `trapframe->a7` 中取出刚才用户放进去的系统调用号。
+
+  - 它把这个数字作为索引，去查一个叫 `syscalls` 的函数指针数组。
+
+  - **如果数字有效**，就调用对应的**内核函数**（比如 sys_exec）。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 机器模式和管理员模式有什么区别吗
