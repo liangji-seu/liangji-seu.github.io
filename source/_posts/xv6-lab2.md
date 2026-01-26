@@ -33,6 +33,9 @@ tags: [嵌入式, OS, XV6]
   - [你理解的流程基本正确](#你理解的流程基本正确)
   - [一个类比](#一个类比)
   - [补充：关于缓存](#补充关于缓存)
+  - [lab2实验](#lab2实验)
+    - [trace](#trace)
+    - [sysinfo](#sysinfo)
 
 # XV6 启动过程概述
 XV6是MIT开发的一个教学用操作系统，基于Unix V6重新实现，运行在RISC-V架构上。其启动过程如下：
@@ -642,3 +645,511 @@ struct proc {
                           → 未命中则从磁盘读取并缓存
 ```
 所以你的理解方向是对的，只是缓存的粒度是磁盘块而不是整个文件。
+
+
+
+
+## lab2实验
+
+![alt text](../images/18.5.png)
+
+### trace
+``` c
+From 566bf1c4d43572f19676aaf6ffd9e4d3df77007b Mon Sep 17 00:00:00 2001
+From: liangji-seu <15262272286@163.com>
+Date: Mon, 26 Jan 2026 15:48:13 +0800
+Subject: [PATCH 1/2] feat: support syscall trace
+
+---
+ Makefile         |  1 +
+ kernel/defs.h    |  3 +++
+ kernel/printf.c  | 57 ++++++++++++++++++++++++++++++++++++++++++
+ kernel/proc.c    |  3 +++
+ kernel/proc.h    |  4 +++
+ kernel/syscall.c | 64 ++++++++++++++++++++++++++++++++++++++++++++++++
+ kernel/syscall.h |  1 +
+ kernel/sysproc.c | 16 ++++++++++++
+ user/user.h      |  1 +
+ user/usys.pl     |  1 +
+ 10 files changed, 151 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index c926b7e..6647da5 100644
+--- a/Makefile
++++ b/Makefile
+@@ -193,6 +193,7 @@ UPROGS=\
+ 	$U/_grind\
+ 	$U/_wc\
+ 	$U/_zombie\
++	$U/_trace\
+ 
+ 
+ 
+diff --git a/kernel/defs.h b/kernel/defs.h
+index 3564db4..b8a90bf 100644
+--- a/kernel/defs.h
++++ b/kernel/defs.h
+@@ -80,6 +80,9 @@ int             pipewrite(struct pipe*, uint64, int);
+ void            printf(char*, ...);
+ void            panic(char*) __attribute__((noreturn));
+ void            printfinit(void);
++void            print_binary(uint64, int);
++void            print_binary64(uint64);
++void            print_binary32(int);
+ 
+ // proc.c
+ int             cpuid(void);
+diff --git a/kernel/printf.c b/kernel/printf.c
+index e1347de..ecc8165 100644
+--- a/kernel/printf.c
++++ b/kernel/printf.c
+@@ -132,3 +132,60 @@ printfinit(void)
+   initlock(&pr.lock, "pr");
+   pr.locking = 1;
+ }
++
++// 打印 uint64 类型数值的二进制形式
++// num: 要打印的数值
++// bits: 要显示的二进制位数（如32表示显示低32位，64表示显示全部）
++void print_binary(uint64 num, int bits) {
++  // 边界检查：bits 范围 1~64
++  if (bits < 1) bits = 1;
++  if (bits > 64) bits = 64;
++
++  // 从最高位开始逐位检查
++  for (int i = bits - 1; i >= 0; i--) {
++    // 按位与操作：检查第i位是否为1
++    uint64 mask = 1UL << i;
++    if (num & mask) {
++      printf("1");
++    } else {
++      printf("0");
++    }
++    // 每8位加一个空格，提升可读性（可选）
++    if (i % 8 == 0 && i != 0) {
++      printf(" ");
++    }
++  }
++  // 换行（可选，根据需要调整）
++  printf("\n");
++}
++
++// 简化版：默认打印64位二进制
++void print_binary64(uint64 num) {
++  print_binary(num, 64);
++}
++
++// 专门打印int类型的32位二进制形式
++// num: 要打印的int型数值（xv6中int为32位）
++// 输出格式：每8位加空格分隔，提升可读性
++void print_binary32(int num) {
++  // 转换为uint32_t避免负数符号位干扰（保证按位打印的准确性）
++  uint32 val = (uint32)num;
++  
++  // 从第31位（最高位）到第0位（最低位）逐位打印
++  for (int i = 31; i >= 0; i--) {
++    // 生成对应位的掩码（1左移i位）
++    uint32 mask = 1U << i;
++    // 按位与判断该位是1还是0
++    if (val & mask) {
++      printf("1");
++    } else {
++      printf("0");
++    }
++    // 每8位添加一个空格，方便阅读（如 10000000 00000000 00000000 00100000）
++    if (i % 8 == 0 && i != 0) {
++      printf(" ");
++    }
++  }
++  // 打印换行，使输出更整洁
++  printf("\n");
++}
+diff --git a/kernel/proc.c b/kernel/proc.c
+index 22e7ce4..83a84e7 100644
+--- a/kernel/proc.c
++++ b/kernel/proc.c
+@@ -305,6 +305,9 @@ fork(void)
+ 
+   pid = np->pid;
+ 
++  // seu liangji add, copy trace_mask from parent to child process
++  np->trace_mask = p->trace_mask;
++
+   release(&np->lock);
+ 
+   acquire(&wait_lock);
+diff --git a/kernel/proc.h b/kernel/proc.h
+index f6ca8b7..b91b487 100644
+--- a/kernel/proc.h
++++ b/kernel/proc.h
+@@ -105,4 +105,8 @@ struct proc {
+   struct file *ofile[NOFILE];  // Open files
+   struct inode *cwd;           // Current directory
+   char name[16];               // Process name (debugging)
++
++  // seu liangji add start
++  int trace_mask;
++  // seu liangji add end
+ };
+diff --git a/kernel/syscall.c b/kernel/syscall.c
+index c1b3670..6ac8910 100644
+--- a/kernel/syscall.c
++++ b/kernel/syscall.c
+@@ -104,6 +104,7 @@ extern uint64 sys_unlink(void);
+ extern uint64 sys_wait(void);
+ extern uint64 sys_write(void);
+ extern uint64 sys_uptime(void);
++extern uint64 sys_trace(void);
+ 
+ static uint64 (*syscalls[])(void) = {
+ [SYS_fork]    sys_fork,
+@@ -127,13 +128,55 @@ static uint64 (*syscalls[])(void) = {
+ [SYS_link]    sys_link,
+ [SYS_mkdir]   sys_mkdir,
+ [SYS_close]   sys_close,
++[SYS_trace]   sys_trace,
+ };
+ 
++// 系统调用名称数组（索引对应系统调用编号）
++static const char* syscall_names[] = {
++    "",          // 0: 无对应系统调用
++    "fork",      // 1
++    "exit",      // 2
++    "wait",      // 3
++    "pipe",      // 4
++    "read",      // 5
++    "kill",      // 6
++    "exec",      // 7
++    "fstat",     // 8
++    "chdir",     // 9
++    "dup",       // 10
++    "getpid",    // 11
++    "sbrk",      // 12
++    "sleep",     // 13
++    "uptime",    // 14
++    "open",      // 15
++    "write",     // 16
++    "mknod",     // 17
++    "unlink",    // 18
++    "link",      // 19
++    "mkdir",     // 20
++    "close",     // 21
++    "trace"      // 22
++};
++
++void get_syscall_name(int id, char* buf)
++{
++    // 清空缓冲区
++    *buf = '\0';
++    
++    // 边界检查：确保id在有效范围内
++    if (id >= 1 && id < sizeof(syscall_names)/sizeof(syscall_names[0])) {
++        strncpy(buf, syscall_names[id], strlen(syscall_names[id]));
++    } else {
++        strncpy(buf, "unknown", strlen("unknown"));
++    }
++}
++
+ void
+ syscall(void)
+ {
+   int num;
+   struct proc *p = myproc();
++  //printf("%d: syscall\n", p->pid);
+ 
+   num = p->trapframe->a7;
+   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+@@ -143,4 +186,25 @@ syscall(void)
+             p->pid, p->name, num);
+     p->trapframe->a0 = -1;
+   }
++
++  // seu liangji add, trace info print
++  int temp = p->trace_mask;
++  char syscall_name[32];
++  memset(syscall_name, 0, sizeof(syscall_name));
++  get_syscall_name(num, syscall_name);
++
++  /*
++  if(temp != 0)
++  {
++      printf("temp = %d,    num = %d\n", temp, num);
++      print_binary32(temp);
++      print_binary32(1<<num);
++      printf("%d\n", (temp & (1<<num)));
++  }
++  */
++
++  if((temp & (1<<num))!=0)
++  {
++      printf("%d: syscall %s -> %d\n", p->pid, syscall_name, p->trapframe->a0);
++  }
+ }
+diff --git a/kernel/syscall.h b/kernel/syscall.h
+index bc5f356..cc112b9 100644
+--- a/kernel/syscall.h
++++ b/kernel/syscall.h
+@@ -20,3 +20,4 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
++#define SYS_trace  22
+diff --git a/kernel/sysproc.c b/kernel/sysproc.c
+index e8bcda9..095982f 100644
+--- a/kernel/sysproc.c
++++ b/kernel/sysproc.c
+@@ -95,3 +95,19 @@ sys_uptime(void)
+   release(&tickslock);
+   return xticks;
+ }
++
++// trace
++uint64
++sys_trace(void)
++{
++    //get trace(int) int to p
++    int p;
++    if(argint(0, &p) < 0)
++        return -1;
++
++    myproc()->trace_mask = p;
++    return 0;
++
++}
++
++
+diff --git a/user/user.h b/user/user.h
+index b71ecda..fdeeefc 100644
+--- a/user/user.h
++++ b/user/user.h
+@@ -23,6 +23,7 @@ int getpid(void);
+ char* sbrk(int);
+ int sleep(int);
+ int uptime(void);
++int trace(int);
+ 
+ // ulib.c
+ int stat(const char*, struct stat*);
+diff --git a/user/usys.pl b/user/usys.pl
+index 01e426e..9c97b05 100755
+--- a/user/usys.pl
++++ b/user/usys.pl
+@@ -36,3 +36,4 @@ entry("getpid");
+ entry("sbrk");
+ entry("sleep");
+ entry("uptime");
++entry("trace");
+-- 
+2.25.1
+
+
+```
+
+
+### sysinfo
+
+> xv6 的kalloc.c中，空闲内存是通过链表（kmem.freelist） 管理的，而非连续的物理地址区间
+``` c
+From 42f4a5077d04d76130213378209d504169c9c853 Mon Sep 17 00:00:00 2001
+From: liangji-seu <15262272286@163.com>
+Date: Mon, 26 Jan 2026 18:34:18 +0800
+Subject: [PATCH 2/2] feat: support sysinfo
+
+---
+ Makefile         |  1 +
+ kernel/defs.h    |  3 +++
+ kernel/kalloc.c  | 13 +++++++++++
+ kernel/proc.c    | 15 +++++++++++++
+ kernel/syscall.c |  3 +++
+ kernel/syscall.h |  1 +
+ kernel/sysproc.c | 57 ++++++++++++++++++++++++++++++++++++++++++++++++
+ user/user.h      |  2 ++
+ user/usys.pl     |  1 +
+ 9 files changed, 96 insertions(+)
+
+diff --git a/Makefile b/Makefile
+index 6647da5..cfb5119 100644
+--- a/Makefile
++++ b/Makefile
+@@ -194,6 +194,7 @@ UPROGS=\
+ 	$U/_wc\
+ 	$U/_zombie\
+ 	$U/_trace\
++	$U/_sysinfotest\
+ 
+ 
+ 
+diff --git a/kernel/defs.h b/kernel/defs.h
+index b8a90bf..0a6f5c1 100644
+--- a/kernel/defs.h
++++ b/kernel/defs.h
+@@ -63,6 +63,7 @@ void            ramdiskrw(struct buf*);
+ void*           kalloc(void);
+ void            kfree(void *);
+ void            kinit(void);
++int             get_leave_mem(void);
+ 
+ // log.c
+ void            initlog(int, struct superblock*);
+@@ -107,6 +108,8 @@ void            yield(void);
+ int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
+ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
+ void            procdump(void);
++int             get_not_unused_proc_num(void);
++
+ 
+ // swtch.S
+ void            swtch(struct context*, struct context*);
+diff --git a/kernel/kalloc.c b/kernel/kalloc.c
+index fa6a0ac..8ac4961 100644
+--- a/kernel/kalloc.c
++++ b/kernel/kalloc.c
+@@ -80,3 +80,16 @@ kalloc(void)
+     memset((char*)r, 5, PGSIZE); // fill with junk
+   return (void*)r;
+ }
++
++int
++get_leave_mem()
++{
++    struct run *r;
++    acquire(&kmem.lock);
++    int count= 0;
++    r = kmem.freelist;
++    for(r = kmem.freelist; r; r = r->next){
++        count++;
++    }
++    release(&kmem.lock);
++    //return bytes
++    return count * 4096;
++}
+diff --git a/kernel/proc.c b/kernel/proc.c
+index 83a84e7..68a8c29 100644
+--- a/kernel/proc.c
++++ b/kernel/proc.c
+@@ -657,3 +657,18 @@ procdump(void)
+     printf("\n");
+   }
+ }
++
++int
++get_not_unused_proc_num()
++{
++    struct proc *p;
++    int num = 0;
++
++    for(p = proc; p < &proc[NPROC]; p++) {
++        if(p->state != UNUSED)
++        {
++            num++;
++        }
++    }
++    return num;
++}
+diff --git a/kernel/syscall.c b/kernel/syscall.c
+index 6ac8910..041f72a 100644
+--- a/kernel/syscall.c
++++ b/kernel/syscall.c
+@@ -105,6 +105,7 @@ extern uint64 sys_wait(void);
+ extern uint64 sys_write(void);
+ extern uint64 sys_uptime(void);
+ extern uint64 sys_trace(void);
++extern uint64 sys_sysinfo(void);
+ 
+ static uint64 (*syscalls[])(void) = {
+ [SYS_fork]    sys_fork,
+@@ -129,6 +130,7 @@ static uint64 (*syscalls[])(void) = {
+ [SYS_mkdir]   sys_mkdir,
+ [SYS_close]   sys_close,
+ [SYS_trace]   sys_trace,
++[SYS_sysinfo]   sys_sysinfo,
+ };
+ 
+ // 系统调用名称数组（索引对应系统调用编号）
+@@ -156,6 +158,7 @@ static const char* syscall_names[] = {
+     "mkdir",     // 20
+     "close",     // 21
+     "trace"      // 22
++    "sysinfo"    // 23
+ };
+ 
+ void get_syscall_name(int id, char* buf)
+diff --git a/kernel/syscall.h b/kernel/syscall.h
+index cc112b9..0dfedc7 100644
+--- a/kernel/syscall.h
++++ b/kernel/syscall.h
+@@ -21,3 +21,4 @@
+ #define SYS_mkdir  20
+ #define SYS_close  21
+ #define SYS_trace  22
++#define SYS_sysinfo 23
+diff --git a/kernel/sysproc.c b/kernel/sysproc.c
+index 095982f..fedc89c 100644
+--- a/kernel/sysproc.c
++++ b/kernel/sysproc.c
+@@ -6,6 +6,7 @@
+ #include "memlayout.h"
+ #include "spinlock.h"
+ #include "proc.h"
++#include "sysinfo.h"
+ 
+ uint64
+ sys_exit(void)
+@@ -110,4 +111,60 @@ sys_trace(void)
+ 
+ }
+ 
++//sysinfo
++uint64
++sys_sysinfo(void)
++{
++  uint64 i; // user pointer to user space sysinfo
++
++  if(argaddr(0, &i) < 0)
++    return -1;
++
++  struct sysinfo temp;
++  temp.freemem = get_leave_mem();
++  temp.nproc = get_not_unused_proc_num();
++
++  struct proc *p = myproc();
++  if(copyout(p->pagetable, i, (char *)&temp, sizeof(temp)) < 0)
++    return -1;
++
++  //
++  return 0;
++}
+ 
+diff --git a/user/user.h b/user/user.h
+index fdeeefc..6ba24e6 100644
+--- a/user/user.h
++++ b/user/user.h
+@@ -1,5 +1,6 @@
+ struct stat;
+ struct rtcdate;
++struct sysinfo;
+ 
+ // system calls
+ int fork(void);
+@@ -24,6 +25,7 @@ char* sbrk(int);
+ int sleep(int);
+ int uptime(void);
+ int trace(int);
++int sysinfo(struct sysinfo*);
+ 
+ // ulib.c
+ int stat(const char*, struct stat*);
+diff --git a/user/usys.pl b/user/usys.pl
+index 9c97b05..bc109fd 100755
+--- a/user/usys.pl
++++ b/user/usys.pl
+@@ -37,3 +37,4 @@ entry("sbrk");
+ entry("sleep");
+ entry("uptime");
+ entry("trace");
++entry("sysinfo");
+-- 
+2.25.1
+
+
+```
