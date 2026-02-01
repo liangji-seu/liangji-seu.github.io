@@ -45,3 +45,96 @@ for $inject_mixin in hexo-config('injects.mixin')
 // --------------------------------------------------
 for $inject_style in hexo-config('injects.style')
   @import $inject_style;
+
+
+
+
+
+
+
+
+
+/* ==========================================================
+   最终对齐版：VS Code 风格 (代码块与正文等宽对齐)
+   ========================================================== */
+
+// 1. 标题勋章序号体系 (1, 1.1)
+article { counter-reset: h1-count; }
+.post-body h1, .post-body h2, .post-body h3 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid #eaecef !important;
+    padding-bottom: 0.5em !important;
+    margin-top: 2.2em !important;
+    display: flex;
+    align-items: center;
+}
+.post-body h1::before, .post-body h2::before, .post-body h3::before {
+    background-color: #007acc !important;
+    color: #ffffff !important;
+    padding: 2px 10px !important;
+    border-radius: 4px !important;
+    margin-right: 12px !important;
+    font-size: 0.85em !important;
+    font-family: "Consolas", monospace;
+}
+.post-body h1 { counter-reset: h2-count; }
+.post-body h1::before { counter-increment: h1-count; content: counter(h1-count); }
+.post-body h2 { counter-reset: h3-count; }
+.post-body h2::before { counter-increment: h2-count; content: counter(h1-count) "." counter(h2-count); }
+.post-body h3::before { counter-increment: h3-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count); }
+
+// 2. 引用块 (>)：还原 VS Code 浅蓝底
+.post-body blockquote {
+    background: #eff6ff !important;    /* 浅蓝背景 */
+    border-left: 5px solid #007acc !important; /* 蓝色左边条 */
+    padding: 12px 20px !important;
+    margin: 20px 0 !important;         /* 确保与正文边缘对齐 */
+    border-radius: 0 4px 4px 0;
+}
+
+// 3. 行内代码 (``)：放大版灰底红字
+.post-body code {
+    color: #e51400 !important;         /* 鲜艳红字 */
+    background-color: #f2f2f2 !important; /* 浅灰背景 */
+    font-size: 0.95em !important;      /* 放大字体解决变小问题 */
+    font-family: "Consolas", "Monaco", monospace !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 2px 5px !important;
+    border-radius: 3px !important;
+}
+
+// 4. 核心对齐：代码区域 (.highlight) 宽度与正文等宽
+.post-body .highlight {
+    margin: 20px 0 !important;         /* 强制左右边距为0，确保与正文对齐 */
+    padding: 0 !important;
+    border: none !important;           /* 移除外框 */
+    background: #f8f8f8 !important;    /* 浅灰底色 */
+    width: 100% !important;            /* 强制宽度 100% */
+    box-sizing: border-box !important;
+}
+
+// 移除代码块内部表格可能导致的偏移
+.highlight table {
+    margin: 0 !important;
+    width: 100% !important;
+    border: none !important;
+}
+
+.highlight .code {
+    padding: 15px !important;          /* 仅在代码内部保留间距 */
+    background: #f8f8f8 !important;
+}
+
+// 5. 语法高亮：绿色注释
+.highlight .comment, .highlight .quote {
+    color: #008000 !important;         /* 强制绿色高亮 */
+    font-style: normal !important;
+}
+
+// 6. 加粗正文
+.post-body strong {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}

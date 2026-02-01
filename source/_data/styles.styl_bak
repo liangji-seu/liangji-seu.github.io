@@ -1,0 +1,44 @@
+// 1. 模拟图片中的行内高亮文字 (如 sp, s0, fp)
+code {
+    color: #c7254e !important;      // 偏红的颜色
+    background-color: #f9f2f4 !important; // 浅粉色背景
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    font-family: Consolas, Monaco, "Andale Mono", monospace;
+}
+
+// 2. 模拟图片中的“用途”块 (灰色圆角背景)
+blockquote {
+    background: #f7f7f7 !important;
+    border-left: 4px solid #ddd !important;
+    padding: 15px 20px !important;
+    margin: 20px 0 !important;
+    color: #444 !important;
+    border-radius: 8px;
+    
+    // 针对块内加粗文字
+    strong {
+        color: #d9534f; // 重点突出的红色
+    }
+}
+
+// 3. 增强标题层级感
+.post-body h2, .post-body h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-top: 35px;
+    color: #222;
+}
+
+// 4. 列表间距优化，让内容不拥挤
+.post-body ul li {
+    margin-bottom: 10px;
+}
+
+// 5. 模拟图片中的“粉色背景强调块” (如果你在MD里用了特殊的HTML标记)
+.note-highlight {
+    background-color: #fff5f5;
+    border: 1px solid #ffeded;
+    padding: 10px;
+    border-radius: 5px;
+}

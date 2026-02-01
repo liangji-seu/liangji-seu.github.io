@@ -30,6 +30,11 @@ code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
 
+
+#gemini css
+custom_file_path:
+  style: source/_data/styles.styl
+
 # Writing
 new_post_name: :title.md # File name of new posts
 default_layout: post
@@ -45,16 +50,20 @@ relative_link: false
 future: true
 syntax_highlighter: highlight.js
 highlight:
-  enable: false
-  line_number: false
-  auto_detect: false
+  enable: true
+  line_number: true
+  auto_detect: true # 开启自动检测，帮助识别语言
   tab_replace: ''
   wrap: true
-  hljs: false
+  hljs: true        # 改为 true，这样 CSS 里的 .comment 才会生效
 prismjs:
-  preprocess: true
-  line_number: true
-  tab_replace: ''
+  enable: false     # 改为 false，避免干扰
+
+
+
+
+
+  
 
 # Home page setting
 # path: Root path for your blogs index page. (default = '')
