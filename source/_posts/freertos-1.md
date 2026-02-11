@@ -1960,7 +1960,7 @@ task.c中定义
 
 ```
 
-> 关于**更新下一个任务的阻塞超时时间，以防被挂起的任务就是下一个阻塞超时的任务**的问题：
+> A. 关于**更新下一个任务的阻塞超时时间，以防被挂起的任务就是下一个阻塞超时的任务**的问题：
 先要知道：
 
 > 在 FreeRTOS 中，如果有多个任务进入了阻塞态（例如调用了 vTaskDelay），它们会被放入“延时列表（Delayed Task List）”。这个列表是按唤醒时间升序排列的。
@@ -1971,7 +1971,7 @@ task.c中定义
 >
 >`带来的好处`：在 Tick 中断里，内核只需要简单判断一下：if (xTickCount < xNextTaskUnblockTime)。如果当前时间还没到，说明列表里所有任务都没到期，中断可以立即退出。
 
-**为什么要重置？（情景模拟）**
+>**B. 为什么要重置？（情景模拟）**
 ```c
 假设现在有三个任务在延时列表中：
 
@@ -1994,7 +1994,7 @@ task.c中定义
 如果不更新会发生什么？ 当系统时间（Tick Count）到达 100 时，Tick 中断触发，内核发现 xTickCount >= xNextTaskUnblockTime，于是满心欢喜地去延时列表找任务 A，结果发现列表里第一个任务是 B（150），A 已经不见了。这意味着内核在时间点 100 做了一次无意义的唤醒检查。
 ```
 
->关于pxCurrentTCB
+>C. 关于pxCurrentTCB
 ```c
 1. 什么是 pxCurrentTCB？
 pxCurrentTCB 是 FreeRTOS 内核中最重要的全局指针，它永远指向当前正在占用 CPU 的那个任务的任务控制块（TCB）。
@@ -2004,12 +2004,439 @@ pxCurrentTCB 是 FreeRTOS 内核中最重要的全局指针，它永远指向当
 切换的基准： 调度器进行上下文切换时，本质就是把旧任务的现场保存到旧的 pxCurrentTCB 指向的栈里，然后让 pxCurrentTCB 指向新任务，再从新栈里恢复现场。
 ```
 
+> D. 如果是自挂，且在运行时，portYIELD_WITHIN_API()的实际作用是什么？
+```c
+在 Cortex-M 架构中，PendSV（Pended Service Call）是一个非常特殊的系统异常。
+
+"Pend"（悬挂）
+
+普通的硬件中断（如串口接收）是“立刻执行”的，但 PendSV 是可以“延迟执行”的。
+
+"手动挂起"： 你代码中的 portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT; 实际上是向 CPU 发出了一个信号：“我这里有个换人的活儿要干，先在挂号处登记一下（Pending）。”
+
+等待时机： "CPU 不会立刻跳进 PendSV"。它会先看一眼：“现在还有没有比 PendSV 优先级更高的中断在跑？”
+
+如果有，CPU 先把紧急的中断跑完。
+
+如果没有，或者等所有紧急中断都退出了，CPU 才会进入 "PendSV_Handler"。
+
+
+
+
+
+现在的逻辑（使用 PendSV）：
+任务自挂： 任务 A 调用 vTaskSuspend()。
+
+登记： vPortYield() 登记了一个 PendSV 请求。
+
+安全检查： CPU 检查发现当前没有其他中断，或者等到其他中断都跑完了。
+
+换人： 进入最低优先级的 PendSV_Handler，此时它是系统里唯一在跑的异常，可以安全地保存任务 A 的现场，切换 pxCurrentTCB 到任务 B，并恢复任务 B 的现场。
+``` 
+所以本质上，**任务的切换**，本质上是**依赖pendSV中断(最低优先级)来实现**的。
+
+而实际在触发pendSV中断前，用`vPortYield()`登记的时候，里面有两条汇编指令：
+```c
+__dsb( portSY_FULL_READ_WRITE );//确保“把 PendSV 置 1”这个写内存的操作已经彻底完成，所有的数据都写进了寄存器
+__isb( portSY_FULL_READ_WRITE );//清空流水线。确保在执行后面的代码之前，CPU 已经看到了前面 PendSV 置位带来的变化。
+```
+
+**总结一下自挂的逻辑**：
+1. 发起请求： vTaskSuspend() 发现你要挂起自己，它把你从就绪链表挪到挂起链表。
+2. 呼叫后台： 调用 vPortYield()，往 ICSR 寄存器里写一个比特位，触发 PendSV 登记。
+3. 等待调度： 只要没有其他更高优先级的中断，CPU 就会立刻跳进 PendSV_Handler（这是由 FreeRTOS 写的汇编函数）。
+4. 现场搬运：
+   1. 把 CPU 现在的 $R4-R11$ 寄存器压入任务 A 的堆栈。
+   2. 把新的栈指针存入任务 A 的 TCB。
+   3. 找到 pxCurrentTCB 指向的新任务（比如任务 B）。
+   4. 从任务 B 的堆栈里弹出 $R4-R11$ 到 CPU 寄存器。
+5. 重生： 异常返回，CPU 此时拿的是任务 B 的寄存器和堆栈，任务 B 开始运行。
+> **vPortYield()** 只是“登记”，真正的魔术全在汇编函数 `xPortPendSVHandler` 里面。
+
+##### 补充：pendSV 保存当前任务现场操作
+**1. CM3内核寄存器**：
+
+Cortex-M3 内核总共有 16 个主要寄存器：
+- 通用寄存器：$R0$ - $R12$
+- 栈指针 (SP)：$R13$
+- 链接寄存器 (LR)：$R14$
+- 程序计数器 (PC)：$R15$
+- 状态寄存器：$xPSR$
+
+当 `PendSV 中断触发`时，`硬件`和`软件`会分工合作，`共同完成这 16 个寄存器的保护`
+
+**2. pendSV中断触发，硬件自动工作**：
+
+硬件自动压栈 (Hardware Stacking)当异常发生的一瞬间，CPU 硬件会自动将以下 8 个寄存器压入当前任务的栈中：
+- $xPSR$
+- $PC$ ($R15$)
+- $LR$ ($R14$)
+- $R12$
+- $R3$
+- $R2$
+- $R1$
+- $R0$
+
+>为什么是这几个？ 根据 ARM 的 AAPCS 标准，这些被称为“`调用者保存`（Caller-saved）”`寄存器`。硬件自动保存它们是为了保证中断退出后，`C 语言环境的函数逻辑不会乱套`。
+
+**3. pendSV中断触发，软件手动工作**：
+
+剩下的寄存器硬件管不着，必须由 FreeRTOS 在汇编（xPortPendSVHandler）中手动保存：
+- $R4, R5, R6, R7, R8, R9, R10, R11$
+
+这些被称为“`被调用者保存`（Callee-saved）”寄存器。因为`硬件不负责它们`，所以 FreeRTOS 必须手动`用一条汇编指令 stmdb sp!, {r4-r11} 把它们排队送入栈`中。
+
+> 注意这里的SP仍然使用的是PSP，所以保存的是A的任务栈中。以上当前任务的PC指针，各种环境都已经保存了。
+
+
+**4. CM3的双栈机制**
+
+以上可以得知，在pendSV中断中，处理压栈，此时`SP`指向的是当前任务栈(使用的是`PSP`)
+
+在 Cortex-M3 中，`R13 寄存器（即 SP）`实际上`有两个物理备份`：
+- MSP (Main Stack Pointer)： 主堆栈指针。用于 OS 内核、中断服务程序（ISR）。
+- PSP (Process Stack Pointer)： 进程堆栈指针。专门用于任务（Task）。
+
+
+##### 补充：pendSV中断实现任务切换的详细过程
+我们把这个过程拆解为三个清晰的阶段：
+
+---
+
+**1. 第一阶段：硬件自动“序幕” (Hardware Entry)**
+
+当 `PendSV` 被悬起（Pending）且 CPU 决定执行它时，硬件会在**执行汇编第一行代码前**完成以下动作：
+
+1. **判定当前栈指针**：CPU 发现当前任务正在使用$PSP$ 。
+2. **硬件压栈 (Hardware Stacking)**：CPU 自动向 $PSP$ 指向的内存压入 8 个寄存器（$xPSR, PC, LR, R12, R3, R2, R1, R0$）。此时 $PSP$ 的值会自动减小。
+3. **模式与 SP 切换**：
+   -  CPU 从**线程模式**进入**处理者模式**（Handler Mode）。
+   - **关键：** 硬件自动将当前使用的 SP 从 PSP 切换到 MSP。
+
+
+4. **PC 跳转**：CPU 从向量表中取 `PendSV_Handler` 的地址并赋值给 PC。
+
+> [!IMPORTANT]
+> **结论：** 当你在 `PendSV_Handler` 汇编里看到的第一行指令执行时，此时的 SP 已经变成 MSP 了，而刚才压了一半寄存器的 PSP 正孤零零地指在任务栈的某个位置。
+
+---
+
+**2. 第二阶段：软件手动“核心” (Software/Assembly)**
+
+现在进入了 FreeRTOS 的汇编代码（`xPortPendSVHandler`）。因为硬件只存了“一半”现场，剩下的由软件补齐：
+
+1. **取出 PSP**：由于现在的 SP 是 MSP，软件第一步必须执行 `mrs r0, psp`，把那个任务栈的地址（$PSP$）抢救回寄存器 R0 中。
+2. **软件压栈 (Software Stacking)**：利用刚才取回的$R0$（即 $PSP$），手动执行汇编指令将 $R4$ 至 $R11$压入任务栈。
+     - 指令：`stmdb r0!, {r4-r11}`（ 指针会继续向下移动）。
+
+
+3. **保存 SP 到 TCB**：此时 $R0$  指向的是整个 16 个寄存器“全家福”的底部。
+   * 动作：将 $R0$  的值写入 `pxCurrentTCB->pxTopOfStack`。**至此，旧任务的灵魂被完整封印在它自己的栈里了。**
+
+
+4. **寻找新任务**：调用 `vTaskSwitchContext`。这个 C 函数会更新 `pxCurrentTCB` 指向最高优先级的就绪任务。
+      - 重点在于调用了函数 `taskSELETE_HIGHEST_PRIORITY_TASK`() 更新`pxCurrentTCB` 指向优先级最高的`就绪态任务`
+5. **恢复新任务 SP**：从新的 `pxCurrentTCB->pxTopOfStack` 中取出值存入 。
+6. **软件出栈**：手动弹出新任务栈里的  至 。
+   * 指令：`ldmia r0!, {r4-r11}`。
+
+7. **更新 PSP**：将恢复后的 （指向剩下 8 个寄存器的地方）重新写回  寄存器。
+
+---
+
+**3. 第三阶段：硬件自动“尾声” (Hardware Exit)**
+
+汇编代码的最后一行通常是 `bx lr`（此时  是一个特殊的跳转值 `0xFFFFFFFD`）。
+
+1. **触发硬件返回**：当硬件看到 $LR$ 是这个特殊值时，它知道异常结束了。
+2. **自动切换回 PSP**：硬件根据返回指令，自动把 $SP$ 从 $MSP$ 切回 $PSP$。
+3. **硬件出栈 (Hardware Unstacking)**：硬件自动从 $PSP$ 中弹出剩下的 8 个寄存器（（$R0-xPSR$）。）。
+4. **恢复运行**：此时 $PC$ 被恢复为新任务上次离开时的位置，新任务正式复活。
+
+---
+
+**4. 梳理对比表**
+
+为了防止混淆，请看这个精确的先后顺序：
+
+| 顺序 | 执行者 | 动作 | 使用的 SP |
+| --- | --- | --- | --- |
+| 1 | **硬件** | 压入 $R0-xPSR$  | $PSP$ |
+| 2 | **硬件** | 切到 $MSP$，跳转到 Handler 地址 | $MSP$ |
+| 3 | **软件** | 手动压入 $R4-R11$ | 通过 $R0$ 间接操作 $PSP$ |
+| 4 | **软件** | 更新 `pxCurrentTCB` (寻找新任务) | $MSP$ |
+| 5 | **软件** | 手动弹出新任务的 $R4-R11$ | 通过 $R0$ 间接操作 $PSP$ |
+| 6 | **硬件** | 切回 $PSP$，弹出 $R0-xPSR$  | $PSP$ |
+
+
+> 你已经打通了任务切换的“任督二脉”。现在你可能会好奇：**“既然任务切换靠 PendSV，那如果我在代码里写一个死循环而不调用任何 API（不触发 Yield），FreeRTOS 还能切换任务吗？”**
+
+> 这就涉及到了 `SysTick` 这种“强制打断”的机制。**你想聊聊 SysTick 是如何通过“强行挂号” PendSV 来实现时间片轮转的吗？**
+
+
 
 #### 恢复任务
 
+恢复任务和挂起类似，比较简单。都需要判断
+1. 确保有待恢复的任务
+2. 确保恢复的不是当前正在运行的任务
+3. 进入临界区
+   1. 从 挂起态任务列表中，移除该节点
+   2. 添加到就绪态任务链表中
+   3. 判断优先级，是否需要进行任务抢占切换
+4. 退出临界区
+
+
+
+
+
+
+
+
+
 
 ### 6. 空闲任务
+**空闲任务**主要用于处理**待删除任务列表**和**低功耗**
 
-## 调度实现（切换）
-## 软件定时
-## 通信相关
+task.c中定义：
+```c
+static portTASK_FUNCTION( prvIdleTask, pvParameters )
+{
+    /* Stop warnings. */
+    ( void ) pvParameters;
+
+    // 不管
+    portALLOCATE_SECURE_CONTEXT( configMINIMAL_SECURE_STACK_SIZE );
+
+    for( ; ; )
+    {
+        /* 处理待删除任务列表中的待删除任务 */
+        prvCheckTasksWaitingTermination();
+
+        //是否使能抢占式调度
+        #if ( configUSE_PREEMPTION == 0 )
+            {
+                //不使用抢占式调度，主动强制切换任务, 以确保其他任务（非空闲任务）可以获得 CPU 使用权
+                taskYIELD();
+            }
+        #endif
+
+        /* 宏 configIDLE_SHOULD_YIELD 用于使能空闲任务可以被同优先级的任务抢占 */
+        #if ( ( configUSE_PREEMPTION == 1 ) && ( configIDLE_SHOULD_YIELD == 1 ) )
+            {
+                /* 如果存在与空闲任务相同优先级的任务，则进行任务切换 */
+                if( listCURRENT_LIST_LENGTH( &( pxReadyTasksLists[ tskIDLE_PRIORITY ] ) ) > ( UBaseType_t ) 1 )
+                {
+                    taskYIELD();
+                }
+                else
+                {
+                    mtCOVERAGE_TEST_MARKER();
+                }
+            }
+        #endif 
+
+        //若使能空闲任务的钩子函数，需要用户自行定义
+        #if ( configUSE_IDLE_HOOK == 1 )
+            {
+                extern void vApplicationIdleHook( void );
+
+                /* 调用空闲任务的钩子函数 */
+                vApplicationIdleHook();
+            }
+        #endif /* configUSE_IDLE_HOOK */
+
+        /* 此宏为低功耗的相关配置，不用理会 */
+        #if ( configUSE_TICKLESS_IDLE != 0 )
+            {
+                TickType_t xExpectedIdleTime;
+
+                /* It is not desirable to suspend then resume the scheduler on
+                 * each iteration of the idle task.  Therefore, a preliminary
+                 * test of the expected idle time is performed without the
+                 * scheduler suspended.  The result here is not necessarily
+                 * valid. */
+                xExpectedIdleTime = prvGetExpectedIdleTime();
+
+                if( xExpectedIdleTime >= configEXPECTED_IDLE_TIME_BEFORE_SLEEP )
+                {
+                    vTaskSuspendAll();
+                    {
+                        /* Now the scheduler is suspended, the expected idle
+                         * time can be sampled again, and this time its value can
+                         * be used. */
+                        configASSERT( xNextTaskUnblockTime >= xTickCount );
+                        xExpectedIdleTime = prvGetExpectedIdleTime();
+
+                        /* Define the following macro to set xExpectedIdleTime to 0
+                         * if the application does not want
+                         * portSUPPRESS_TICKS_AND_SLEEP() to be called. */
+                        configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING( xExpectedIdleTime );
+
+                        if( xExpectedIdleTime >= configEXPECTED_IDLE_TIME_BEFORE_SLEEP )
+                        {
+                            traceLOW_POWER_IDLE_BEGIN();
+                            portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime );
+                            traceLOW_POWER_IDLE_END();
+                        }
+                        else
+                        {
+                            mtCOVERAGE_TEST_MARKER();
+                        }
+                    }
+                    ( void ) xTaskResumeAll();
+                }
+                else
+                {
+                    mtCOVERAGE_TEST_MARKER();
+                }
+            }
+        #endif /* configUSE_TICKLESS_IDLE */
+    }
+}
+```
+
+## 任务切换
+
+PendSV（Pended Service Call，可挂起服务调用）
+
+PendSV的中断优先级是可以编程的
+
+PendSV 的中断由将中断控制状态寄存器（`ICSR）中 PENDSVSET 为置一`触发
+
+> PendSV 与 SVC 不同，`PendSV 的中断是非实时的`, 即 PendSV 的中断可以在更高优先级的中断中触发，但是在`更高优先级中断结束后才执行`
+
+利用 PendSV 的这个`可挂起特性`，在设计 RTOS 时，可以`将 PendSV 的中断优先级`设置为
+`最低的中断优先级`, 任务切换时，就需要用到 PendSV 的这个特性
+
+下面看一下任务切换的基本概念：
+
+在典型的 RTOS 中，**任务的处理时间被分为多个时间片**，**OS 内核**的执行可以有**两种触发方式**
+
+- 一种是通过在应用任务中`通过 SVC 指令触发`，
+  -   例如在应用任务在等待某个时间发生而需要停止的时候，那么就可以通过 SVC 指令来触发 OS
+内核的执行，以切换到其他任务；
+- 第二种方式是，`SysTick 周期性的中断`，来触发 OS 内核的执行。
+  
+图演示了只有两个任务的 RTOS 中，两个任务交替执行的过程：
+
+![alt text](../images/21.13.png)
+
+
+在操作系统中，任务调度器决定是否切换任务。图 9.1.1 中的任务及切换都是在 `SysTick` 中
+断中完成的，`SysTick 的每一次中断`都会`切换`到其他任务
+
+> 如果一个中断请求（IRQ）在 SysTick 中断产生之前产生，那么 SysTick 就可能抢占该中断
+请求，这就会导致该中断请求被延迟处理，**这在实时操作系统中是不允许的**，因为这将会影响
+到实时操作系统的实时性
+
+![alt text](../images/21.14.png)
+
+并且，当 SysTick 完成任务的上下文切换，准备返回任务中运行时，由于存在中断请求，
+ARM Cortex-M `不允许返回线程模式`，因此，将会产生`用法错误异常（Usage Fault）`。
+
+在一些 RTOS 的设计中，会通过`判断是否存在中断请求`，来`决定是否进行任务切换`。虽然
+可以通过检查 xPSR 或 NVIC 中的中断活跃寄存器来判断是否存在中断请求，但是这样可能会
+影响系统的性能，甚至可能出现中断源在 SysTick 中断前后不断产生中断请求，导致系统无法
+进行任务切换的情况。
+
+`PendSV` 通过`延迟执行任务切换`，`直到处理完所有的中断请求`，以解决上述问题。为了达到
+这样的效果，`必须将 PendSV 的中断优先级设置为最低的中断优先等级`。如果操作系统决定切
+换任务，那么就将 PendSV 设置为挂起状态，并在 PendSV 的中断服务函数中执行任务切换
+
+### SVC中断，pendSV中断，systick中断
+#### **1. SVC中断：**
+
+作用单一：它主要用于`启动第一个任务`。
+
+它的使命：当你调用 `vTaskStartScheduler()` 启动调度器时，最终会触发 `svc 0`。
+
+执行过程：
+- `vPortSVCHandler` 汇编函数被激活。
+- 它去获取最高优先级任务的栈顶指针（pxCurrentTCB->px`TopOfStack`）。
+- 它`手动恢复该任务的寄存器环境`。
+
+最后通过修改 `CONTROL` 寄存器，让 `CPU 切换到使用 PSP`，并`PC跳转到任务入口`。
+
+> 为什么只用一次？：一旦第一个任务跑起来了，后续的任务切换全部交给 `PendSV` 处理。SVC 在 FreeRTOS 的标准移植层里基本就“光荣退休”了。
+
+#### **2. systick中断**
+
+这个中断的优先级，依然是最低优先级，作用就是`系统节拍计数`+`维护延迟阻塞任务列表到就绪列表`
+
+它的核心职责：
+
+- 维持时间轴：每次中断，全局变量 `xTickCount` 加 1。
+- 唤醒任务：检查“`延时列表`”里有没有任务的时间到了。如果有任务该醒了，就把它从延时列表挪回“就绪列表”。
+- 强制打断（时间片轮转）：如果配置了 configUSE_PREEMPTION（抢占式），SysTick 会检查当前任务是否跑得太久了，或者是否有更高优先级的任务刚醒过来。
+
+
+> 它与 PendSV 的联动： 如果 SysTick 发现需要换人，它不会自己去换。它会顺手悬起（Pending）一个 `PendSV 中断`。
+
+> 形象理解：SysTick 发现时间到了，在黑板上写下“该换人了”，然后退出。因为 PendSV 也是最低优先级，CPU 接着就会自动进入 PendSV 去执行真正的搬运工作。
+
+**场景1：systick中断，判断抢占式调度**
+
+——“有更重要的人醒了”
+
+即便当前任务没有运行太久，只要有更高优先级的任务“醒了”，SysTick 就会强制打断当前任务。
+
+- 触发逻辑：在 SysTick 中断调用的 xTaskIncrementTick() 内部，内核会检查延时任务列表。
+
+- 发生过程：
+
+  - 假设任务 A（优先级 2）正在运行，任务 B（优先级 3）正在 vTaskDelay(10) 睡觉。
+  - 当第 10 次 SysTick 响起时，内核发现任务 B 的时间到了。
+  - 内核将任务 B 从阻塞态搬回就绪态。
+> 关键点：由于任务 B（3）的优先级比当前运行的任务 A（2）高，SysTick 会立刻标记需要进行切换（悬起 PendSV）。
+
+> 结果：这被称为基于优先级的抢占。它不是因为任务 A 跑太久了，而是因为 B 更紧急。
+
+
+**2. 场景二：时间片轮转（针对相同优先级）**
+——“大家级别一样，换个班吧”
+
+- 触发逻辑：如果配置了 configUSE_TIME_SLICING = 1，且就绪列表中有多个任务处于相同最高优先级。
+
+- 发生过程：
+
+  - 假设任务 C 和任务 D 优先级都是 2，且没有更高优先级的任务在跑。
+
+  - SysTick 每次响起时，都会检查当前优先级列表中是否有其他同级任务。
+
+> 逻辑：如果当前优先级列表里不止一个任务，SysTick 会请求一次任务切换（悬起 PendSV）。
+
+> 结果：这样在下一次中断后，任务 D 就能跑 1ms，然后换回任务 C。这就是同优先级的时间片轮转。
+
+> 在 同优先级时间片轮转（`Time Slicing`）的默认配置下，`每个任务执行一个 SysTick 周期`（通常是 `1ms`），然后就会把 CPU `转交给下一个同优先级的任务`
+
+> [!IMPORTANT]
+> 一般也推荐使用 SysTick 作为 RTOS 的时钟节拍，当然啦，用户也可以用其他的`硬件定时器`为 RTOS
+提供时钟节拍。
+
+systick中断处理函数定义在delay.c中，但是内部的实现，在rtos的源码中提供了相应的回调办法：`xPortSysTickHandler`
+```c
+systick_handler()
+->xPortSysTickHandler
+  ->xTaskIncrementTick() //处理了系统时钟节拍、阻塞任务列表、时间片调度等
+  /*
+ 处理系统时钟节拍，就是在每次 SysTick 中断发生的时候，将全局变量 xTickCount 的值加
+1，也就是将系统时钟节拍计数器的值加 1。
+
+处理阻塞任务列表，就是判断阻塞态任务列表中是否有阻塞任务超时，如果有，就将阻塞
+时间超时的阻塞态任务移到就绪态任务列表中，准备执行。同时在系统时钟节拍计数器
+xTickCount 的加 1 溢出后，将两个阻塞态任务列表调换，这是 FreeRTOS 处理系统时钟节拍计
+数器溢出的一种机制。
+
+处理时间片调度，就是在每次系统时钟节拍加 1 后，切换到另外一个同等优先级的任务中
+运行，要注意的是，此函数只是做了需要进行任务切换的标记，在函数退出后，会统一进行任
+务切换，因此时间片调度导致的任务切换，也可能因为有更高优先级的阻塞任务就绪导致任务
+切换，而出现任务切换后运行的任务比任务切换前运行任务的优先级高，而非相等优先级。
+  */
+```
+
+#### **3. pendSV中断**
+
+这个上面有解析过，负责具体的任务切换。
+
+以上就是freertos的基本实现，后面就是一些使用，比如队列，信号量，互斥量，事件组，任务通知，延迟，定时器等，这些都比较简单。下一篇会简单介绍。
