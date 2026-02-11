@@ -1587,7 +1587,7 @@ StackType_t * pxPortInitialiseStack( StackType_t * pxTopOfStack,/* 任务栈顶�
 最终，初始化任务栈构造出来的栈内容如下所示
 ![alt text](../images/21.12.png)
 
-#### prvAddNewTaskToReadyList() 加入就绪队列
+##### prvAddNewTaskToReadyList() 加入就绪队列
 `prvAddNewTaskToReadList()`用于将新建的任务添加到就绪态任务列表中
 
 函数同样定义在task.c中
