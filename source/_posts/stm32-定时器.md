@@ -101,14 +101,14 @@ fCK_CNT= fCK_PSC / (PSC[15:0]+1)
 
 ### 相关寄存器
 #### CR
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-4.png)
-![alt text](image-5.png)
+![alt text](../images/8.12.png)
+![alt text](../images/8.13.png)
+![alt text](../images/8.14.png)
+![alt text](../images/8.15.png)
 #### DR
-![alt text](image-3.png)
+![alt text](../images/8.16.png)
 #### SR
-![alt text](image-2.png)
+![alt text](../images/8.17.png)
 
 
 
