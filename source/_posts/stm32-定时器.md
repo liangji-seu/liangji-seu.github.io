@@ -5,99 +5,286 @@ categories: [学习笔记, 嵌入式, MCU]
 tags: [嵌入式, mcu, stm32]
 ---
 # STM32 定时器
-## 硬件总线分布
-APB1：TIM2-7
-APB2：TIM1, TIM8
+## 定时器硬件总线挂载情况
+- APB1：TIM2-7
+- APB2：TIM1, TIM8
 
-## 分类
-1. 2个基本定时器（TIM6, TIM7）
-2. 4个通用定时器（TIM2-5）
-3. 2个高级控制定时器（TIM1, TIM8）
+## 定时器资源
+1. 2个**基本**定时器（TIM6, TIM7）
+2. 4个**通用**定时器（TIM2-5）
+3. 2个**高级**控制定时器（TIM1, TIM8）
 
-这些定时器属于独立外设
+这些定时器彼此独立。
 
 ## 基本定时器（6，7）
-16位自动重载**递增**计数器
+**特点**：
 
-16位可编程分频器(倍频
-![alt text](../images/8.1.png)
-
-预分频器-影子寄存器：
-    预分频器作为缓冲作用，等更新事件发生，送入影子寄存器
-
-重装载寄存器-影子寄存器：
-1. ARPE位 = 0：不缓冲，直接更新
-2. ARPE位 = 1：等更新事件发生才写入。
-
-更新事件的产生：
-1. 软件产生:
-   1. UG位 =1, 产生更新事件
-2. 硬件产生 
-   1. 计数器的值 = TIMx_ARR设定值， 产生 DMA 请求、产生更新事件，比如中断信号或者触发 DAC 同步电路， 此时叫定时器上溢，定时器溢
-出就伴随着更新事件的发生
+1. `16位自动重载**递增**计数器`
+2. `16位可编程分频器`(倍频
 
 
-### 配置逻辑
+### 框图
+![alt text](../images/8.10.png)
 
-一定记得
-1. 使能时钟
-2. 找到HAL库的寄存器描述
-   1. 配置设备寄存器基地址
-   2. 配置设备描述
-3. HAL_init 配置设备
-4. 使能设备
-5. 使能设备中断
-6. 使能NVIC中断响应
-7. 初始化完成
+### 硬件部分
+#### 1. 时钟源
 
-1. 覆写IRQ原本的中断处理函数，指向HAL的中断处理函数（他内部会实现关中断，判断中断类型，调用回调函数，开中断，清标志位等）
-2. 回调函数callback里面实现具体的业务逻辑，所以放在main里面
+很明显，定时器，都需要时钟源
 
+基本定时器时钟挂载在 `APB1 总线`，所以它的时钟来自于 APB1 总线.
+
+但是基本定时器不是直接用的APB1总线的时钟，而是先经过一个**倍频器**，然后得到输入时钟。
+
+> `sys_stm32_clock_init` 时钟设置函数已经设置 `APB1 总线`时钟频率为 `36M`，APB1 总线的预分频器`分频系数是 2`，所以挂载在 APB1 总线的定时器时钟频率为 `72Mhz`
+![alt text](../images/8.11.png)
+
+
+#### 2. 控制器
+控制器除了控制定时器复位、使能、计数等功能之外，还可以用于触发 DAC 转换。
+
+#### 3. 时基单元
+时基单元包括：计数器寄存器(TIMx_`CNT`)、预`分频`器寄存器(TIMx_PSC)、`自动重载`寄存器
+(TIMx_ARR) 。
+
+这三个寄存器都是 `16 位`有效数字，即可设置值范围是 0~65535
+> 这里感觉就跟普通的systick定时器差不多了。
+
+从上面的框图，可以看到，**预分频器 PSC**，它有一个输入和一个输出。**输入 CK_PSC** 来源于控制器部分，
+实际上就是来自于内部时钟（`CK_INT`），即 2 倍的 APB1 总线时钟频率（`72MHz`）。**输出 CK_CNT**
+是分频后的时钟，它是计数器**实际的计数时钟**
+
+所以通过分频器除一下，就可以得到，给**时基单元计数用的时钟周期**了。
+```c
+fCK_CNT= fCK_PSC / (PSC[15:0]+1)
+```
+
+
+> **影子寄存器**
+>
+> 可以看到，预分频模块和自动重载模块有影子
+> 
+> 实际上，预分频器寄存器只是起到**缓存数据的作用**，只有等到**更新事件发生时**，预分频器寄存器的
+值才会被自动写入其影子寄存器中，这时才真正起作用。
+
+
+### 更新事件
+更新事件，更新事件的产生有两种情况：
+1. 由**软件产生**，将 TIMx_EGR 寄存器的位UG 置 1，产生更新事件后，硬件会自动将 UG 位清零
+2. 由硬件产生：
+   1. `计数器的值`（递增）等于`自动重装载寄存器影子寄存器`的值，TIMx_CNT 值与 TIMx_ARR 的设定值相等时，TIMx_CNT 的值就会被`自动清零`并且会`生成更新事件`
+
+说白了，更新事件，就是硬件计数到预定数字了，或者软件主动触发. 
+
+而这个**更新事件**，就是**完成了一轮计数**，可以此时就可以**开启相应功能**：
+1. 产生 DMA 请求
+2. 产生中断信号
+3. 触发 DAC 同步电路
+
+>这也就是我们为什么要用定时器的理由，因为我们肯定时需要实现某些定时的功能的。计数到装载值，只是知道，现在到时间了，更新事件的触发效果，才是我们做想要的功能的开始
+
+> TIMx_CNT `等于`TIMx_ARR 时，我们称之为`定时器溢出`，因为是`递增计数`，故而又称为`定时器上溢`。定时器溢出就`伴随着更新事件的发生`
+
+
+所以，只要设置`预分频寄存器`和`自动重载`寄存器的值就可以**控制定时器更新事件发生的时间**. 当计数器的
+值等于自动重载寄存器的值时就会生成更新事件，**硬件自动置位**相关**更新事件**的**标志位**，
+- 如：更新中断标志位.
+
+### 使用举例
+我们在之前，设置主频72Mhz,然后，让systick定时器，1ms一次中断（裸机关中断），计算得到`systick定时器经过1us所需的计数`。延时靠数tick。
+
+现在，我们新增一个基本定时器，延时500ms, 主频72Mhz给到分频器（`CK_INT 为 72MHz`）
+1. `预分频`系数设置为 `7200`，即写入预分频寄存器的值为 7199，那么 `fCK_CNT`=72MHz/7200=`10KHz`。
+2. 所以，计数+1 = 0.1ms
+3. 需要 `500ms 的中断周期`，所以我们让计数器`计数 5000 个`数就能满足要求，即需要设置自动重载寄存器的值为4999
+4. 更新中断使能位 UIE 置 1，CEN 位也要置 1, **开中断**，让更新事件能够做事
+
+
+### 相关寄存器
+#### CR
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-4.png)
+![alt text](image-5.png)
+#### DR
+![alt text](image-3.png)
+#### SR
+![alt text](image-2.png)
+
+
+
+### 实验
+上面已经详细梳理过，基本定时器的使用了，现在想要一个定时器中断，就比较简单了，涉及的外设
+1. TIM6
+2. NVIC
+
+如果要中断中控制点灯：
+
+3. GPIO
+
+实验要求：定时器控制LED1 – PE5定时翻转
+
+`main`()
+```c
+    HAL_Init();                             /* 初始化HAL库 */
+    sys_stm32_clock_init(RCC_PLL_MUL9);     /* 设置时钟, 72Mhz */
+    delay_init(72);                         /* 延时初始化 */
+    usart_init(115200);                     /* 串口初始化为115200 */
+    led_init();                             /* 初始化LED */
+    
+    btim_timx_int_init(5000 - 1, 7200 - 1); /* 10Khz的计数频率，计数5K次为500ms */
+```
+
+再来看看btim的bsp是如何实现的， 两块，一块是TIM6的配置，一块是NVIC的配置
+```c
+void btim_timx_int_init(uint16_t arr, uint16_t psc)
+{
+    g_timx_handle.Instance = BTIM_TIMX_INT;                      /* 通用定时器X */
+    g_timx_handle.Init.Prescaler = psc;                          /* 设置预分频系数 */
+    g_timx_handle.Init.CounterMode = TIM_COUNTERMODE_UP;         /* 递增计数模式 */
+    g_timx_handle.Init.Period = arr;                             /* 自动装载值 */
+    HAL_TIM_Base_Init(&g_timx_handle);
+
+    HAL_TIM_Base_Start_IT(&g_timx_handle);    /* 使能定时器x及其更新中断 */
+}
+```
+
+`HAL_TIM_Base_Init`里面，先做一些前置配置：`HAL_TIM_Base_MspInit`，然后配置时基
+```c
+HAL_StatusTypeDef HAL_TIM_Base_Init(TIM_HandleTypeDef *htim)
+{
+  /* Check the TIM handle allocation */
+  if (htim == NULL)
+  {
+    return HAL_ERROR;
+  }
+
+  /* Check the parameters */
+  assert_param(IS_TIM_INSTANCE(htim->Instance));
+  assert_param(IS_TIM_COUNTER_MODE(htim->Init.CounterMode));
+  assert_param(IS_TIM_CLOCKDIVISION_DIV(htim->Init.ClockDivision));
+  assert_param(IS_TIM_AUTORELOAD_PRELOAD(htim->Init.AutoReloadPreload));
+
+  if (htim->State == HAL_TIM_STATE_RESET)
+  {
+    /* Allocate lock resource and initialize it */
+    htim->Lock = HAL_UNLOCKED;
+
+#if (USE_HAL_TIM_REGISTER_CALLBACKS == 1)
+    /* Reset interrupt callbacks to legacy weak callbacks */
+    TIM_ResetCallback(htim);
+
+    if (htim->Base_MspInitCallback == NULL)
+    {
+      htim->Base_MspInitCallback = HAL_TIM_Base_MspInit;
+    }
+    /* Init the low level hardware : GPIO, CLOCK, NVIC */
+    htim->Base_MspInitCallback(htim);
+#else
+    /* Init the low level hardware : GPIO, CLOCK, NVIC */
+    HAL_TIM_Base_MspInit(htim);
+#endif /* USE_HAL_TIM_REGISTER_CALLBACKS */
+  }
+
+  /* Set the TIM state */
+  htim->State = HAL_TIM_STATE_BUSY;
+
+  /* Set the Time Base configuration */
+  TIM_Base_SetConfig(htim->Instance, &htim->Init);
+
+  /* Initialize the DMA burst operation state */
+  htim->DMABurstState = HAL_DMA_BURST_STATE_READY;
+
+  /* Initialize the TIM channels state */
+  TIM_CHANNEL_STATE_SET_ALL(htim, HAL_TIM_CHANNEL_STATE_READY);
+  TIM_CHANNEL_N_STATE_SET_ALL(htim, HAL_TIM_CHANNEL_STATE_READY);
+
+  /* Initialize the TIM state*/
+  htim->State = HAL_TIM_STATE_READY;
+
+  return HAL_OK;
+}
+
+/**
+ * @brief       定时器底层驱动，开启时钟，设置中断优先级
+                此函数会被HAL_TIM_Base_Init()函数调用
+ * @param       htim:定时器句柄
+ * @retval      无
+ */
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == BTIM_TIMX_INT)
+    {
+        BTIM_TIMX_INT_CLK_ENABLE();                     /* 使能TIM时钟 */
+        HAL_NVIC_SetPriority(BTIM_TIMX_INT_IRQn, 1, 3); /* 抢占1，子优先级3，组2 */
+        HAL_NVIC_EnableIRQ(BTIM_TIMX_INT_IRQn);         /* 开启ITM3中断 */
+    }
+}
+```
+可以看到，**一般套路**都是：
+1. 先确定好涉及的外设（NVIC，TIM6）
+2. 打开所需外设的时钟（TIM6）
+3. 设置相应的外设
+   1. NVIC（中断优先级，开中断）
+   2. TIM6（分频，重装载值，更新中断使能）
+
+中断向量表里面，中断处理函数：
+```c
+                DCD     TIM6_IRQHandler            ; TIM6
+```
+
+虽然btim.h里面定义的, NVIC打开的中断号是TIM6_DAC_IRQn, 虽然带DAC字样，但是就是指的tim6的中断
+```c
+#define BTIM_TIMX_INT                       TIM6
+#define BTIM_TIMX_INT_IRQn                  TIM6_DAC_IRQn
+#define BTIM_TIMX_INT_IRQHandler            TIM6_DAC_IRQHandler
+
+//stm32xe.h
+#define TIM6_DAC_IRQn           TIM6_IRQn
+#define TIM6_DAC_IRQHandler           TIM6_IRQHandler
+
+  TIM6_IRQn                   = 54,     /*!< TIM6 global Interrupt                                */
 
 ```
-TIM_HandleTypeDef init_TIM;
 
-#define liangji_TIM6_IRQHandler TIM6_IRQHandler
-void liangji_init_TIM6(uint32_t psc, uint32_t period)
+所以，当产生更新事件后，实际调用的中断处理函数是：`TIM6_IRQHandler`
+
+可以看到，在bsp的定时器驱动程序中，将这个中断处理函数，重实现为HAL的公共处理
+```c
+void BTIM_TIMX_INT_IRQHandler(void)
 {
-	//enable clk
-	__HAL_RCC_TIM6_CLK_ENABLE();
-	
-	//enable NVIC
-	HAL_NVIC_SetPriority(TIM6_IRQn,2,3);
-	HAL_NVIC_EnableIRQ(TIM6_IRQn);
-	
-	//config tim reg
-	init_TIM.Instance = TIM6;
-	init_TIM.Init.Prescaler=psc;//7200 divf
-	init_TIM.Init.CounterMode=TIM_COUNTERMODE_UP;
-	init_TIM.Init.Period=period;//5000 ~ 500ms
-	//init_TIM.Init.ClockDivision=TIM_CLOCKDIVISION_DIV2;//72M
-	init_TIM.Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;
-
-	HAL_TIM_Base_Init(&init_TIM);
-	
-	//enable TIM6, and enable TIM6_IT
-	HAL_TIM_Base_Start_IT(&init_TIM);
+    HAL_TIM_IRQHandler(&g_timx_handle); /* 定时器中断公共处理函数 */
 }
 
-void liangji_TIM6_IRQHandler(void)
-{
-	HAL_TIM_IRQHandler(&init_TIM);
-}
+```
 
-/*
+判断发生中断的原因-> 更新事件，HAL里面，清除一些标志位。然后调用中断回调函数`HAL_TIM_PeriodElapsedCallback`
+```c
+ // 对这个发生中断的定时器，进行分析，是不是通用定时器发生的输入捕获？输出比较？
+
+  /* TIM Update event */
+  if (__HAL_TIM_GET_FLAG(htim, TIM_FLAG_UPDATE) != RESET)
+  {
+    if (__HAL_TIM_GET_IT_SOURCE(htim, TIM_IT_UPDATE) != RESET)
+    {
+      __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
+#if (USE_HAL_TIM_REGISTER_CALLBACKS == 1)
+      htim->PeriodElapsedCallback(htim);
+#else
+      HAL_TIM_PeriodElapsedCallback(htim);
+#endif /* USE_HAL_TIM_REGISTER_CALLBACKS */
+    }
+  }
+```
+
+这个回调函数，是个弱定义，我们就在自己的bsp驱动程序中实现
+```c
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	__HAL_TIM_DISABLE(htim);
-	__HAL_TIM_DISABLE_IT (htim, TIM_IT_UPDATE);
-	
-	//do your thing
-	LED1_TOGGLE();
-	__HAL_TIM_ENABLE(htim);
-	__HAL_TIM_ENABLE_IT(htim, TIM_IT_UPDATE);
+    if (htim->Instance == BTIM_TIMX_INT)
+    {
+        LED1_TOGGLE(); /* LED1反转 */
+    }
 }
-*/
 
 ```
 
