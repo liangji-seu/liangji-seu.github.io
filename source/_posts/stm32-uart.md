@@ -1,5 +1,5 @@
 ---
-title: stm32-uart
+title: stm32-uart*
 date: 2025-12-03 14:56:32
 categories: [学习笔记, 嵌入式, MCU] 
 tags: [嵌入式, mcu, stm32]

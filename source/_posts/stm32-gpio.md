@@ -1,5 +1,5 @@
 ---
-title: stm32 gpio
+title: stm32 gpio*
 date: 2026-02-12 20:47:57
 categories: [学习笔记, 嵌入式, MCU] 
 tags: [嵌入式, mcu, stm32]
