@@ -51,7 +51,7 @@ future: true
 syntax_highlighter: highlight.js
 highlight:
   enable: true
-  line_number: true
+  line_number: false
   auto_detect: true # 开启自动检测，帮助识别语言
   tab_replace: ''
   wrap: true

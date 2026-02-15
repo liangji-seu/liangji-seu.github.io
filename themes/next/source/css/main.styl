@@ -49,92 +49,225 @@ for $inject_style in hexo-config('injects.style')
 
 
 
-
-
-
-
-
 /* ==========================================================
-   最终对齐版：VS Code 风格 (代码块与正文等宽对齐)
+   Next Theme 自定义样式：VS Code 风格 + 紧凑排版 (最终版)
    ========================================================== */
 
-// 1. 标题勋章序号体系 (1, 1.1)
+// ----------------------------------------------------------
+// 1. 标题勋章序号体系 (1.1.1.1...)
+// ----------------------------------------------------------
 article { counter-reset: h1-count; }
-.post-body h1, .post-body h2, .post-body h3 {
+
+.post-body h1, .post-body h2, .post-body h3, .post-body h4, .post-body h5, .post-body h6, .post-body h7 {
     color: #000000 !important;
     font-weight: 700 !important;
     border-bottom: 1px solid #eaecef !important;
-    padding-bottom: 0.5em !important;
-    margin-top: 2.2em !important;
+    padding-bottom: 0.3em !important;
+    
+    /* 关键修改：减少标题上方的空白 (从 1.5em -> 1.0em) */
+    margin-top: 1.0em !important; 
+    margin-bottom: 0.8em !important;
+    
     display: flex;
     align-items: center;
 }
-.post-body h1::before, .post-body h2::before, .post-body h3::before {
+
+.post-body h1::before, .post-body h2::before, .post-body h3::before, 
+.post-body h4::before, .post-body h5::before, .post-body h6::before, .post-body h7::before {
     background-color: #007acc !important;
     color: #ffffff !important;
-    padding: 2px 10px !important;
+    padding: 1px 8px !important;
     border-radius: 4px !important;
     margin-right: 12px !important;
-    font-size: 0.85em !important;
+    font-size: 0.75em !important;
     font-family: "Consolas", monospace;
+    flex-shrink: 0;
 }
+
+// 递归计数逻辑
 .post-body h1 { counter-reset: h2-count; }
 .post-body h1::before { counter-increment: h1-count; content: counter(h1-count); }
 .post-body h2 { counter-reset: h3-count; }
 .post-body h2::before { counter-increment: h2-count; content: counter(h1-count) "." counter(h2-count); }
+.post-body h3 { counter-reset: h4-count; }
 .post-body h3::before { counter-increment: h3-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count); }
+.post-body h4 { counter-reset: h5-count; }
+.post-body h4::before { counter-increment: h4-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count); }
+.post-body h5 { counter-reset: h6-count; }
+.post-body h5::before { counter-increment: h5-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count); }
+.post-body h6 { counter-reset: h7-count; }
+.post-body h6::before { counter-increment: h6-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count) "." counter(h6-count); }
+.post-body h7::before { counter-increment: h7-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count) "." counter(h6-count) "." counter(h7-count); }
 
-// 2. 引用块 (>)：还原 VS Code 浅蓝底
+
+// ----------------------------------------------------------
+// 2. 正文紧凑化 & 缩进 (Global Compact & Indent)
+// ----------------------------------------------------------
+.post-body p, .post-body ul, .post-body ol, .post-body dl, .post-body table, .post-body img, .post-body .tabs {
+    margin-left: 24px !important; /* 保持左缩进 */
+    
+    /* 关键修改：大幅减少段落间距 (默认是 20px，现在改为 8px) */
+    margin-bottom: 8px !important; 
+    margin-top: 0 !important;
+}
+
+/* 列表内部的间距也压缩 */
+.post-body li { 
+    margin-bottom: 4px !important; 
+}
+.post-body li p {
+    margin-bottom: 4px !important; /* 列表里的段落更紧凑 */
+}
+
+
+// ----------------------------------------------------------
+// 3. 引用块 (>)：超紧凑胶囊风格 + 额外深缩进
+// ----------------------------------------------------------
 .post-body blockquote {
-    background: #eff6ff !important;    /* 浅蓝背景 */
-    border-left: 5px solid #007acc !important; /* 蓝色左边条 */
-    padding: 12px 20px !important;
-    margin: 20px 0 !important;         /* 确保与正文边缘对齐 */
-    border-radius: 0 4px 4px 0;
+    background: #f3f8ff !important;
+    border-left: 5px solid #007acc !important;
+    border-radius: 6px !important;
+    
+    /* 细微边框 */
+    border-right: 1px solid rgba(0, 122, 204, 0.1) !important;
+    border-bottom: 1px solid rgba(0, 122, 204, 0.1) !important;
+    border-top: 1px solid rgba(0, 122, 204, 0.1) !important;
+    
+    padding: 3px 16px !important;
+    
+    /* 关键修改：左缩进改为 48px (比正文的 24px 多一倍)，形成明显缩进层级 */
+    margin: 12px 0 12px 48px !important;
+    
+    color: #444 !important;
+    overflow: hidden !important;
 }
 
-// 3. 行内代码 (``)：放大版灰底红字
-.post-body code {
-    color: #e51400 !important;         /* 鲜艳红字 */
-    background-color: #f2f2f2 !important; /* 浅灰背景 */
-    font-size: 0.95em !important;      /* 放大字体解决变小问题 */
-    font-family: "Consolas", "Monaco", monospace !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 2px 5px !important;
-    border-radius: 3px !important;
+.post-body blockquote p { 
+    margin: 0 !important; 
+    line-height: 1.5 !important; 
 }
 
-// 4. 核心对齐：代码区域 (.highlight) 宽度与正文等宽
+
+
+
+// ----------------------------------------------------------
+// 4. 代码区域 (.highlight)：紧凑排版
+// ----------------------------------------------------------
 .post-body .highlight {
-    margin: 20px 0 !important;         /* 强制左右边距为0，确保与正文对齐 */
+    background: #f6f8fa !important;
+    border: 1px solid #d1d5da !important;
+    border-radius: 8px !important;
+    
+    /* 关键修改：减少代码块上下的留白 (20px -> 12px) */
+    margin: 12px 0 12px 24px !important;
+    width: auto !important;
+    
     padding: 0 !important;
-    border: none !important;           /* 移除外框 */
-    background: #f8f8f8 !important;    /* 浅灰底色 */
-    width: 100% !important;            /* 强制宽度 100% */
-    box-sizing: border-box !important;
+    overflow: hidden !important;
+    box-shadow: none !important;
 }
 
-// 移除代码块内部表格可能导致的偏移
-.highlight table {
-    margin: 0 !important;
-    width: 100% !important;
-    border: none !important;
+.highlight .gutter { display: none !important; }
+
+.highlight table, .highlight tr, .highlight td {
+    margin: 0 !important; padding: 0 !important;
+    border: none !important; width: 100% !important;
+    background: transparent !important;
 }
 
-.highlight .code {
-    padding: 15px !important;          /* 仅在代码内部保留间距 */
-    background: #f8f8f8 !important;
+.highlight .code, .highlight pre {
+    color: #24292e !important;
+    background: transparent !important;
+    padding: 10px 16px !important; /* 稍微再紧凑一点点 */
+    font-family: "Consolas", "Menlo", monospace !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important; /* 代码行间距也稍微收一点 */
 }
 
-// 5. 语法高亮：绿色注释
-.highlight .comment, .highlight .quote {
-    color: #008000 !important;         /* 强制绿色高亮 */
-    font-style: normal !important;
+// ----------------------------------------------------------
+// 5. 语法高亮 (VS Code Light 鲜艳配色版)
+// ----------------------------------------------------------
+.highlight .keyword { color: #af00db !important; font-weight: bold !important; }
+.highlight .type, .highlight .built_in { color: #0000ff !important; font-weight: bold !important; }
+.highlight .function, .highlight .title { color: #795e26 !important; }
+.highlight .string { color: #a31515 !important; }
+.highlight .comment, .highlight .quote { color: #009900 !important; font-style: italic !important; font-weight: 600 !important; }
+.highlight .number, .highlight .literal { color: #098658 !important; }
+.highlight .meta { color: #af00db !important; }
+.highlight .variable, .highlight .attr, .highlight .params { color: #24292e !important; }
+
+// ----------------------------------------------------------
+// 6. 行内代码 (``) & 其他
+// ----------------------------------------------------------
+.post-body > code, .post-body p code, .post-body li code {
+    color: #d63200 !important;
+    background-color: rgba(27, 31, 35, 0.13) !important;
+    padding: 0.2em 0.5em !important;
+    margin: 0 3px !important;
+    font-size: 0.95em !important;
+    border-radius: 4px !important;
+    font-family: "Consolas", monospace !important;
 }
 
-// 6. 加粗正文
-.post-body strong {
-    color: #000000 !important;
-    font-weight: 700 !important;
+.post-body strong { color: #000000 !important; font-weight: 700 !important; }
+
+
+
+
+// ----------------------------------------------------------
+// 7. 目录与列表的超紧凑优化 (针对嵌套结构)
+// ----------------------------------------------------------
+/* 列表整体：上下间距 */
+.post-body ul, .post-body ol {
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    padding-left: 20px !important; /* 减少左侧缩进，让目录横向也紧凑点 */
+}
+
+/* 核心修复：嵌套列表（子目录）强制去除上下间距 */
+/* 只有这样，"框图"和"第一部分"之间才不会有巨大的空隙 */
+.post-body ul ul, .post-body ol ol, .post-body ul ol, .post-body ol ul {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* 列表项 (每一行) */
+.post-body li {
+    margin-bottom: 2px !important; /* 每一项之间只留极小的缝隙 (2px) */
+    line-height: 1.35 !important;  /* 压低行高，目录更紧实 */
+    font-size: 0.95em !important;  /* 字体稍微缩小 5%，显精致 */
+}
+
+/* 针对列表里的段落（防止 p 标签撑大） */
+.post-body li p {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    line-height: 1.35 !important;
+}
+
+/* 目录链接美化：去掉下划线，使用 VS Code 蓝 */
+.post-body li a {
+    border-bottom: none !important;
+    color: #007acc !important; 
+    text-decoration: none !important;
+}
+.post-body li a:hover {
+    text-decoration: underline !important;
+    color: #005f9e !important;
+}
+
+
+
+// ----------------------------------------------------------
+// 8. 全局选中文字样式 (Selection) -> VS Code 浅蓝
+// ----------------------------------------------------------
+::selection {
+    background: #add6ff !important; /* 经典的淡蓝色高亮 */
+    color: inherit !important;      /* 文字颜色保持不变，不要强制变白 */
+}
+
+/* 针对 Firefox 浏览器的兼容写法 */
+::-moz-selection {
+    background: #add6ff !important;
+    color: inherit !important;
 }
