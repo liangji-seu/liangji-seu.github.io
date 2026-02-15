@@ -19,3 +19,51 @@ h2, h3 {
   border-bottom: 2px solid #333 !important;
   padding-bottom: 5px;
 }
+
+// 同分类文章导航
+.post-category-nav {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px dashed #ccc;
+}
+
+.category-nav-title {
+  font-size: 1.1em !important;
+  border-bottom: none !important;
+  margin-bottom: 10px;
+
+  a {
+    color: inherit;
+    &:hover {
+      color: #fc6423;
+    }
+  }
+
+  i {
+    margin-right: 6px;
+  }
+}
+
+.category-nav-list {
+  padding-left: 1.5em;
+  margin: 0;
+  line-height: 2;
+
+  .category-nav-item {
+    font-size: 0.9em;
+
+    a {
+      color: #555;
+      &:hover {
+        color: #fc6423;
+      }
+    }
+
+    &.current {
+      span {
+        color: #fc6423;
+        font-weight: bold;
+      }
+    }
+  }
+}

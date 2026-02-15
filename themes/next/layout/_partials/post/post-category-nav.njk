@@ -1,0 +1,24 @@
+{%- if post.categories and post.categories.length %}
+  {%- set cat = post.categories.toArray()[0] %}
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="{{ url_for(cat.path) }}">{{ cat.name }}</a>
+      </h3>
+      <ol class="category-nav-list">
+        {%- for p in cat.posts.sort('-date').toArray() %}
+          {%- if p.path === post.path %}
+            <li class="category-nav-item current">
+              <span>{{ p.title }}</span>
+            </li>
+          {% else %}
+            <li class="category-nav-item">
+              <a href="{{ url_for(p.path) }}">{{ p.title }}</a>
+            </li>
+          {%- endif %}
+        {%- endfor %}
+      </ol>
+    </div>
+  </div>
+{%- endif %}
