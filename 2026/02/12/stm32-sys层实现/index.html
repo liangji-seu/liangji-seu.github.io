@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="sys层这一层，主要剖析一下底层核心驱动函数, 基本上要访问一个系统的最小驱动就是这三个。 delay原理首先，stm32里面的delay 延时的编程思想： CM3 内核处理器，内部包含了一个 SysTick 定时器  SysTick 是一个 24 位的向下递减的计数定时器，当计数值减到 0 时，将从 RELOAD 寄存器中自动重装载定时初值，开始新一轮计数。只要不把它在 SysTick 控制及状">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 sys层实现*">
+<meta property="og:url" content="http://example.com/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="sys层这一层，主要剖析一下底层核心驱动函数, 基本上要访问一个系统的最小驱动就是这三个。 delay原理首先，stm32里面的delay 延时的编程思想： CM3 内核处理器，内部包含了一个 SysTick 定时器  SysTick 是一个 24 位的向下递减的计数定时器，当计数值减到 0 时，将从 RELOAD 寄存器中自动重装载定时初值，开始新一轮计数。只要不把它在 SysTick 控制及状">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/24.1.png">
+<meta property="article:published_time" content="2026-02-12T11:02:21.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.751Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/24.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/","path":"2026/02/12/stm32-sys层实现/","title":"stm32 sys层实现*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 sys层实现* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#sys%E5%B1%82"><span class="nav-number">1.</span> <span class="nav-text">sys层</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#delay"><span class="nav-number">1.1.</span> <span class="nav-text">delay</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.1.2.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#delay-init"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">delay_init()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delay-us"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">delay_us()</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sys"><span class="nav-number">1.2.</span> <span class="nav-text">sys</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uart"><span class="nav-number">1.3.</span> <span class="nav-text">uart</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 sys层实现* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 sys层实现*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-12 19:02:21" itemprop="dateCreated datePublished" datetime="2026-02-12T19:02:21+08:00">2026-02-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="sys层"><a href="#sys层" class="headerlink" title="sys层"></a>sys层</h1><p>这一层，主要剖析一下底层核心驱动函数, 基本上要访问一个系统的最小驱动就是这三个。</p>
+<h2 id="delay"><a href="#delay" class="headerlink" title="delay"></a>delay</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>首先，stm32里面的delay 延时的编程思想：</p>
+<p><code>CM3 内核</code>处理器，内部包含了<code>一个 SysTick 定时器</code></p>
+<blockquote>
+<p>SysTick 是一个 24 位的<strong>向下递减</strong>的计数定时器，当计数值减到 0 时，将从 RELOAD 寄存器中自动重装载定时初值，开始新一轮计数。只要不把它在 SysTick 控制及状态寄存器中的使能位清除，就永不停息</p>
+</blockquote>
+<p>所以，这里的delay延时，依赖我们的<strong>第一个外设</strong>：CM3内部的一个<strong>systick的定时器</strong>。</p>
+<p>利用 <code>STM32的内部 SysTick</code> 来实现延时的，这样既<code>不占用中断</code>，也<code>不占用系统定时器</code>。</p>
+<p>这里说的<strong>不占用中断</strong>的意思是<strong>不开定时器中断</strong>：</p>
+<blockquote>
+<p>SysTick 是内核外设，它确实有一个专属的异常向量（Exception），即 SysTick_Handler。但在实现 delay 函数时，市面上常见的做法（尤其是正点原子、野火等教程）确实是不开启中断的。</p>
+</blockquote>
+<p>这里不占用中断的意思是：<strong>不进入中断服务函数（ISR）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// startup.S 中，是有systick中断的处理函数的</span></span><br><span class="line">DCD     SysTick_Handler            ; SysTick Handler</span><br></pre></td></tr></table></figure>
+
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>ucos&#x2F;freertos 运行需要一个<strong>系统时钟节拍</strong>（类似“心跳”），而这个节拍是固定的（由 OS_TICKS_PER_SEC 宏定义设置），比如要求 <strong>5ms 一次</strong>。</p>
+<p>一般是由 <strong>SysTick 来提供这个节拍</strong>，也就是 SysTick要设置为 <code>5ms 中断一次</code>，为 ucos 提供时钟节拍，而且这个时钟一般是不能被打断的（否则就不准了）。</p>
+<blockquote>
+<p>systick定时器，是一个外设，给定主频sysclk时钟，设置技术周期，就可以实现节拍中断</p>
+</blockquote>
+<p>当你实现了系统节拍定时中断后，systick 不能再被随意更改，如果我们还想利用 systick 来做 delay_us 或者 delay_ms 的延时，就必须想点办法了，这里我们利用的是<strong>时钟摘取法</strong>。</p>
+<blockquote>
+<p>delay_us 为例, </p>
+<p><code>sysclk = 72Mhz</code>, 输入systick定时器，计数<code>分频</code>（1&#x2F;8）得到 <code>9Mhz的systick信号</code>。那么一个systick脉冲周期 &#x3D; （1&#x2F;9）us. </p>
+<p>此时如果要delay_us(50), 一直统计 systick 的计数变化，直到数到（50 * 9）， 那么就是50us</p>
+</blockquote>
+<blockquote>
+<p>优点：只是抓取 SysTick 计数器的变化，并不需要修改 SysTick 的任何状态，完全不影响 SysTick 作为 UCOS时钟节拍的功能</p>
+<p>缺点：占用cpu</p>
+</blockquote>
+<h4 id="delay-init"><a href="#delay-init" class="headerlink" title="delay_init()"></a>delay_init()</h4><p>delay_init(72Mhz), 意味着，systick的输入是72Mhz，<strong>systick计数值减少72，经过1us</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//main.c</span></span><br><span class="line">    delay_init(<span class="number">72</span>);                         <span class="comment">/* 延时初始化 */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">uint32_t</span> g_fac_us = <span class="number">0</span>;       <span class="comment">/* us延时倍乘数 */</span></span><br><span class="line"> </span><br><span class="line"><span class="comment">// sysclk = 72 (Mhz), g_fac_us = 72,即数72下，算1us</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">delay_init</span><span class="params">(<span class="type">uint16_t</span> sysclk)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> SYS_SUPPORT_OS                                      <span class="comment">/* 如果需要支持OS */</span></span></span><br><span class="line">    <span class="type">uint32_t</span> reload;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    g_fac_us = sysclk;                                  <span class="comment">/* 由于在HAL_Init中已对systick做了配置，所以这里无需重新配置 */</span></span><br><span class="line">    <span class="comment">//g_fac_us = 72,即数72下，算1us, 1us时基计数值</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> SYS_SUPPORT_OS                                      <span class="comment">/* 如果需要支持OS. */</span></span></span><br><span class="line">    reload = sysclk;                                    <span class="comment">/* 每秒钟的计数次数 单位为M */</span></span><br><span class="line">    reload *= <span class="number">1000000</span> / delay_ostickspersec;            <span class="comment">/* 根据delay_ostickspersec设定溢出时间,reload为24位</span></span><br><span class="line"><span class="comment">                                                         * 寄存器,最大值:16777216,在168M下,约合0.09986s左右</span></span><br><span class="line"><span class="comment">                                                         */</span></span><br><span class="line">    g_fac_ms = <span class="number">1000</span> / delay_ostickspersec;              <span class="comment">/* 代表OS可以延时的最少单位 */</span></span><br><span class="line">    SysTick-&gt;CTRL |= <span class="number">1</span> &lt;&lt; <span class="number">1</span>;                            <span class="comment">/* 开启SYSTICK中断 */</span></span><br><span class="line">    SysTick-&gt;LOAD = reload;                             <span class="comment">/* 每1/delay_ostickspersec秒中断一次 */</span></span><br><span class="line">    SysTick-&gt;CTRL |= <span class="number">1</span> &lt;&lt; <span class="number">0</span>;                            <span class="comment">/* 开启SYSTICK */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="delay-us"><a href="#delay-us" class="headerlink" title="delay_us()"></a>delay_us()</h4><blockquote>
+<p>可见，是占用cpu资源的等待，不停的去读systick-&gt;val</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//nus = 要延时多少us</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">delay_us</span><span class="params">(<span class="type">uint32_t</span> nus)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint32_t</span> ticks;</span><br><span class="line">    <span class="type">uint32_t</span> told, tnow, tcnt = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint32_t</span> reload = SysTick-&gt;LOAD;        <span class="comment">/* LOAD的值 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//需要数多少节拍</span></span><br><span class="line">    ticks = nus * g_fac_us;                 <span class="comment">/* 需要的节拍数 */</span></span><br><span class="line">    </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> SYS_SUPPORT_OS                          <span class="comment">/* 如果需要支持OS */</span></span></span><br><span class="line">    delay_osschedlock();                    <span class="comment">/* 锁定 OS 的任务调度器 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    told = SysTick-&gt;VAL;                    <span class="comment">/* 刚进入时的计数器值 */</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        tnow = SysTick-&gt;VAL;</span><br><span class="line">        <span class="keyword">if</span> (tnow != told)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (tnow &lt; told)</span><br><span class="line">            &#123;</span><br><span class="line">                tcnt += told - tnow;        <span class="comment">/* 这里注意一下SYSTICK是一个递减的计数器就可以了 */</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                tcnt += reload - tnow + told;</span><br><span class="line">            &#125;</span><br><span class="line">            told = tnow;</span><br><span class="line">            <span class="keyword">if</span> (tcnt &gt;= ticks) </span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">break</span>;                      <span class="comment">/* 时间超过/等于要延迟的时间,则退出 */</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> SYS_SUPPORT_OS                          <span class="comment">/* 如果需要支持OS */</span></span></span><br><span class="line">    delay_osschedunlock();                  <span class="comment">/* 恢复 OS 的任务调度器 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> </span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>可见，这种最基础的延时，就是不停的读systick的计数累计变化，来实现延时的。所以如果支持OS，他需要锁住调度。</p>
+<p>当 OS 还未运行的时候，我们的 delay_ms 就是直接由 delay_us 实现的，OS 下的 delay_us<br>可以实现很长的延时（<strong>达到 53 秒</strong>）而不溢出！，所以放心的使用 delay_us 来实现 delay_ms，不<br>过由于 delay_us 的时候，任务调度被上锁了，所以还是建议不要用 delay_us 来延时很长的时间，否则影响整个系统的性能</p>
+</blockquote>
+<p>总结<br><img src="/../images/24.1.png" alt="alt text"></p>
+<blockquote>
+<p>在<strong>没有os</strong>的情况下，是<strong>不需要systick中断的</strong>，</p>
+</blockquote>
+<blockquote>
+<p>但是如果<strong>有rtos</strong>，则必须要systick中断来提供系统节拍进行调度</p>
+</blockquote>
+<h2 id="sys"><a href="#sys" class="headerlink" title="sys"></a>sys</h2><p><code>sys_nvic_set_vector_table</code>()<br>设置中断向量表的偏移（VTOR）</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       设置中断向量表偏移地址</span></span><br><span class="line"><span class="comment"> * @param       baseaddr: 基址</span></span><br><span class="line"><span class="comment"> * @param       offset: 偏移量(必须是0, 或者0X100的倍数)</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sys_nvic_set_vector_table</span><span class="params">(<span class="type">uint32_t</span> baseaddr, <span class="type">uint32_t</span> offset)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 设置NVIC的向量表偏移寄存器,VTOR低9位保留,即[8:0]保留 */</span></span><br><span class="line">    SCB-&gt;VTOR = baseaddr | (offset &amp; (<span class="type">uint32_t</span>)<span class="number">0xFFFFFE00</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>sys_stm32_clock_init</code>()<br>设置从时钟源到系统时钟sysclk，到所有外设总线时钟</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       系统时钟初始化函数</span></span><br><span class="line"><span class="comment"> * @param       plln: PLL倍频系数(PLL倍频), 取值范围: 2~16</span></span><br><span class="line"><span class="comment">                中断向量表位置在启动时已经在SystemInit()中初始化</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sys_stm32_clock_init</span><span class="params">(<span class="type">uint32_t</span> plln)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_StatusTypeDef ret = HAL_ERROR;</span><br><span class="line">    RCC_OscInitTypeDef rcc_osc_init = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    RCC_ClkInitTypeDef rcc_clk_init = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"></span><br><span class="line">    rcc_osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;       <span class="comment">/* 选择要配置HSE */</span></span><br><span class="line">    rcc_osc_init.HSEState = RCC_HSE_ON;                         <span class="comment">/* 打开HSE */</span></span><br><span class="line">    rcc_osc_init.HSEPredivValue = RCC_HSE_PREDIV_DIV1;          <span class="comment">/* HSE预分频系数 */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLState = RCC_PLL_ON;                     <span class="comment">/* 打开PLL */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;             <span class="comment">/* PLL时钟源选择HSE */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLMUL = plln;                             <span class="comment">/* PLL倍频系数 */</span></span><br><span class="line">    ret = HAL_RCC_OscConfig(&amp;rcc_osc_init);                     <span class="comment">/* 初始化 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != HAL_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>);                                              <span class="comment">/* 时钟初始化失败，之后的程序将可能无法正常执行，可以在这里加入自己的处理 */</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 选中PLL作为系统时钟源并且配置HCLK,PCLK1和PCLK2*/</span></span><br><span class="line">    rcc_clk_init.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);</span><br><span class="line">    rcc_clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;        <span class="comment">/* 设置系统时钟来自PLL */</span></span><br><span class="line">    rcc_clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;               <span class="comment">/* AHB分频系数为1 */</span></span><br><span class="line">    rcc_clk_init.APB1CLKDivider = RCC_HCLK_DIV2;                <span class="comment">/* APB1分频系数为2 */</span></span><br><span class="line">    rcc_clk_init.APB2CLKDivider = RCC_HCLK_DIV1;                <span class="comment">/* APB2分频系数为1 */</span></span><br><span class="line">    ret = HAL_RCC_ClockConfig(&amp;rcc_clk_init, FLASH_LATENCY_2);  <span class="comment">/* 同时设置FLASH延时周期为2WS，也就是3个CPU周期。 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != HAL_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>);                                              <span class="comment">/* 时钟初始化失败，之后的程序将可能无法正常执行，可以在这里加入自己的处理 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="uart"><a href="#uart" class="headerlink" title="uart"></a>uart</h2><p>这个单独一章节讲</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/08/freertos-1/" rel="prev" title="freertos 基础实现">
+                  <i class="fa fa-angle-left"></i> freertos 基础实现
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/12/stm32-gpio/" rel="next" title="stm32 gpio*">
+                  stm32 gpio* <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 sys层实现*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

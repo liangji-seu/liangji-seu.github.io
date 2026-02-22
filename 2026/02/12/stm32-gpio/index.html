@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="gpio把gpio,当成是一个外设，重新再学习一遍 stm32f1 gpio资源STM32F103ZET6 芯片是 144 脚的芯片， 具有 GPIOA、GPIOB、GPIOC、GPIOD、GPIOE、GPIOF 和 GPIOG 七组 GPIO 口，共有 112 个 IO 口可供我们编程使用 IO 功能模式GPIO 有八种工作模式，分别是： 上下拉（输入） 输入浮空 拉&#x2F;下拉电阻为断开状">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 gpio*">
+<meta property="og:url" content="http://example.com/2026/02/12/stm32-gpio/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="gpio把gpio,当成是一个外设，重新再学习一遍 stm32f1 gpio资源STM32F103ZET6 芯片是 144 脚的芯片， 具有 GPIOA、GPIOB、GPIOC、GPIOD、GPIOE、GPIOF 和 GPIOG 七组 GPIO 口，共有 112 个 IO 口可供我们编程使用 IO 功能模式GPIO 有八种工作模式，分别是： 上下拉（输入） 输入浮空 拉&#x2F;下拉电阻为断开状">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/26.1.png">
+<meta property="og:image" content="http://example.com/images/26.2.png">
+<meta property="og:image" content="http://example.com/images/26.3.png">
+<meta property="og:image" content="http://example.com/images/26.4.png">
+<meta property="article:published_time" content="2026-02-12T12:47:57.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.749Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/26.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/12/stm32-gpio/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/12/stm32-gpio/","path":"2026/02/12/stm32-gpio/","title":"stm32 gpio*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 gpio* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#gpio"><span class="nav-number">1.</span> <span class="nav-text">gpio</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#stm32f1-gpio%E8%B5%84%E6%BA%90"><span class="nav-number">1.1.</span> <span class="nav-text">stm32f1 gpio资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO-%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">IO 功能模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E4%B8%8B%E6%8B%89%EF%BC%88%E8%BE%93%E5%85%A5%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">上下拉（输入）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A8%E6%8C%BD%E5%BC%80%E6%BC%8F%EF%BC%88%E8%BE%93%E5%87%BA%E3%80%81%E5%A4%8D%E7%94%A8%EF%BC%89"><span class="nav-number">1.2.2.</span> <span class="nav-text">推挽开漏（输出、复用）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.</span> <span class="nav-text">寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CR"><span class="nav-number">1.3.1.</span> <span class="nav-text">CR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DR"><span class="nav-number">1.3.2.</span> <span class="nav-text">DR</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.</span> <span class="nav-text">实验</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/12/stm32-gpio/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 gpio* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 gpio*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-12 20:47:57" itemprop="dateCreated datePublished" datetime="2026-02-12T20:47:57+08:00">2026-02-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="gpio"><a href="#gpio" class="headerlink" title="gpio"></a>gpio</h1><p>把gpio,当成是一个外设，重新再学习一遍</p>
+<h2 id="stm32f1-gpio资源"><a href="#stm32f1-gpio资源" class="headerlink" title="stm32f1 gpio资源"></a>stm32f1 gpio资源</h2><p>STM32F103ZET6 芯片是 144 脚的芯片，</p>
+<p>具有 GPIOA、GPIOB、GPIOC、GPIOD、GPIOE、GPIOF 和 GPIOG <strong>七组 GPIO 口</strong>，共有 112 个 IO 口可供我们编程使用</p>
+<h2 id="IO-功能模式"><a href="#IO-功能模式" class="headerlink" title="IO 功能模式"></a>IO 功能模式</h2><p>GPIO 有八种工作模式，分别是：</p>
+<h3 id="上下拉（输入）"><a href="#上下拉（输入）" class="headerlink" title="上下拉（输入）"></a>上下拉（输入）</h3><ol>
+<li><strong>输入浮空</strong><ul>
+<li>拉&#x2F;下拉电阻为断开状态</li>
+<li>用于按键检测等场景</li>
+</ul>
+</li>
+<li><strong>输入上拉</strong></li>
+<li><strong>输入下拉</strong></li>
+<li><strong>模拟输入</strong><ul>
+<li>用于 ADC、DAC、MCO这类操作<code>模拟信号</code>的外设</li>
+</ul>
+</li>
+</ol>
+<p><img src="/../images/26.1.png" alt="alt text"></p>
+<blockquote>
+<p><strong>为什么要上下拉</strong>？（防止“漂移”）</p>
+<p>简单来说，上下拉电阻的作用就是<strong>给引脚一个确定的默认状态</strong>，防止电路在悬空时受到电磁干扰</p>
+</blockquote>
+<h3 id="推挽开漏（输出、复用）"><a href="#推挽开漏（输出、复用）" class="headerlink" title="推挽开漏（输出、复用）"></a>推挽开漏（输出、复用）</h3><ol start="5">
+<li><p><strong>开漏输出</strong></p>
+<ul>
+<li>它只能输出低电平 Vss 或者高阻态，常用于 IIC 通讯（IIC_SDA）或其它需要进行电平转换的场景</li>
+</ul>
+</li>
+<li><p><strong>推挽输出</strong></p>
+<ul>
+<li>会输出低电平 VSS 或者高电平VDD,驱动能力较强</li>
+</ul>
+</li>
+<li><p><strong>开漏式复用功能</strong></p>
+<ul>
+<li>。当选择复用功能时，引脚的状态是<code>由对应的外设控制</code>，而不是输出数据寄存器</li>
+</ul>
+</li>
+<li><p><strong>推挽式复用功能</strong></p>
+</li>
+</ol>
+<blockquote>
+<p>[!IMPORTANT]<br><strong>1. 必须用【推挽输出】 (Push-Pull)</strong></p>
+</blockquote>
+<p>当你需要引脚作为 <strong>“动力源”</strong> 或者 <strong>“高速信号源”</strong> 时。</p>
+<ul>
+<li><strong>驱动能力需求</strong>：如果你要直接驱动 LED、蜂鸣器、光耦，或者给某个模块供电。推挽输出在输出“1”时能提供稳定的电流，输出“0”时能强力吸收电流。</li>
+<li><strong>高速通讯</strong>：比如 <strong>SPI 协议</strong>或 <strong>UART 串口</strong>。推挽输出的电平切换速度极快，边缘非常陡峭，能支持几十 MHz 的频率。</li>
+<li><strong>简单驱动</strong>：控制继电器模块、驱动各种 LCD&#x2F;OLED 屏幕。</li>
+</ul>
+<hr>
+<blockquote>
+<p>[!IMPORTANT]<br><strong>2. 必须用【开漏输出】 (Open-Drain)</strong></p>
+</blockquote>
+<p>当你需要 <strong>“兼容性”</strong>、<strong>“安全性”</strong> 或者符合 <strong>“总线标准”</strong> 时。</p>
+<p>A. <code>I2C 总线</code>（必须开漏）</p>
+<p>I2C 协议规定了多个设备挂在同一根线上。如果用推挽，一旦两个芯片一个发高一个发低，就会<strong>直接短路烧毁</strong>。开漏模式下，大家只负责“拉低”或“松手”，即使同时动作也不会坏。</p>
+<p>B. <code>电平转换（3.3V 控 5V）</code></p>
+<p>STM32 内部最高只能出 3.3V。如果你要把信号给一个 5V 的老芯片（它可能规定 3.5V 以上才算高电平），推挽就没戏了。</p>
+<ul>
+<li><strong>做法</strong>：选开漏，外部接一个电阻拉到 5V。这样引脚“松手”时，电压就是 5V，完美解决。</li>
+</ul>
+<p>C. <code>“线与”逻辑</code>（报警&#x2F;中断线）</p>
+<p>比如你有 5 个传感器，任何一个报警都要让单片机知道。</p>
+<ul>
+<li>你可以把它们的开漏输出全部连在一起。</li>
+<li>只要有一个传感器报警（拉低），整条线就变低。这种简单的并联在推挽模式下是绝对禁止的。</li>
+</ul>
+<hr>
+<blockquote>
+<p>[!IMPORTANT]<br>当你面对一个 GPIO 输出配置时，按顺序问自己这三个问题：</p>
+</blockquote>
+<ol>
+<li><strong>这是一根通讯总线吗？</strong></li>
+</ol>
+<ul>
+<li>是 I2C 吗？  <strong>开漏</strong>。</li>
+<li>是 SPI&#x2F;UART 吗？  <strong>推挽</strong>。</li>
+</ul>
+<ol start="2">
+<li><strong>这根线上会连着多个输出设备吗？</strong></li>
+</ol>
+<ul>
+<li>是（比如共享中断信号线）  <strong>开漏</strong>。</li>
+<li>否（一对一连接）  往下看。</li>
+</ul>
+<ol start="3">
+<li><strong>对方的电压和 STM32 一样吗？</strong></li>
+</ol>
+<ul>
+<li>一样 (3.3V)  <strong>推挽</strong>。</li>
+<li>对方更高 (5V)  <strong>开漏 + 外部上拉到 5V</strong>。</li>
+</ul>
+<h2 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h2><p>在理解了IO的工作模式后，就知道要怎么用了，之后就是通过配置寄存器，来达成我们想要的工作模式。</p>
+<p>所有的寄存器，简单来说，可以归结为：</p>
+<ol>
+<li>CR（控制寄存器）</li>
+<li>DR（数据寄存器）</li>
+<li>SR（状态寄存器）</li>
+</ol>
+<h3 id="CR"><a href="#CR" class="headerlink" title="CR"></a>CR</h3><ul>
+<li>这 2 个配置寄存器就是用来配置 GPIO 的相<code>关工作模式</code>和<code>工作速度</code></li>
+</ul>
+<p><img src="/../images/26.2.png" alt="alt text"></p>
+<h3 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h3><ul>
+<li>这里就是输出的数据寄存器了，这里有两个，都可以进行写，具体会有区分，这些都属于具体的设备细节了，无需在意。</li>
+</ul>
+<p><img src="/../images/26.3.png" alt="alt text"></p>
+<p><img src="/../images/26.4.png" alt="alt text"></p>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>点灯实验，没什么好说的，比较简单，这里要注意一个通用的意识：</p>
+<p><strong>初始化外设</strong>的步骤：</p>
+<ol>
+<li>使能设备（使能时钟）</li>
+<li>配置外设寄存器（有定义外设基地址）</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* @brief 初始化 LED 相关 IO 口, 并使能时钟</span></span><br><span class="line"><span class="comment">* @param 无</span></span><br><span class="line"><span class="comment">* @retval 无</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">led_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    LED0_GPIO_CLK_ENABLE(); <span class="comment">/* LED0 时钟使能 */</span></span><br><span class="line">    LED1_GPIO_CLK_ENABLE(); <span class="comment">/* LED1 时钟使能 */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    GPIO_InitTypeDef gpio_init_struct;</span><br><span class="line">    gpio_init_struct.Pin = LED0_GPIO_PIN; <span class="comment">/* LED0 引脚 */</span></span><br><span class="line">    gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP; <span class="comment">/* 推挽输出 */</span></span><br><span class="line">    gpio_init_struct.Pull = GPIO_PULLUP; <span class="comment">/* 上拉 */</span></span><br><span class="line">    gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH; <span class="comment">/* 高速 */</span></span><br><span class="line">    HAL_GPIO_Init(LED0_GPIO_PORT, &amp;gpio_init_struct); <span class="comment">/* 初始化 LED0 引脚 */</span></span><br><span class="line">    gpio_init_struct.Pin = LED1_GPIO_PIN; <span class="comment">/* LED1 引脚 */</span></span><br><span class="line">    HAL_GPIO_Init(LED1_GPIO_PORT, &amp;gpio_init_struct); <span class="comment">/* 初始化 LED1 引脚 */</span></span><br><span class="line">    LED0(<span class="number">1</span>); <span class="comment">/* 关闭 LED0 */</span></span><br><span class="line">    LED1(<span class="number">1</span>); <span class="comment">/* 关闭 LED1 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/" rel="prev" title="stm32 sys层实现*">
+                  <i class="fa fa-angle-left"></i> stm32 sys层实现*
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/13/stm32-dma/" rel="next" title="stm32 dma">
+                  stm32 dma <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 gpio*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

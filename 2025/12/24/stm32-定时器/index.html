@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="STM32 定时器定时器硬件总线挂载情况 APB1：TIM2-7 APB2：TIM1, TIM8  定时器资源 2个基本定时器（TIM6, TIM7） 4个通用定时器（TIM2-5） 2个高级控制定时器（TIM1, TIM8）  这些定时器彼此独立。 基本定时器（6，7）特点：  16位自动重载**递增**计数器 16位可编程分频器(倍频  框图 硬件部分1. 时钟源很明显，定时器，都需要时钟源">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 定时器*">
+<meta property="og:url" content="http://example.com/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="STM32 定时器定时器硬件总线挂载情况 APB1：TIM2-7 APB2：TIM1, TIM8  定时器资源 2个基本定时器（TIM6, TIM7） 4个通用定时器（TIM2-5） 2个高级控制定时器（TIM1, TIM8）  这些定时器彼此独立。 基本定时器（6，7）特点：  16位自动重载**递增**计数器 16位可编程分频器(倍频  框图 硬件部分1. 时钟源很明显，定时器，都需要时钟源">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/8.10.png">
+<meta property="og:image" content="http://example.com/images/8.11.png">
+<meta property="og:image" content="http://example.com/images/8.12.png">
+<meta property="og:image" content="http://example.com/images/8.13.png">
+<meta property="og:image" content="http://example.com/images/8.14.png">
+<meta property="og:image" content="http://example.com/images/8.15.png">
+<meta property="og:image" content="http://example.com/images/8.16.png">
+<meta property="og:image" content="http://example.com/images/8.17.png">
+<meta property="og:image" content="http://example.com/images/8.2.png">
+<meta property="og:image" content="http://example.com/images/8.3.png">
+<meta property="og:image" content="http://example.com/images/8.4.png">
+<meta property="og:image" content="http://example.com/images/8.5.png">
+<meta property="og:image" content="http://example.com/images/8.6.png">
+<meta property="og:image" content="http://example.com/images/8.7.png">
+<meta property="og:image" content="http://example.com/images/8.8.png">
+<meta property="og:image" content="http://example.com/images/8.9.png">
+<meta property="article:published_time" content="2025-12-24T15:14:25.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.753Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/8.10.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/","path":"2025/12/24/stm32-定时器/","title":"stm32 定时器*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 定时器* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#STM32-%E5%AE%9A%E6%97%B6%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">STM32 定时器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E7%A1%AC%E4%BB%B6%E6%80%BB%E7%BA%BF%E6%8C%82%E8%BD%BD%E6%83%85%E5%86%B5"><span class="nav-number">1.1.</span> <span class="nav-text">定时器硬件总线挂载情况</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E8%B5%84%E6%BA%90"><span class="nav-number">1.2.</span> <span class="nav-text">定时器资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%886%EF%BC%8C7%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">基本定时器（6，7）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A1%86%E5%9B%BE"><span class="nav-number">1.3.1.</span> <span class="nav-text">框图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E9%83%A8%E5%88%86"><span class="nav-number">1.3.2.</span> <span class="nav-text">硬件部分</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%97%B6%E9%92%9F%E6%BA%90"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">1. 时钟源</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">2. 控制器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%97%B6%E5%9F%BA%E5%8D%95%E5%85%83"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">3. 时基单元</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E4%BA%8B%E4%BB%B6"><span class="nav-number">1.3.3.</span> <span class="nav-text">更新事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E4%B8%BE%E4%BE%8B"><span class="nav-number">1.3.4.</span> <span class="nav-text">使用举例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.5.</span> <span class="nav-text">相关寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CR"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">CR</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DR"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">DR</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SR"><span class="nav-number">1.3.5.3.</span> <span class="nav-text">SR</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.3.6.</span> <span class="nav-text">实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%882-5%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">通用定时器（2-5）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%97%B6%E9%92%9F%E6%BA%90%E9%80%89%E6%8B%A9"><span class="nav-number">1.4.1.</span> <span class="nav-text">1. 时钟源选择</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%A7%E5%88%B6%E5%99%A8-1"><span class="nav-number">1.4.2.</span> <span class="nav-text">2. 控制器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%97%B6%E5%9F%BA%E5%8D%95%E5%85%83-1"><span class="nav-number">1.4.3.</span> <span class="nav-text">3. 时基单元</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E8%BE%93%E5%85%A5%E6%8D%95%E8%8E%B7"><span class="nav-number">1.4.4.</span> <span class="nav-text">4. 输入捕获</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E8%BE%93%E5%85%A5%E6%8D%95%E8%8E%B7%E5%92%8C%E8%BE%93%E5%87%BA%E6%AF%94%E8%BE%83%E5%85%AC%E7%94%A8%E9%83%A8%E5%88%86"><span class="nav-number">1.4.5.</span> <span class="nav-text">5. 输入捕获和输出比较公用部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E8%BE%93%E5%87%BA%E6%AF%94%E8%BE%83"><span class="nav-number">1.4.6.</span> <span class="nav-text">6. 输出比较</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E4%B8%AD%E6%96%AD%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.7.</span> <span class="nav-text">定时器中断实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E5%99%A8%E8%BE%93%E5%87%BAPWM%E6%B3%A2%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.8.</span> <span class="nav-text">定时器输出PWM波实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E6%8D%95%E8%8E%B7%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.9.</span> <span class="nav-text">输入捕获实验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%89%E5%86%B2%E8%AE%A1%E6%95%B0%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.10.</span> <span class="nav-text">脉冲计数实验</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E7%BA%A7%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%881-8%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">高级定时器（1,8）</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 定时器* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 定时器*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-24 23:14:25" itemprop="dateCreated datePublished" datetime="2025-12-24T23:14:25+08:00">2025-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="STM32-定时器"><a href="#STM32-定时器" class="headerlink" title="STM32 定时器"></a>STM32 定时器</h1><h2 id="定时器硬件总线挂载情况"><a href="#定时器硬件总线挂载情况" class="headerlink" title="定时器硬件总线挂载情况"></a>定时器硬件总线挂载情况</h2><ul>
+<li>APB1：TIM2-7</li>
+<li>APB2：TIM1, TIM8</li>
+</ul>
+<h2 id="定时器资源"><a href="#定时器资源" class="headerlink" title="定时器资源"></a>定时器资源</h2><ol>
+<li>2个<strong>基本</strong>定时器（TIM6, TIM7）</li>
+<li>4个<strong>通用</strong>定时器（TIM2-5）</li>
+<li>2个<strong>高级</strong>控制定时器（TIM1, TIM8）</li>
+</ol>
+<p>这些定时器彼此独立。</p>
+<h2 id="基本定时器（6，7）"><a href="#基本定时器（6，7）" class="headerlink" title="基本定时器（6，7）"></a>基本定时器（6，7）</h2><p><strong>特点</strong>：</p>
+<ol>
+<li><code>16位自动重载**递增**计数器</code></li>
+<li><code>16位可编程分频器</code>(倍频</li>
+</ol>
+<h3 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h3><p><img src="/../images/8.10.png" alt="alt text"></p>
+<h3 id="硬件部分"><a href="#硬件部分" class="headerlink" title="硬件部分"></a>硬件部分</h3><h4 id="1-时钟源"><a href="#1-时钟源" class="headerlink" title="1. 时钟源"></a>1. 时钟源</h4><p>很明显，定时器，都需要时钟源</p>
+<p>基本定时器时钟挂载在 <code>APB1 总线</code>，所以它的时钟来自于 APB1 总线.</p>
+<p>但是基本定时器不是直接用的APB1总线的时钟，而是先经过一个<strong>倍频器</strong>，然后得到输入时钟。</p>
+<blockquote>
+<p><code>sys_stm32_clock_init</code> 时钟设置函数已经设置 <code>APB1 总线</code>时钟频率为 <code>36M</code>，APB1 总线的预分频器<code>分频系数是 2</code>，所以挂载在 APB1 总线的定时器时钟频率为 <code>72Mhz</code><br><img src="/../images/8.11.png" alt="alt text"></p>
+</blockquote>
+<h4 id="2-控制器"><a href="#2-控制器" class="headerlink" title="2. 控制器"></a>2. 控制器</h4><p>控制器除了控制定时器复位、使能、计数等功能之外，还可以用于触发 DAC 转换。</p>
+<h4 id="3-时基单元"><a href="#3-时基单元" class="headerlink" title="3. 时基单元"></a>3. 时基单元</h4><p>时基单元包括：计数器寄存器(TIMx_<code>CNT</code>)、预<code>分频</code>器寄存器(TIMx_PSC)、<code>自动重载</code>寄存器<br>(TIMx_ARR) 。</p>
+<p>这三个寄存器都是 <code>16 位</code>有效数字，即可设置值范围是 0~65535</p>
+<blockquote>
+<p>这里感觉就跟普通的systick定时器差不多了。</p>
+</blockquote>
+<p>从上面的框图，可以看到，<strong>预分频器 PSC</strong>，它有一个输入和一个输出。<strong>输入 CK_PSC</strong> 来源于控制器部分，<br>实际上就是来自于内部时钟（<code>CK_INT</code>），即 2 倍的 APB1 总线时钟频率（<code>72MHz</code>）。<strong>输出 CK_CNT</strong><br>是分频后的时钟，它是计数器<strong>实际的计数时钟</strong></p>
+<p>所以通过分频器除一下，就可以得到，给<strong>时基单元计数用的时钟周期</strong>了。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">fCK_CNT= fCK_PSC / (PSC[<span class="number">15</span>:<span class="number">0</span>]+<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p><strong>影子寄存器</strong></p>
+<p>可以看到，预分频模块和自动重载模块有影子</p>
+<p>实际上，预分频器寄存器只是起到<strong>缓存数据的作用</strong>，只有等到<strong>更新事件发生时</strong>，预分频器寄存器的<br>值才会被自动写入其影子寄存器中，这时才真正起作用。</p>
+</blockquote>
+<h3 id="更新事件"><a href="#更新事件" class="headerlink" title="更新事件"></a>更新事件</h3><p>更新事件，更新事件的产生有两种情况：</p>
+<ol>
+<li>由<strong>软件产生</strong>，将 TIMx_EGR 寄存器的位UG 置 1，产生更新事件后，硬件会自动将 UG 位清零</li>
+<li>由硬件产生：<ol>
+<li><code>计数器的值</code>（递增）等于<code>自动重装载寄存器影子寄存器</code>的值，TIMx_CNT 值与 TIMx_ARR 的设定值相等时，TIMx_CNT 的值就会被<code>自动清零</code>并且会<code>生成更新事件</code></li>
+</ol>
+</li>
+</ol>
+<p>说白了，更新事件，就是硬件计数到预定数字了，或者软件主动触发. </p>
+<p>而这个<strong>更新事件</strong>，就是<strong>完成了一轮计数</strong>，可以此时就可以<strong>开启相应功能</strong>：</p>
+<ol>
+<li>产生 DMA 请求</li>
+<li>产生中断信号</li>
+<li>触发 DAC 同步电路</li>
+</ol>
+<blockquote>
+<p>这也就是我们为什么要用定时器的理由，因为我们肯定时需要实现某些定时的功能的。计数到装载值，只是知道，现在到时间了，更新事件的触发效果，才是我们做想要的功能的开始</p>
+</blockquote>
+<blockquote>
+<p>TIMx_CNT <code>等于</code>TIMx_ARR 时，我们称之为<code>定时器溢出</code>，因为是<code>递增计数</code>，故而又称为<code>定时器上溢</code>。定时器溢出就<code>伴随着更新事件的发生</code></p>
+</blockquote>
+<p>所以，只要设置<code>预分频寄存器</code>和<code>自动重载</code>寄存器的值就可以<strong>控制定时器更新事件发生的时间</strong>. 当计数器的<br>值等于自动重载寄存器的值时就会生成更新事件，<strong>硬件自动置位</strong>相关<strong>更新事件</strong>的<strong>标志位</strong>，</p>
+<ul>
+<li>如：更新中断标志位.</li>
+</ul>
+<h3 id="使用举例"><a href="#使用举例" class="headerlink" title="使用举例"></a>使用举例</h3><p>我们在之前，设置主频72Mhz,然后，让systick定时器，1ms一次中断（裸机关中断），计算得到<code>systick定时器经过1us所需的计数</code>。延时靠数tick。</p>
+<p>现在，我们新增一个基本定时器，延时500ms, 主频72Mhz给到分频器（<code>CK_INT 为 72MHz</code>）</p>
+<ol>
+<li><code>预分频</code>系数设置为 <code>7200</code>，即写入预分频寄存器的值为 7199，那么 <code>fCK_CNT</code>&#x3D;72MHz&#x2F;7200&#x3D;<code>10KHz</code>。</li>
+<li>所以，计数+1 &#x3D; 0.1ms</li>
+<li>需要 <code>500ms 的中断周期</code>，所以我们让计数器<code>计数 5000 个</code>数就能满足要求，即需要设置自动重载寄存器的值为4999</li>
+<li>更新中断使能位 UIE 置 1，CEN 位也要置 1, <strong>开中断</strong>，让更新事件能够做事</li>
+</ol>
+<h3 id="相关寄存器"><a href="#相关寄存器" class="headerlink" title="相关寄存器"></a>相关寄存器</h3><h4 id="CR"><a href="#CR" class="headerlink" title="CR"></a>CR</h4><p><img src="/../images/8.12.png" alt="alt text"><br><img src="/../images/8.13.png" alt="alt text"><br><img src="/../images/8.14.png" alt="alt text"><br><img src="/../images/8.15.png" alt="alt text"></p>
+<h4 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h4><p><img src="/../images/8.16.png" alt="alt text"></p>
+<h4 id="SR"><a href="#SR" class="headerlink" title="SR"></a>SR</h4><p><img src="/../images/8.17.png" alt="alt text"></p>
+<h3 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h3><p>上面已经详细梳理过，基本定时器的使用了，现在想要一个定时器中断，就比较简单了，涉及的外设</p>
+<ol>
+<li>TIM6</li>
+<li>NVIC</li>
+</ol>
+<p>如果要中断中控制点灯：</p>
+<ol start="3">
+<li>GPIO</li>
+</ol>
+<p>实验要求：定时器控制LED1 – PE5定时翻转</p>
+<p><code>main</code>()</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HAL_Init();                             <span class="comment">/* 初始化HAL库 */</span></span><br><span class="line">sys_stm32_clock_init(RCC_PLL_MUL9);     <span class="comment">/* 设置时钟, 72Mhz */</span></span><br><span class="line">delay_init(<span class="number">72</span>);                         <span class="comment">/* 延时初始化 */</span></span><br><span class="line">usart_init(<span class="number">115200</span>);                     <span class="comment">/* 串口初始化为115200 */</span></span><br><span class="line">led_init();                             <span class="comment">/* 初始化LED */</span></span><br><span class="line"></span><br><span class="line">btim_timx_int_init(<span class="number">5000</span> - <span class="number">1</span>, <span class="number">7200</span> - <span class="number">1</span>); <span class="comment">/* 10Khz的计数频率，计数5K次为500ms */</span></span><br></pre></td></tr></table></figure>
+
+<p>再来看看btim的bsp是如何实现的， 两块，一块是TIM6的配置，一块是NVIC的配置</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">btim_timx_int_init</span><span class="params">(<span class="type">uint16_t</span> arr, <span class="type">uint16_t</span> psc)</span></span><br><span class="line">&#123;</span><br><span class="line">    g_timx_handle.Instance = BTIM_TIMX_INT;                      <span class="comment">/* 通用定时器X */</span></span><br><span class="line">    g_timx_handle.Init.Prescaler = psc;                          <span class="comment">/* 设置预分频系数 */</span></span><br><span class="line">    g_timx_handle.Init.CounterMode = TIM_COUNTERMODE_UP;         <span class="comment">/* 递增计数模式 */</span></span><br><span class="line">    g_timx_handle.Init.Period = arr;                             <span class="comment">/* 自动装载值 */</span></span><br><span class="line">    HAL_TIM_Base_Init(&amp;g_timx_handle);</span><br><span class="line"></span><br><span class="line">    HAL_TIM_Base_Start_IT(&amp;g_timx_handle);    <span class="comment">/* 使能定时器x及其更新中断 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>HAL_TIM_Base_Init</code>里面，先做一些前置配置：<code>HAL_TIM_Base_MspInit</code>，然后配置时基</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_TIM_Base_Init</span><span class="params">(TIM_HandleTypeDef *htim)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* Check the TIM handle allocation */</span></span><br><span class="line">  <span class="keyword">if</span> (htim == <span class="literal">NULL</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> HAL_ERROR;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check the parameters */</span></span><br><span class="line">  assert_param(IS_TIM_INSTANCE(htim-&gt;Instance));</span><br><span class="line">  assert_param(IS_TIM_COUNTER_MODE(htim-&gt;Init.CounterMode));</span><br><span class="line">  assert_param(IS_TIM_CLOCKDIVISION_DIV(htim-&gt;Init.ClockDivision));</span><br><span class="line">  assert_param(IS_TIM_AUTORELOAD_PRELOAD(htim-&gt;Init.AutoReloadPreload));</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (htim-&gt;State == HAL_TIM_STATE_RESET)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* Allocate lock resource and initialize it */</span></span><br><span class="line">    htim-&gt;Lock = HAL_UNLOCKED;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> (USE_HAL_TIM_REGISTER_CALLBACKS == 1)</span></span><br><span class="line">    <span class="comment">/* Reset interrupt callbacks to legacy weak callbacks */</span></span><br><span class="line">    TIM_ResetCallback(htim);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (htim-&gt;Base_MspInitCallback == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      htim-&gt;Base_MspInitCallback = HAL_TIM_Base_MspInit;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* Init the low level hardware : GPIO, CLOCK, NVIC */</span></span><br><span class="line">    htim-&gt;Base_MspInitCallback(htim);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">    <span class="comment">/* Init the low level hardware : GPIO, CLOCK, NVIC */</span></span><br><span class="line">    HAL_TIM_Base_MspInit(htim);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* USE_HAL_TIM_REGISTER_CALLBACKS */</span></span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Set the TIM state */</span></span><br><span class="line">  htim-&gt;State = HAL_TIM_STATE_BUSY;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Set the Time Base configuration */</span></span><br><span class="line">  TIM_Base_SetConfig(htim-&gt;Instance, &amp;htim-&gt;Init);</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Initialize the DMA burst operation state */</span></span><br><span class="line">  htim-&gt;DMABurstState = HAL_DMA_BURST_STATE_READY;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Initialize the TIM channels state */</span></span><br><span class="line">  TIM_CHANNEL_STATE_SET_ALL(htim, HAL_TIM_CHANNEL_STATE_READY);</span><br><span class="line">  TIM_CHANNEL_N_STATE_SET_ALL(htim, HAL_TIM_CHANNEL_STATE_READY);</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Initialize the TIM state*/</span></span><br><span class="line">  htim-&gt;State = HAL_TIM_STATE_READY;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> HAL_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       定时器底层驱动，开启时钟，设置中断优先级</span></span><br><span class="line"><span class="comment">                此函数会被HAL_TIM_Base_Init()函数调用</span></span><br><span class="line"><span class="comment"> * @param       htim:定时器句柄</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">HAL_TIM_Base_MspInit</span><span class="params">(TIM_HandleTypeDef *htim)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (htim-&gt;Instance == BTIM_TIMX_INT)</span><br><span class="line">    &#123;</span><br><span class="line">        BTIM_TIMX_INT_CLK_ENABLE();                     <span class="comment">/* 使能TIM时钟 */</span></span><br><span class="line">        HAL_NVIC_SetPriority(BTIM_TIMX_INT_IRQn, <span class="number">1</span>, <span class="number">3</span>); <span class="comment">/* 抢占1，子优先级3，组2 */</span></span><br><span class="line">        HAL_NVIC_EnableIRQ(BTIM_TIMX_INT_IRQn);         <span class="comment">/* 开启ITM3中断 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，<strong>一般套路</strong>都是：</p>
+<ol>
+<li>先确定好涉及的外设（NVIC，TIM6）</li>
+<li>打开所需外设的时钟（TIM6）</li>
+<li>设置相应的外设<ol>
+<li>NVIC（中断优先级，开中断）</li>
+<li>TIM6（分频，重装载值，更新中断使能）</li>
+</ol>
+</li>
+</ol>
+<p>中断向量表里面，中断处理函数：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DCD     TIM6_IRQHandler            ; TIM6</span><br></pre></td></tr></table></figure>
+
+<p>虽然btim.h里面定义的, NVIC打开的中断号是TIM6_DAC_IRQn, 虽然带DAC字样，但是就是指的tim6的中断</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> BTIM_TIMX_INT                       TIM6</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BTIM_TIMX_INT_IRQn                  TIM6_DAC_IRQn</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BTIM_TIMX_INT_IRQHandler            TIM6_DAC_IRQHandler</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//stm32xe.h</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TIM6_DAC_IRQn           TIM6_IRQn</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TIM6_DAC_IRQHandler           TIM6_IRQHandler</span></span><br><span class="line"></span><br><span class="line">  TIM6_IRQn                   = <span class="number">54</span>,     <span class="comment">/*!&lt; TIM6 global Interrupt                                */</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>所以，当产生更新事件后，实际调用的中断处理函数是：<code>TIM6_IRQHandler</code></p>
+<p>可以看到，在bsp的定时器驱动程序中，将这个中断处理函数，重实现为HAL的公共处理</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">BTIM_TIMX_INT_IRQHandler</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_TIM_IRQHandler(&amp;g_timx_handle); <span class="comment">/* 定时器中断公共处理函数 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>判断发生中断的原因-&gt; 更新事件，HAL里面，清除一些标志位。然后调用中断回调函数<code>HAL_TIM_PeriodElapsedCallback</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"> <span class="comment">// 对这个发生中断的定时器，进行分析，是不是通用定时器发生的输入捕获？输出比较？</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* TIM Update event */</span></span><br><span class="line">  <span class="keyword">if</span> (__HAL_TIM_GET_FLAG(htim, TIM_FLAG_UPDATE) != RESET)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> (__HAL_TIM_GET_IT_SOURCE(htim, TIM_IT_UPDATE) != RESET)</span><br><span class="line">    &#123;</span><br><span class="line">      __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> (USE_HAL_TIM_REGISTER_CALLBACKS == 1)</span></span><br><span class="line">      htim-&gt;PeriodElapsedCallback(htim);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">      HAL_TIM_PeriodElapsedCallback(htim);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* USE_HAL_TIM_REGISTER_CALLBACKS */</span></span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个回调函数，是个弱定义，我们就在自己的bsp驱动程序中实现</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">HAL_TIM_PeriodElapsedCallback</span><span class="params">(TIM_HandleTypeDef *htim)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (htim-&gt;Instance == BTIM_TIMX_INT)</span><br><span class="line">    &#123;</span><br><span class="line">        LED1_TOGGLE(); <span class="comment">/* LED1反转 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="通用定时器（2-5）"><a href="#通用定时器（2-5）" class="headerlink" title="通用定时器（2-5）"></a>通用定时器（2-5）</h2><p>和基本定时器区别：多了输入捕获，PWM输出，输出比较，单脉冲模式</p>
+<p>下面是组成部分</p>
+<h3 id="1-时钟源选择"><a href="#1-时钟源选择" class="headerlink" title="1. 时钟源选择"></a>1. 时钟源选择</h3><ol>
+<li><p>内部时钟(CK_INT)</p>
+</li>
+<li><p>外部时钟模式 1：外部输入引脚(TIx)，x&#x3D;1，2（即只能来自于通道 1 或者通道 2）</p>
+<pre><code> 外部时钟源信号→IO→TIMx_CH1（或者 TIMx_CH2）
+</code></pre>
+</li>
+<li><p>外部时钟模式 2：外部触发输入(ETR)</p>
+</li>
+<li><p>内部触发输入(ITRx)：使用一个定时器作为另一定时器的预分频器</p>
+</li>
+</ol>
+<h3 id="2-控制器-1"><a href="#2-控制器-1" class="headerlink" title="2. 控制器"></a>2. 控制器</h3><h3 id="3-时基单元-1"><a href="#3-时基单元-1" class="headerlink" title="3. 时基单元"></a>3. 时基单元</h3><h3 id="4-输入捕获"><a href="#4-输入捕获" class="headerlink" title="4. 输入捕获"></a>4. 输入捕获</h3><h3 id="5-输入捕获和输出比较公用部分"><a href="#5-输入捕获和输出比较公用部分" class="headerlink" title="5. 输入捕获和输出比较公用部分"></a>5. 输入捕获和输出比较公用部分</h3><h3 id="6-输出比较"><a href="#6-输出比较" class="headerlink" title="6. 输出比较"></a>6. 输出比较</h3><h3 id="定时器中断实验"><a href="#定时器中断实验" class="headerlink" title="定时器中断实验"></a>定时器中断实验</h3><ol>
+<li>TIMx_CR1   （时基单元）<ol>
+<li>APRE（选择是否自动重载缓冲）</li>
+<li>CMS 和 DIR (选择计数模式)</li>
+<li>CEN 使能计数器</li>
+</ol>
+</li>
+<li>TIMx_SMCR（从模式控制）  （时钟源选择）<ol>
+<li>SMS （配置输入时钟来源）</li>
+</ol>
+</li>
+<li>TIMx_DIER （DMA&#x2F;中断使能寄存器）  （配置溢出更新中断使能）<ol>
+<li>UIE</li>
+</ol>
+</li>
+<li>TIMx_SR  （状态寄存器） （显示中断标志位，通知产生了中断，需要手动清除）<ol>
+<li>UIF</li>
+</ol>
+</li>
+<li>TIMx_CNT  （计数寄存器）</li>
+<li>TIMx_PSC  （预分频）</li>
+<li>TIMx_ARR  （自动重载）</li>
+</ol>
+<p>通用定时器（TIM2-TIM5 等）虽然支持 4 种时钟源（内部时钟、外部 TIx、外部 ETR、内部触发 ITRx），但复位后默认选择的是 “内部时钟（CK_INT）”，这是由硬件寄存器的复位值决定的</p>
+<p>可以尝试自己直接实现中断处理，最后清除中断flag即可</p>
+<figure class="highlight scss"><table><tr><td class="code"><pre><span class="line">void <span class="built_in">liangji_TIM3_IRQHandler</span>(void)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">//HAL_TIM_IRQHandler(&amp;init_TIM3);</span></span><br><span class="line">	<span class="built_in">if</span>(__HAL_TIM_GET_FLAG(&amp;init_TIM3, TIM_FLAG_UPDATE))</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">LED1_TOGGLE</span>();</span><br><span class="line">		<span class="built_in">__HAL_TIM_CLEAR_FLAG</span>(&amp;init_TIM3, TIM_FLAG_UPDATE);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="定时器输出PWM波实验"><a href="#定时器输出PWM波实验" class="headerlink" title="定时器输出PWM波实验"></a>定时器输出PWM波实验</h3><p>实现原理<br><img src="/../images/8.2.png" alt="alt text"></p>
+<p>使用寄存器，除了上面的中断用到的基本定时器相关寄存器之外<br>还有</p>
+<ol>
+<li>TIMx_CCMR1&#x2F;2 （捕获 &#x2F;比较模式寄 存器）</li>
+<li>TIMx_CCER   （捕获&#x2F;比较使能寄存器）</li>
+<li>TIMx_CCR1~4   （捕获&#x2F;比较寄存器）</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">TIM_HandleTypeDef init_TIM3;</span><br><span class="line">TIM_OC_InitTypeDef init_TIM3_OC;</span><br><span class="line">GPIO_InitTypeDef init_gpio7;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">liangji_init_TIM3_PWM</span><span class="params">(<span class="type">uint32_t</span> psc, <span class="type">uint32_t</span> period)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">//enable clk</span></span><br><span class="line">	__HAL_RCC_TIM3_CLK_ENABLE();</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//enable NVIC</span></span><br><span class="line">	<span class="built_in">HAL_NVIC_SetPriority</span>(TIM3_IRQn,<span class="number">2</span>,<span class="number">3</span>);</span><br><span class="line">	<span class="built_in">HAL_NVIC_EnableIRQ</span>(TIM3_IRQn);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//io mux, PA7-&gt;TIM3_CH2, REMAP</span></span><br><span class="line">	__HAL_RCC_GPIOB_CLK_ENABLE();</span><br><span class="line">	init_gpio<span class="number">7.</span>Pin = GPIO_PIN_5;</span><br><span class="line">	init_gpio<span class="number">7.</span>Mode = GPIO_MODE_AF_PP;</span><br><span class="line">	init_gpio<span class="number">7.</span>Speed = GPIO_SPEED_FREQ_HIGH;</span><br><span class="line">	init_gpio<span class="number">7.</span>Pull = GPIO_PULLUP;</span><br><span class="line">	<span class="built_in">HAL_GPIO_Init</span>(GPIOB, &amp;init_gpio7);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//GTIM_TIMX_PWM_CHY_GPIO_REMAP();</span></span><br><span class="line">	__HAL_RCC_AFIO_CLK_ENABLE();</span><br><span class="line">	__HAL_AFIO_REMAP_TIM3_PARTIAL();</span><br><span class="line">	<span class="comment">//AFIO_BASE</span></span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//CLK src sel, default choose ck_int</span></span><br><span class="line">	</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//config TIM BASE</span></span><br><span class="line">	init_TIM<span class="number">3.</span>Instance = TIM3;</span><br><span class="line">	init_TIM<span class="number">3.</span>Init.Prescaler=psc;</span><br><span class="line">	init_TIM<span class="number">3.</span>Init.CounterMode=TIM_COUNTERMODE_UP;</span><br><span class="line">	init_TIM<span class="number">3.</span>Init.Period=period;</span><br><span class="line">	init_TIM<span class="number">3.</span>Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;</span><br><span class="line">	<span class="comment">//init_TIM3.Channel = HAL_TIM_ACTIVE_CHANNEL_2;</span></span><br><span class="line">	<span class="built_in">HAL_TIM_PWM_Init</span>(&amp;init_TIM3);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//config TIM compare and output</span></span><br><span class="line">	init_TIM3_OC.OCMode=TIM_OCMODE_PWM1;</span><br><span class="line">	init_TIM3_OC.Pulse=period/<span class="number">2</span>;</span><br><span class="line">	init_TIM3_OC.OCPolarity=TIM_OCPOLARITY_LOW;</span><br><span class="line">	<span class="built_in">HAL_TIM_PWM_ConfigChannel</span>(&amp;init_TIM3, &amp;init_TIM3_OC, TIM_CHANNEL_2);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//TIM3 IT</span></span><br><span class="line">	<span class="comment">//HAL_TIM_Base_Start_IT(&amp;init_TIM3);</span></span><br><span class="line">	<span class="built_in">HAL_TIM_PWM_Start</span>(&amp;init_TIM3, TIM_CHANNEL_2);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">liangji_pwm_led</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="type">static</span> <span class="type">uint8_t</span> dir = <span class="number">1</span>;</span><br><span class="line">	<span class="type">static</span> <span class="type">uint16_t</span> ledrpwmval = <span class="number">0</span>;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">if</span> (dir)</span><br><span class="line">		ledrpwmval++;</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		ledrpwmval--;</span><br><span class="line">		</span><br><span class="line">	<span class="comment">//switch</span></span><br><span class="line">	<span class="keyword">if</span> (ledrpwmval &gt; <span class="number">300</span>)</span><br><span class="line">		dir = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">if</span> (ledrpwmval == <span class="number">0</span>)</span><br><span class="line">		dir = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">	__HAL_TIM_SET_COMPARE(&amp;init_TIM3, TIM_CHANNEL_2, ledrpwmval);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>注意：关于引脚复用，和引脚重映射，最终你用到那个IO，你就配置那个IO就行了，重映射的原来的那个IO不需要配置了。</p>
+<p>TIM3方面</p>
+<p><img src="/../images/8.3.png" alt="alt text"><br><img src="/../images/8.4.png" alt="alt text"><br><img src="/../images/8.5.png" alt="alt text"><br>主要配置：<br>时基<br>时钟源（无需配置，默认就行）<br>比较主电路<br>输出部分</p>
+<h3 id="输入捕获实验"><a href="#输入捕获实验" class="headerlink" title="输入捕获实验"></a>输入捕获实验</h3><p><img src="/../images/8.6.png" alt="alt text"><br><img src="/../images/8.7.png" alt="alt text"></p>
+<p>要做的事情</p>
+<ol>
+<li>给TIM时钟</li>
+<li>配置时钟源</li>
+<li>配置输入IO</li>
+<li>配置时基</li>
+<li>配置输入通道</li>
+<li>配置捕获主电路</li>
+<li>配置捕获中断</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//TIM COMMON - Capture Project</span></span><br><span class="line"><span class="comment">//PA0 -&gt; TIM5_CH1</span></span><br><span class="line">TIM_HandleTypeDef init_TIM5;</span><br><span class="line">GPIO_InitTypeDef init_gpio_capture;</span><br><span class="line">TIM_IC_InitTypeDef init_IC;</span><br><span class="line"><span class="meta">#<span class="keyword">define</span> liangji_TIM5_IRQHandler TIM5_IRQHandler</span></span><br><span class="line"><span class="type">uint8_t</span> g_timxchy_cap_sta = <span class="number">0</span>; <span class="comment">//this count N</span></span><br><span class="line"><span class="type">uint16_t</span> g_timxchy_cap_val = <span class="number">0</span>; <span class="comment">//count Once cnt &lt; arr</span></span><br><span class="line"><span class="type">uint16_t</span> count_up = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">liangji_init_TIM5_CAPTURE</span><span class="params">(<span class="type">uint32_t</span> psc, <span class="type">uint32_t</span> period)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">//NVIC</span></span><br><span class="line">	<span class="built_in">HAL_NVIC_SetPriority</span>(TIM5_IRQn,<span class="number">2</span>,<span class="number">3</span>);</span><br><span class="line">	<span class="built_in">HAL_NVIC_EnableIRQ</span>(TIM5_IRQn);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//IO</span></span><br><span class="line">	__HAL_RCC_GPIOA_CLK_ENABLE();</span><br><span class="line">	init_gpio_capture.Pin = GPIO_PIN_0;</span><br><span class="line">	init_gpio_capture.Mode = GPIO_MODE_AF_PP;</span><br><span class="line">	init_gpio_capture.Speed = GPIO_SPEED_FREQ_HIGH;</span><br><span class="line">	init_gpio_capture.Pull = GPIO_PULLUP;</span><br><span class="line">	<span class="built_in">HAL_GPIO_Init</span>(GPIOA, &amp;init_gpio_capture);</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//enable TIM5 CLK</span></span><br><span class="line">	__HAL_RCC_TIM5_CLK_ENABLE();</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//TIM5 CLK SOURCE SEL</span></span><br><span class="line">	<span class="comment">//stay Default</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//TIM5 TIM BASE</span></span><br><span class="line">	init_TIM<span class="number">5.</span>Instance = TIM5;</span><br><span class="line">	init_TIM<span class="number">5.</span>Init.Prescaler=psc;</span><br><span class="line">	init_TIM<span class="number">5.</span>Init.CounterMode=TIM_COUNTERMODE_UP;</span><br><span class="line">	init_TIM<span class="number">5.</span>Init.Period=period;</span><br><span class="line">	init_TIM<span class="number">5.</span>Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;</span><br><span class="line">	init_TIM<span class="number">5.</span>Init.AutoReloadPreload=TIM_AUTORELOAD_PRELOAD_DISABLE;</span><br><span class="line">	init_TIM<span class="number">5.</span>Channel = HAL_TIM_ACTIVE_CHANNEL_1;</span><br><span class="line">	<span class="built_in">HAL_TIM_IC_Init</span>(&amp;init_TIM5);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//TIM5 Capture</span></span><br><span class="line">	init_IC.ICFilter = <span class="number">0</span>;<span class="comment">//dont use filter</span></span><br><span class="line">	init_IC.ICPrescaler = TIM_ICPSC_DIV1;</span><br><span class="line">	init_IC.ICSelection = TIM_ICSELECTION_DIRECTTI;</span><br><span class="line">	init_IC.ICPolarity = TIM_ICPOLARITY_RISING;</span><br><span class="line">	<span class="built_in">HAL_TIM_IC_ConfigChannel</span>(&amp;init_TIM5, &amp;init_IC, TIM_CHANNEL_1);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//TIM5 Capture IT and IT</span></span><br><span class="line">	<span class="built_in">HAL_TIM_IC_Start_IT</span>(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">	<span class="built_in">HAL_TIM_Base_Start_IT</span>(&amp;init_TIM5);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">liangji_TIM5_Capture</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span>((g_timxchy_cap_sta &amp; <span class="number">0x80</span>)!= <span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="comment">//we get a pulse</span></span><br><span class="line">		<span class="type">uint16_t</span> N = g_timxchy_cap_sta &amp; <span class="number">0x3F</span>;</span><br><span class="line">		N*= <span class="number">65536</span>;</span><br><span class="line">		N+=g_timxchy_cap_val;</span><br><span class="line">		<span class="built_in">printf</span>(<span class="string">&quot;HIGH PULSE : %d us \r\n&quot;</span>, N);</span><br><span class="line">		g_timxchy_cap_sta = <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//just LED0 TOGGLE</span></span><br><span class="line">	<span class="type">static</span> <span class="type">uint8_t</span> t = <span class="number">0</span>;</span><br><span class="line">	t++;</span><br><span class="line">	<span class="keyword">if</span>(t&gt;<span class="number">20</span>)&#123;</span><br><span class="line">		t=<span class="number">0</span>;</span><br><span class="line">		<span class="built_in">LED0_TOGGLE</span>();</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">liangji_TIM5_IRQHandler</span><span class="params">(<span class="type">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">		<span class="built_in">HAL_TIM_IRQHandler</span>(&amp;init_TIM5);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">			Update IT callback</span></span><br><span class="line"><span class="comment">			impel in main, toggle led1, and count up ++</span></span><br><span class="line"><span class="comment">      HAL_TIM_PeriodElapsedCallback(htim);</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">HAL_TIM_PeriodElapsedCallback</span><span class="params">(TIM_HandleTypeDef *htim)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (htim-&gt;Instance == TIM6)&#123;</span><br><span class="line">		<span class="comment">//LED1_TOGGLE();</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (htim-&gt;Instance == TIM3)&#123;</span><br><span class="line">		<span class="comment">//LED1_TOGGLE();</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (htim-&gt;Instance == TIM5) &#123;</span><br><span class="line">			<span class="keyword">if</span>((g_timxchy_cap_sta &amp; <span class="number">0X80</span>) == <span class="number">0</span>)&#123;</span><br><span class="line">					<span class="keyword">if</span>(g_timxchy_cap_sta &amp; <span class="number">0X40</span>)&#123;</span><br><span class="line">							<span class="keyword">if</span> ((g_timxchy_cap_sta &amp; <span class="number">0X3F</span>) == <span class="number">0X3F</span>)&#123;</span><br><span class="line">								<span class="comment">//  wait for falling, over the N max, is too long,think it is success, so re-wait for up, give up wait falling</span></span><br><span class="line">								<span class="built_in">TIM_RESET_CAPTUREPOLARITY</span>(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">								<span class="built_in">TIM_SET_CAPTUREPOLARITY</span>(&amp;init_TIM5, TIM_CHANNEL_1, TIM_ICPOLARITY_RISING);</span><br><span class="line">								g_timxchy_cap_sta |= <span class="number">0x80</span>;     </span><br><span class="line">								g_timxchy_cap_val = <span class="number">0xffff</span>; <span class="comment">//mean: N(max)*arr + N(max)</span></span><br><span class="line">							&#125;</span><br><span class="line">							<span class="keyword">else</span> &#123;</span><br><span class="line">								g_timxchy_cap_sta++;  <span class="comment">//N +1</span></span><br><span class="line">							&#125;</span><br><span class="line">					&#125;</span><br><span class="line">			</span><br><span class="line">			&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">      HAL_TIM_IC_CaptureCallback(htim);</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">HAL_TIM_IC_CaptureCallback</span><span class="params">(TIM_HandleTypeDef *htim)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="comment">//get up cnt</span></span><br><span class="line">	<span class="comment">//set fall detect</span></span><br><span class="line">	<span class="keyword">if</span>((g_timxchy_cap_sta &amp; <span class="number">0X80</span>) == <span class="number">0</span>)&#123;</span><br><span class="line">		<span class="keyword">if</span>(g_timxchy_cap_sta &amp; <span class="number">0X40</span>)&#123; <span class="comment">//now 0 1, but now capture falling because when capture up, we detect falling</span></span><br><span class="line">			g_timxchy_cap_sta |= <span class="number">0x80</span>;</span><br><span class="line">			g_timxchy_cap_val = <span class="built_in">HAL_TIM_ReadCapturedValue</span>(&amp;init_TIM5, TIM_CHANNEL_1);<span class="comment">//get falling cnt t2 (t2&lt;arr)</span></span><br><span class="line">			<span class="comment">//reset detect up</span></span><br><span class="line">			<span class="built_in">TIM_RESET_CAPTUREPOLARITY</span>(&amp;init_TIM5, TIM_CHANNEL_1);</span><br><span class="line">			<span class="built_in">TIM_SET_CAPTUREPOLARITY</span>(&amp;init_TIM5, TIM_CHANNEL_1, TIM_ICPOLARITY_RISING);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123; <span class="comment">//now 0 0, wait for up edge, but now capture interupt, so start a new detect</span></span><br><span class="line">			g_timxchy_cap_sta = <span class="number">0</span>;</span><br><span class="line">			g_timxchy_cap_val = <span class="number">0</span>;</span><br><span class="line">			g_timxchy_cap_sta |= <span class="number">0x40</span>;   <span class="comment">// set 0 1, we have get up edge</span></span><br><span class="line">			<span class="comment">//set polo falling detect, no need to record now cnt t1, because t1 + N*arr + t2 = now</span></span><br><span class="line">			__HAL_TIM_DISABLE(&amp;init_TIM5);</span><br><span class="line">			__HAL_TIM_SET_COUNTER(&amp;init_TIM5, <span class="number">0</span>); </span><br><span class="line">			<span class="built_in">TIM_RESET_CAPTUREPOLARITY</span>(&amp;init_TIM5, TIM_CHANNEL_1);			</span><br><span class="line">			<span class="built_in">TIM_SET_CAPTUREPOLARITY</span>(&amp;init_TIM5, TIM_CHANNEL_1, TIM_ICPOLARITY_RISING);</span><br><span class="line">			__HAL_TIM_ENABLE(&amp;init_TIM5);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/../images/8.8.png" alt="alt text"><br>重点在于在捕获中断和更新事件中断中，统计溢出次数N和上升下降沿。</p>
+<h3 id="脉冲计数实验"><a href="#脉冲计数实验" class="headerlink" title="脉冲计数实验"></a>脉冲计数实验</h3><p>这次我们使用外部时钟模式1, 多一个配置控制器。</p>
+<p><img src="/../images/8.9.png" alt="alt text"></p>
+<p>注意所有功能的使能， 中断的使能</p>
+<ol>
+<li>时钟的使能</li>
+<li>输入通道的使能（如果有）</li>
+<li>更新事件中断使能</li>
+</ol>
+<h2 id="高级定时器（1-8）"><a href="#高级定时器（1-8）" class="headerlink" title="高级定时器（1,8）"></a>高级定时器（1,8）</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-hal%E5%BA%93/" rel="prev" title="stm32 hal库">
+                  <i class="fa fa-angle-left"></i> stm32 hal库
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/" rel="next" title="stm32 看门狗">
+                  stm32 看门狗 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 定时器*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

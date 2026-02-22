@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="寒假两个月学习规划（Linux驱动方向） 目标：研二秋季投递大厂实习前，达到面经中Linux驱动&#x2F;BSP方向除手撕代码外的面试水平 周期：8周（约2个月）   一、现状与差距分析已有基础   模块 掌握程度 说明    STM32 扎实 GPIO&#x2F;UART&#x2F;I2C&#x2F;DMA&#x2F;定时器&#x2F;中断&#x2F;时钟，寄存器级理解   FreeRTOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="学习计划">
+<meta property="og:url" content="http://example.com/2026/02/16/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="寒假两个月学习规划（Linux驱动方向） 目标：研二秋季投递大厂实习前，达到面经中Linux驱动&#x2F;BSP方向除手撕代码外的面试水平 周期：8周（约2个月）   一、现状与差距分析已有基础   模块 掌握程度 说明    STM32 扎实 GPIO&#x2F;UART&#x2F;I2C&#x2F;DMA&#x2F;定时器&#x2F;中断&#x2F;时钟，寄存器级理解   FreeRTOS">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-02-16T07:57:47.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.757Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/02/16/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/16/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/","path":"2026/02/16/学习计划/","title":"学习计划"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>学习计划 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%92%E5%81%87%E4%B8%A4%E4%B8%AA%E6%9C%88%E5%AD%A6%E4%B9%A0%E8%A7%84%E5%88%92%EF%BC%88Linux%E9%A9%B1%E5%8A%A8%E6%96%B9%E5%90%91%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">寒假两个月学习规划（Linux驱动方向）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%8E%B0%E7%8A%B6%E4%B8%8E%E5%B7%AE%E8%B7%9D%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">一、现状与差距分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%B2%E6%9C%89%E5%9F%BA%E7%A1%80"><span class="nav-number">1.1.1.</span> <span class="nav-text">已有基础</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%A2%E7%BB%8F%E8%80%83%E7%82%B9%E5%B7%AE%E8%B7%9D%E8%A1%A8"><span class="nav-number">1.1.2.</span> <span class="nav-text">面经考点差距表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%818%E5%91%A8%E8%AF%A6%E7%BB%86%E8%A7%84%E5%88%92"><span class="nav-number">1.2.</span> <span class="nav-text">二、8周详细规划</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC1-2%E5%91%A8%EF%BC%9ALinux%E9%A9%B1%E5%8A%A8%E5%85%A5%E9%97%A8-C%E8%AF%AD%E8%A8%80%E6%9F%A5%E6%BC%8F"><span class="nav-number">1.2.1.</span> <span class="nav-text">第1-2周：Linux驱动入门 + C语言查漏</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux%E9%A9%B1%E5%8A%A8%EF%BC%88%E6%AF%8F%E5%A4%A9%E4%B8%BB%E5%8A%9B%E6%97%B6%E9%97%B4%EF%BC%89"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">Linux驱动（每天主力时间）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C%E8%AF%AD%E8%A8%80%E6%9F%A5%E6%BC%8F%EF%BC%88%E6%AF%8F%E5%A4%A91%E5%B0%8F%E6%97%B6%EF%BC%89"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">C语言查漏（每天1小时）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC3-4%E5%91%A8%EF%BC%9Aplatform%E9%A9%B1%E5%8A%A8-%E8%AE%BE%E5%A4%87%E6%A0%91%E6%B7%B1%E5%85%A5-%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">1.2.2.</span> <span class="nav-text">第3-4周：platform驱动 + 设备树深入 + 内核内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Linux%E9%A9%B1%E5%8A%A8"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">Linux驱动</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">内核内存管理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC5-6%E5%91%A8%EF%BC%9A%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6-%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6-C-11"><span class="nav-number">1.2.3.</span> <span class="nav-text">第5-6周：进程调度 + 同步机制 + C++11</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">内核进程与调度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">同步机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#C-11%EF%BC%88%E6%AF%8F%E5%A4%A91-1-5%E5%B0%8F%E6%97%B6%EF%BC%89"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">C++11（每天1-1.5小时）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC7%E5%91%A8%EF%BC%9A%E7%BD%91%E7%BB%9C-ARM%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84-%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7"><span class="nav-number">1.2.4.</span> <span class="nav-text">第7周：网络 + ARM体系结构 + 调试工具</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">网络基础</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ARM%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E8%A1%A5%E5%85%85"><span class="nav-number">1.2.4.2.</span> <span class="nav-text">ARM体系结构补充</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7"><span class="nav-number">1.2.4.3.</span> <span class="nav-text">调试工具</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC8%E5%91%A8%EF%BC%9AMakefile-Shell-%E9%9D%A2%E7%BB%8F%E5%AE%9E%E6%88%98-%E9%A1%B9%E7%9B%AE%E6%95%B4%E7%90%86"><span class="nav-number">1.2.5.</span> <span class="nav-text">第8周：Makefile&#x2F;Shell + 面经实战 + 项目整理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Makefile-Shell-%E5%B7%A5%E5%85%B7"><span class="nav-number">1.2.5.1.</span> <span class="nav-text">Makefile&#x2F;Shell&#x2F;工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%A2%E7%BB%8F%E5%AE%9E%E6%88%98"><span class="nav-number">1.2.5.2.</span> <span class="nav-text">面经实战</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E6%95%B4%E7%90%86%EF%BC%88%E9%9D%A2%E8%AF%95%E7%AB%9E%E4%BA%89%E5%8A%9B%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="nav-number">1.2.5.3.</span> <span class="nav-text">项目整理（面试竞争力核心）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%AF%8F%E6%97%A5%E6%97%B6%E9%97%B4%E5%88%86%E9%85%8D"><span class="nav-number">1.3.</span> <span class="nav-text">三、每日时间分配</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E4%BC%98%E5%85%88%E7%BA%A7%E8%AF%B4%E6%98%8E"><span class="nav-number">1.4.</span> <span class="nav-text">四、优先级说明</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E5%85%B3%E4%BA%8E%E5%BF%83%E6%80%81"><span class="nav-number">1.5.</span> <span class="nav-text">五、关于心态</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/16/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="学习计划 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          学习计划
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-16 15:57:47" itemprop="dateCreated datePublished" datetime="2026-02-16T15:57:47+08:00">2026-02-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/" itemprop="url" rel="index"><span itemprop="name">学习计划</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="寒假两个月学习规划（Linux驱动方向）"><a href="#寒假两个月学习规划（Linux驱动方向）" class="headerlink" title="寒假两个月学习规划（Linux驱动方向）"></a>寒假两个月学习规划（Linux驱动方向）</h1><blockquote>
+<p>目标：研二秋季投递大厂实习前，达到面经中Linux驱动&#x2F;BSP方向除手撕代码外的面试水平</p>
+<p>周期：8周（约2个月）</p>
+</blockquote>
+<hr>
+<h2 id="一、现状与差距分析"><a href="#一、现状与差距分析" class="headerlink" title="一、现状与差距分析"></a>一、现状与差距分析</h2><h3 id="已有基础"><a href="#已有基础" class="headerlink" title="已有基础"></a>已有基础</h3><table>
+<thead>
+<tr>
+<th>模块</th>
+<th>掌握程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>STM32</td>
+<td>扎实</td>
+<td>GPIO&#x2F;UART&#x2F;I2C&#x2F;DMA&#x2F;定时器&#x2F;中断&#x2F;时钟，寄存器级理解</td>
+</tr>
+<tr>
+<td>FreeRTOS</td>
+<td>扎实</td>
+<td>任务切换&#x2F;PendSV&#x2F;双栈&#x2F;内存管理&#x2F;调度机制</td>
+</tr>
+<tr>
+<td>xv6</td>
+<td>扎实</td>
+<td>5个lab完成，页表&#x2F;trap&#x2F;COW fork，OS内功好</td>
+</tr>
+<tr>
+<td>IMX6ULL</td>
+<td>中等</td>
+<td>U-Boot&#x2F;LCD&#x2F;I2C&#x2F;SPI&#x2F;RTC驱动，还没进入Linux驱动框架</td>
+</tr>
+<tr>
+<td>RK3399项目</td>
+<td>实战级</td>
+<td>TypeC OTG切换&#x2F;MIPI转LVDS屏幕适配，两年工业经验</td>
+</tr>
+</tbody></table>
+<h3 id="面经考点差距表"><a href="#面经考点差距表" class="headerlink" title="面经考点差距表"></a>面经考点差距表</h3><table>
+<thead>
+<tr>
+<th>模块</th>
+<th>面经出现频率</th>
+<th>当前状态</th>
+<th>需要补的内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>C语言基础</td>
+<td>几乎每场</td>
+<td>有实战基础</td>
+<td>static&#x2F;volatile&#x2F;const细节、内存对齐、指针高级用法</td>
+</tr>
+<tr>
+<td>C++11</td>
+<td>~60%</td>
+<td>薄弱</td>
+<td>move&#x2F;lambda&#x2F;智能指针&#x2F;STL容器</td>
+</tr>
+<tr>
+<td>Linux驱动框架</td>
+<td>核心必考</td>
+<td>刚到U-Boot</td>
+<td>字符设备→platform→设备树→子系统驱动</td>
+</tr>
+<tr>
+<td>内核内存管理</td>
+<td>~70%</td>
+<td>xv6有底子</td>
+<td>kmalloc&#x2F;vmalloc&#x2F;slab&#x2F;buddy&#x2F;mmap</td>
+</tr>
+<tr>
+<td>进程与调度</td>
+<td>~60%</td>
+<td>xv6有底子</td>
+<td>CFS、task_struct、IPC</td>
+</tr>
+<tr>
+<td>同步机制</td>
+<td>~50%</td>
+<td>FreeRTOS有概念</td>
+<td>mutex&#x2F;spinlock&#x2F;信号量&#x2F;RCU</td>
+</tr>
+<tr>
+<td>U-Boot</td>
+<td>~40%</td>
+<td>已学过</td>
+<td>补bootcmd&#x2F;bootargs&#x2F;启动流程细节</td>
+</tr>
+<tr>
+<td>ARM体系结构</td>
+<td>~40%</td>
+<td>有基础</td>
+<td>异常等级、MMU、Cache一致性</td>
+</tr>
+<tr>
+<td>网络TCP&#x2F;IP</td>
+<td>~35%</td>
+<td>薄弱</td>
+<td>三次握手&#x2F;四次挥手、socket、select&#x2F;poll&#x2F;epoll</td>
+</tr>
+<tr>
+<td>调试工具</td>
+<td>~30%</td>
+<td>一般</td>
+<td>GDB、ftrace、coredump分析</td>
+</tr>
+<tr>
+<td>Makefile&#x2F;Shell</td>
+<td>~25%</td>
+<td>一般</td>
+<td>Makefile语法、Shell脚本基础</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="二、8周详细规划"><a href="#二、8周详细规划" class="headerlink" title="二、8周详细规划"></a>二、8周详细规划</h2><h3 id="第1-2周：Linux驱动入门-C语言查漏"><a href="#第1-2周：Linux驱动入门-C语言查漏" class="headerlink" title="第1-2周：Linux驱动入门 + C语言查漏"></a>第1-2周：Linux驱动入门 + C语言查漏</h3><h4 id="Linux驱动（每天主力时间）"><a href="#Linux驱动（每天主力时间）" class="headerlink" title="Linux驱动（每天主力时间）"></a>Linux驱动（每天主力时间）</h4><ul>
+<li><input disabled="" type="checkbox"> 字符设备驱动开发<ul>
+<li><code>file_operations</code> 结构体</li>
+<li><code>cdev</code>、<code>register_chrdev</code>、<code>alloc_chrdev_region</code></li>
+<li>设备号（主设备号&#x2F;次设备号）</li>
+<li><code>class_create</code> &#x2F; <code>device_create</code> 自动创建设备节点</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 动手写一个LED字符设备驱动，从用户空间 <code>open/write/ioctl</code> 控制</li>
+<li><input disabled="" type="checkbox"> 设备树基础<ul>
+<li>设备树语法（DTS&#x2F;DTB&#x2F;DTC）</li>
+<li>节点、属性、<code>compatible</code> 字段</li>
+<li>设备树和驱动的匹配机制（<code>of_match_table</code>）</li>
+<li><code>of_</code> 系列API：<code>of_find_node_by_path</code>、<code>of_property_read_u32</code> 等</li>
+</ul>
+</li>
+</ul>
+<h4 id="C语言查漏（每天1小时）"><a href="#C语言查漏（每天1小时）" class="headerlink" title="C语言查漏（每天1小时）"></a>C语言查漏（每天1小时）</h4><ul>
+<li><input disabled="" type="checkbox"> <code>static</code> 的三种用法<ul>
+<li>修饰局部变量：生命周期延长到程序结束</li>
+<li>修饰全局变量：限制作用域到本文件</li>
+<li>修饰函数：限制函数可见性到本文件</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>volatile</code> 的作用和使用场景<ul>
+<li>防止编译器优化，每次从内存读取</li>
+<li>场景：硬件寄存器、中断服务程序中的共享变量、多线程共享变量</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>const</code> 与 <code>#define</code> 的区别<ul>
+<li>类型检查、作用域、调试可见性</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 指针专题<ul>
+<li>指针与数组的区别</li>
+<li>函数指针、回调函数</li>
+<li>指针的指针（二级指针）</li>
+<li><code>void*</code> 的使用</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 结构体内存对齐<ul>
+<li>对齐规则、<code>#pragma pack</code></li>
+<li><code>sizeof</code> 计算</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 大小端（Big-endian &#x2F; Little-endian）<ul>
+<li>判断方法、转换函数</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>malloc</code> 的实现原理<ul>
+<li><code>brk</code> &#x2F; <code>mmap</code> 系统调用</li>
+<li>内存碎片问题</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="第3-4周：platform驱动-设备树深入-内核内存管理"><a href="#第3-4周：platform驱动-设备树深入-内核内存管理" class="headerlink" title="第3-4周：platform驱动 + 设备树深入 + 内核内存管理"></a>第3-4周：platform驱动 + 设备树深入 + 内核内存管理</h3><h4 id="Linux驱动"><a href="#Linux驱动" class="headerlink" title="Linux驱动"></a>Linux驱动</h4><ul>
+<li><input disabled="" type="checkbox"> platform总线驱动模型（面经必考）<ul>
+<li><code>platform_device</code> 和 <code>platform_driver</code></li>
+<li><code>probe</code> 和 <code>remove</code> 函数</li>
+<li>资源获取：<code>platform_get_resource</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 设备树与驱动的完整流程<ul>
+<li>pinctrl子系统：引脚复用配置</li>
+<li>gpio子系统：<code>of_get_named_gpio</code>、<code>gpio_request</code>、<code>gpio_direction_output</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> I2C子系统驱动（重点学框架，裸机协议你已经会了）<ul>
+<li>I2C核心层 &#x2F; 适配器层 &#x2F; 设备驱动层</li>
+<li><code>i2c_driver</code>、<code>i2c_client</code></li>
+<li><code>i2c_transfer</code> &#x2F; <code>i2c_smbus_read_byte_data</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> SPI子系统驱动<ul>
+<li><code>spi_driver</code>、<code>spi_device</code></li>
+<li><code>spi_sync</code> &#x2F; <code>spi_async</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="内核内存管理"><a href="#内核内存管理" class="headerlink" title="内核内存管理"></a>内核内存管理</h4><ul>
+<li><input disabled="" type="checkbox"> 物理内存管理<ul>
+<li>buddy system（伙伴系统）：页的分配与合并</li>
+<li><code>alloc_pages</code> &#x2F; <code>free_pages</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> slab分配器<ul>
+<li>解决buddy system小内存分配效率问题</li>
+<li><code>kmem_cache_create</code> &#x2F; <code>kmem_cache_alloc</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>kmalloc</code> vs <code>vmalloc</code> vs <code>kmap</code><ul>
+<li><code>kmalloc</code>：物理连续，基于slab，用于小内存</li>
+<li><code>vmalloc</code>：虚拟连续物理不一定连续，用于大内存</li>
+<li><code>kmap</code>：映射高端内存</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>mmap</code> 原理<ul>
+<li>用户空间与内核空间的内存映射</li>
+<li><code>remap_pfn_range</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>copy_from_user</code> &#x2F; <code>copy_to_user</code><ul>
+<li>为什么不能直接用 <code>memcpy</code></li>
+<li>页错误处理</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 用户空间虚拟内存布局<ul>
+<li>代码段 &#x2F; 数据段 &#x2F; BSS &#x2F; 堆 &#x2F; 栈 &#x2F; mmap区域</li>
+<li>4GB虚拟地址空间划分（3G用户 + 1G内核）</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="第5-6周：进程调度-同步机制-C-11"><a href="#第5-6周：进程调度-同步机制-C-11" class="headerlink" title="第5-6周：进程调度 + 同步机制 + C++11"></a>第5-6周：进程调度 + 同步机制 + C++11</h3><h4 id="内核进程与调度"><a href="#内核进程与调度" class="headerlink" title="内核进程与调度"></a>内核进程与调度</h4><ul>
+<li><input disabled="" type="checkbox"> <code>task_struct</code> 结构体关键字段<ul>
+<li>进程状态（TASK_RUNNING &#x2F; TASK_INTERRUPTIBLE &#x2F; TASK_UNINTERRUPTIBLE）</li>
+<li>PID、优先级、调度策略</li>
+<li>mm_struct（内存描述符）</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 进程状态转换<ul>
+<li>创建→就绪→运行→阻塞→终止</li>
+<li>僵尸进程、孤儿进程</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> CFS调度器原理<ul>
+<li>虚拟运行时间 <code>vruntime</code></li>
+<li>红黑树组织就绪队列</li>
+<li>权重与nice值的关系</li>
+<li>SCHED_NORMAL &#x2F; SCHED_FIFO &#x2F; SCHED_RR 的区别</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 进程间通信（IPC）<ul>
+<li>管道（pipe）和命名管道（FIFO）</li>
+<li>共享内存（效率最高）</li>
+<li>信号量（semaphore）</li>
+<li>消息队列</li>
+<li>信号（signal）</li>
+<li>socket（可跨主机）</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 中断上下半部<ul>
+<li>上半部：硬中断，快速执行</li>
+<li>下半部：softirq &#x2F; tasklet &#x2F; workqueue</li>
+<li>threaded irq</li>
+<li>各自适用场景</li>
+</ul>
+</li>
+</ul>
+<h4 id="同步机制"><a href="#同步机制" class="headerlink" title="同步机制"></a>同步机制</h4><ul>
+<li><input disabled="" type="checkbox"> 自旋锁（spinlock）<ul>
+<li>忙等待，适用于中断上下文和短临界区</li>
+<li><code>spin_lock</code> &#x2F; <code>spin_lock_irqsave</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 互斥锁（mutex）<ul>
+<li>可睡眠，只能用于进程上下文</li>
+<li>适用于长临界区</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 自旋锁 vs 互斥锁的选择（面经高频题）<ul>
+<li>中断上下文 → 必须用自旋锁</li>
+<li>临界区很短 → 自旋锁</li>
+<li>临界区可能睡眠 → 互斥锁</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 信号量 vs completion</li>
+<li><input disabled="" type="checkbox"> 原子操作：<code>atomic_t</code>、<code>atomic_read</code>、<code>atomic_set</code>、<code>atomic_inc</code></li>
+<li><input disabled="" type="checkbox"> RCU基本概念<ul>
+<li>读不加锁，写端等待所有读完成后再释放旧数据</li>
+<li>适用于读多写少场景</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 死锁<ul>
+<li>四个必要条件</li>
+<li>避免方法：固定加锁顺序、超时机制</li>
+</ul>
+</li>
+</ul>
+<h4 id="C-11（每天1-1-5小时）"><a href="#C-11（每天1-1-5小时）" class="headerlink" title="C++11（每天1-1.5小时）"></a>C++11（每天1-1.5小时）</h4><blockquote>
+<p>不需要精通，但面经中出现率约60%，需要能答上来</p>
+</blockquote>
+<ul>
+<li><input disabled="" type="checkbox"> 基础特性<ul>
+<li><code>auto</code> 类型推导</li>
+<li><code>nullptr</code> 替代 <code>NULL</code></li>
+<li>范围for循环</li>
+<li><code>enum class</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 右值引用和移动语义<ul>
+<li>左值 vs 右值</li>
+<li><code>std::move</code> 的作用：将左值转为右值引用，触发移动构造</li>
+<li>移动构造函数 vs 拷贝构造函数</li>
+<li><code>std::forward</code> 完美转发</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 智能指针<ul>
+<li><code>std::shared_ptr</code>：引用计数，共享所有权</li>
+<li><code>std::unique_ptr</code>：独占所有权，不可拷贝</li>
+<li><code>std::weak_ptr</code>：解决 <code>shared_ptr</code> 循环引用</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>lambda</code> 表达式<ul>
+<li>语法：<code>[capture](params) -&gt; return_type { body }</code></li>
+<li>捕获方式：<code>[=]</code> 值捕获、<code>[&amp;]</code> 引用捕获</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> STL容器<ul>
+<li><code>vector</code>：<code>reserve</code> vs <code>resize</code>、<code>push_back</code> vs <code>emplace_back</code></li>
+<li><code>map</code> vs <code>unordered_map</code>（红黑树 vs 哈希表）</li>
+<li><code>vector</code> vs <code>array</code></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="第7周：网络-ARM体系结构-调试工具"><a href="#第7周：网络-ARM体系结构-调试工具" class="headerlink" title="第7周：网络 + ARM体系结构 + 调试工具"></a>第7周：网络 + ARM体系结构 + 调试工具</h3><h4 id="网络基础"><a href="#网络基础" class="headerlink" title="网络基础"></a>网络基础</h4><ul>
+<li><input disabled="" type="checkbox"> TCP三次握手（面经高频）<ul>
+<li>SYN → SYN+ACK → ACK</li>
+<li>为什么是三次不是两次</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> TCP四次挥手<ul>
+<li>FIN → ACK → FIN → ACK</li>
+<li>TIME_WAIT状态的意义</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> TCP vs UDP<ul>
+<li>可靠性、连接、顺序、效率</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> socket编程基本流程<ul>
+<li>服务端：socket → bind → listen → accept → read&#x2F;write → close</li>
+<li>客户端：socket → connect → read&#x2F;write → close</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> I&#x2F;O多路复用（面经高频）<ul>
+<li><code>select</code>：fd数量有限（1024），每次需要拷贝fd集合</li>
+<li><code>poll</code>：无fd数量限制，但仍需遍历</li>
+<li><code>epoll</code>：事件驱动，效率最高，<code>epoll_create</code>&#x2F;<code>epoll_ctl</code>&#x2F;<code>epoll_wait</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 其他协议<ul>
+<li>ARP协议：IP地址→MAC地址</li>
+<li>DNS解析过程</li>
+<li>ICMP：ping的原理</li>
+</ul>
+</li>
+</ul>
+<h4 id="ARM体系结构补充"><a href="#ARM体系结构补充" class="headerlink" title="ARM体系结构补充"></a>ARM体系结构补充</h4><ul>
+<li><input disabled="" type="checkbox"> ARM异常等级<ul>
+<li>EL0（用户态）→ EL1（内核态）→ EL2（Hypervisor）→ EL3（Secure Monitor）</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> MMU工作原理<ul>
+<li>页表（多级页表）、TLB（Translation Lookaside Buffer）</li>
+<li>TLB miss的处理流程</li>
+<li>与xv6的页表机制对照理解</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> Cache<ul>
+<li>L1&#x2F;L2&#x2F;L3层级</li>
+<li>Cache一致性问题（多核场景）</li>
+<li>DMA操作时的Cache刷新</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> ARM启动流程<ul>
+<li>BootROM → BL1 → BL2 → BL31(TF-A) → U-Boot → Kernel</li>
+<li>对照你学过的U-Boot部分衔接理解</li>
+</ul>
+</li>
+</ul>
+<h4 id="调试工具"><a href="#调试工具" class="headerlink" title="调试工具"></a>调试工具</h4><ul>
+<li><input disabled="" type="checkbox"> GDB<ul>
+<li>常用命令：<code>break</code>&#x2F;<code>next</code>&#x2F;<code>step</code>&#x2F;<code>print</code>&#x2F;<code>backtrace</code>&#x2F;<code>watch</code></li>
+<li>远程调试：<code>gdbserver</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 内核调试<ul>
+<li><code>printk</code> 日志等级</li>
+<li>动态调试（dynamic debug）</li>
+<li><code>ftrace</code>：函数跟踪、事件跟踪</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> coredump分析<ul>
+<li>生成coredump文件</li>
+<li>用GDB加载分析</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <code>dmesg</code> 查看内核日志</li>
+</ul>
+<hr>
+<h3 id="第8周：Makefile-Shell-面经实战-项目整理"><a href="#第8周：Makefile-Shell-面经实战-项目整理" class="headerlink" title="第8周：Makefile&#x2F;Shell + 面经实战 + 项目整理"></a>第8周：Makefile&#x2F;Shell + 面经实战 + 项目整理</h3><h4 id="Makefile-Shell-工具"><a href="#Makefile-Shell-工具" class="headerlink" title="Makefile&#x2F;Shell&#x2F;工具"></a>Makefile&#x2F;Shell&#x2F;工具</h4><ul>
+<li><input disabled="" type="checkbox"> Makefile<ul>
+<li>基本语法：目标、依赖、命令</li>
+<li>自动变量：<code>$@</code>、<code>$&lt;</code>、<code>$^</code></li>
+<li>模式规则、伪目标</li>
+<li>内核模块的Makefile写法</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> Shell脚本基础<ul>
+<li>变量、条件判断、循环</li>
+<li>常用命令：<code>grep</code>&#x2F;<code>sed</code>&#x2F;<code>awk</code>&#x2F;<code>find</code>&#x2F;<code>xargs</code></li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> Git<ul>
+<li>分支管理、merge vs rebase</li>
+<li>解决冲突</li>
+</ul>
+</li>
+</ul>
+<h4 id="面经实战"><a href="#面经实战" class="headerlink" title="面经实战"></a>面经实战</h4><ul>
+<li><input disabled="" type="checkbox"> 逐条过面经PDF，针对Linux驱动&#x2F;BSP相关的面试记录：<ul>
+<li><strong>重点场次</strong>：03、04、07、13、14、15、31、32、33、34、38号</li>
+<li>能答的打勾，不能答的记录下来回头补</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 模拟面试练习<ul>
+<li>找同学互相模拟，或者对着镜子讲</li>
+<li>每个知识点要能用自己的话讲2-3分钟</li>
+</ul>
+</li>
+</ul>
+<h4 id="项目整理（面试竞争力核心）"><a href="#项目整理（面试竞争力核心）" class="headerlink" title="项目整理（面试竞争力核心）"></a>项目整理（面试竞争力核心）</h4><ul>
+<li><input disabled="" type="checkbox"> RK3399 TypeC OTG项目 — STAR描述<ul>
+<li><strong>S</strong>：什么产品、什么需求</li>
+<li><strong>T</strong>：你负责什么</li>
+<li><strong>A</strong>：具体怎么做的（改了哪些代码、遇到什么坑）</li>
+<li><strong>R</strong>：结果如何</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> RK3399 MIPI转LVDS屏幕适配项目 — STAR描述<ul>
+<li>同上，重点准备：时序参数调试、DTS配置、调试过程</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> 准备好能讲15分钟的项目深度版本</li>
+<li><input disabled="" type="checkbox"> 准备好3分钟的项目精简版本</li>
+</ul>
+<hr>
+<h2 id="三、每日时间分配"><a href="#三、每日时间分配" class="headerlink" title="三、每日时间分配"></a>三、每日时间分配</h2><table>
+<thead>
+<tr>
+<th>时间段</th>
+<th>内容</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>上午（3-4h）</td>
+<td>Linux驱动学习 + 实操</td>
+<td>IMX6ULL跟着做，代码必须跑起来</td>
+</tr>
+<tr>
+<td>下午前半（2h）</td>
+<td>当周理论模块</td>
+<td>内核原理 &#x2F; C++ &#x2F; 网络，按周计划推进</td>
+</tr>
+<tr>
+<td>下午后半（1.5h）</td>
+<td>写笔记 + 对照面经验证</td>
+<td>学完一个点就去面经里找相关题</td>
+</tr>
+<tr>
+<td>晚上（1-1.5h）</td>
+<td>C语言 &#x2F; 回顾当天内容</td>
+<td>查漏补缺</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、优先级说明"><a href="#四、优先级说明" class="headerlink" title="四、优先级说明"></a>四、优先级说明</h2><p>如果时间不够用，按以下顺序砍：</p>
+<ol>
+<li><strong>绝不能砍</strong>：Linux驱动框架（字符设备&#x2F;platform&#x2F;设备树&#x2F;I2C子系统）、内核内存管理、同步机制</li>
+<li><strong>尽量保住</strong>：C语言细节、进程调度CFS、中断上下半部、C++11基础</li>
+<li><strong>可以精简</strong>：网络只需掌握TCP三握四挥 + epoll、ARM只需MMU + 启动流程</li>
+<li><strong>实在没时间可以考前突击</strong>：Makefile&#x2F;Shell、调试工具细节</li>
+</ol>
+<hr>
+<h2 id="五、关于心态"><a href="#五、关于心态" class="headerlink" title="五、关于心态"></a>五、关于心态</h2><ul>
+<li>面经PDF里47场面试覆盖了BSP&#x2F;RTOS&#x2F;AI芯片&#x2F;蓝牙&#x2F;汽车电子等完全不同的方向，你只需要关注Linux驱动&#x2F;BSP相关的15-20场</li>
+<li>深度比广度重要：能把Linux I2C子系统从用户空间到硬件寄存器完整讲清楚，比什么都知道一点但讲不深强得多</li>
+<li>你的RK3399项目经验是真正的差异化竞争力，很多应届生没有这个</li>
+<li>每周末回顾一次本周学了什么，对照面经检验，保持节奏感</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/15/stm32-i2c/" rel="prev" title="stm32 i2c">
+                  <i class="fa fa-angle-left"></i> stm32 i2c
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/" rel="next" title="imx6ull 基础复盘*">
+                  imx6ull 基础复盘* <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/">学习计划</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item current">
+              <span>学习计划</span>
+            </li>
+          
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

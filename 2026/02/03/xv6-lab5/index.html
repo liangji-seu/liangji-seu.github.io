@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="cow fork存储空间定义关于存储，首先，存储器的访问颗粒是1个字 &#x3D; 8bit, 所以每个字节 都有一个物理地址。  所以如果定义一个指针，uint64* p; 他实际上是一块uint64的内存，里面存放的是一个uint64内存的开始地址，也可以表示一片连着的uint64内存的初始块的起始地址（数组）  这也就解释了，为什么如果uint64 a, a++, 则表示的是下一个字节，而u">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6 lab5">
+<meta property="og:url" content="http://example.com/2026/02/03/xv6-lab5/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="cow fork存储空间定义关于存储，首先，存储器的访问颗粒是1个字 &#x3D; 8bit, 所以每个字节 都有一个物理地址。  所以如果定义一个指针，uint64* p; 他实际上是一块uint64的内存，里面存放的是一个uint64内存的开始地址，也可以表示一片连着的uint64内存的初始块的起始地址（数组）  这也就解释了，为什么如果uint64 a, a++, 则表示的是下一个字节，而u">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/20.1.png">
+<meta property="og:image" content="http://example.com/images/20.2.png">
+<meta property="og:image" content="http://example.com/images/20.3.png">
+<meta property="article:published_time" content="2026-02-03T04:53:23.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.757Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="XV6">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/20.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/03/xv6-lab5/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/03/xv6-lab5/","path":"2026/02/03/xv6-lab5/","title":"xv6 lab5"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>xv6 lab5 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#cow-fork"><span class="nav-number">1.</span> <span class="nav-text">cow fork</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">存储空间定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pagetable-t"><span class="nav-number">1.2.</span> <span class="nav-text">pagetable_t</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fork"><span class="nav-number">1.3.</span> <span class="nav-text">fork</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kalloc"><span class="nav-number">1.4.</span> <span class="nav-text">kalloc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cow-fork%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.5.</span> <span class="nav-text">cow fork实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#copyout"><span class="nav-number">1.6.</span> <span class="nav-text">copyout</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cow-fork-%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0%EF%BC%88cowtest%EF%BC%89"><span class="nav-number">1.7.</span> <span class="nav-text">cow fork 的基本实现（cowtest）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#usertests%E5%88%86%E6%9E%90"><span class="nav-number">1.8.</span> <span class="nav-text">usertests分析</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/03/xv6-lab5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="xv6 lab5 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xv6 lab5
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-03 12:53:23" itemprop="dateCreated datePublished" datetime="2026-02-03T12:53:23+08:00">2026-02-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="cow-fork"><a href="#cow-fork" class="headerlink" title="cow fork"></a>cow fork</h1><h2 id="存储空间定义"><a href="#存储空间定义" class="headerlink" title="存储空间定义"></a>存储空间定义</h2><p>关于存储，首先，存储器的访问颗粒是1个字 &#x3D; 8bit, 所以每个字节 都有一个物理地址。<br><img src="/../images/20.1.png" alt="alt text"><br><img src="/../images/20.2.png" alt="alt text"></p>
+<blockquote>
+<p>所以如果定义一个指针，uint64* p; 他实际上是一块uint64的内存，里面存放的是一个uint64内存的开始地址，也可以表示一片连着的uint64内存的初始块的起始地址（数组）</p>
+</blockquote>
+<p>这也就解释了，为什么如果uint64 a, a++, 则表示的是下一个字节，而uint64 *a, a++, 则a指向的是下一个uint64内存。</p>
+<h2 id="pagetable-t"><a href="#pagetable-t" class="headerlink" title="pagetable_t"></a>pagetable_t</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//riscv.h</span></span><br><span class="line"><span class="keyword">typedef</span> uint64 <span class="type">pte_t</span>;                          </span><br><span class="line"><span class="keyword">typedef</span> uint64 *<span class="type">pagetable_t</span>; <span class="comment">// 512 PTEs </span></span><br></pre></td></tr></table></figure>
+
+<p>所以pagetable是一个指向uint64_t的内存块的<strong>数组</strong>的指针</p>
+<p>里面每一项，<strong>是pte,也就是一个8字节的内存</strong>。64位，但是我们只使用里面的后面一部分的位数</p>
+<p><strong>硬件是如何转换的？</strong></p>
+<p>CPU访问一个虚拟地址（例如0x80001234）时，<code>硬件（MMU）</code>会进行以下动作：</p>
+<p>VPN : xv6 (Sv39) 中，前27位（0x234）是偏移量。</p>
+<p>查表寻踪：MMU 持有 VPN 去查表，找到对应的 PTE。</p>
+<p>PTE中取出对应的物理页号（PPN），这就是物理内存中那一页的“起始” 。</p>
+<p>直接调整12位偏移量，就得到了最终的物理地址。</p>
+<p>关键点：映射对称，低12位是完全不动、原封不动地复制过去的。</p>
+<blockquote>
+<p><strong>VA</strong>：[ 虚拟页号 A ]+[ 偏移量 0x234 ]</p>
+<p><strong>PA</strong>：[ 物理页号 B ]+[ 偏移量 0x234 ]</p>
+</blockquote>
+<h2 id="fork"><a href="#fork" class="headerlink" title="fork"></a>fork</h2><p>分析一下普通的fork的内容</p>
+<ol>
+<li><strong>创建子进程allocproc()</strong><ol>
+<li>np-&gt;pid</li>
+<li>np-&gt;status &#x3D; USED</li>
+<li>np-&gt;trapframe &#x3D; kalloc() 分配一页（4096字节）的物理内存地址</li>
+<li>np-&gt;pagetable 创建空的页表<ol>
+<li>uvmcreate()，默认分配一页内存 创建pagetable_t变量指向这段内存</li>
+<li>mappage(trampoline) 添加一页映射trampoline</li>
+<li>mappage(trapframe) 添加一页映射前面分配的trapframe</li>
+</ol>
+</li>
+<li>np-&gt;context, 指定上下文<ol>
+<li>context-&gt;ra &#x3D; forkret</li>
+<li>context-&gt;sp &#x3D; kstack + PIGESIZE (sp栈底到栈顶1页大小)</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><strong>uvmcopy</strong>(p-&gt;pagetable, np-&gt;pagetable, p-&gt;sz) 拷贝父进程页表到子进程<ol>
+<li>针对每一页虚拟内存的起始地址va(uint64)（0 ~ p-&gt;sz）<ol>
+<li>从父进程的pagetable中walk出该页虚拟地址va对应的pte(一段uint64内存)</li>
+<li>验证该pte是否有效（PTE_V）</li>
+<li>(因为我们不需要父进程pte，而是需要在子进程复制一份pte)</li>
+<li>PTE2PA 得到 该va对应的pa</li>
+<li>拷贝父进程该va对应的pte的flag</li>
+<li>申请一页空的内存mem kalloc</li>
+<li>从父进程的pa拷贝父进程的该页内存到mem</li>
+<li>mappage 添加该va ~ mem 的映射在子进程的页表中</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>np-&gt;sz &#x3D; p-&gt;sz 拷贝父进程的虚拟地址空间大小</li>
+<li>拷贝父进程trapframe内容</li>
+<li>设置子进程的fork()返回值a0寄存器 &#x3D; 0</li>
+<li>复制文件描述符引用</li>
+<li>复制进程名</li>
+<li>np-&gt;parent &#x3D; p</li>
+<li>设置子进程状态RUNABLE，加入调度器，开始运行</li>
+<li>返回子进程pid</li>
+</ol>
+<blockquote>
+<p>p-&gt;sz, kstack什么时候定的？</p>
+</blockquote>
+<h2 id="kalloc"><a href="#kalloc" class="headerlink" title="kalloc"></a>kalloc</h2><p><code>kalloc.c</code>负责对物理内存的管理，因为这里涉及到一个链表结构：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">run</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">next</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">freelist</span>;</span></span><br><span class="line">&#125; kmem;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>kmem就是我们实际的内核的物理内存管理员，他持有一个锁（针对多cpu申请内存），还有一个struct run的指针，</p>
+<p>注意这里struct run的结构体，他这里只是借用了struct结构体的一个内部变量内存结构，这样就相当于说明，一个一小块内存，里面排头的一个8字节指针，指向下一块小内存。就这样一直指下去，至于里面的值是什么，不知道，纯粹的野指针。</p>
+<p>他先创建了这么个结构，然后有一个头：struct run *freelist, 她指向第一块这个小struc内存</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span></span><br><span class="line"><span class="title function_">freerange</span><span class="params">(<span class="type">void</span> *pa_start, <span class="type">void</span> *pa_end)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">char</span> *p;</span><br><span class="line">  p = (<span class="type">char</span>*)PGROUNDUP((uint64)pa_start);</span><br><span class="line">  <span class="keyword">for</span>(; p + PGSIZE &lt;= (<span class="type">char</span>*)pa_end; p += PGSIZE)</span><br><span class="line">    kfree(p);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里是freerange，他是在系统初始化的时候在init的时候被调用的，告知他物理内存的起始和终止位置。freerange会把这块物理内存，按页大小（4096字节）<strong>划分好</strong>，并传入每页的起始地址，<strong>给kfree，用于释放，串联</strong>。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span></span><br><span class="line"><span class="title function_">kfree</span><span class="params">(<span class="type">void</span> *pa)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">r</span>;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(((uint64)pa % PGSIZE) != <span class="number">0</span> || (<span class="type">char</span>*)pa &lt; end || (uint64)pa &gt;= PHYSTOP)</span><br><span class="line">    panic(<span class="string">&quot;kfree&quot;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Fill with junk to catch dangling refs.</span></span><br><span class="line">  <span class="built_in">memset</span>(pa, <span class="number">1</span>, PGSIZE);</span><br><span class="line"></span><br><span class="line">  r = (<span class="keyword">struct</span> run*)pa;</span><br><span class="line"></span><br><span class="line">  acquire(&amp;kmem.lock);</span><br><span class="line">  r-&gt;next = kmem.freelist;</span><br><span class="line">  kmem.freelist = r;</span><br><span class="line">  release(&amp;kmem.lock);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>kfree，当freerange传入一页物理内存的指针，他会格式化这一页内存，然后把这个指针改成struct run的指针，这样就完成了r对这个内存的指向，虽<code>然他实际上还是指向的一个struct run这块小内存，但起始地址是相同的</code>，<strong>指针r里面存的地址才是我们想要的</strong>，至于struct run是什么我们不关心。<br>这样就可以逐步把这些指针串起来，变成一个一页一页的链表，至此，freerange就完成了对初始状态下，空闲内存列表的收集。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> *</span><br><span class="line"><span class="title function_">kalloc</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">r</span>;</span></span><br><span class="line"></span><br><span class="line">  acquire(&amp;kmem.lock);</span><br><span class="line">  r = kmem.freelist;</span><br><span class="line">  <span class="keyword">if</span>(r)</span><br><span class="line">    kmem.freelist = r-&gt;next;</span><br><span class="line">  release(&amp;kmem.lock);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(r)</span><br><span class="line">    <span class="built_in">memset</span>((<span class="type">char</span>*)r, <span class="number">5</span>, PGSIZE); <span class="comment">// fill with junk</span></span><br><span class="line">  <span class="keyword">return</span> (<span class="type">void</span>*)r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>最后就是kalloc了，就是从这个空闲链表上摘下一个空闲页。如果用完了要释放了，就还用上面的kfree释放物理页，让他重新回归空闲列表。</p>
+<h2 id="cow-fork实现"><a href="#cow-fork实现" class="headerlink" title="cow fork实现"></a>cow fork实现</h2><blockquote>
+<p><strong>注意一点</strong>：</p>
+<p>cow fork 和 fork本质上没什么不同，只是延时创建内存，共同的，<code>子进程还是无法写父进程的只读区域</code>，也就是无法动父进程的代码段。</p>
+<p>这里要区分于<code>fork + exec</code>， exec才是真正把所有内存区域全部写，覆盖成你要执行的指令程序。这样覆盖完后，<code>只读区域，和读写区域就变了</code>。就完成了一个全新的指令进程了。</p>
+</blockquote>
+<p><strong>1. 分配</strong></p>
+<p>应该修改uvmcopy的内容，不能直接mem &#x3D; kalloc分配内存拷贝，而是就用父进程的那一页物理内存，直接加入页表，同时设置父进程页表和子进程页表为合法，只读</p>
+<p><strong>2. 使用</strong></p>
+<p>思路如下：<br><img src="/../images/20.3.png" alt="alt text"></p>
+<p><strong>3. 释放</strong></p>
+<p>这里也很关键，不然sh执行指令exec覆盖的时候，就会出现释放kfree灾难，所以有必要了解一下总结在上面的<code>kalloc的内容</code></p>
+<p>所以要关注什么时候，需要真正释放，而不是结束一次进程就要释放一次进程，这样就释放灾难了。</p>
+<p>这里非常关键，如果你没有内存页统计管理的话，就会导致进程在执行中，容易释放掉所有的内存，因为子进程不管你的父进程有啥，直接free了，</p>
+<p>这样容易报错：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">xv6 kernel is booting</span><br><span class="line"></span><br><span class="line">hart 2 starting</span><br><span class="line">hart 1 starting</span><br><span class="line">init: starting sh</span><br><span class="line">$ <span class="built_in">ls</span></span><br><span class="line">.              1 1 1024</span><br><span class="line">..             1 1 1024</span><br><span class="line">README         2 2 2226</span><br><span class="line"><span class="built_in">cat</span>            2 3 23896</span><br><span class="line"><span class="built_in">echo</span>           2 4 22728</span><br><span class="line">forktest       2 5 13088</span><br><span class="line">grep           2 6 27256</span><br><span class="line">init           2 7 23832</span><br><span class="line"><span class="built_in">kill</span>           2 8 22704</span><br><span class="line"><span class="built_in">ln</span>             2 9 22656</span><br><span class="line"><span class="built_in">ls</span>             2 10 26128</span><br><span class="line"><span class="built_in">mkdir</span>          2 11 22800</span><br><span class="line"><span class="built_in">rm</span>             2 12 22792</span><br><span class="line">sh             2 13 41664</span><br><span class="line">stressfs       2 14 23800</span><br><span class="line">usertests      2 15 156016</span><br><span class="line">grind          2 16 37976</span><br><span class="line"><span class="built_in">wc</span>             2 17 25040</span><br><span class="line">zombie         2 18 22192</span><br><span class="line">cowtest        2 19 30232</span><br><span class="line">console        3 20 0</span><br><span class="line">usertrap(): unexpected scause 0x0000000000000002 pid=2, name = sh</span><br><span class="line">            sepc=0x0000000000001000 stval=0x0000000000000000</span><br><span class="line">Fault info: VA=0x0000000000001000, PTE_VAL=0x0000000021fda50b, Flags=0x000000000000010b</span><br><span class="line">usertrap(): unexpected scause 0x000000000000000c pid=1, name = init</span><br><span class="line">            sepc=0x0000000000001000 stval=0x0000000000001000</span><br><span class="line">panic: init exiting</span><br><span class="line">QEMU: Terminated</span><br></pre></td></tr></table></figure>
+
+
+<p>kalloc.c里面的实现逻辑，需要有一个对物理内存页的全局计数：</p>
+<p>总结规则就是：</p>
+<p><strong>1. kalloc</strong> -&gt; 申请新的物理内存 （cnt &#x3D; 1）</p>
+<p><strong>2. kfree</strong> -&gt;</p>
+<ol>
+<li>cnt &gt; 1, (实际上不止一个进程拥有这块内存页)， cnt -1</li>
+<li>cng &lt;&#x3D;0, (此时需要回收内存)， cnt &#x3D; 0</li>
+</ol>
+<p><strong>3. kinit</strong> -&gt; 初始化统计数组为0，（这样freerange里面才能触发kfree，统一收集所有空闲内存页）</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">diff --git a/kernel/kalloc.c b/kernel/kalloc.c</span><br><span class="line">index fa6a0ac..<span class="number">0</span>cac44a <span class="number">100644</span></span><br><span class="line">--- a/kernel/kalloc.c</span><br><span class="line">+++ b/kernel/kalloc.c</span><br><span class="line">@@ <span class="number">-18</span>,<span class="number">15</span> +<span class="number">18</span>,<span class="number">29</span> @@ <span class="class"><span class="keyword">struct</span> <span class="title">run</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">next</span>;</span></span><br><span class="line"> &#125;;</span><br><span class="line"></span><br><span class="line">+<span class="meta">#<span class="keyword">define</span> MEM_NUM (PHYSTOP-KERNBASE)/PGSIZE</span></span><br><span class="line">+</span><br><span class="line"> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">freelist</span>;</span></span><br><span class="line">+  uint8 pa_mem_cnt[MEM_NUM];</span><br><span class="line"> &#125; kmem;</span><br><span class="line"></span><br><span class="line">+<span class="type">void</span></span><br><span class="line">+kmem_py_mem_cnt_add(uint64 pa)</span><br><span class="line">+&#123;</span><br><span class="line">+    <span class="comment">//add pa_mem_cnt</span></span><br><span class="line">+    acquire(&amp;kmem.lock);</span><br><span class="line">+    <span class="type">int</span> id = (pa-KERNBASE)/PGSIZE;</span><br><span class="line">+    kmem.pa_mem_cnt[id]++;</span><br><span class="line">+    release(&amp;kmem.lock);</span><br><span class="line">+&#125;</span><br><span class="line">+</span><br><span class="line"> <span class="type">void</span></span><br><span class="line"> <span class="title function_">kinit</span><span class="params">()</span></span><br><span class="line"> &#123;</span><br><span class="line">   initlock(&amp;kmem.lock, <span class="string">&quot;kmem&quot;</span>);</span><br><span class="line">+  <span class="built_in">memset</span>(kmem.pa_mem_cnt, <span class="number">0</span>, <span class="keyword">sizeof</span>(kmem.pa_mem_cnt));</span><br><span class="line">   freerange(end, (<span class="type">void</span>*)PHYSTOP);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line">@@ <span class="number">-51</span>,<span class="number">12</span> +<span class="number">65</span>,<span class="number">28</span> @@ kfree(<span class="type">void</span> *pa)</span><br><span class="line">   <span class="keyword">if</span>(((uint64)pa % PGSIZE) != <span class="number">0</span> || (<span class="type">char</span>*)pa &lt; end || (uint64)pa &gt;= PHYSTOP)</span><br><span class="line">     panic(<span class="string">&quot;kfree&quot;</span>);</span><br><span class="line"></span><br><span class="line">+<span class="comment">/*</span></span><br><span class="line"><span class="comment">+  if(kmem_py_mem_cnt_modify((uint64)pa, 0) != 0)&#123;</span></span><br><span class="line"><span class="comment">+      // find pa page minus , but not == 0</span></span><br><span class="line"><span class="comment">+      return;</span></span><br><span class="line"><span class="comment">+  &#125;</span></span><br><span class="line"><span class="comment">+  */</span></span><br><span class="line">+</span><br><span class="line">+  acquire(&amp;kmem.lock);</span><br><span class="line">+  <span class="type">int</span> id = ((uint64)pa-KERNBASE)/PGSIZE;</span><br><span class="line">+  <span class="keyword">if</span>(kmem.pa_mem_cnt[id] &gt; <span class="number">1</span>)&#123;</span><br><span class="line">+      kmem.pa_mem_cnt[id]--;</span><br><span class="line">+      release(&amp;kmem.lock);</span><br><span class="line">+      <span class="keyword">return</span>;</span><br><span class="line">+  &#125;</span><br><span class="line">+</span><br><span class="line">+  kmem.pa_mem_cnt[id] = <span class="number">0</span>;</span><br><span class="line">+</span><br><span class="line">   <span class="comment">// Fill with junk to catch dangling refs.</span></span><br><span class="line">   <span class="built_in">memset</span>(pa, <span class="number">1</span>, PGSIZE);</span><br><span class="line"></span><br><span class="line">   r = (<span class="keyword">struct</span> run*)pa;</span><br><span class="line"></span><br><span class="line">-  acquire(&amp;kmem.lock);</span><br><span class="line">   r-&gt;next = kmem.freelist;</span><br><span class="line">   kmem.freelist = r;</span><br><span class="line">   release(&amp;kmem.lock);</span><br><span class="line">@@ <span class="number">-74</span>,<span class="number">9</span> +<span class="number">104</span>,<span class="number">16</span> @@ kalloc(<span class="type">void</span>)</span><br><span class="line">   r = kmem.freelist;</span><br><span class="line">   <span class="keyword">if</span>(r)</span><br><span class="line">     kmem.freelist = r-&gt;next;</span><br><span class="line">+</span><br><span class="line">+  <span class="comment">// add 1 in r page</span></span><br><span class="line">+  <span class="comment">// 拿出新内存</span></span><br><span class="line">+  <span class="type">int</span> id = ((uint64)r-KERNBASE)/PGSIZE;</span><br><span class="line">+  kmem.pa_mem_cnt[id] = <span class="number">1</span>;</span><br><span class="line">+</span><br><span class="line">   release(&amp;kmem.lock);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span>(r)</span><br><span class="line">     <span class="built_in">memset</span>((<span class="type">char</span>*)r, <span class="number">5</span>, PGSIZE); <span class="comment">// fill with junk</span></span><br><span class="line">+</span><br><span class="line">   <span class="keyword">return</span> (<span class="type">void</span>*)r;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>这边我犯了一些错误，只考虑了单个cpu的情况，事实上，会有很多个cpu，这会导致，如果你修改kmem内存管理员内的任何东西的时候，如果不<strong>加锁</strong>，会出现数据被意外修改。所以一定要完整的加锁才行</p>
+</blockquote>
+<p><strong>4. 使用支持内存计数统计</strong><br>当我们在kalloc.c中支持了物理内存页的计数统计，肯定需要让cpu在处理访问页的时候，用上。<br>所以，还要在之前的uvmcopy，usertrap中用上。</p>
+<p>因为对于进程和内存来说，总共就3种涉及的关系：</p>
+<ol>
+<li>申请新的kalloc()</li>
+<li>释放旧的kfree()</li>
+<li>拷贝内存uvmcopy()</li>
+</ol>
+<p>所以这里需要再次修改之前的uvmcopy(), 之前只实现了cow的标志位逻辑和申请拷贝逻辑，没有计数。后面trap的时候，就无法根据计数正确的释放free</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//uvmcopy()</span></span><br><span class="line"><span class="comment">//完成标志位C设置</span></span><br><span class="line">kmem_py_mem_cnt_add(pa); <span class="comment">//对该内存计数+1</span></span><br><span class="line"><span class="comment">//拷贝含C的页表项</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//usertrap()</span></span><br><span class="line"><span class="comment">// 申请新内存</span></span><br><span class="line">kfree((<span class="type">void</span> *)pa); <span class="comment">//释放老内存，实际上是只对计数-1，不是真的释放</span></span><br><span class="line"><span class="comment">// 制作新的页表项.....</span></span><br></pre></td></tr></table></figure>
+<p>此时，进行cowtest测试, 可以看到简单测试已经通过了，还有一个file的test</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cowtest        2 19 30232</span><br><span class="line">console        3 20 0</span><br><span class="line">$ cowtest</span><br><span class="line">simple: ok</span><br><span class="line">simple: ok</span><br><span class="line">three: ok</span><br><span class="line">three: ok</span><br><span class="line">three: ok</span><br><span class="line">file: usertrap(): unexpected scause 0x0000000000000002 pid=5, name = cowtest</span><br><span class="line">            sepc=0x0000000000000dbc stval=0x0000000000000004</span><br><span class="line">$</span><br><span class="line">$</span><br><span class="line">$</span><br><span class="line">$ QEMU: Terminated</span><br></pre></td></tr></table></figure>
+
+<p>这个file的test，实际上是要copyout也要实现缺页处理</p>
+<h2 id="copyout"><a href="#copyout" class="headerlink" title="copyout"></a>copyout</h2><p>正常普通的<strong>写内存</strong>可能发生在：</p>
+<ol>
+<li>cpu修改变量的值</li>
+<li>exec覆盖内存</li>
+<li>copyout内核把数据往用户空间的内存拷贝。</li>
+<li>……</li>
+</ol>
+<p>这些情况都可以因为mmu+pagetable，出现页异常。</p>
+<p>所以，copyout也要像usertrap一样，进行页处理</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">@@ <span class="number">-356</span>,<span class="number">12</span> +<span class="number">378</span>,<span class="number">51</span> @@ copyout(<span class="type">pagetable_t</span> pagetable, uint64 dstva, <span class="type">char</span> *src, uint64 len)</span><br><span class="line">     n = PGSIZE - (dstva - va0);</span><br><span class="line">     <span class="keyword">if</span>(n &gt; len)</span><br><span class="line">       n = len;</span><br><span class="line">-    memmove((<span class="type">void</span> *)(pa0 + (dstva - va0)), src, n);</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">// liangji add</span></span><br><span class="line">+    <span class="type">pte_t</span> *pte;</span><br><span class="line">+    <span class="type">char</span> *mem = (<span class="type">char</span>*)pa0;</span><br><span class="line">+    uint flags;</span><br><span class="line">+    <span class="keyword">if</span>((pte = walk(pagetable, va0, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">+    &#123;</span><br><span class="line">+        panic(<span class="string">&quot;write page, cannot walk pte&quot;</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">+    <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">+    &#123;</span><br><span class="line">+        panic(<span class="string">&quot;write page, walk pte, but not valid&quot;</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">// if w=0 &amp;&amp; c=1</span></span><br><span class="line">+    <span class="keyword">if</span>(((*pte &amp; PTE_W) == <span class="number">0</span> ) &amp;&amp; ((*pte &amp; PTE_C) != <span class="number">0</span>))&#123;</span><br><span class="line">+          <span class="comment">//alloc and copy mem</span></span><br><span class="line">+          <span class="keyword">if</span>((mem = kalloc()) == <span class="number">0</span>)</span><br><span class="line">+              panic(<span class="string">&quot;fail to alloc new mem in cow fork&quot;</span>);</span><br><span class="line">+          memmove((<span class="type">void</span>*)(uint64)mem, (<span class="type">void</span>*)pa0, PGSIZE);</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">//old pa should cnt --</span></span><br><span class="line">+          kfree((<span class="type">void</span> *)pa0);</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">// set w = 1, and c = 0</span></span><br><span class="line">+          flags = PTE_FLAGS(*pte);</span><br><span class="line">+          flags |= PTE_W;</span><br><span class="line">+          flags &amp;= ~PTE_C;</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">//change child pte</span></span><br><span class="line">+          uint64 new_pte = PA2PTE((uint64)mem);</span><br><span class="line">+          new_pte &amp;= ~(<span class="number">0x3FF</span>);</span><br><span class="line">+          new_pte |= flags;</span><br><span class="line">+          *pte = new_pte;</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">//memmove((void *)(pa0 + (dstva - va0)), src, n);</span></span><br><span class="line">+    memmove((<span class="type">void</span> *)((uint64)mem + (dstva - va0)), src, n);</span><br><span class="line"></span><br><span class="line">     len -= n;</span><br><span class="line">     src += n;</span><br><span class="line">     dstva = va0 + PGSIZE;</span><br><span class="line">   &#125;</span><br><span class="line">+</span><br><span class="line">+  sfence_vma();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line">--</span><br><span class="line"><span class="number">2.25</span>.<span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这边我也犯了几个错误</p>
+<p><strong>1. 数据拷贝的时机</strong></p>
+<p>因为触发页异常，申请一页新内存，<code>必须要在释放旧内存前，拷贝旧内存数据到新内存</code>，原因是：我们实际写数据，不可能刚好写一页4096字节，可能旧写一个字节，甚至只改变一些标志位，<code>剩下的旧内存数据，依然是有效的</code>，不能丢弃。</p>
+<p><strong>2. 引用计数逻辑的死循环风险</strong></p>
+<p>按道理来说，当释放到这页物理内存，只有一个进程的时候，就不需要再释放，然后申请新页了，直接默认属于最后一个进程就行了。也可以不修复，只是让最后一个进程重新申请一次内存，麻烦一点而已。</p>
+</blockquote>
+<h2 id="cow-fork-的基本实现（cowtest）"><a href="#cow-fork-的基本实现（cowtest）" class="headerlink" title="cow fork 的基本实现（cowtest）"></a>cow fork 的基本实现（cowtest）</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">From <span class="number">43b</span>c35e4289e3d3261ff4a7b7691665b1856c228 Mon Sep <span class="number">17</span> <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> <span class="number">2001</span></span><br><span class="line">From: liangji-seu &lt;<span class="number">15262272286</span>@<span class="number">163.</span>com&gt;</span><br><span class="line">Date: Tue, <span class="number">3</span> Feb <span class="number">2026</span> <span class="number">23</span>:<span class="number">34</span>:<span class="number">01</span> +<span class="number">0800</span></span><br><span class="line">Subject: [PATCH] test: cow</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"> kernel/defs.h   |  <span class="number">3</span> +++</span><br><span class="line"> kernel/kalloc.c | <span class="number">39</span> +++++++++++++++++++++++++++-</span><br><span class="line"> kernel/riscv.h  |  <span class="number">1</span> +</span><br><span class="line"> kernel/trap.c   | <span class="number">50</span> +++++++++++++++++++++++++++++++++++-</span><br><span class="line"> kernel/vm.c     | <span class="number">67</span> ++++++++++++++++++++++++++++++++++++++++++++++---</span><br><span class="line"> <span class="number">5</span> files changed, <span class="number">155</span> insertions(+), <span class="number">5</span> deletions(-)</span><br><span class="line"></span><br><span class="line">diff --git a/kernel/defs.h b/kernel/defs.h</span><br><span class="line">index <span class="number">3564</span>db4..<span class="number">84</span>df726 <span class="number">100644</span></span><br><span class="line">--- a/kernel/defs.h</span><br><span class="line">+++ b/kernel/defs.h</span><br><span class="line">@@ <span class="number">-63</span>,<span class="number">6</span> +<span class="number">63</span>,<span class="number">7</span> @@ <span class="type">void</span>            <span class="title function_">ramdiskrw</span><span class="params">(<span class="keyword">struct</span> buf*)</span>;</span><br><span class="line"> <span class="type">void</span>*           <span class="title function_">kalloc</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"> <span class="type">void</span>            <span class="title function_">kfree</span><span class="params">(<span class="type">void</span> *)</span>;</span><br><span class="line"> <span class="type">void</span>            <span class="title function_">kinit</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">+<span class="type">void</span>            <span class="title function_">kmem_py_mem_cnt_add</span><span class="params">(uint64)</span>;</span><br><span class="line"> </span><br><span class="line"> <span class="comment">// log.c</span></span><br><span class="line"> <span class="type">void</span>            <span class="title function_">initlog</span><span class="params">(<span class="type">int</span>, <span class="keyword">struct</span> superblock*)</span>;</span><br><span class="line">@@ <span class="number">-170</span>,<span class="number">6</span> +<span class="number">171</span>,<span class="number">8</span> @@ uint64          <span class="title function_">walkaddr</span><span class="params">(<span class="type">pagetable_t</span>, uint64)</span>;</span><br><span class="line"> <span class="type">int</span>             <span class="title function_">copyout</span><span class="params">(<span class="type">pagetable_t</span>, uint64, <span class="type">char</span> *, uint64)</span>;</span><br><span class="line"> <span class="type">int</span>             <span class="title function_">copyin</span><span class="params">(<span class="type">pagetable_t</span>, <span class="type">char</span> *, uint64, uint64)</span>;</span><br><span class="line"> <span class="type">int</span>             <span class="title function_">copyinstr</span><span class="params">(<span class="type">pagetable_t</span>, <span class="type">char</span> *, uint64, uint64)</span>;</span><br><span class="line">+<span class="type">pte_t</span> *         <span class="title function_">walk</span><span class="params">(<span class="type">pagetable_t</span>, uint64 , <span class="type">int</span>)</span>;</span><br><span class="line">+</span><br><span class="line"> </span><br><span class="line"> <span class="comment">// plic.c</span></span><br><span class="line"> <span class="type">void</span>            <span class="title function_">plicinit</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">diff --git a/kernel/kalloc.c b/kernel/kalloc.c</span><br><span class="line">index fa6a0ac..<span class="number">0</span>cac44a <span class="number">100644</span></span><br><span class="line">--- a/kernel/kalloc.c</span><br><span class="line">+++ b/kernel/kalloc.c</span><br><span class="line">@@ <span class="number">-18</span>,<span class="number">15</span> +<span class="number">18</span>,<span class="number">29</span> @@ <span class="class"><span class="keyword">struct</span> <span class="title">run</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">next</span>;</span></span><br><span class="line"> &#125;;</span><br><span class="line"> </span><br><span class="line">+<span class="meta">#<span class="keyword">define</span> MEM_NUM (PHYSTOP-KERNBASE)/PGSIZE</span></span><br><span class="line">+</span><br><span class="line"> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">spinlock</span> <span class="title">lock</span>;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">run</span> *<span class="title">freelist</span>;</span></span><br><span class="line">+  uint8 pa_mem_cnt[MEM_NUM];</span><br><span class="line"> &#125; kmem;</span><br><span class="line"> </span><br><span class="line">+<span class="type">void</span></span><br><span class="line">+kmem_py_mem_cnt_add(uint64 pa)</span><br><span class="line">+&#123;</span><br><span class="line">+    <span class="comment">//add pa_mem_cnt</span></span><br><span class="line">+    acquire(&amp;kmem.lock);</span><br><span class="line">+    <span class="type">int</span> id = (pa-KERNBASE)/PGSIZE;</span><br><span class="line">+    kmem.pa_mem_cnt[id]++;</span><br><span class="line">+    release(&amp;kmem.lock);</span><br><span class="line">+&#125;</span><br><span class="line">+</span><br><span class="line"> <span class="type">void</span></span><br><span class="line"> <span class="title function_">kinit</span><span class="params">()</span></span><br><span class="line"> &#123;</span><br><span class="line">   initlock(&amp;kmem.lock, <span class="string">&quot;kmem&quot;</span>);</span><br><span class="line">+  <span class="built_in">memset</span>(kmem.pa_mem_cnt, <span class="number">0</span>, <span class="keyword">sizeof</span>(kmem.pa_mem_cnt));</span><br><span class="line">   freerange(end, (<span class="type">void</span>*)PHYSTOP);</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">@@ <span class="number">-51</span>,<span class="number">12</span> +<span class="number">65</span>,<span class="number">28</span> @@ kfree(<span class="type">void</span> *pa)</span><br><span class="line">   <span class="keyword">if</span>(((uint64)pa % PGSIZE) != <span class="number">0</span> || (<span class="type">char</span>*)pa &lt; end || (uint64)pa &gt;= PHYSTOP)</span><br><span class="line">     panic(<span class="string">&quot;kfree&quot;</span>);</span><br><span class="line"> </span><br><span class="line">+<span class="comment">/*</span></span><br><span class="line"><span class="comment">+  if(kmem_py_mem_cnt_modify((uint64)pa, 0) != 0)&#123;</span></span><br><span class="line"><span class="comment">+      // find pa page minus , but not == 0</span></span><br><span class="line"><span class="comment">+      return;</span></span><br><span class="line"><span class="comment">+  &#125;</span></span><br><span class="line"><span class="comment">+  */</span></span><br><span class="line">+</span><br><span class="line">+  acquire(&amp;kmem.lock);</span><br><span class="line">+  <span class="type">int</span> id = ((uint64)pa-KERNBASE)/PGSIZE;</span><br><span class="line">+  <span class="keyword">if</span>(kmem.pa_mem_cnt[id] &gt; <span class="number">1</span>)&#123;</span><br><span class="line">+      kmem.pa_mem_cnt[id]--;</span><br><span class="line">+      release(&amp;kmem.lock);</span><br><span class="line">+      <span class="keyword">return</span>;</span><br><span class="line">+  &#125;</span><br><span class="line">+</span><br><span class="line">+  kmem.pa_mem_cnt[id] = <span class="number">0</span>;</span><br><span class="line">+</span><br><span class="line">   <span class="comment">// Fill with junk to catch dangling refs.</span></span><br><span class="line">   <span class="built_in">memset</span>(pa, <span class="number">1</span>, PGSIZE);</span><br><span class="line"> </span><br><span class="line">   r = (<span class="keyword">struct</span> run*)pa;</span><br><span class="line"> </span><br><span class="line">-  acquire(&amp;kmem.lock);</span><br><span class="line">   r-&gt;next = kmem.freelist;</span><br><span class="line">   kmem.freelist = r;</span><br><span class="line">   release(&amp;kmem.lock);</span><br><span class="line">@@ <span class="number">-74</span>,<span class="number">9</span> +<span class="number">104</span>,<span class="number">16</span> @@ kalloc(<span class="type">void</span>)</span><br><span class="line">   r = kmem.freelist;</span><br><span class="line">   <span class="keyword">if</span>(r)</span><br><span class="line">     kmem.freelist = r-&gt;next;</span><br><span class="line">+</span><br><span class="line">+  <span class="comment">// add 1 in r page </span></span><br><span class="line">+  <span class="comment">// 拿出新内存</span></span><br><span class="line">+  <span class="type">int</span> id = ((uint64)r-KERNBASE)/PGSIZE;</span><br><span class="line">+  kmem.pa_mem_cnt[id] = <span class="number">1</span>;</span><br><span class="line">+</span><br><span class="line">   release(&amp;kmem.lock);</span><br><span class="line"> </span><br><span class="line">   <span class="keyword">if</span>(r)</span><br><span class="line">     <span class="built_in">memset</span>((<span class="type">char</span>*)r, <span class="number">5</span>, PGSIZE); <span class="comment">// fill with junk</span></span><br><span class="line">+</span><br><span class="line">   <span class="keyword">return</span> (<span class="type">void</span>*)r;</span><br><span class="line"> &#125;</span><br><span class="line">diff --git a/kernel/riscv.h b/kernel/riscv.h</span><br><span class="line">index <span class="number">1691f</span>af..a578894 <span class="number">100644</span></span><br><span class="line">--- a/kernel/riscv.h</span><br><span class="line">+++ b/kernel/riscv.h</span><br><span class="line">@@ <span class="number">-343</span>,<span class="number">6</span> +<span class="number">343</span>,<span class="number">7</span> @@ sfence_vma()</span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> PTE_W (1L &lt;&lt; 2)</span></span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> PTE_X (1L &lt;&lt; 3)</span></span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> PTE_U (1L <span class="string">&lt;&lt; 4) // 1 -&gt;</span> user can access</span></span><br><span class="line">+<span class="meta">#<span class="keyword">define</span> PTE_C (1L <span class="string">&lt;&lt; 8) // 1 -&gt;</span> user can access</span></span><br><span class="line"> </span><br><span class="line"> <span class="comment">// shift a physical address to the right place for a PTE.</span></span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> PA2PTE(pa) ((((uint64)pa) &gt;&gt; 12) &lt;&lt; 10)</span></span><br><span class="line">diff --git a/kernel/trap.c b/kernel/trap.c</span><br><span class="line">index a63249e..ffa887c <span class="number">100644</span></span><br><span class="line">--- a/kernel/trap.c</span><br><span class="line">+++ b/kernel/trap.c</span><br><span class="line">@@ <span class="number">-65</span>,<span class="number">14</span> +<span class="number">65</span>,<span class="number">62</span> @@ usertrap(<span class="type">void</span>)</span><br><span class="line">     intr_on();</span><br><span class="line"> </span><br><span class="line">     syscall();</span><br><span class="line">+  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (r_scause() == <span class="number">15</span>)&#123;</span><br><span class="line">+      <span class="comment">// cannot write va in pagetable</span></span><br><span class="line">+      <span class="comment">// copy mem</span></span><br><span class="line">+      uint64 stval = PGROUNDDOWN(r_stval());</span><br><span class="line">+      <span class="type">char</span> *mem;</span><br><span class="line">+      <span class="type">pte_t</span> *pte;</span><br><span class="line">+      uint flags;</span><br><span class="line">+      <span class="keyword">if</span>((pte = walk(p-&gt;pagetable, stval, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">+      &#123;</span><br><span class="line">+          panic(<span class="string">&quot;write page, cannot walk pte&quot;</span>);</span><br><span class="line">+      &#125;</span><br><span class="line">+      <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">+      &#123;</span><br><span class="line">+          panic(<span class="string">&quot;write page, walk pte, but not valid&quot;</span>);</span><br><span class="line">+      &#125;</span><br><span class="line">+</span><br><span class="line">+      <span class="comment">// if w=0 &amp;&amp; c=1</span></span><br><span class="line">+      <span class="keyword">if</span>(((*pte &amp; PTE_W) == <span class="number">0</span> ) &amp;&amp; ((*pte &amp; PTE_C) != <span class="number">0</span>))&#123;</span><br><span class="line">+          <span class="comment">//alloc and copy mem</span></span><br><span class="line">+          uint64 pa = PTE2PA(*pte);</span><br><span class="line">+          <span class="keyword">if</span>((mem = kalloc()) == <span class="number">0</span>)</span><br><span class="line">+              panic(<span class="string">&quot;fail to alloc new mem in cow fork&quot;</span>);</span><br><span class="line">+</span><br><span class="line">+          memmove(mem, (<span class="type">char</span>*)pa, PGSIZE);</span><br><span class="line">+          <span class="comment">//old pa should cnt --</span></span><br><span class="line">+          kfree((<span class="type">void</span> *)pa);</span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">// set w = 1, and c = 0</span></span><br><span class="line">+          flags = PTE_FLAGS(*pte);</span><br><span class="line">+          flags |= PTE_W;</span><br><span class="line">+          flags &amp;= ~PTE_C;</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">//change child pte</span></span><br><span class="line">+          uint64 new_pte = PA2PTE((uint64)mem);</span><br><span class="line">+          new_pte &amp;= ~(<span class="number">0x3FF</span>);</span><br><span class="line">+          new_pte |= flags;</span><br><span class="line">+          *pte = new_pte;</span><br><span class="line">+          sfence_vma();</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span>((which_dev = devintr()) != <span class="number">0</span>)&#123;</span><br><span class="line">     <span class="comment">// ok</span></span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">-    <span class="built_in">printf</span>(<span class="string">&quot;usertrap(): unexpected scause %p pid=%d\n&quot;</span>, r_scause(), p-&gt;pid);</span><br><span class="line">+</span><br><span class="line">+    <span class="keyword">if</span> (r_scause() == <span class="number">12</span> || r_scause() == <span class="number">13</span> || r_scause() == <span class="number">15</span>) &#123;</span><br><span class="line">+        <span class="type">pte_t</span> *debug_pte = walk(p-&gt;pagetable, r_stval(), <span class="number">0</span>);</span><br><span class="line">+        <span class="built_in">printf</span>(<span class="string">&quot;Fault info: VA=%p, PTE_VAL=%p, Flags=%p\n&quot;</span>, r_stval(), *debug_pte, PTE_FLAGS(*debug_pte));</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    <span class="built_in">printf</span>(<span class="string">&quot;usertrap(): unexpected scause %p pid=%d, name = %s\n&quot;</span>, r_scause(), p-&gt;pid, p-&gt;name);</span><br><span class="line">     <span class="built_in">printf</span>(<span class="string">&quot;            sepc=%p stval=%p\n&quot;</span>, r_sepc(), r_stval());</span><br><span class="line">     p-&gt;killed = <span class="number">1</span>;</span><br><span class="line">   &#125;</span><br><span class="line"> </span><br><span class="line">+</span><br><span class="line">   <span class="keyword">if</span>(p-&gt;killed)</span><br><span class="line">     <span class="built_in">exit</span>(<span class="number">-1</span>);</span><br><span class="line"> </span><br><span class="line">diff --git a/kernel/vm.c b/kernel/vm.c</span><br><span class="line">index d5a12a0..<span class="number">82</span>eab08 <span class="number">100644</span></span><br><span class="line">--- a/kernel/vm.c</span><br><span class="line">+++ b/kernel/vm.c</span><br><span class="line">@@ <span class="number">-148</span>,<span class="number">8</span> +<span class="number">148</span>,<span class="number">10</span> @@ mappages(<span class="type">pagetable_t</span> pagetable, uint64 va, uint64 size, uint64 pa, <span class="type">int</span> perm)</span><br><span class="line">   <span class="keyword">for</span>(;;)&#123;</span><br><span class="line">     <span class="keyword">if</span>((pte = walk(pagetable, a, <span class="number">1</span>)) == <span class="number">0</span>)</span><br><span class="line">       <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">-    <span class="keyword">if</span>(*pte &amp; PTE_V)</span><br><span class="line">+    <span class="keyword">if</span>(*pte &amp; PTE_V)&#123;</span><br><span class="line">+      <span class="built_in">printf</span>(<span class="string">&quot;panic: %p\n&quot;</span>, *pte);</span><br><span class="line">       panic(<span class="string">&quot;mappages: remap&quot;</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">     *pte = PA2PTE(pa) | perm | PTE_V;</span><br><span class="line">     <span class="keyword">if</span>(a == last)</span><br><span class="line">       <span class="keyword">break</span>;</span><br><span class="line">@@ <span class="number">-303</span>,<span class="number">7</span> +<span class="number">305</span>,<span class="number">7</span> @@ uvmcopy(<span class="type">pagetable_t</span> old, <span class="type">pagetable_t</span> new, uint64 sz)</span><br><span class="line">   <span class="type">pte_t</span> *pte;</span><br><span class="line">   uint64 pa, i;</span><br><span class="line">   uint flags;</span><br><span class="line">-  <span class="type">char</span> *mem;</span><br><span class="line">+  <span class="comment">//char *mem;</span></span><br><span class="line"> </span><br><span class="line">   <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; sz; i += PGSIZE)&#123;</span><br><span class="line">     <span class="keyword">if</span>((pte = walk(old, i, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">@@ <span class="number">-311</span>,<span class="number">7</span> +<span class="number">313</span>,<span class="number">17</span> @@ uvmcopy(<span class="type">pagetable_t</span> old, <span class="type">pagetable_t</span> new, uint64 sz)</span><br><span class="line">     <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">       panic(<span class="string">&quot;uvmcopy: page not present&quot;</span>);</span><br><span class="line">     pa = PTE2PA(*pte);</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">//set pte w=0, c=1</span></span><br><span class="line">+    <span class="keyword">if</span>(((*pte) &amp; PTE_W) !=<span class="number">0</span> )&#123;</span><br><span class="line">+        (*pte) &amp;= ~PTE_W;</span><br><span class="line">+        (*pte) |= PTE_C;</span><br><span class="line">+    &#125;</span><br><span class="line">     flags = PTE_FLAGS(*pte);</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">//add pa_mem_cnt</span></span><br><span class="line">+    kmem_py_mem_cnt_add(pa);</span><br><span class="line">+    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     if((mem = kalloc()) == 0)</span></span><br><span class="line"><span class="comment">       goto err;</span></span><br><span class="line"><span class="comment">     memmove(mem, (char*)pa, PGSIZE);</span></span><br><span class="line"><span class="comment">@@ -319,7 +331,17 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)</span></span><br><span class="line"><span class="comment">       kfree(mem);</span></span><br><span class="line"><span class="comment">       goto err;</span></span><br><span class="line"><span class="comment">     &#125;</span></span><br><span class="line"><span class="comment">+</span></span><br><span class="line"><span class="comment">+    */</span></span><br><span class="line">+</span><br><span class="line">+    <span class="keyword">if</span>(mappages(new, i, PGSIZE, (uint64)pa, flags) != <span class="number">0</span>)&#123;</span><br><span class="line">+        <span class="built_in">printf</span>(<span class="string">&quot;mappage new pagetable fail\n&quot;</span>);</span><br><span class="line">+        <span class="keyword">goto</span> err;</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line">   &#125;</span><br><span class="line">+  sfence_vma();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> </span><br><span class="line">  err:</span><br><span class="line">@@ <span class="number">-356</span>,<span class="number">12</span> +<span class="number">378</span>,<span class="number">51</span> @@ copyout(<span class="type">pagetable_t</span> pagetable, uint64 dstva, <span class="type">char</span> *src, uint64 len)</span><br><span class="line">     n = PGSIZE - (dstva - va0);</span><br><span class="line">     <span class="keyword">if</span>(n &gt; len)</span><br><span class="line">       n = len;</span><br><span class="line">-    memmove((<span class="type">void</span> *)(pa0 + (dstva - va0)), src, n);</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">// liangji add </span></span><br><span class="line">+    <span class="type">pte_t</span> *pte;</span><br><span class="line">+    <span class="type">char</span> *mem = (<span class="type">char</span>*)pa0;</span><br><span class="line">+    uint flags;</span><br><span class="line">+    <span class="keyword">if</span>((pte = walk(pagetable, va0, <span class="number">0</span>)) == <span class="number">0</span>)</span><br><span class="line">+    &#123;</span><br><span class="line">+        panic(<span class="string">&quot;write page, cannot walk pte&quot;</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">+    <span class="keyword">if</span>((*pte &amp; PTE_V) == <span class="number">0</span>)</span><br><span class="line">+    &#123;</span><br><span class="line">+        panic(<span class="string">&quot;write page, walk pte, but not valid&quot;</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">// if w=0 &amp;&amp; c=1</span></span><br><span class="line">+    <span class="keyword">if</span>(((*pte &amp; PTE_W) == <span class="number">0</span> ) &amp;&amp; ((*pte &amp; PTE_C) != <span class="number">0</span>))&#123;</span><br><span class="line">+          <span class="comment">//alloc and copy mem</span></span><br><span class="line">+          <span class="keyword">if</span>((mem = kalloc()) == <span class="number">0</span>)</span><br><span class="line">+              panic(<span class="string">&quot;fail to alloc new mem in cow fork&quot;</span>);</span><br><span class="line">+          memmove((<span class="type">void</span>*)(uint64)mem, (<span class="type">void</span>*)pa0, PGSIZE);</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">//old pa should cnt --</span></span><br><span class="line">+          kfree((<span class="type">void</span> *)pa0);</span><br><span class="line">+          </span><br><span class="line">+          <span class="comment">// set w = 1, and c = 0</span></span><br><span class="line">+          flags = PTE_FLAGS(*pte);</span><br><span class="line">+          flags |= PTE_W;</span><br><span class="line">+          flags &amp;= ~PTE_C;</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">//change child pte</span></span><br><span class="line">+          uint64 new_pte = PA2PTE((uint64)mem);</span><br><span class="line">+          new_pte &amp;= ~(<span class="number">0x3FF</span>);</span><br><span class="line">+          new_pte |= flags;</span><br><span class="line">+          *pte = new_pte;</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    <span class="comment">//memmove((void *)(pa0 + (dstva - va0)), src, n);</span></span><br><span class="line">+    memmove((<span class="type">void</span> *)((uint64)mem + (dstva - va0)), src, n);</span><br><span class="line"> </span><br><span class="line">     len -= n;</span><br><span class="line">     src += n;</span><br><span class="line">     dstva = va0 + PGSIZE;</span><br><span class="line">   &#125;</span><br><span class="line">+</span><br><span class="line">+  sfence_vma();</span><br><span class="line">   <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">-- </span><br><span class="line"><span class="number">2.25</span>.<span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="usertests分析"><a href="#usertests分析" class="headerlink" title="usertests分析"></a>usertests分析</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/OS/" rel="tag"># OS</a>
+              <a href="/tags/XV6/" rel="tag"># XV6</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/01/31/xv6-lab4/" rel="prev" title="xv6 lab4">
+                  <i class="fa fa-angle-left"></i> xv6 lab4
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/08/freertos-1/" rel="next" title="freertos 基础实现">
+                  freertos 基础实现 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>xv6 lab5</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

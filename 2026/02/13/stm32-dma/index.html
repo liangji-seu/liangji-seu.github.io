@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="stm32 dma dma介绍 dma资源 dma特性 框图 第一部分 DMA 请求 第二部分 通道 第三部分 仲裁器   寄存器 CR DR SR   实验 分析 如何理解hal库驱动的编写思想 hal库驱动的实现 多个打印源（环形缓冲区）   dma + uart （最高效接收方案） 3种接收不定长数据的情况   dma + uart （最高效发送方案） 总结      stm32 dmad">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 dma">
+<meta property="og:url" content="http://example.com/2026/02/13/stm32-dma/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="stm32 dma dma介绍 dma资源 dma特性 框图 第一部分 DMA 请求 第二部分 通道 第三部分 仲裁器   寄存器 CR DR SR   实验 分析 如何理解hal库驱动的编写思想 hal库驱动的实现 多个打印源（环形缓冲区）   dma + uart （最高效接收方案） 3种接收不定长数据的情况   dma + uart （最高效发送方案） 总结      stm32 dmad">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/28.1.png">
+<meta property="og:image" content="http://example.com/images/28.2.png">
+<meta property="og:image" content="http://example.com/images/28.3.png">
+<meta property="og:image" content="http://example.com/images/28.4.png">
+<meta property="og:image" content="http://example.com/images/28.5.png">
+<meta property="og:image" content="http://example.com/images/28.6.png">
+<meta property="og:image" content="http://example.com/images/28.7.png">
+<meta property="og:image" content="http://example.com/images/28.8.png">
+<meta property="og:image" content="http://example.com/images/28.9.png">
+<meta property="og:image" content="http://example.com/images/28.10.png">
+<meta property="og:image" content="http://example.com/images/28.11.png">
+<meta property="article:published_time" content="2026-02-13T11:43:09.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.748Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/28.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/13/stm32-dma/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/13/stm32-dma/","path":"2026/02/13/stm32-dma/","title":"stm32 dma"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 dma | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#stm32-dma"><span class="nav-number">1.</span> <span class="nav-text">stm32 dma</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#dma%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">dma介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dma%E8%B5%84%E6%BA%90"><span class="nav-number">1.2.</span> <span class="nav-text">dma资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dma%E7%89%B9%E6%80%A7"><span class="nav-number">1.3.</span> <span class="nav-text">dma特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A1%86%E5%9B%BE"><span class="nav-number">1.4.</span> <span class="nav-text">框图</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86-DMA-%E8%AF%B7%E6%B1%82"><span class="nav-number">1.4.1.</span> <span class="nav-text">第一部分 DMA 请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86-%E9%80%9A%E9%81%93"><span class="nav-number">1.4.2.</span> <span class="nav-text">第二部分 通道</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86-%E4%BB%B2%E8%A3%81%E5%99%A8"><span class="nav-number">1.4.3.</span> <span class="nav-text">第三部分 仲裁器</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.5.</span> <span class="nav-text">寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CR"><span class="nav-number">1.5.1.</span> <span class="nav-text">CR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DR"><span class="nav-number">1.5.2.</span> <span class="nav-text">DR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SR"><span class="nav-number">1.5.3.</span> <span class="nav-text">SR</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.6.</span> <span class="nav-text">实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E6%9E%90"><span class="nav-number">1.6.1.</span> <span class="nav-text">分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3hal%E5%BA%93%E9%A9%B1%E5%8A%A8%E7%9A%84%E7%BC%96%E5%86%99%E6%80%9D%E6%83%B3"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">如何理解hal库驱动的编写思想</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#hal%E5%BA%93%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">hal库驱动的实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E6%89%93%E5%8D%B0%E6%BA%90%EF%BC%88%E7%8E%AF%E5%BD%A2%E7%BC%93%E5%86%B2%E5%8C%BA%EF%BC%89"><span class="nav-number">1.6.1.3.</span> <span class="nav-text">多个打印源（环形缓冲区）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dma-uart-%EF%BC%88%E6%9C%80%E9%AB%98%E6%95%88%E6%8E%A5%E6%94%B6%E6%96%B9%E6%A1%88%EF%BC%89"><span class="nav-number">1.6.2.</span> <span class="nav-text">dma + uart （最高效接收方案）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3%E7%A7%8D%E6%8E%A5%E6%94%B6%E4%B8%8D%E5%AE%9A%E9%95%BF%E6%95%B0%E6%8D%AE%E7%9A%84%E6%83%85%E5%86%B5"><span class="nav-number">1.6.2.1.</span> <span class="nav-text">3种接收不定长数据的情况</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dma-uart-%EF%BC%88%E6%9C%80%E9%AB%98%E6%95%88%E5%8F%91%E9%80%81%E6%96%B9%E6%A1%88%EF%BC%89"><span class="nav-number">1.6.3.</span> <span class="nav-text">dma + uart （最高效发送方案）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.6.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/13/stm32-dma/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 dma | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 dma
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-13 19:43:09" itemprop="dateCreated datePublished" datetime="2026-02-13T19:43:09+08:00">2026-02-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#stm32-dma">stm32 dma</a><ul>
+<li><a href="#dma%E4%BB%8B%E7%BB%8D">dma介绍</a></li>
+<li><a href="#dma%E8%B5%84%E6%BA%90">dma资源</a></li>
+<li><a href="#dma%E7%89%B9%E6%80%A7">dma特性</a></li>
+<li><a href="#%E6%A1%86%E5%9B%BE">框图</a><ul>
+<li><a href="#%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86-dma-%E8%AF%B7%E6%B1%82">第一部分 DMA 请求</a></li>
+<li><a href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86-%E9%80%9A%E9%81%93">第二部分 通道</a></li>
+<li><a href="#%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86-%E4%BB%B2%E8%A3%81%E5%99%A8">第三部分 仲裁器</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AF%84%E5%AD%98%E5%99%A8">寄存器</a><ul>
+<li><a href="#cr">CR</a></li>
+<li><a href="#dr">DR</a></li>
+<li><a href="#sr">SR</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E9%AA%8C">实验</a><ul>
+<li><a href="#%E5%88%86%E6%9E%90">分析</a><ul>
+<li><a href="#%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3hal%E5%BA%93%E9%A9%B1%E5%8A%A8%E7%9A%84%E7%BC%96%E5%86%99%E6%80%9D%E6%83%B3">如何理解hal库驱动的编写思想</a></li>
+<li><a href="#hal%E5%BA%93%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%AE%9E%E7%8E%B0">hal库驱动的实现</a></li>
+<li><a href="#%E5%A4%9A%E4%B8%AA%E6%89%93%E5%8D%B0%E6%BA%90%E7%8E%AF%E5%BD%A2%E7%BC%93%E5%86%B2%E5%8C%BA">多个打印源（环形缓冲区）</a></li>
+</ul>
+</li>
+<li><a href="#dma--uart-%E6%9C%80%E9%AB%98%E6%95%88%E6%8E%A5%E6%94%B6%E6%96%B9%E6%A1%88">dma + uart （最高效接收方案）</a><ul>
+<li><a href="#3%E7%A7%8D%E6%8E%A5%E6%94%B6%E4%B8%8D%E5%AE%9A%E9%95%BF%E6%95%B0%E6%8D%AE%E7%9A%84%E6%83%85%E5%86%B5">3种接收不定长数据的情况</a></li>
+</ul>
+</li>
+<li><a href="#dma--uart-%E6%9C%80%E9%AB%98%E6%95%88%E5%8F%91%E9%80%81%E6%96%B9%E6%A1%88">dma + uart （最高效发送方案）</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="stm32-dma"><a href="#stm32-dma" class="headerlink" title="stm32 dma"></a>stm32 dma</h1><h2 id="dma介绍"><a href="#dma介绍" class="headerlink" title="dma介绍"></a>dma介绍</h2><p>DMA，全称为：Direct Memory Access，即<strong>直接存储器访问</strong></p>
+<p>DMA 传输方式无需 CPU 直接控制传输，也没有中断处理方式那样保留现场和恢复现场的过程</p>
+<p>通过硬件为 <code>RAM</code> 与 <code>I/O 设备</code>开辟一条直接传送数据的通路，能使 CPU 的效率大为提高</p>
+<h2 id="dma资源"><a href="#dma资源" class="headerlink" title="dma资源"></a>dma资源</h2><p>STM32F103 内部有 <strong>2 个 DMA</strong> 控制器(DMA2 仅存大容量产品中)。</p>
+<ol>
+<li><code>DMA1</code> 有 <code>7</code> 个通道</li>
+<li><code>DMA2</code> 有 <code>5</code> 个通道</li>
+</ol>
+<p><strong>每个通道</strong>专门用来管理来自于<strong>一个或多个外设</strong>对<strong>存储器</strong>访问的请求。</p>
+<p>还有一个<strong>仲裁器</strong>来协调各个 DMA 请求的优先权</p>
+<h2 id="dma特性"><a href="#dma特性" class="headerlink" title="dma特性"></a>dma特性</h2><p>DMA 有以下一些特性：</p>
+<ul>
+<li><strong>每个通道</strong>都直接连接<code>专用的硬件 DMA 请求</code>，每个通道都同样<code>支持软件触发</code>。这些功能通过软件来配置。</li>
+<li>在<strong>七个请求间的优先权</strong>可以通过软件编程设置(共有四级：很高、高、中等和低)，假如在相等优先权时由硬件决定(请求 0 优先于请求 1，依此类推)。</li>
+<li>独立的源和目标数据区的传输宽度(字节、半字、全字)，模拟打包和拆包的过程。源和目标地址必须<strong>按数据传输宽度对齐</strong>。</li>
+<li>支持循环的缓冲器管理。</li>
+<li><strong>每个通道都有 3 个事件标志</strong>(DMA 半传输，DMA 传输完成和 DMA 传输出错), 这 3 个事件标志<strong>逻辑或</strong>成为一个单独的中断请求。</li>
+<li>存储器和存储器间的传输。</li>
+<li><strong>外设和存储器</strong>，<strong>存储器和外设</strong>的传输。</li>
+<li>闪存、SRAM、外设的 SRAM、APB1、APB2 和 AHB 外设均可作为访问的源和目标。</li>
+<li>可编程的数据传输数目：最大为 65536。</li>
+</ul>
+<h2 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h2><p><img src="/../images/28.1.png" alt="alt text"></p>
+<h3 id="第一部分-DMA-请求"><a href="#第一部分-DMA-请求" class="headerlink" title="第一部分 DMA 请求"></a>第一部分 DMA 请求</h3><p>如果<strong>外设</strong>想要<code>通过 DMA</code> 来<strong>传输数据</strong>，必须</p>
+<ol>
+<li>先给 DMA 控制器发送 <code>DMA 请求</code>，</li>
+<li>DMA 收到请求信号之后，控制器会<code>给外设一个应答信号</code></li>
+<li>当外设应答后且 DMA 控制器收到应答信号之后，</li>
+<li>会启动 DMA 的传输，直到传输完毕</li>
+</ol>
+<p>STM32F103 共有 <code>DMA1</code> 和 <code>DMA2</code> 两个控制器，<code>DMA1 有 7 个通道</code>，<code>DMA2 有 5 个通道</code></p>
+<p><strong>不同的 DMA 控制器的通道</strong>对应着<strong>不同的外设请求</strong>，这决定了我们在软件编程上该怎么设置</p>
+<p><img src="/../images/28.2.png" alt="alt text"></p>
+<p><img src="/../images/28.3.png" alt="alt text"></p>
+<h3 id="第二部分-通道"><a href="#第二部分-通道" class="headerlink" title="第二部分 通道"></a>第二部分 通道</h3><p>DMA 具有 12 个独立可编程的通道，其中 DMA1 有 7 个通道，DMA2 有 5 个通道，<strong>每个通道对应不同的外设的 DMA 请求</strong>。虽然每个通道可以接收多个外设的请求，但是<strong>同一时间只能接收一个</strong>，不能同时接收多个。</p>
+<h3 id="第三部分-仲裁器"><a href="#第三部分-仲裁器" class="headerlink" title="第三部分 仲裁器"></a>第三部分 仲裁器</h3><p>当<strong>发生多个 DMA 通道请求时</strong>，就意味着有先后响应处理的顺序问题，这个就由<strong>仲裁器</strong>管理。</p>
+<p><code>仲裁器</code>管理 DMA 通道请求分为<code>两个阶段</code>。</p>
+<ol>
+<li>第一阶段属于<strong>软件阶段</strong>，可以在 DMA_CCRx寄存器中设置，有 4 个等级：非常高，高，中和低四个<strong>优先级</strong>。</li>
+<li>第二阶段属于<strong>硬件阶段</strong>，如果两个或以上的 DMA 通道请求设置的优先级一样，则他们优先级取决于通道编号，编号越低优先权越高，比如通道 0 高于通道 1。</li>
+</ol>
+<p>在大容量产品和互联型产品中，<strong>DMA1 控制器拥有高于 DMA2 控制器的优先级</strong>。</p>
+<h2 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h2><h3 id="CR"><a href="#CR" class="headerlink" title="CR"></a>CR</h3><p><img src="/../images/28.4.png" alt="alt text"></p>
+<p>该寄存器是用来<strong>清除 DMA_ISR 的对应位</strong>的，通过写 0 清除。</p>
+<blockquote>
+<p>在 DMA_ISR 被置位后，我们必须通过向该寄存器对应的位写 0 来清除</p>
+</blockquote>
+<p><img src="/../images/28.5.png" alt="alt text"><br>该寄存器控制着 DMA <code>通道 x</code> 的<code>每次传输所要传输的数据量</code>。其设置范围为 0~65535。并且<strong>该寄存器的值随着传输的进行而减少</strong>，当该寄存器的<strong>值为 0</strong> 的时候就代表此次数据传输已经<strong>全部发送完成</strong>。</p>
+<blockquote>
+<p>所以可以通过<code>这个寄存器的值</code>来<code>获取当前 DMA 传输的进度</code></p>
+</blockquote>
+<p><img src="/../images/28.6.png" alt="alt text"><br>这个就是正经的配置寄存器了</p>
+<p>该寄存器控制着 DMA 很多相关信息，包括</p>
+<ul>
+<li>数据宽度</li>
+<li>外设及存储器宽度</li>
+<li>通道优先级、</li>
+<li>增量模式、</li>
+<li>传输方向、</li>
+<li>中断允许、</li>
+<li>使能等，</li>
+</ul>
+<blockquote>
+<p>DMA_CCRx 是 DMA 传输的核心控制寄存器</p>
+</blockquote>
+<p><img src="/../images/28.7.png" alt="alt text"><br><img src="/../images/28.8.png" alt="alt text"></p>
+<p>该<strong>寄存器</strong>是用来存储 STM32 <strong>外设的地址</strong>，比如我们平常使用串口 1，那么该寄存器必须写入 0x40013804（其实就是<code>&amp;USART1_DR</code>）。其他外设就可以修改成其他对应外设地址就好了</p>
+<blockquote>
+<p>所以，<code>DMA</code>就是个<strong>数据拷贝工</strong>，原来我们拷贝数据，需要占用cpu来拷贝（比如从uart-&gt;DB中，拷贝一个字节到内存中）</p>
+</blockquote>
+<p><img src="/../images/28.9.png" alt="alt text"></p>
+<p>DMA 通道 x <strong>存储器地址寄存器</strong>用来存放<strong>存储器的地址</strong>，该寄存器和DMA_CPARx 差不多，所以就不列出来了。</p>
+<p>举个应用的例子，在程序中，我们使用到一个 g_sendbuf [5200]数组来做存<br>储器，那么我们在 DMA_CMARx 中写入<code>&amp;g_sendbuf</code>(即内存地址) 即可。</p>
+<h3 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h3><p>无</p>
+<h3 id="SR"><a href="#SR" class="headerlink" title="SR"></a>SR</h3><p><img src="/../images/28.10.png" alt="alt text"><br>这个就是个中断状态寄存器，可以看出某个通道是否出现了中断，以及处于什么状态</p>
+<p>该寄存器是<strong>查询当前 DMA 传输的状态</strong>，我们常用的是 <code>TCIFx</code> 位，即通道 DMA <code>传输完成与否</code>的标志。</p>
+<blockquote>
+<p>注意此寄存器为只读寄存器，所以在这些位被置位之后，只能通过其他的操作来清除</p>
+</blockquote>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>实验是用dma来代替cpu拷贝数据到uart1去发送。</p>
+<p>这个自己手写了一下bsp的驱动。</p>
+<p>需要注意的点：</p>
+<ol>
+<li>注意观察dma结构体（类对象）的成员变量的类型</li>
+<li>dma对象要和uart使用的外设对象绑定，不绑定，uart那边无法使用dma的方法</li>
+</ol>
+<p>因为我们已经初始化好了uart1，所以只要补上dma1的通道4即可。</p>
+<p>dma.c</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;./BSP/DMA/dma.h&quot;</span></span></span><br><span class="line"></span><br><span class="line">DMA_HandleTypeDef hdma;</span><br><span class="line"><span class="keyword">extern</span> UART_HandleTypeDef g_uart1_handle;  <span class="comment">/* UART句柄 */</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">dma1_init</span><span class="params">(DMA_Channel_TypeDef* DMAx_CHx)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//enable dma</span></span><br><span class="line">    __HAL_RCC_DMA1_CLK_ENABLE();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//init dma</span></span><br><span class="line">    <span class="comment">//hdma.Instance = (DMA_Channel_TypeDef   *)DMA1_BASE;</span></span><br><span class="line">		hdma.Instance = DMAx_CHx;</span><br><span class="line">    hdma.Init.Direction = DMA_MEMORY_TO_PERIPH;</span><br><span class="line">	  hdma.Init.PeriphInc = DMA_PINC_DISABLE;</span><br><span class="line">	  hdma.Init.MemInc = DMA_MINC_ENABLE;</span><br><span class="line">	  hdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;</span><br><span class="line">	  hdma.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;</span><br><span class="line">	  hdma.Init.Mode = DMA_NORMAL;</span><br><span class="line">	  hdma.Init.Priority = DMA_PRIORITY_HIGH;</span><br><span class="line">		</span><br><span class="line">    hdma.DmaBaseAddress = (DMA_TypeDef            *)DMA1_BASE;</span><br><span class="line">    <span class="comment">//hdma.ChannelIndex = channel;</span></span><br><span class="line"></span><br><span class="line">    __HAL_LINKDMA(&amp;g_uart1_handle,hdmatx, hdma);</span><br><span class="line">    HAL_DMA_Init(&amp;hdma);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>main.c</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint8_t</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint8_t</span> lcd_id[<span class="number">12</span>];</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    HAL_Init();                                         <span class="comment">/* 初始化HAL库 */</span></span><br><span class="line">    sys_stm32_clock_init(RCC_PLL_MUL9);                 <span class="comment">/* 设置时钟, 72Mhz */</span></span><br><span class="line">    delay_init(<span class="number">72</span>);                                     <span class="comment">/* 延时初始化 */</span></span><br><span class="line">    usart_init(<span class="number">115200</span>);                                 <span class="comment">/* 串口初始化为115200 */</span></span><br><span class="line">    led_init();                                         <span class="comment">/* 初始化LED */</span></span><br><span class="line">    lcd_init();                                         <span class="comment">/* 初始化LCD */</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;test1\n&quot;</span>);</span><br><span class="line">    dma1_init((DMA_Channel_TypeDef* )DMA1_Channel4_BASE);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;test2\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;test3\n&quot;</span>);</span><br><span class="line">    g_point_color = RED;</span><br><span class="line">    <span class="built_in">sprintf</span>((<span class="type">char</span> *)lcd_id, <span class="string">&quot;LCD ID:%04X&quot;</span>, lcddev.id);  <span class="comment">/* 将LCD ID打印到lcd_id数组 */</span></span><br><span class="line">		HAL_UART_Transmit_DMA(&amp;g_uart1_handle, (<span class="type">uint8_t</span>*)send_buffer, <span class="keyword">sizeof</span>(send_buffer));</span><br><span class="line">		<span class="comment">//HAL_UART_Transmit_IT(&amp;g_uart1_handle, (uint8_t*)send_buffer, sizeof(send_buffer));</span></span><br><span class="line">		<span class="comment">//HAL_UART_Transmit(&amp;g_uart1_handle, (uint8_t*)send_buffer, sizeof(send_buffer), 1000);</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			  LED0_TOGGLE(); <span class="comment">/*红灯闪烁*/</span></span><br><span class="line">				LED1_TOGGLE();</span><br><span class="line">        delay_ms(<span class="number">50</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面来剖析一下dma驱动，以及串口dma发送驱动具体工作内容</p>
+<h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><p>首先看一下hal里面，对dma对象的类定义</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment">  * @brief  DMA handle Structure definition</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> __<span class="title">DMA_HandleTypeDef</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  DMA_Channel_TypeDef   *Instance;                      <span class="comment">/* 寄存器基地址 (通道) */</span></span><br><span class="line">  </span><br><span class="line">  DMA_InitTypeDef       Init;                          <span class="comment">/* DMA 通信参数 */</span></span><br><span class="line">  </span><br><span class="line">  HAL_LockTypeDef       Lock;                          <span class="comment">/* DMA 锁对象 */</span></span><br><span class="line">  </span><br><span class="line">  HAL_DMA_StateTypeDef  State;                         <span class="comment">/* DMA 传输状态 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="type">void</span>                  *Parent;            <span class="comment">/* 父对象状态，HAL 库处理的中间变量 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="type">void</span>                  (* XferCpltCallback)( <span class="keyword">struct</span> __DMA_HandleTypeDef * hdma);    <span class="comment">/* DMA 传输完成回调 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="type">void</span>                  (* XferHalfCpltCallback)( <span class="keyword">struct</span> __DMA_HandleTypeDef * hdma); <span class="comment">/* DMA 一半传输完成回调 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="type">void</span>                  (* XferErrorCallback)( <span class="keyword">struct</span> __DMA_HandleTypeDef * hdma);   <span class="comment">/*DMA 传输错误回调*/</span></span><br><span class="line"></span><br><span class="line">  <span class="type">void</span>                  (* XferAbortCallback)( <span class="keyword">struct</span> __DMA_HandleTypeDef * hdma);   <span class="comment">/* DMA 传输中止回调 */</span>  </span><br><span class="line">  </span><br><span class="line">  __IO <span class="type">uint32_t</span>         ErrorCode;                       <span class="comment">/* DMA 存取错误代码 */</span></span><br><span class="line"></span><br><span class="line">  DMA_TypeDef            *DmaBaseAddress;                <span class="comment">/* DMA 通道基地址 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="type">uint32_t</span>               ChannelIndex;                   <span class="comment">/* DMA 通道索引 */</span></span><br><span class="line"></span><br><span class="line">&#125; DMA_HandleTypeDef; </span><br></pre></td></tr></table></figure>
+<p>可以看到，一个dma的类对象，里面包含的成员变量有很多，但是我也不知道实际要初始化哪些</p>
+<h4 id="如何理解hal库驱动的编写思想"><a href="#如何理解hal库驱动的编写思想" class="headerlink" title="如何理解hal库驱动的编写思想"></a>如何理解hal库驱动的编写思想</h4><p><strong>1. 统一的标准：HAL 驱动的“三部曲”</strong></p>
+<p>无论是一个简单的 GPIO，还是复杂的网络控制器（ETH），HAL 库的逻辑永远遵循这个流程：</p>
+<ul>
+<li><p>第一步：<strong>配置句柄</strong>（The Handle）这是你已经掌握的：填充 <code>Instance</code> 和 <code>Init</code>。这是告诉硬件：“你是谁”以及“你怎么工作”。</p>
+</li>
+<li><p>第二步：<strong>硬件底层初始化</strong>（The <code>MSP</code> - MCU Support Package）<br>这是最容易被忽略但最标准的地方。HAL 库规定：所有的 HAL_XXX_Init 内部都会调用一个空弱函数（__weak）叫 <code>HAL_XXX_MspInit</code>。</p>
+</li>
+</ul>
+<blockquote>
+<p>标准在这里： 凡是涉及<strong>跨模块的关联</strong>（比如 UART 要用 DMA，或者 GPIO 要用中断），标准做法都是在 <code>MspInit</code> 中完成。</p>
+</blockquote>
+<blockquote>
+<p>你的发现： __HAL_LINKDMA 就应该写在 HAL_UART_MspInit 里面。</p>
+</blockquote>
+<ul>
+<li>第三步：<strong>启动与关联</strong>（The Process&#x2F;Link）<br>这就是你提到的“绑定”。在 HAL 的逻辑里，如果 外设 A 需要调用外设 B 来协同工作，那么 A 的句柄里一定有<code>一个指针指向 B</code>。</li>
+</ul>
+<hr>
+<p><strong>2. 怎么“预判”哪些变量需要赋值？</strong></p>
+<p>当你拿到一个全新的外设结构体时，可以用以下逻辑进行“排查”：</p>
+<ul>
+<li>看成员名：</li>
+</ul>
+<blockquote>
+<p>凡是带 *hdma… 或者 *h…（<strong>指针开头</strong>）的，通常是关联对象。它们不会在 Init 函数里自动生成，必须通过 __HAL_LINKDMA 或手动赋值。</p>
+</blockquote>
+<blockquote>
+<p>凡是带 State、Lock、ErrorCode 的，全是<strong>只读</strong>。</p>
+</blockquote>
+<ul>
+<li>看“协作关系”：</li>
+</ul>
+<blockquote>
+<p>问自己：这个外设是独立工作的吗？</p>
+</blockquote>
+<blockquote>
+<p>如果是 UART、SPI、I2C 这种<strong>需要 DMA 搬运数据</strong>的，你立刻就要想到：<strong>必然存在一个 Link 动作</strong>。</p>
+</blockquote>
+<ul>
+<li>看 .c 文件的头部注释（最硬核的标准）：</li>
+</ul>
+<blockquote>
+<p>打开 <code>stm32f1xx_hal_uart.c</code>，看顶部的 How to use this driver。</p>
+<p>你会发现官方明确写了：<code>For DMA mode</code>: (##) Configure the UART TX&#x2F;RX DMA channel 和 (##) Associate the initialized DMA handle to the UART handle。</p>
+</blockquote>
+<p><strong>3. 如果你自己写驱动，该如何设计？</strong></p>
+<p>为了让你的驱动看起来像“正规军”，建议模仿 HAL 的这种**“解耦”**设计：</p>
+<ul>
+<li><p><strong>不要在 Init 内部写死关联</strong>： 不要让 DMA_Init 去管 UART。</p>
+<ul>
+<li><p>使用“父子”指针： * 如果 A 驱动调用 B 驱动，在 A 的结构体里留一个 void *Parent 或 B_HandleTypedef *pChild。</p>
+</li>
+<li><p>提供一个宏（类似 LINK）来连接它们。</p>
+</li>
+</ul>
+</li>
+<li><p>状态与配置分离： * 用户填写的放在 Init。</p>
+</li>
+<li><p>驱动运行时的临时变量（如 Counter、Index）放在结构体的根目录下。</p>
+</li>
+</ul>
+<p>以上，应该能对hal编写的驱动，有一个初步的认识了。</p>
+<p>下面看看实际hal的工作</p>
+<h4 id="hal库驱动的实现"><a href="#hal库驱动的实现" class="headerlink" title="hal库驱动的实现"></a>hal库驱动的实现</h4><p><code>HAL_DMA_Init()</code>,</p>
+<p>可以看到，它使用assert_parame进行断言判断，这里也可以看出要初始化实例的那些变量</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief  Initialize the DMA according to the specified</span></span><br><span class="line"><span class="comment">  *         parameters in the DMA_InitTypeDef and initialize the associated handle.</span></span><br><span class="line"><span class="comment">  * @param  hdma: Pointer to a DMA_HandleTypeDef structure that contains</span></span><br><span class="line"><span class="comment">  *               the configuration information for the specified DMA Channel.</span></span><br><span class="line"><span class="comment">  * @retval HAL status</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_DMA_Init</span><span class="params">(DMA_HandleTypeDef *hdma)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">uint32_t</span> tmp = <span class="number">0U</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check the DMA handle allocation */</span></span><br><span class="line">  <span class="keyword">if</span>(hdma == <span class="literal">NULL</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> HAL_ERROR;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check the parameters */</span></span><br><span class="line">  assert_param(IS_DMA_ALL_INSTANCE(hdma-&gt;Instance));</span><br><span class="line">  assert_param(IS_DMA_DIRECTION(hdma-&gt;Init.Direction));</span><br><span class="line">  assert_param(IS_DMA_PERIPHERAL_INC_STATE(hdma-&gt;Init.PeriphInc));</span><br><span class="line">  assert_param(IS_DMA_MEMORY_INC_STATE(hdma-&gt;Init.MemInc));</span><br><span class="line">  assert_param(IS_DMA_PERIPHERAL_DATA_SIZE(hdma-&gt;Init.PeriphDataAlignment));</span><br><span class="line">  assert_param(IS_DMA_MEMORY_DATA_SIZE(hdma-&gt;Init.MemDataAlignment));</span><br><span class="line">  assert_param(IS_DMA_MODE(hdma-&gt;Init.Mode));</span><br><span class="line">  assert_param(IS_DMA_PRIORITY(hdma-&gt;Init.Priority));</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> defined (DMA2)</span></span><br><span class="line">  <span class="comment">/* calculation of the channel index */</span></span><br><span class="line">  <span class="keyword">if</span> ((<span class="type">uint32_t</span>)(hdma-&gt;Instance) &lt; (<span class="type">uint32_t</span>)(DMA2_Channel1))</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* DMA1 */</span></span><br><span class="line">    hdma-&gt;ChannelIndex = (((<span class="type">uint32_t</span>)hdma-&gt;Instance - (<span class="type">uint32_t</span>)DMA1_Channel1) / ((<span class="type">uint32_t</span>)DMA1_Channel2 - (<span class="type">uint32_t</span>)DMA1_Channel1)) &lt;&lt; <span class="number">2</span>;</span><br><span class="line">    hdma-&gt;DmaBaseAddress = DMA1;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span> </span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* DMA2 */</span></span><br><span class="line">    hdma-&gt;ChannelIndex = (((<span class="type">uint32_t</span>)hdma-&gt;Instance - (<span class="type">uint32_t</span>)DMA2_Channel1) / ((<span class="type">uint32_t</span>)DMA2_Channel2 - (<span class="type">uint32_t</span>)DMA2_Channel1)) &lt;&lt; <span class="number">2</span>;</span><br><span class="line">    hdma-&gt;DmaBaseAddress = DMA2;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">  <span class="comment">/* DMA1 */</span></span><br><span class="line">  <span class="comment">//可以看到，Index是通过channel4的基地址计算出来的，baseAddress就直接赋值为了DMA1</span></span><br><span class="line">  hdma-&gt;ChannelIndex = (((<span class="type">uint32_t</span>)hdma-&gt;Instance - (<span class="type">uint32_t</span>)DMA1_Channel1) / ((<span class="type">uint32_t</span>)DMA1_Channel2 - (<span class="type">uint32_t</span>)DMA1_Channel1)) &lt;&lt; <span class="number">2</span>;</span><br><span class="line">  hdma-&gt;DmaBaseAddress = DMA1;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* DMA2 */</span></span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Change DMA peripheral state */</span></span><br><span class="line">  hdma-&gt;State = HAL_DMA_STATE_BUSY;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Get the CR register value */</span></span><br><span class="line">  <span class="comment">//获取当前的dma1通道4的控制寄存器CR</span></span><br><span class="line">  tmp = hdma-&gt;Instance-&gt;CCR;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Clear PL, MSIZE, PSIZE, MINC, PINC, CIRC and DIR bits */</span></span><br><span class="line">  tmp &amp;= ((<span class="type">uint32_t</span>)~(DMA_CCR_PL    | DMA_CCR_MSIZE  | DMA_CCR_PSIZE  | \</span><br><span class="line">                      DMA_CCR_MINC  | DMA_CCR_PINC   | DMA_CCR_CIRC   | \</span><br><span class="line">                      DMA_CCR_DIR));</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Prepare the DMA Channel configuration */</span></span><br><span class="line">  tmp |=  hdma-&gt;Init.Direction        |</span><br><span class="line">          hdma-&gt;Init.PeriphInc           | hdma-&gt;Init.MemInc           |</span><br><span class="line">          hdma-&gt;Init.PeriphDataAlignment | hdma-&gt;Init.MemDataAlignment |</span><br><span class="line">          hdma-&gt;Init.Mode                | hdma-&gt;Init.Priority;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Write to DMA Channel CR register */</span></span><br><span class="line">  hdma-&gt;Instance-&gt;CCR = tmp;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//以上，只是配置了一些基础的，比如通道优先级，数据宽度，增量模式使能，方向等等。没有中断的使能，也没有开启dma通道</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Initialise the error code */</span></span><br><span class="line">  hdma-&gt;ErrorCode = HAL_DMA_ERROR_NONE;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Initialize the DMA state*/</span></span><br><span class="line">  hdma-&gt;State = HAL_DMA_STATE_READY;</span><br><span class="line">  <span class="comment">/* Allocate lock resource and initialize it */</span></span><br><span class="line">  hdma-&gt;Lock = HAL_UNLOCKED;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> HAL_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，HAL_DMA_Init(),也仅仅只是<strong>配置了基础的功能参数</strong>，比如通道优先级，数据宽度，增量模式使能，方向等等。没有中断的使能，也没有开启dma通道</p>
+<p>下面看看绑定DMA1_CH4 和uart1_tx</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">__HAL_LINKDMA(&amp;g_uart1_handle,hdmatx, hdma);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __HAL_LINKDMA(__HANDLE__, __PPP_DMA_FIELD__, __DMA_HANDLE__)               \</span></span><br><span class="line"><span class="meta">                    do&#123;                                                      \</span></span><br><span class="line"><span class="meta">                          (__HANDLE__)-&gt;__PPP_DMA_FIELD__ = &amp;(__DMA_HANDLE__); \</span></span><br><span class="line"><span class="meta">                          (__DMA_HANDLE__).Parent = (__HANDLE__);             \</span></span><br><span class="line"><span class="meta">                      &#125; while(0U)</span></span><br></pre></td></tr></table></figure>
+<p>第一个参数是uart1的句柄地址，参数2是参数名字，参数3是dma的句柄对象。</p>
+<blockquote>
+<p>注意，这个是宏函数，不是函数，所以不用担心临时变量地址问题</p>
+</blockquote>
+<p>里面的内容就是：</p>
+<ol>
+<li>uart1对象的参数2 赋值为 dma的句柄地址</li>
+<li>dma对象的parent指针，指向</li>
+</ol>
+<p>至此，dma1 ch4的初始化，就结束了，之后，调用 <code>HAL_UART_Transmit_DMA</code> 来让dma代替cpu读取内存，拷贝到uart_tx 的 db，然后发送出去。</p>
+<p>在hal库的uart驱动里面，可以看到这里的注释，有教你如何使用uart串口驱动，以及如何使用dma进行发送接收</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">The UART HAL driver can be used as follows:</span><br><span class="line"></span><br><span class="line">(#) Declare a UART_HandleTypeDef handle <span class="title function_">structure</span> <span class="params">(eg. UART_HandleTypeDef huart)</span>.</span><br><span class="line"><span class="params">(#)</span> Initialize the UART low level resources by implementing the <span class="title function_">HAL_UART_MspInit</span><span class="params">()</span> API:</span><br><span class="line">    <span class="params">(##)</span> Enable the USARTx interface clock.</span><br><span class="line">    <span class="params">(##)</span> UART pins configuration:</span><br><span class="line">        <span class="params">(+++)</span> Enable the clock <span class="keyword">for</span> the UART GPIOs.</span><br><span class="line">        <span class="params">(+++)</span> Configure these UART <span class="title function_">pins</span> <span class="params">(TX as alternate function pull-up, RX as alternate function Input)</span>.</span><br><span class="line">    <span class="params">(##)</span> NVIC configuration <span class="keyword">if</span> you need to use interrupt <span class="title function_">process</span> <span class="params">(HAL_UART_Transmit_IT()</span></span><br><span class="line"><span class="params">         and HAL_UART_Receive_IT() APIs)</span>:</span><br><span class="line">        <span class="params">(+++)</span> Configure the USARTx interrupt priority.</span><br><span class="line">        <span class="params">(+++)</span> Enable the NVIC USART IRQ handle.</span><br><span class="line">    <span class="params">(##)</span> DMA Configuration <span class="keyword">if</span> you need to use DMA <span class="title function_">process</span> <span class="params">(HAL_UART_Transmit_DMA()</span></span><br><span class="line"><span class="params">         and HAL_UART_Receive_DMA() APIs)</span>:</span><br><span class="line">        <span class="params">(+++)</span> Declare a DMA handle structure <span class="keyword">for</span> the Tx/Rx channel.</span><br><span class="line">        <span class="params">(+++)</span> Enable the DMAx interface clock.</span><br><span class="line">        <span class="params">(+++)</span> Configure the declared DMA handle structure with the required</span><br><span class="line">              Tx/Rx parameters.</span><br><span class="line">        <span class="params">(+++)</span> Configure the DMA Tx/Rx channel.</span><br><span class="line">        <span class="params">(+++)</span> Associate the initialized DMA handle to the UART DMA Tx/Rx handle.</span><br><span class="line">        <span class="params">(+++)</span> Configure the priority and enable the NVIC <span class="keyword">for</span> the transfer complete</span><br><span class="line">              interrupt on the DMA Tx/Rx channel.</span><br><span class="line">        <span class="params">(+++)</span> Configure the USARTx interrupt priority and enable the NVIC USART IRQ <span class="title function_">handle</span></span><br><span class="line">              <span class="params">(used <span class="keyword">for</span> last byte sending completion detection in DMA non circular mode)</span></span><br><span class="line"></span><br><span class="line"><span class="params">(#)</span> Program the Baud Rate, Word Length, Stop Bit, Parity, Hardware</span><br><span class="line">    flow control and <span class="title function_">Mode</span><span class="params">(Receiver/Transmitter)</span> in the huart Init structure.</span><br><span class="line"></span><br><span class="line"><span class="params">(#)</span> For the UART asynchronous mode, initialize the UART registers by calling</span><br><span class="line">    the <span class="title function_">HAL_UART_Init</span><span class="params">()</span> API.</span><br><span class="line"></span><br><span class="line"><span class="params">(#)</span> For the UART Half duplex mode, initialize the UART registers by calling</span><br><span class="line">    the <span class="title function_">HAL_HalfDuplex_Init</span><span class="params">()</span> API.</span><br><span class="line"></span><br><span class="line"><span class="params">(#)</span> For the LIN mode, initialize the UART registers by calling the <span class="title function_">HAL_LIN_Init</span><span class="params">()</span> API.</span><br><span class="line"></span><br><span class="line"><span class="params">(#)</span> For the Multi-Processor mode, initialize the UART registers by calling</span><br><span class="line">    the <span class="title function_">HAL_MultiProcessor_Init</span><span class="params">()</span> API.</span><br></pre></td></tr></table></figure>
+
+<p>这里有对dma相关的串口api进行汇总</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">(#) Non-Blocking mode API<span class="string">&#x27;s with DMA are :</span></span><br><span class="line"><span class="string">    (+) HAL_UART_Transmit_DMA()</span></span><br><span class="line"><span class="string">    (+) HAL_UART_Receive_DMA()</span></span><br><span class="line"><span class="string">    (+) HAL_UART_DMAPause()</span></span><br><span class="line"><span class="string">    (+) HAL_UART_DMAResume()</span></span><br><span class="line"><span class="string">    (+) HAL_UART_DMAStop()</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+<p>下面我们来逐一分析一下</p>
+<p><code>HAL_UART_Transmit_DMA</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_UART_Transmit_DMA</span><span class="params">(UART_HandleTypeDef *huart, <span class="type">uint8_t</span> *pData, <span class="type">uint16_t</span> Size)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">uint32_t</span> *tmp;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check that a Tx process is not already ongoing */</span></span><br><span class="line">  <span class="keyword">if</span> (huart-&gt;gState == HAL_UART_STATE_READY)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ((pData == <span class="literal">NULL</span>) || (Size == <span class="number">0U</span>))</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">return</span> HAL_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Process Locked */</span></span><br><span class="line">    __HAL_LOCK(huart);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好要发送的字符串的内存起始地址，以及要发送的字节数</span></span><br><span class="line">    huart-&gt;pTxBuffPtr = pData;</span><br><span class="line">    huart-&gt;TxXferSize = Size;</span><br><span class="line">    huart-&gt;TxXferCount = Size;</span><br><span class="line"></span><br><span class="line">    huart-&gt;ErrorCode = HAL_UART_ERROR_NONE;</span><br><span class="line">    huart-&gt;gState = HAL_UART_STATE_BUSY_TX;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好uart dma发送完成回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferCpltCallback = UART_DMATransmitCplt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好uart dma发送一半完成回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferHalfCpltCallback = UART_DMATxHalfCplt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好 dma错误 回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferErrorCallback = UART_DMAError;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好 dma终止 回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferAbortCallback = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Enable the UART transmit DMA channel */</span></span><br><span class="line">    <span class="comment">//用dma的驱动，开始发送这个内存区域</span></span><br><span class="line">    tmp = (<span class="type">uint32_t</span> *)&amp;pData;</span><br><span class="line">    HAL_DMA_Start_IT(huart-&gt;hdmatx, *(<span class="type">uint32_t</span> *)tmp, (<span class="type">uint32_t</span>)&amp;huart-&gt;Instance-&gt;DR, Size);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Clear the TC flag in the SR register by writing 0 to it */</span></span><br><span class="line">    <span class="comment">//清除串口的TC标志位（传输完成标志位）</span></span><br><span class="line">    __HAL_UART_CLEAR_FLAG(huart, UART_FLAG_TC);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Process Unlocked */</span></span><br><span class="line">    __HAL_UNLOCK(huart);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Enable the DMA transfer for transmit request by setting the DMAT bit</span></span><br><span class="line"><span class="comment">       in the UART CR3 register */</span></span><br><span class="line">    <span class="comment">//置1，使用uart1的CR3的DMAT位。</span></span><br><span class="line">    SET_BIT(huart-&gt;Instance-&gt;CR3, USART_CR3_DMAT);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> HAL_OK;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> HAL_BUSY;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>先关注绑定的几个回调函数：</p>
+<ol>
+<li>hdmatx-&gt;XferCpltCallback &#x3D; UART_DMATransmitCplt;<ol>
+<li>指定好uart dma发送完成回调函数</li>
+</ol>
+</li>
+<li>hdmatx-&gt;XferHalfCpltCallback &#x3D; UART_DMATxHalfCplt;<ol>
+<li>指定好uart dma发送一半完成回调函数</li>
+</ol>
+</li>
+<li>hdmatx-&gt;XferErrorCallback &#x3D; UART_DMAError;<ol>
+<li>指定好 dma错误 回调函数</li>
+</ol>
+</li>
+<li>hdmatx-&gt;XferAbortCallback &#x3D; NULL;<ol>
+<li>指定好 dma终止 回调函数</li>
+</ol>
+</li>
+</ol>
+<p>我们先来看看这几个回调函数的内容，因为你后面使能了这几个中断后，就会触发他们的回调</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DCD     DMA1_Channel4_IRQHandler   ; DMA1 Channel <span class="number">4</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，是有DMA1—CH4的中断向量的</p>
+<p>下面分别看一下，这些中断的回调函数：</p>
+<p><code>UART_DMATransmitCplt</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">UART_DMATransmitCplt</span><span class="params">(DMA_HandleTypeDef *hdma)</span></span><br><span class="line">&#123;</span><br><span class="line">  UART_HandleTypeDef *huart = (UART_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)-&gt;Parent;</span><br><span class="line">  <span class="comment">/* DMA Normal mode*/</span></span><br><span class="line">  <span class="keyword">if</span> ((hdma-&gt;Instance-&gt;CCR &amp; DMA_CCR_CIRC) == <span class="number">0U</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    huart-&gt;TxXferCount = <span class="number">0x00U</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Disable the DMA transfer for transmit request by setting the DMAT bit</span></span><br><span class="line"><span class="comment">       in the UART CR3 register */</span></span><br><span class="line">    CLEAR_BIT(huart-&gt;Instance-&gt;CR3, USART_CR3_DMAT);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Enable the UART Transmit Complete Interrupt */</span></span><br><span class="line">    SET_BIT(huart-&gt;Instance-&gt;CR1, USART_CR1_TCIE);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/* DMA Circular mode */</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> (USE_HAL_UART_REGISTER_CALLBACKS == 1)</span></span><br><span class="line">    <span class="comment">/*Call registered Tx complete callback*/</span></span><br><span class="line">    huart-&gt;TxCpltCallback(huart);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">    <span class="comment">/*Call legacy weak Tx complete callback*/</span></span><br><span class="line">    HAL_UART_TxCpltCallback(huart);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* USE_HAL_UART_REGISTER_CALLBACKS */</span></span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，已经有定义了，然后留了一个 HAL_UART_TxCpltCallback(huart)来让你自己定义</p>
+<p>剩下的也都一样。</p>
+<p>接下来里面有两个比较重要的，<code>HAL_DMA_Start_IT</code> 和 <code>SET_BIT(huart-&gt;Instance-&gt;CR3, USART_CR3_DMAT)</code></p>
+<p><code>HAL_DMA_Start_IT</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief  Start the DMA Transfer with interrupt enabled.</span></span><br><span class="line"><span class="comment">  * @param  hdma: pointer to a DMA_HandleTypeDef structure that contains</span></span><br><span class="line"><span class="comment">  *               the configuration information for the specified DMA Channel.</span></span><br><span class="line"><span class="comment">  * @param  SrcAddress: The source memory Buffer address</span></span><br><span class="line"><span class="comment">  * @param  DstAddress: The destination memory Buffer address</span></span><br><span class="line"><span class="comment">  * @param  DataLength: The length of data to be transferred from source to destination</span></span><br><span class="line"><span class="comment">  * @retval HAL status</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_DMA_Start_IT</span><span class="params">(DMA_HandleTypeDef *hdma, <span class="type">uint32_t</span> SrcAddress, <span class="type">uint32_t</span> DstAddress, <span class="type">uint32_t</span> DataLength)</span></span><br><span class="line">&#123;</span><br><span class="line">  HAL_StatusTypeDef status = HAL_OK;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check the parameters */</span></span><br><span class="line">  assert_param(IS_DMA_BUFFER_SIZE(DataLength));</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Process locked */</span></span><br><span class="line">  __HAL_LOCK(hdma);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span>(HAL_DMA_STATE_READY == hdma-&gt;State)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">/* Change DMA peripheral state */</span></span><br><span class="line">    hdma-&gt;State = HAL_DMA_STATE_BUSY;</span><br><span class="line">    hdma-&gt;ErrorCode = HAL_DMA_ERROR_NONE;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Disable the peripheral */</span></span><br><span class="line">    __HAL_DMA_DISABLE(hdma);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Configure the source, destination address and the data length &amp; clear flags*/</span></span><br><span class="line">    DMA_SetConfig(hdma, SrcAddress, DstAddress, DataLength);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Enable the transfer complete interrupt */</span></span><br><span class="line">    <span class="comment">/* Enable the transfer Error interrupt */</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> != hdma-&gt;XferHalfCpltCallback)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">/* Enable the Half transfer complete interrupt as well */</span></span><br><span class="line">      __HAL_DMA_ENABLE_IT(hdma, (DMA_IT_TC | DMA_IT_HT | DMA_IT_TE));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      __HAL_DMA_DISABLE_IT(hdma, DMA_IT_HT);</span><br><span class="line">      __HAL_DMA_ENABLE_IT(hdma, (DMA_IT_TC | DMA_IT_TE));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* Enable the Peripheral */</span></span><br><span class="line">    __HAL_DMA_ENABLE(hdma);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;      </span><br><span class="line">    <span class="comment">/* Process Unlocked */</span></span><br><span class="line">    __HAL_UNLOCK(hdma); </span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Remain BUSY */</span></span><br><span class="line">    status = HAL_BUSY;</span><br><span class="line">  &#125;    </span><br><span class="line">  <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>总结一下这个函数的内容：</p>
+<ol>
+<li>__HAL_DMA_DISABLE(hdma)<ol>
+<li>设置DMA-&gt;CCR的EN位为0</li>
+</ol>
+</li>
+<li>DMA_SetConfig(hdma, SrcAddress, DstAddress, DataLength)<ol>
+<li>主要就是设置DMA_CH4-&gt;CPAR里面，记录下源地址，目的地址（之前只是指定了dma的工作方式，没有具体的任务内容）</li>
+</ol>
+</li>
+<li>判断如果指定了传输一半完成的回调函数（确实是已经指定了的）<ol>
+<li>__HAL_DMA_ENABLE_IT(hdma, (DMA_IT_TC | DMA_IT_HT | DMA_IT_TE))，就把支持的3个中断全部使能</li>
+</ol>
+</li>
+<li>__HAL_DMA_ENABLE(hdma)<ol>
+<li>设置DMA-&gt;CCR的EN位为1</li>
+</ol>
+</li>
+</ol>
+<p>简单说就是：</p>
+<ol>
+<li>告诉dma实际要进行拷贝的内存地址</li>
+<li>开中断</li>
+<li>使能dmaEN，开始工作</li>
+</ol>
+<p>确实如<code>HAL_DMA_Start_IT</code>命名那样，<code>开中断模式</code><strong>开始工作</strong>。</p>
+<p>接下来分析串口dma发送的最后一句：</p>
+<p><code>SET_BIT(huart-&gt;Instance-&gt;CR3, USART_CR3_DMAT)</code></p>
+<p>设置的值如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> USART_CR3_DMAT_Pos                  (7U)                               </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> USART_CR3_DMAT_Msk                  (0x1UL &lt;&lt; USART_CR3_DMAT_Pos)       <span class="comment">/*!&lt; 0x00000080 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> USART_CR3_DMAT                      USART_CR3_DMAT_Msk                 <span class="comment">/*!&lt; DMA Enable Transmitter */</span></span></span><br></pre></td></tr></table></figure>
+
+<p>再看看uart的CR3寄存器<br><img src="/../images/28.11.png" alt="alt text"></p>
+<p>可以看到，他就是使能了UART1的CR3的这个DMAT位，串口硬件就可以开始使用DMA进行发送了。</p>
+<blockquote>
+<p>并不是我想的那样，得用软件来告诉串口怎么用dma，人家<strong>串口硬件已经支持dma了</strong>，你直接使能，他就知道用这个来发送了。</p>
+</blockquote>
+<p>对比一下原来，串口单独发送的场景，还记得吗：</p>
+<ol>
+<li>阻塞发送：<ol>
+<li>真的让cpu在while里面，不停的拷贝字节到uart1-&gt;DB</li>
+</ol>
+</li>
+<li>非阻塞发送<ol>
+<li>HAL_UART_Transmit_IT里面，只是使能了发送空中断。</li>
+</ol>
+</li>
+</ol>
+<blockquote>
+<p>所以，所谓的驱动，只是用来<strong>开启硬件原本就有的功能</strong>，不是让你用软件来实现原本硬件没有的功能</p>
+</blockquote>
+<p>至此，串口的DMA发送，就已经分析完毕了。</p>
+<p>那为什么我在main.c里面，指定串口传输完成回调函数，但是没有进入这个回调函数呢？</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_TxCpltCallback</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//HAL_UART_Transmit_DMA(huart, (uint8_t*)send_buffer, sizeof(send_buffer));</span></span><br><span class="line">	   LED1_TOGGLE();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>原因在于，之前，<code>HAL_UART_Transmit_DMA</code>里面，指定了dma的回调函数，然后确实是<strong>打开了dma的3个中断</strong>。但是<strong>没有使能串口的中断</strong>。</p>
+<p>所以当dma完成传输后，会先进入dma的<code>XferCpltCallback</code>回调函数，也就是<code>UART_DMATransmitCplt</code>.</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_UART_Transmit_DMA</span><span class="params">(UART_HandleTypeDef *huart, <span class="type">uint8_t</span> *pData, <span class="type">uint16_t</span> Size)</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好uart dma发送完成回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferCpltCallback = UART_DMATransmitCplt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好uart dma发送一半完成回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferHalfCpltCallback = UART_DMATxHalfCplt;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好 dma错误 回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferErrorCallback = UART_DMAError;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指定好 dma终止 回调函数</span></span><br><span class="line">    huart-&gt;hdmatx-&gt;XferAbortCallback = <span class="literal">NULL</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><code>UART_DMATransmitCplt</code>里面，你看注释，发现，如果我们的dma使用的是normal模式，则会使能串口传输完成中断，而不是进入你实现的<code>HAL_UART_TxCpltCallback(huart)</code>;</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">UART_DMATransmitCplt</span><span class="params">(DMA_HandleTypeDef *hdma)</span></span><br><span class="line">&#123;</span><br><span class="line">  UART_HandleTypeDef *huart = (UART_HandleTypeDef *)((DMA_HandleTypeDef *)hdma)-&gt;Parent;</span><br><span class="line">  <span class="comment">/* DMA Normal mode*/</span></span><br><span class="line">  <span class="keyword">if</span> ((hdma-&gt;Instance-&gt;CCR &amp; DMA_CCR_CIRC) == <span class="number">0U</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    huart-&gt;TxXferCount = <span class="number">0x00U</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Disable the DMA transfer for transmit request by setting the DMAT bit</span></span><br><span class="line"><span class="comment">       in the UART CR3 register */</span></span><br><span class="line">    CLEAR_BIT(huart-&gt;Instance-&gt;CR3, USART_CR3_DMAT);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Enable the UART Transmit Complete Interrupt */</span></span><br><span class="line">    SET_BIT(huart-&gt;Instance-&gt;CR1, USART_CR1_TCIE);</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/* DMA Circular mode */</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">if</span> (USE_HAL_UART_REGISTER_CALLBACKS == 1)</span></span><br><span class="line">    <span class="comment">/*Call registered Tx complete callback*/</span></span><br><span class="line">    huart-&gt;TxCpltCallback(huart);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">    <span class="comment">/*Call legacy weak Tx complete callback*/</span></span><br><span class="line">    HAL_UART_TxCpltCallback(huart);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* USE_HAL_UART_REGISTER_CALLBACKS */</span></span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以，最终触发的逻辑是：dma完成中断-&gt;dma完成回调-&gt;使能串口传输完成中断-&gt;串口传输完成回调</p>
+<p>但是我如果实现了串口的接收中断回调函数，发现还是没有进入，所以得需要进入看看串口的中断回调函数具体干了些什么：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_IRQHandler</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>终于发现问题了，因为串口中断的触发，需要dma的中断的触发，这就需要NVIC都要打开各自的中断使能，这样才能响应。</p>
+</blockquote>
+<p>所以最终需要在DMA1_Init()里面，在初始化完成dma1ch4, 绑定完uart1后，需要使能NVIC中断。</p>
+<p>所以涉及的外设（你忘记总结了）：</p>
+<ol>
+<li>DMA1_CH4</li>
+<li>UART1</li>
+<li>NVIC(dma + uart)</li>
+</ol>
+<p>所以，最后，总结一下修改的代码：<br><code>dma.c</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;./BSP/DMA/dma.h&quot;</span></span></span><br><span class="line"></span><br><span class="line">DMA_HandleTypeDef hdma;</span><br><span class="line"><span class="keyword">extern</span> UART_HandleTypeDef g_uart1_handle;  <span class="comment">/* UART句柄 */</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">dma1_init</span><span class="params">(DMA_Channel_TypeDef* DMAx_CHx)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//enable dma</span></span><br><span class="line">    __HAL_RCC_DMA1_CLK_ENABLE();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//init dma</span></span><br><span class="line">    <span class="comment">//hdma.Instance = (DMA_Channel_TypeDef   *)DMA1_BASE;</span></span><br><span class="line">		hdma.Instance = DMAx_CHx;</span><br><span class="line">    hdma.Init.Direction = DMA_MEMORY_TO_PERIPH;</span><br><span class="line">	  hdma.Init.PeriphInc = DMA_PINC_DISABLE;</span><br><span class="line">	  hdma.Init.MemInc = DMA_MINC_ENABLE;</span><br><span class="line">	  hdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;</span><br><span class="line">	  hdma.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;</span><br><span class="line">	  <span class="comment">//hdma.Init.Mode = DMA_NORMAL;</span></span><br><span class="line">		hdma.Init.Mode = DMA_CIRCULAR;</span><br><span class="line">	  hdma.Init.Priority = DMA_PRIORITY_HIGH;</span><br><span class="line">		</span><br><span class="line">    hdma.DmaBaseAddress = (DMA_TypeDef            *)DMA1_BASE;</span><br><span class="line">    <span class="comment">//hdma.ChannelIndex = channel;</span></span><br><span class="line"></span><br><span class="line">    __HAL_LINKDMA(&amp;g_uart1_handle,hdmatx, hdma);</span><br><span class="line">    HAL_DMA_Init(&amp;hdma);</span><br><span class="line">	</span><br><span class="line">		<span class="comment">/* 在 HAL_UART_MspInit 或类似位置 */</span></span><br><span class="line">		HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, <span class="number">3</span>, <span class="number">0</span>); <span class="comment">// DMA中断</span></span><br><span class="line">		HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">DMA1_Channel4_IRQHandler</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_DMA_IRQHandler(&amp;hdma); <span class="comment">// 必须调用，这才会触发 UART_DMATransmitCplt</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>main.c</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint8_t</span> x = <span class="number">0</span>;</span><br><span class="line">    <span class="type">uint8_t</span> lcd_id[<span class="number">12</span>];</span><br><span class="line"></span><br><span class="line">    HAL_Init();                                         <span class="comment">/* 初始化HAL库 */</span></span><br><span class="line">    sys_stm32_clock_init(RCC_PLL_MUL9);                 <span class="comment">/* 设置时钟, 72Mhz */</span></span><br><span class="line">    delay_init(<span class="number">72</span>);                                     <span class="comment">/* 延时初始化 */</span></span><br><span class="line">    usart_init(<span class="number">115200</span>);                                 <span class="comment">/* 串口初始化为115200 */</span></span><br><span class="line">    led_init();                                         <span class="comment">/* 初始化LED */</span></span><br><span class="line">    lcd_init();                                         <span class="comment">/* 初始化LCD */</span></span><br><span class="line"></span><br><span class="line">    dma1_init((DMA_Channel_TypeDef* )DMA1_Channel4_BASE);</span><br><span class="line"></span><br><span class="line">    g_point_color = RED;</span><br><span class="line">    <span class="built_in">sprintf</span>((<span class="type">char</span> *)lcd_id, <span class="string">&quot;LCD ID:%04X&quot;</span>, lcddev.id);  <span class="comment">/* 将LCD ID打印到lcd_id数组 */</span></span><br><span class="line">		HAL_UART_Transmit_DMA(&amp;g_uart1_handle, (<span class="type">uint8_t</span>*)send_buffer, <span class="keyword">sizeof</span>(send_buffer));</span><br><span class="line">		<span class="comment">//HAL_UART_Transmit_IT(&amp;g_uart1_handle, (uint8_t*)send_buffer, sizeof(send_buffer));</span></span><br><span class="line">		<span class="comment">//HAL_UART_Transmit(&amp;g_uart1_handle, (uint8_t*)send_buffer, sizeof(send_buffer), 1000);</span></span><br><span class="line"></span><br><span class="line">		<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">		&#123;</span><br><span class="line">        delay_ms(<span class="number">50</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_TxCpltCallback</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (huart-&gt;Instance == USART_UX)                    <span class="comment">/* 如果是串口1 */</span></span><br><span class="line">    &#123;</span><br><span class="line">				LED1_TOGGLE();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_TxHalfCpltCallback</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">		<span class="keyword">if</span> (huart-&gt;Instance == USART_UX)                    <span class="comment">/* 如果是串口1 */</span></span><br><span class="line">    &#123;</span><br><span class="line">				LED0_TOGGLE();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<hr>
+<p>如果开启了dma按照<strong>循环模式</strong>进行发送，那么之后，如果在<strong>主程序中printf</strong>，就会让cpu一直while<strong>循环等待uart tx 的 SR</strong>寄存器发送完成。结果就一直卡在这里。</p>
+<p>所以我想问问，如果开启dma循环模式后，就没有办法释放dma对uart tx的控制权吗，cpu永远也无法等到可以发送吗?</p>
+<p>答案是是的</p>
+<blockquote>
+<p>在循环模式下，DMA 处于“永远在线”状态。只要串口的发送缓冲区空了（TXE 置位），DMA 硬件就会立刻检测到并把内存里的下一个字节塞进串口。</p>
+</blockquote>
+<h4 id="多个打印源（环形缓冲区）"><a href="#多个打印源（环形缓冲区）" class="headerlink" title="多个打印源（环形缓冲区）"></a>多个打印源（环形缓冲区）</h4><p>所以当有多个打印输出源的时候，<strong>最佳的做法</strong>是：</p>
+<p><strong>软件环形缓冲区</strong>（最高级）</p>
+<p>不直接使用 HAL 的 Transmit。</p>
+<p><strong>建立一个足够大的全局数组作为环形缓冲区</strong>。</p>
+<p>printf 只管把数据往缓冲区里写（通过 sprintf）。</p>
+<p>DMA 在 <strong>Normal 模式</strong>下，每次只负责把缓冲区里的现有数据发出去。</p>
+<p>发送完成后，在<strong>回调函数里检查缓冲区是否还有新数据</strong>，如果有，继续发。</p>
+<h3 id="dma-uart-（最高效接收方案）"><a href="#dma-uart-（最高效接收方案）" class="headerlink" title="dma + uart （最高效接收方案）"></a>dma + uart （最高效接收方案）</h3><p>简单的“字节中断接收”在处理高频、大量数据时会让 CPU 疲于奔命</p>
+<p>而 <code>DMA</code> + <code>uart空闲中断（IDLE）</code> 的组合则是嵌入式开发中处理不定长数据的“黄金标准”</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">* @param  __INTERRUPT__ specifies the UART interrupt source to enable.</span><br><span class="line">*          This parameter can be one of the following values:</span><br><span class="line">*            @arg UART_IT_CTS:  CTS change interrupt</span><br><span class="line">*            @arg UART_IT_LBD:  LIN Break detection interrupt</span><br><span class="line">*            @arg UART_IT_TXE:  Transmit Data Register empty interrupt</span><br><span class="line">*            @arg UART_IT_TC:   Transmission complete interrupt</span><br><span class="line">*            @arg UART_IT_RXNE: Receive Data <span class="keyword">register</span> not empty interrupt</span><br><span class="line">*            @arg UART_IT_IDLE: Idle line detection interrupt</span><br><span class="line">*            @arg UART_IT_PE:   Parity Error interrupt</span><br><span class="line">*            @arg UART_IT_ERR:  Error <span class="title function_">interrupt</span><span class="params">(Frame error, noise error, overrun error)</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>核心矛盾</strong>：DMA 的“盲目性” vs. 数据的“随机性”</p>
+<p><code>DMA 的本性</code>：DMA 像是一个只管搬运的苦力。你告诉它“搬 100 个字节”，它就乖乖搬 100 个。只有当搬满 100 个时，它才会通过中断告诉你“我干完了”。</p>
+<p><code>不定长数据的挑战</code>：如果<strong>对方只发了 20 个字节就停</strong>了，DMA 还在傻傻地等剩下的 80 个。这时候 CPU 如果不去干预，数据就会一直躺在缓冲区里，你的程序也就无法处理这 20 个字节。</p>
+<blockquote>
+<p>因为本质上，我们指定dma接收，发送，都是<strong>定长</strong>，收满，发满，才能触发dma传输完成中断</p>
+</blockquote>
+<p><strong>解决方案</strong>：IDLE（串口空闲中断）</p>
+<p>为了解决这个问题，STM32 硬件提供了一个非常有用的特性：<code>IDLE 线检测</code>。</p>
+<p><code>原理</code>：当串口接收总线在接收完最后一个数据后，如果<code>持续出现一个字节的时间没有数据信号</code>，硬件会自动将 USART_<code>SR</code> 寄存器中的 <code>IDLE 位置 1</code>。</p>
+<p><code>作用</code>：它相当于给 DMA 搬运工配了一个“监工”。如果<code>数据流断了</code>（代表一帧数据发完了），IDLE 中断就会触发，叫醒 CPU 来收货。</p>
+<p><strong>实现方案</strong>：</p>
+<p>“DMA + IDLE” 的工作流程这是面试中需要答出的标准流程：</p>
+<ul>
+<li><code>初始化</code>：配置串口 DMA 接收为 Normal 模式，设置一个足够大的缓冲区（比如 100 字节），并开启串口的 IDLE 中断。</li>
+<li><code>数据传输</code>：数据开始发送，DMA 自动将数据从串口寄存器搬运到内存缓冲区。此时 CPU 完全不参与。</li>
+<li><code>触发中断</code>：对方发送了 30 个字节后停止。串口检测到线路空闲，触发 IDLE 中断。</li>
+<li><code>计算长度</code>：<ul>
+<li>在 IDLE 中断服务函数中，CPU 停止 DMA 传输。</li>
+<li>关键点：读取 DMA 寄存器中的 CNDTR（当前要传输的数目）。</li>
+<li>计算公式：$接收长度 &#x3D; 总缓冲区大小 - CNDTR$。</li>
+</ul>
+</li>
+<li><code>数据处理</code>：根据计算出的长度处理缓冲区数据。</li>
+<li><code>重启</code>：清除 IDLE 标志位，重置 DMA 计数器，开启下一次接收</li>
+</ul>
+<h5 id="3种接收不定长数据的情况"><a href="#3种接收不定长数据的情况" class="headerlink" title="3种接收不定长数据的情况"></a>3种接收不定长数据的情况</h5><p>假设dma缓冲区，接收定长100字节</p>
+<ol>
+<li>正常情况（接收数据，有间隔，第一帧10字节，隔了一会，第二帧20字节）<ul>
+<li>使用IDLE空闲中断来接收。</li>
+</ul>
+</li>
+<li>粘包情况（两帧间隔太短，触发不了IDLE中断）<ul>
+<li>软件协议帧封装</li>
+</ul>
+</li>
+<li>溢出情况（接收的数据源源不断，又很紧凑，cpu总是要等dma收满才能进行处理，容易出现数据覆盖和cpu等待）<ul>
+<li>TC + HC 中断，形成双缓冲区。HC触发，前50个字节满了，cpu读前半段内存，dma接着写后半段内存。TC触发，后50个字节满，cpu读后半段，DMA接着写前半段。</li>
+</ul>
+</li>
+</ol>
+<p><strong>情景分析</strong>：</p>
+<p><code>高速</code>、<code>流数据型</code>（如 921600 波特率以上，传感器每秒发几百次数据）</p>
+<p>在高频采样中，<code>总线几乎是满载</code>的，字<code>节间的空隙</code>极短，IDLE 很难稳定触发。这时候，必须使用“HT + TC + 协议解析”的组合。</p>
+<p>请你详细解释一下这个场景，DMA要循环模式是吗，就是不能由CPU来控制了，这样的话，一旦触发HC，CPU在hc中断里面，立刻迅速把前半段缓冲区拷贝出来，放到外面处理，此时DMA还在写后半段，触发TC中断，cpu在中断中立刻把后半段缓冲区拷贝出来，DMA此时在写前半段，是吗？</p>
+<p><strong>答案</strong>：</p>
+<ol>
+<li><strong>DMA必须是循环模式</strong></li>
+</ol>
+<ul>
+<li>在高频（$921600 \text{ bps}$）下，关闭和重启 DMA 的那几个微秒时间差，就足以丢失几个字节的数据<ul>
+<li><p><code>循环模式</code>：就像一个永不停歇的传送带。DMA 硬件自动回环，不需要 CPU 介入。</p>
+</li>
+<li><p><code>CPU 的角色</code>：不再是“指挥官”，而是“<code>搬运工</code>”。它只需要根据 HT（半满）和 TC（全满）这两个信号，在传送带的不同位置“卸货”。</p>
+</li>
+</ul>
+</li>
+</ul>
+<ol start="2">
+<li><strong>速度竞赛</strong>：CPU 拷贝 vs. DMA 写入</li>
+</ol>
+<ul>
+<li>你担心的“<code>CPU 拷贝速度</code>”问题，我们可以通过简单的数学计算来打消顾虑。<ul>
+<li><code>DMA 写入速度</code>（以 $921600 \text{ bps}$ 为例）：串口是串行传输，每秒约 $92160 \text{ 字节}$。意味着每接收 <code>1 个字节</code> 大约需要 <code>10.8 微秒</code> ($\mu s$)。</li>
+<li><code>CPU 拷贝速度</code>（以 STM32F1 72MHz 为例）：CPU 使用 memcpy 是并行总线操作。拷贝 <code>1 个字节</code> 只需要<code>几个时钟周期（纳秒级）</code>。</li>
+</ul>
+</li>
+<li>结论：CPU 拷贝 $50 \text{ 字节}$ 可能只需要 $1 \text{-} 2 \mu s$，而 DMA 写满剩下的 $50 \text{ 字节}$ 需要大约 $540 \mu s$。CPU 的拷贝速度远超 DMA 的写入速度，这是方案成立的基础。</li>
+</ul>
+<ol start="3">
+<li><strong>处理和存储太慢怎么办</strong>？</li>
+</ol>
+<ul>
+<li>（核心架构设计）这是最关键的问题。<ul>
+<li>如果你的 TCN 模型推理或 <code>SD 卡存储</code>需要 $5 \text{ ms}$，而 DMA 每 $1 \text{ ms}$ 就填满一半缓冲区，直接在中断里处理肯定会炸掉（覆盖）。</li>
+<li><code>解决方案</code>：构建“二级缓冲区”架构（生产者-消费者模型）你不能在 HT&#x2F;TC 中断里做任何“重体力活”。中断里只做一件极其简单的事：<strong>把数据丢进队列（Queue）</strong>。</li>
+</ul>
+</li>
+</ul>
+<p><strong>推荐的架构流程</strong>：</p>
+<ul>
+<li><code>一级缓存</code>（DMA Ring Buffer）：<ul>
+<li>设置为 $100 \text{ 字节}$。</li>
+<li>HT 中断触发：memcpy 前 $50 \text{ 字节}$ 到二级缓冲区。</li>
+<li>TC 中断触发：memcpy 后 $50 \text{ 字节}$ 到二级缓冲区。</li>
+</ul>
+</li>
+<li><code>二级缓存</code>（软件大队列&#x2F;Ring Buffer）：<ul>
+<li>这是一个由软件维护的、大得多的数组（比如 $2048 \text{ 字节}$）。</li>
+<li>中断里的 memcpy 只是<strong>把数据搬到这里</strong>，<strong>并更新“写指针”</strong>。</li>
+</ul>
+</li>
+<li><code>主任务（消费者）</code>：<ul>
+<li>在 while(1) 或 RTOS 任务中，不断<strong>检查二级缓存的“读指针”</strong>。</li>
+<li>协议解析：在这里寻找帧头帧尾。</li>
+<li>算法处理：在这里跑你的 TCN 模型或进行数据存储。</li>
+</ul>
+</li>
+</ul>
+<p><strong>这样设计的好处</strong>：</p>
+<ul>
+<li>削峰填谷：即使某次算法处理慢了（比如耗时 $2 \text{ ms}$），只要二级缓存足够大，它就能把这段时间内 DMA 产生的多帧数据“存”起来，等 CPU 忙完了再一口气处理掉，不会丢失任何数据。</li>
+</ul>
+<p><strong>总结你的逻辑</strong></p>
+<ul>
+<li><p>粘包：靠**二级缓存中的协议解析（帧头帧尾）**解决。</p>
+</li>
+<li><p>溢出：靠HT + TC 双缓冲保证硬件级不覆盖。</p>
+</li>
+<li><p>处理慢：靠更大的二级软件缓冲区 + 异步处理任务来缓冲压力。</p>
+</li>
+</ul>
+<blockquote>
+<p>在这种模式下，IDLE 中断反而成了“锦上添花”：如果数据流突然断了（对方停止发送），IDLE 中断能强行把当前还没填满半个缓冲区的那一丁点残余数据给“掏”出来处理。</p>
+</blockquote>
+<h3 id="dma-uart-（最高效发送方案）"><a href="#dma-uart-（最高效发送方案）" class="headerlink" title="dma + uart （最高效发送方案）"></a>dma + uart （最高效发送方案）</h3><p>前面讲了uart的接收，如何高效的实现。现在来分析，如果是发送，要<strong>如何实现高效的发送</strong>？</p>
+<p>下面先解释几个概念：</p>
+<ol>
+<li><strong>Cache 一致性</strong></li>
+</ol>
+<p>简单来说，这是<strong>CPU</strong> 看到的”和“<strong>DMA</strong> <strong>看到的不一致</strong>导致的问题。</p>
+<ul>
+<li><code>Cache 的存在</code>：CPU 频率很高（比如 $72 \text{ MHz}$ 甚至 $480 \text{ MHz}$），但访问 SRAM 相对较慢。为了提速，CPU 内部有一个小而快的缓存（Cache）。CPU 读写数据时，会先在 Cache 里折腾，不一定立刻同步到 SRAM。</li>
+<li><code>DMA 的视角</code>：DMA 是一个“外行”，它直接访问 SRAM，看不见 CPU 的 Cache。</li>
+<li><code>冲突场景</code>：<ul>
+<li>CPU 往 Buffer A 写了数据（其实只写到了 Cache 里）。</li>
+<li>CPU 告诉 DMA：“去 SRAM 的 Buffer A 搬数据发出去”。</li>
+<li>DMA 去了，但 SRAM 里的数据还是旧的。</li>
+<li>结果：串口发出去的是一堆乱码或旧数据。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>注意</strong>：你目前使用的 STM32F1 (Cortex-M3) 架构比较基础，没有 D-Cache（数据缓存），所以你感受不到这个问题。但如果你以后接触 STM32H7 (Cortex-M7) 或 <strong>Linux 驱动开发</strong>，这就是必须要处理的头等大事（需要调用 <strong>SCB_CleanDCache() 强制同步</strong>）。</p>
+</blockquote>
+<hr>
+<ol start="2">
+<li><strong>既然已经用了 HC&#x2F;TC 乒乓机制，为什么还要锁</strong>？</li>
+</ol>
+<p>你设计的“HC 写前半段，TC 写后半段”在理论上非常完美，但它有一个<strong>前提</strong>：系统必须是绝对实时且单任务的。</p>
+<p>在真实的多任务环境（比如 FreeRTOS）中，<strong>锁的作用</strong>是处理以下<strong>两种意外</strong>：</p>
+<ul>
+<li><strong>A. 任务竞争（多个生产者）</strong></li>
+</ul>
+<p>如果你的系统里有 <code>Task_Sensor</code> 和 <code>Task_Log</code> 都要发串口。</p>
+<p><code>Task_Sensor</code> 正在往前半段写，写到一半，被优先级更高的 <code>Task_Log</code> 抢占了。<br>Task_Log 也往里面写。</p>
+<p><strong>结果</strong>：数据乱套了。这时候需要一个 <code>Mutex（互斥锁）</code> 确保同一时间只有一个任务能操作缓冲区。</p>
+<ul>
+<li>B. <strong>“生产”慢于“消费”（溢出风险）</strong></li>
+</ul>
+<p>虽然你算过 CPU 拷贝比 DMA 快，但如果 CPU 被一个极其耗时的计算任务（比如你的 TCN 模型推理）卡住了：</p>
+<p>DMA 发完了后半段（触发 TC），转头开始发前半段。</p>
+<p>但此时 CPU 还没写完前半段！</p>
+<p>结果：<strong>DMA 把写了一半的残缺数据发了出去</strong>。</p>
+<p><code>锁的作用</code>：这时候需要一个 <strong>Semaphore（信号量）</strong>。DMA 发完一半后，必须等待 CPU 的“写完”信号；CPU 写完一半后，也得检查 DMA 是否已经腾出了位置。</p>
+<hr>
+<ol start="3">
+<li><strong>“零拷贝”如何在这个基础上实现？</strong></li>
+</ol>
+<p>你之前理解的“双缓冲”可能还是：传感器 -&gt; 临时变量 -&gt; memcpy 到 BufferA。这多了一次 <code>memcpy</code>。</p>
+<p><strong>真正的零拷贝方案</strong>：<br><strong>不需要中间变量</strong>，直接让算法&#x2F;传感器驱动<strong>在 DMA 缓冲区内原地生产</strong>。</p>
+<p><strong>获取地址</strong>：算法询问缓冲区管理器：“我现在可以往哪写？”</p>
+<p><strong>直接写入</strong>：管理器返回 <code>BufferA 的起始地址</code>。算法直接执行：<code>p_buffer[0] = ADC_Value</code>;</p>
+<p><strong>标记完成</strong>：算法写完后，告诉 DMA 搬运长度。</p>
+<p>在这个过程中，数据从寄存器&#x2F;计算结果出来后，只<strong>经过一次赋值</strong>就到了 DMA 准备发送的位置，没有任何冗余的内存移动。</p>
+<p>总结：</p>
+<p>如果要用dma+uart来进行发送的最佳方案是：<br><strong>锁 + 零拷贝 + 双缓冲的最终形态</strong></p>
+<p>我们可以用 FreeRTOS 的逻辑来构建这个系统</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">uint8_t</span> buffer[<span class="number">2</span>][<span class="number">128</span>]; <span class="comment">// 双缓冲</span></span><br><span class="line">    <span class="type">uint8_t</span> active_idx;     <span class="comment">// 当前 CPU 正在写的索引 (0 或 1)</span></span><br><span class="line">    SemaphoreHandle_t xSem; <span class="comment">// 同步信号量：DMA 发完了吗？</span></span><br><span class="line">    MutexHandle_t xLock;    <span class="comment">// 互斥锁：谁在用缓冲区？</span></span><br><span class="line">&#125; TX_System;</span><br></pre></td></tr></table></figure>
+
+<p><strong>发送流程（零拷贝版）</strong>：</p>
+<p><code>Take Mutex</code>：xSemaphoreTake(xLock)（确保没有其他任务在发）(只有我能写)。</p>
+<p><code>获取指针</code>：target_ptr &#x3D; TX_System.buffer[TX_System.active_idx]。</p>
+<p><code>原地生产</code>：sprintf(target_ptr, “Data:%d”, value);（直接写进 DMA 区）。</p>
+<p><code>启动发送</code>：调用 HAL_UART_Transmit_DMA。</p>
+<p><code>等待完成</code>：xSemaphoreTake(xSem)（任务阻塞，不占 CPU，等待 TC 中断唤醒）。</p>
+<p><code>切换索引</code>：active_idx &#x3D; !active_idx。</p>
+<p><code>Give Mutex</code>：xSemaphoreGive(xLock)。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><strong>1. 数据接收 (RX)：追求“万无一失”</strong></p>
+<p>你的逻辑核心是：<strong>硬件搬运 + 逻辑分包 + 异步处理</strong>。</p>
+<ul>
+<li><p><code>HC/TC 双缓冲区（乒乓缓冲）</code>：解决**“溢出”**。DMA 在写后半段时，CPU 处理前半段，反之亦然，实现 100% 的总线占空比。</p>
+</li>
+<li><p><code>IDLE 中断</code>：解决**“不定长”**。它是数据的“监工”，一旦对方发完停下了，立刻通知 CPU 别等了，赶紧收货。</p>
+</li>
+<li><p><code>二级缓存队列（Ring Buffer）</code>：解决**“处理慢”**。中断只负责“扔进筐里”，耗时的协议解析和算法（如扭矩估算）放到主循环或低优先级任务里慢慢跑。</p>
+</li>
+</ul>
+<p><strong>2. 数据发送 (TX)：追求“极致效率”</strong></p>
+<p>你的逻辑核心是：<strong>并发竞争控制 + 消除内存拷贝</strong>。</p>
+<ul>
+<li><p><code>锁（Mutex/Semaphore）</code>：解决冲突。确保在多任务（FreeRTOS）环境下，不会有两个任务同时抢占同一个 DMA 通道，避免数据乱序。</p>
+</li>
+<li><p><code>零拷贝（原地生产）</code>：解决CPU 损耗。数据直接在 DMA 能够触及的缓冲区里通过 sprintf 或结构体赋值产生，省去了从“用户缓存”搬运到“发送缓存”的 memcpy 耗时。</p>
+</li>
+<li><p><code>双缓冲区/发送队列</code>：解决等待延迟。在发 A 包的时候，CPU 已经在准备 B 包，发送过程永不停歇。</p>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/12/stm32-gpio/" rel="prev" title="stm32 gpio*">
+                  <i class="fa fa-angle-left"></i> stm32 gpio*
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/15/stm32-i2c/" rel="next" title="stm32 i2c">
+                  stm32 i2c <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 dma</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="数据通信的基本概念由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：  USART IIC SPI CAN USB  按通信方式分类：1. 串行通信  基本特征是数据逐位顺序依次传输，优点是传输线少、布线成本低、灵活度高等优点 用于近距离人机交互，特殊处理后也可以用于远距离 缺点就是传输速率低  2. 并行通信  数据各位可以通过多">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32-uart*">
+<meta property="og:url" content="http://example.com/2025/12/03/stm32-uart/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="数据通信的基本概念由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：  USART IIC SPI CAN USB  按通信方式分类：1. 串行通信  基本特征是数据逐位顺序依次传输，优点是传输线少、布线成本低、灵活度高等优点 用于近距离人机交互，特殊处理后也可以用于远距离 缺点就是传输速率低  2. 并行通信  数据各位可以通过多">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/27.1.png">
+<meta property="og:image" content="http://example.com/images/27.2.png">
+<meta property="og:image" content="http://example.com/images/27.3.png">
+<meta property="og:image" content="http://example.com/images/27.4.png">
+<meta property="og:image" content="http://example.com/images/27.5.png">
+<meta property="og:image" content="http://example.com/images/27.6.png">
+<meta property="og:image" content="http://example.com/images/27.7.png">
+<meta property="og:image" content="http://example.com/images/27.8.png">
+<meta property="og:image" content="http://example.com/images/27.9.png">
+<meta property="og:image" content="http://example.com/images/27.10.png">
+<meta property="og:image" content="http://example.com/images/27.11.png">
+<meta property="og:image" content="http://example.com/images/27.12.png">
+<meta property="og:image" content="http://example.com/images/27.13.png">
+<meta property="article:published_time" content="2025-12-03T06:56:32.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.751Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/27.1.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/03/stm32-uart/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/03/stm32-uart/","path":"2025/12/03/stm32-uart/","title":"stm32-uart*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32-uart* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">数据通信的基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%89%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F%E5%88%86%E7%B1%BB%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">按通信方式分类：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%89%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%96%B9%E5%90%91%E5%88%86%E7%B1%BB"><span class="nav-number">1.2.</span> <span class="nav-text">按数据传输方向分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%89%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E6%96%B9%E5%BC%8F%E5%88%86%E7%B1%BB"><span class="nav-number">1.3.</span> <span class="nav-text">按数据同步方式分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E4%BF%A1%E9%80%9F%E7%8E%87"><span class="nav-number">1.4.</span> <span class="nav-text">通信速率</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1"><span class="nav-number">2.</span> <span class="nav-text">串口通信</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1%E7%9A%84%E5%8D%8F%E8%AE%AE%E5%B1%82"><span class="nav-number">3.</span> <span class="nav-text">串口通信的协议层</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A2%E7%89%B9%E7%8E%87"><span class="nav-number">3.1.</span> <span class="nav-text">波特率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%B8%A7%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.2.</span> <span class="nav-text">数据帧格式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#stm32-uart"><span class="nav-number">4.</span> <span class="nav-text">stm32 uart</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%B2%E5%8F%A3%E8%B5%84%E6%BA%90"><span class="nav-number">4.1.</span> <span class="nav-text">串口资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A1%86%E5%9B%BE"><span class="nav-number">4.2.</span> <span class="nav-text">框图</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86-USART-%E4%BF%A1%E5%8F%B7%E5%BC%95%E8%84%9A"><span class="nav-number">4.2.1.</span> <span class="nav-text">第一部分 USART 信号引脚</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86-%E6%95%B0%E6%8D%AE%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">4.2.2.</span> <span class="nav-text">第二部分 数据寄存器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86-%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-number">4.2.3.</span> <span class="nav-text">第三部分 控制器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E9%83%A8%E5%88%86-%E6%97%B6%E9%92%9F%E4%B8%8E%E6%B3%A2%E7%89%B9%E7%8E%87"><span class="nav-number">4.2.4.</span> <span class="nav-text">第四部分 时钟与波特率</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">4.3.</span> <span class="nav-text"></span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">4.4.</span> <span class="nav-text">寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CR"><span class="nav-number">4.4.1.</span> <span class="nav-text">CR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DR"><span class="nav-number">4.4.2.</span> <span class="nav-text">DR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SR"><span class="nav-number">4.4.3.</span> <span class="nav-text">SR</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">4.5.</span> <span class="nav-text">实验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-uart%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE%E3%80%82"><span class="nav-number">4.5.1.</span> <span class="nav-text">1. uart发送数据。</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E5%8F%91%E9%80%81"><span class="nav-number">4.5.1.1.</span> <span class="nav-text">直接发送</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E6%9C%AC%E5%9C%B0%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE"><span class="nav-number">4.5.1.2.</span> <span class="nav-text">发送本地内存中的数据</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-uart-%E6%8E%A5%E6%94%B6"><span class="nav-number">4.5.2.</span> <span class="nav-text">2. uart 接收</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/03/stm32-uart/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32-uart* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32-uart*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-03 14:56:32" itemprop="dateCreated datePublished" datetime="2025-12-03T14:56:32+08:00">2025-12-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="数据通信的基本概念"><a href="#数据通信的基本概念" class="headerlink" title="数据通信的基本概念"></a>数据通信的基本概念</h1><p>由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：</p>
+<ol>
+<li>USART</li>
+<li>IIC</li>
+<li>SPI</li>
+<li>CAN</li>
+<li>USB</li>
+</ol>
+<h2 id="按通信方式分类："><a href="#按通信方式分类：" class="headerlink" title="按通信方式分类："></a>按通信方式分类：</h2><p><strong>1. 串行通信</strong></p>
+<ul>
+<li><strong>基本特征</strong>是数据逐位顺序依次传输，优点是传输线少、布线成本低、灵活度高<br>等优点</li>
+<li>用于<strong>近距离</strong>人机交互，特殊处理后也可以用于远距离</li>
+<li><strong>缺点</strong>就是传输速率低</li>
+</ul>
+<p><strong>2. 并行通信</strong></p>
+<ul>
+<li>数据各位可以通过多条线同时传输</li>
+<li>传输速率高</li>
+<li><strong>成本高</strong>，<code>抗干扰能力差</code>因而适用于<code>短距离、高速率</code>的通信</li>
+</ul>
+<p><img src="/../images/27.1.png" alt="alt text"></p>
+<h2 id="按数据传输方向分类"><a href="#按数据传输方向分类" class="headerlink" title="按数据传输方向分类"></a>按数据传输方向分类</h2><ol>
+<li><strong>全双工</strong></li>
+</ol>
+<ul>
+<li>数据可以同时进行<code>双向传输</code>，日常的打电话属于这种情形</li>
+</ul>
+<ol start="2">
+<li><strong>半双工</strong></li>
+</ol>
+<ul>
+<li>指数据传输可以沿着两个方向，但是需要<code>分时进行</code>，如对讲机</li>
+</ul>
+<ol start="3">
+<li><strong>单工通信</strong></li>
+</ol>
+<ul>
+<li>指数据传输<code>仅能沿一个方向</code>，不能实现反方向传输，如校园广播</li>
+</ul>
+<p><img src="/../images/27.2.png" alt="alt text"></p>
+<h2 id="按数据同步方式分类"><a href="#按数据同步方式分类" class="headerlink" title="按数据同步方式分类"></a>按数据同步方式分类</h2><ol>
+<li><strong>同步通信</strong></li>
+</ol>
+<ul>
+<li>要求通信双方共用<code>同一时钟信号</code>，在总线上保持统一的时序和周期完成信息传输</li>
+<li><strong>优点</strong>：可以实现高速率、大容量的数据传输，以及点对多点传输。</li>
+<li><strong>缺点</strong>：要求发送时钟和接收时钟保持严格同步，收发双方时钟允许的误差较小，同时硬件复杂</li>
+</ul>
+<ol start="2">
+<li><strong>异步通信</strong></li>
+</ol>
+<ul>
+<li>无需时钟信号</li>
+<li>而是<strong>在数据信号中</strong>加入开始位和停止位等一些<strong>同步信号</strong>，以便使接收端能够正确地将每一个字符接收下来，某些通信中<strong>还需要双方约定传输速率</strong></li>
+<li><strong>优点</strong>：没有时钟信号硬件简单，双方时钟可允许一定误差。</li>
+<li><strong>缺点</strong>：通信速率较低，只适用点对点传输<br><img src="/../images/27.3.png" alt="alt text"></li>
+</ul>
+<h2 id="通信速率"><a href="#通信速率" class="headerlink" title="通信速率"></a>通信速率</h2><p>通信速率（<strong>传输速率</strong>）指数据在信道中传输的速度，它分为两种：</p>
+<ol>
+<li><strong>传信率</strong><ul>
+<li>每秒钟传输的信息量，即每秒钟传输的二进制位数，单位为 <code>bit/s</code>（即比特每秒），因而又称为<code>比特率</code></li>
+</ul>
+</li>
+<li>传码率<ul>
+<li>每秒钟传输的<code>码元个数</code>，单位为 <code>Baud</code>（即波特每秒），因而又称为波特率</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>码元就是一位&#x2F;多位bit进行编码，码元携带一定的比特信息</p>
+</blockquote>
+<blockquote>
+<p>举个例子：波特率为 100 Baud，即每秒传输 100 个码元，如果码元采用十六进制编码（即M&#x3D;2，代入上述式子），那么这时候的比特率就是 400 bit&#x2F;s。如果码元采用二进制编码（即 M&#x3D;2，代入上述式子），那么这时候的比特率就是 100 bit&#x2F;s。<br><strong>采用二进制的时候，波特率和比特率数值上相等</strong></p>
+</blockquote>
+<h1 id="串口通信"><a href="#串口通信" class="headerlink" title="串口通信"></a>串口通信</h1><p><strong>串口通信</strong>是一种设备间常用的<code>串行</code>通信方式, 串口<code>按位（bit）</code>发送和接收<code>字节</code></p>
+<p><strong>串口通信协议</strong> 是指规定了<code>数据包的内容</code>, 内容包含了</p>
+<ol>
+<li><code>起始位</code></li>
+<li><code>主体数据</code></li>
+<li><code>校验位</code></li>
+<li><code>停止位</code></li>
+</ol>
+<blockquote>
+<p>双方需要约定一致的数据包格式才能正常收发数据的有关规范, 所以是<strong>异步全双工串行通信</strong></p>
+</blockquote>
+<p>常用的串口通信协议：</p>
+<ol>
+<li>RS-232</li>
+<li>RS-422 </li>
+<li>RS-485</li>
+</ol>
+<h1 id="串口通信的协议层"><a href="#串口通信的协议层" class="headerlink" title="串口通信的协议层"></a>串口通信的协议层</h1><p>串口通信的<code>数据包</code>由<code>发送设备的 TXD</code> 接口传输到<code>接收设备的 RXD</code> 接口。</p>
+<p>在串口通信的协议层中，<strong>规定了数据包的内容</strong>，它由<code>起始位</code>、<code>主体数据</code>、<code>校验位</code>以及<code>停止位</code>组成，通讯双方的数据包格式要约定一致才能正常收发数据</p>
+<p><img src="/../images/27.4.png" alt="alt text"></p>
+<p>串口通信协议数据包组成可以分为<code>波特率</code>和<code>数据帧格式</code>两部分</p>
+<h2 id="波特率"><a href="#波特率" class="headerlink" title="波特率"></a>波特率</h2><p>串口异步通信，异步通信是不需要时钟信号的。</p>
+<p><code>波特率</code>表示<code>每秒</code>钟传送的<code>码元符号的个数</code>，所以它决定了数据帧里面每<br><code>一个位</code>的<code>时间长度</code>。两个要通信的设备的波特率一定要<code>设置相同</code>，我们常见的波特率是 4800、9600、115200 等</p>
+<h2 id="数据帧格式"><a href="#数据帧格式" class="headerlink" title="数据帧格式"></a>数据帧格式</h2><ol>
+<li><strong>起始位和停止位</strong></li>
+</ol>
+<ul>
+<li><code>起始位</code>是由一个逻辑 0 的数据位表示，</li>
+<li><code>数据帧</code>的停止位可以是 0.5、1、1.5 或 2 个逻辑 1 的数据位表示</li>
+<li><strong>双方约定一致即可</strong></li>
+</ul>
+<ol start="2">
+<li><strong>有效数据位</strong></li>
+</ol>
+<ul>
+<li>这就是我们真正需要的数据，有效数据位通常会<code>被约定</code>为 5、6、7 或者 <code>8 个</code>位长。有效数据位是<code>低位（LSB）在前</code>，<code>高位（MSB）在后</code></li>
+</ul>
+<ol start="3">
+<li><strong>校验位</strong></li>
+</ol>
+<ul>
+<li>可以认为是一个特殊的数据位。校验位一般用来判断接收的数据位有无错误，检验<br>方法有：奇检验、偶检验、0 检验、1 检验以及无检验</li>
+</ul>
+<blockquote>
+<p>这些串口uart通信协议，uart这个外设硬件已经替你实现了，如果你用gpio来模拟uart通信协议，才需要自己编写串口协议的逻辑</p>
+</blockquote>
+<h1 id="stm32-uart"><a href="#stm32-uart" class="headerlink" title="stm32 uart"></a>stm32 uart</h1><h2 id="串口资源"><a href="#串口资源" class="headerlink" title="串口资源"></a>串口资源</h2><p><strong>F1</strong> 的串口分为两种：</p>
+<ul>
+<li><strong>USART</strong>（即通用<code>同步异步</code>收发器）</li>
+<li><strong>UART</strong>（即通用<code>异步</code>收发器）。</li>
+</ul>
+<p><code>UART</code> 是在 USART 基础上<code>裁剪掉了同步通信功能</code>，<strong>只剩下异步通信功能</strong>。简单区分同步和异步就是看通信时需不需要对外提供时钟输出，我们平时用串口通信基本都是<strong>异步通信</strong>。</p>
+<hr>
+<p>ZET6 最多可提供 <strong>5 路串口</strong></p>
+<ul>
+<li>3 个 USART </li>
+<li>2 个 UART</li>
+</ul>
+<blockquote>
+<p>其中 USART1 的时钟源来于 APB2 时钟，其最大频率为 72MHz，其他 4 个串口的时钟源可以来于 APB1 时钟，其最大频率为 36MHz。</p>
+</blockquote>
+<blockquote>
+<p>STM32 的串口输出的是 TTL 电平信号</p>
+</blockquote>
+<h2 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h2><p><img src="/../images/27.5.png" alt="alt text"></p>
+<h3 id="第一部分-USART-信号引脚"><a href="#第一部分-USART-信号引脚" class="headerlink" title="第一部分 USART 信号引脚"></a>第一部分 USART 信号引脚</h3><ol>
+<li><code>TX</code>：发送数据输出引脚</li>
+<li><code>RX</code>：接收数据输入引脚</li>
+<li>SCLK：发送器时钟输出，适用于同步传输</li>
+<li>SW_RX：数据接收引脚，属于内部引脚，用于智能卡模式</li>
+<li>IrDA_RDI：IrDA 模式下的数据输入</li>
+<li>IrDA_TDO：IrDA 模式下的数据输出</li>
+<li><code>nRTS</code>：(<strong>0 &#x3D;&#x3D; RX ready</strong>) <strong>请求发送</strong>，若是低电平，表示 USART 准备好接收数据</li>
+<li><code>nCTS</code>：（<strong>1 &#x3D;&#x3D; 通知发送者，这个发完就不发了</strong>）<strong>清除发送</strong>，若是高电平，在当前数据传输结束时阻断下一次的数据发送</li>
+</ol>
+<h3 id="第二部分-数据寄存器"><a href="#第二部分-数据寄存器" class="headerlink" title="第二部分 数据寄存器"></a>第二部分 数据寄存器</h3><p>USART_DR 这一块，包含了<code>已发送</code>或<code>接收到</code>的数据, 它本身就是<strong>两个寄存器</strong>组成的</p>
+<p>左边的寄存器，给发送用的（<code>TDR</code>），右边的寄存器给接收用的（<code>RDR</code>）</p>
+<blockquote>
+<p>TDR&#x2F;RDR 提供了<code>内部总线</code>和<code>输出/入移位寄存器</code>之间的<strong>并行接口</strong></p>
+</blockquote>
+<p>当进行<strong>数据发送操作</strong>时，往 USART_DR 中写入数据会自动<code>存储在 TDR</code>内；</p>
+<p>当进行<strong>读取操作</strong>时，向 USART_DR 读取数据会自动<code>提取 RDR</code> 数据</p>
+<h3 id="第三部分-控制器"><a href="#第三部分-控制器" class="headerlink" title="第三部分 控制器"></a>第三部分 控制器</h3><p>USART 有专门控制发送的发送器，控制接收的接收器，还有唤醒单元、中断控制等等</p>
+<h3 id="第四部分-时钟与波特率"><a href="#第四部分-时钟与波特率" class="headerlink" title="第四部分 时钟与波特率"></a>第四部分 时钟与波特率</h3><p>这部分的主要功能就是为 USART 提供时钟以及配置波特率</p>
+<p>（由此可见，即便他不依赖CLK线同步，但是工作肯定也是需要时钟的）</p>
+<p>二进制系统中，波特率与波特率的数值相等，所以我们今后在把串口波特率理解为<strong>每秒钟</strong>传输的<strong>二进制位数</strong></p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img src="/../images/27.6.png" alt="alt text"></h2><p><strong>fck</strong> 是给<strong>串口的时钟</strong></p>
+<ul>
+<li>USART2\3\3\4\5 的时钟源为 PCLK1</li>
+<li>USART1 的时钟源为 PCLK2</li>
+</ul>
+<hr>
+<p><img src="/../images/27.7.png" alt="alt text"></p>
+<blockquote>
+<p>因此，这样就可以计算如何设置串口的波特率所需的参数了</p>
+</blockquote>
+<h2 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h2><p>所以，寄存器的配置过程，说白了，就是根据你的协议需要（比如要不要校验位等），在寄存器里面配置具体的协议细节。</p>
+<p>手册中的配置步骤：</p>
+<ol>
+<li><p>通过在 USART_CR1 寄存器上置位 <code>UE 位来激活</code> USART。</p>
+</li>
+<li><p>编程 USART_CR1 的 M 位来<code>定义字长</code>。</p>
+</li>
+<li><p>在 USART_CR2 中编程<code>停止位的位数</code>。</p>
+</li>
+<li><p>如果采用多缓冲器通信，配置 USART_CR3 中的 DMA 使能位(DMAT)。按多缓冲器通信中的描述配置 <strong>DMA 寄存器</strong>。</p>
+</li>
+<li><p>利用 USART_BRR 寄存器选择要求的<code>波特率</code>。</p>
+</li>
+<li><p>设置 USART_CR1 中的 TE 位，发送一个<code>空闲帧作为第一次</code>数据发送。</p>
+</li>
+<li><p>把要发送的数据写进 USART_DR 寄存器(此动作清除 TXE 位)。在只有一个缓冲器的情况下，对每个待发送的数据重复步骤 7。</p>
+</li>
+<li><p>在 USART_DR 寄存器中写入最后一个数据字后，要等待 TC&#x3D;1，它表示最后一个数据帧的传输结束。(<strong>这个就是串口驱动的发送方法内部需要实现的逻辑了</strong>)</p>
+</li>
+<li><p>当需要关闭 USART 或需要进入停机模式之前，需要确认传输结束，避免破坏最后一次传输 (<strong>这个就是串口驱动的关闭方法内部需要实现的逻辑了</strong>)</p>
+</li>
+</ol>
+<h3 id="CR"><a href="#CR" class="headerlink" title="CR"></a>CR</h3><p>很有意思的是，串口复位的控制寄存器，居然是定义在RCC的寄存器里面的。</p>
+<p><img src="/../images/27.8.png" alt="alt text"><br><img src="/../images/27.9.png" alt="alt text"></p>
+<p><img src="/../images/27.10.png" alt="alt text"></p>
+<blockquote>
+<p>TE 为<strong>发送使能位</strong>，设置为 1，将开启串口的发送功能。</p>
+<p>RE 为<strong>接收使能位</strong>，用法同 TE</p>
+</blockquote>
+<blockquote>
+<p>TXIE 为<strong>发送缓冲区空</strong>中断使能位，置1，当 USART_<strong>SR</strong> 中的 <code>TXE</code> 位为1 时，将产生串口中断。</p>
+<p>TCIE 为<strong>发送完成</strong>中断使能位，置1，当 USART_<strong>SR</strong> 中的 <code>TC</code>位为 1 时，将产生串口中断</p>
+<p>RXNEIE 为<strong>接收缓冲区非空</strong>中断使能，置1，当 USART_<strong>SR</strong>中的 <code>ORE</code> 或者 <code>RXNE</code> 位为 1 时，将产生串口中断</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">TXIE 触发的核心是 “发送缓冲区空，可写新数据”，用于持续发送；</span><br><span class="line">TCIE 触发的核心是 “发送完全结束”，用于确认发送完成；</span><br><span class="line">RXNEIE 触发的核心是 “接收有数据可读” 或 “接收溢出错误”，是接收数据的核心中断。</span><br><span class="line"></span><br><span class="line">持续发送：</span><br><span class="line">利用 TXE 中断（发送缓冲区空）不断填充下一个字节，直到数据发完。关于 “发完后如何停止中断”，在中断服务函数中主动关闭 TXIE 是行业内的标准做法，也是最稳妥、最高效的方式</span><br></pre></td></tr></table></figure>
+
+<h3 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h3><p><img src="/../images/27.11.png" alt="alt text"></p>
+<blockquote>
+<p>当向该寄存器写数据的时候，串口就会自动发送，</p>
+<p>当收到数据的时候，也是存在该寄存器内</p>
+</blockquote>
+<h3 id="SR"><a href="#SR" class="headerlink" title="SR"></a>SR</h3><p><img src="/../images/27.12.png" alt="alt text"><br><img src="/../images/27.13.png" alt="alt text"></p>
+<blockquote>
+<p><strong>RXNE（读数据寄存器非空）</strong>，当该位被置 1 的时候，就是提示已经有数据被接收到了，并且<strong>可以读出来了</strong>。这时候我们要做的就是(<strong>尽快去读取 USART_DR</strong>)（接收中断的标志），通过读 USART_DR 可以将该位清零，也可以向该位写 0，直接清除</p>
+</blockquote>
+<blockquote>
+<p><strong>TC（发送完成）</strong>，当该位被置位的时候，表示 USART_<strong>DR 内的数据已经被发送完成了</strong></p>
+<p>也有两种清零方式：<br>1）读 USART_SR，写 USART_DR。<br>2）直接向该位写 0</p>
+</blockquote>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>这个实验也比较简单，上面的uart模块内部框图+寄存器，以及中断触发方式弄懂之后，HAL已经为我们编写好了uart的串口驱动。</p>
+<p>实验：uart1定时发送数据，若收到数据，就立刻把收到的数据返回发送出去。</p>
+<p>一次接收，一次发送，就是一个字节嘛</p>
+<p>老规矩：<br>涉及外设：</p>
+<ol>
+<li>uart1</li>
+<li>NVIC</li>
+<li>AFIO</li>
+<li>gpio(复用)</li>
+</ol>
+<p>usart_init()</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">usart_init</span><span class="params">(<span class="type">uint32_t</span> baudrate)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/*UART 初始化设置*/</span></span><br><span class="line">    g_uart1_handle.Instance = USART_UX;                                       <span class="comment">/* USART_UX */</span></span><br><span class="line">    g_uart1_handle.Init.BaudRate = baudrate;                                  <span class="comment">/* 波特率 */</span></span><br><span class="line">    g_uart1_handle.Init.WordLength = UART_WORDLENGTH_8B;                      <span class="comment">/* 字长为8位数据格式 */</span></span><br><span class="line">    g_uart1_handle.Init.StopBits = UART_STOPBITS_1;                           <span class="comment">/* 一个停止位 */</span></span><br><span class="line">    g_uart1_handle.Init.Parity = UART_PARITY_NONE;                            <span class="comment">/* 无奇偶校验位 */</span></span><br><span class="line">    g_uart1_handle.Init.HwFlowCtl = UART_HWCONTROL_NONE;                      <span class="comment">/* 无硬件流控 */</span></span><br><span class="line">    g_uart1_handle.Init.Mode = UART_MODE_TX_RX;                               <span class="comment">/* 收发模式 */</span></span><br><span class="line">    HAL_UART_Init(&amp;g_uart1_handle);                                           <span class="comment">/* HAL_UART_Init()会使能UART1 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 该函数会开启接收中断：标志位UART_IT_RXNE，并且设置接收缓冲以及接收缓冲接收最大数据量 */</span></span><br><span class="line">    HAL_UART_Receive_IT(&amp;g_uart1_handle, (<span class="type">uint8_t</span> *)g_rx_buffer, RXBUFFERSIZE); </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       UART底层初始化函数</span></span><br><span class="line"><span class="comment"> * @param       huart: UART句柄类型指针</span></span><br><span class="line"><span class="comment"> * @note        此函数会被HAL_UART_Init()调用</span></span><br><span class="line"><span class="comment"> *              完成时钟使能，引脚配置，中断配置</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_MspInit</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">    GPIO_InitTypeDef gpio_init_struct;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (huart-&gt;Instance == USART_UX)                            <span class="comment">/* 如果是串口1，进行串口1 MSP初始化 */</span></span><br><span class="line">    &#123;</span><br><span class="line">        USART_TX_GPIO_CLK_ENABLE();                             <span class="comment">/* 使能串口TX脚时钟 */</span></span><br><span class="line">        USART_RX_GPIO_CLK_ENABLE();                             <span class="comment">/* 使能串口RX脚时钟 */</span></span><br><span class="line">        USART_UX_CLK_ENABLE();                                  <span class="comment">/* 使能串口时钟 */</span></span><br><span class="line"></span><br><span class="line">        gpio_init_struct.Pin = USART_TX_GPIO_PIN;               <span class="comment">/* 串口发送引脚号 */</span></span><br><span class="line">        gpio_init_struct.Mode = GPIO_MODE_AF_PP;                <span class="comment">/* 复用推挽输出 */</span></span><br><span class="line">        gpio_init_struct.Pull = GPIO_PULLUP;                    <span class="comment">/* 上拉 */</span></span><br><span class="line">        gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;          <span class="comment">/* IO速度设置为高速 */</span></span><br><span class="line">        HAL_GPIO_Init(USART_TX_GPIO_PORT, &amp;gpio_init_struct);</span><br><span class="line">                </span><br><span class="line">        gpio_init_struct.Pin = USART_RX_GPIO_PIN;               <span class="comment">/* 串口RX脚 模式设置 */</span></span><br><span class="line">        gpio_init_struct.Mode = GPIO_MODE_AF_INPUT;    </span><br><span class="line">        HAL_GPIO_Init(USART_RX_GPIO_PORT, &amp;gpio_init_struct);   <span class="comment">/* 串口RX脚 必须设置成输入模式 */</span></span><br><span class="line">        </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> USART_EN_RX</span></span><br><span class="line">        HAL_NVIC_EnableIRQ(USART_UX_IRQn);                      <span class="comment">/* 使能USART1中断通道 */</span></span><br><span class="line">        HAL_NVIC_SetPriority(USART_UX_IRQn, <span class="number">3</span>, <span class="number">3</span>);              <span class="comment">/* 组2，最低优先级:抢占优先级3，子优先级3 */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到：</p>
+<ol>
+<li>使能gpio引脚时钟</li>
+<li>使能串口时钟</li>
+<li>配置io复用（hal里面使能afio时钟）</li>
+<li>配置NVIC（使能串口中断响应，优先级）</li>
+<li>配置uart外设（接收，发送中断都打开了）</li>
+</ol>
+<p>核心看一下，他是如何实现，uart发送数据，uart接收数据</p>
+<h3 id="1-uart发送数据。"><a href="#1-uart发送数据。" class="headerlink" title="1. uart发送数据。"></a>1. uart发送数据。</h3><h4 id="直接发送"><a href="#直接发送" class="headerlink" title="直接发送"></a>直接发送</h4><p>先看printf(), 底层调用的是fputc</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* MDK下需要重定义fputc函数, printf函数最终会通过调用fputc输出字符串到串口 */</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">fputc</span><span class="params">(<span class="type">int</span> ch, FILE *f)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">while</span> ((USART_UX-&gt;SR &amp; <span class="number">0X40</span>) == <span class="number">0</span>);     <span class="comment">/* 等待上一个字符发送完成 */</span></span><br><span class="line"></span><br><span class="line">    USART_UX-&gt;DR = (<span class="type">uint8_t</span>)ch;             <span class="comment">/* 将要发送的字符 ch 写入到DR寄存器 */</span></span><br><span class="line">    <span class="keyword">return</span> ch;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，是<strong>直接写的数据寄存器</strong>，没有走发送完成中断来实现持续发送</p>
+<h4 id="发送本地内存中的数据"><a href="#发送本地内存中的数据" class="headerlink" title="发送本地内存中的数据"></a>发送本地内存中的数据</h4><p>可以看到，main.c中，如果收到了一组完整的数据，程序会把他发送出去</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//main.c</span></span><br><span class="line">            HAL_UART_Transmit(&amp;g_uart1_handle,(<span class="type">uint8_t</span>*)g_usart_rx_buf, len, <span class="number">1000</span>);    <span class="comment">/* 发送接收到的数据 */</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，这个方法本身也是一个阻塞方式进行发送的，不是非阻塞方式。底层还是不停的写数据寄存器</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief  Sends an amount of data in blocking mode.</span></span><br><span class="line"><span class="comment">  * @note   When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),</span></span><br><span class="line"><span class="comment">  *         the sent data is handled as a set of u16. In this case, Size must indicate the number</span></span><br><span class="line"><span class="comment">  *         of u16 provided through pData.</span></span><br><span class="line"><span class="comment">  * @param  huart Pointer to a UART_HandleTypeDef structure that contains</span></span><br><span class="line"><span class="comment">  *               the configuration information for the specified UART module.</span></span><br><span class="line"><span class="comment">  * @param  pData Pointer to data buffer (u8 or u16 data elements).</span></span><br><span class="line"><span class="comment">  * @param  Size  Amount of data elements (u8 or u16) to be sent</span></span><br><span class="line"><span class="comment">  * @param  Timeout Timeout duration</span></span><br><span class="line"><span class="comment">  * @retval HAL status</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_UART_Transmit</span><span class="params">(UART_HandleTypeDef *huart, <span class="type">uint8_t</span> *pData, <span class="type">uint16_t</span> Size, <span class="type">uint32_t</span> Timeout)</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//......</span></span><br><span class="line">    <span class="keyword">while</span> (huart-&gt;TxXferCount &gt; <span class="number">0U</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">if</span> (UART_WaitOnFlagUntilTimeout(huart, UART_FLAG_TXE, RESET, tickstart, Timeout) != HAL_OK)</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="keyword">return</span> HAL_TIMEOUT;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (pdata8bits == <span class="literal">NULL</span>)</span><br><span class="line">      &#123;</span><br><span class="line">        huart-&gt;Instance-&gt;DR = (<span class="type">uint16_t</span>)(*pdata16bits &amp; <span class="number">0x01FFU</span>);</span><br><span class="line">        pdata16bits++;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">      &#123;</span><br><span class="line">        huart-&gt;Instance-&gt;DR = (<span class="type">uint8_t</span>)(*pdata8bits &amp; <span class="number">0xFFU</span>);</span><br><span class="line">        pdata8bits++;</span><br><span class="line">      &#125;</span><br><span class="line">      huart-&gt;TxXferCount--;</span><br><span class="line">    &#125;</span><br><span class="line">   <span class="comment">//......</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>而他的下面有一个非阻塞的方式进行发送。（这个是非阻塞发送一整个字符串）</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * @brief  Sends an amount of data in non blocking mode.</span></span><br><span class="line"><span class="comment">  * @note   When UART parity is not enabled (PCE = 0), and Word Length is configured to 9 bits (M1-M0 = 01),</span></span><br><span class="line"><span class="comment">  *         the sent data is handled as a set of u16. In this case, Size must indicate the number</span></span><br><span class="line"><span class="comment">  *         of u16 provided through pData.</span></span><br><span class="line"><span class="comment">  * @param  huart Pointer to a UART_HandleTypeDef structure that contains</span></span><br><span class="line"><span class="comment">  *               the configuration information for the specified UART module.</span></span><br><span class="line"><span class="comment">  * @param  pData Pointer to data buffer (u8 or u16 data elements).</span></span><br><span class="line"><span class="comment">  * @param  Size  Amount of data elements (u8 or u16) to be sent</span></span><br><span class="line"><span class="comment">  * @retval HAL status</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_UART_Transmit_IT</span><span class="params">(UART_HandleTypeDef *huart, <span class="type">uint8_t</span> *pData, <span class="type">uint16_t</span> Size)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* Check that a Tx process is not already ongoing */</span></span><br><span class="line">  <span class="keyword">if</span> (huart-&gt;gState == HAL_UART_STATE_READY)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ((pData == <span class="literal">NULL</span>) || (Size == <span class="number">0U</span>))</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="keyword">return</span> HAL_ERROR;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Process Locked */</span></span><br><span class="line">    __HAL_LOCK(huart);</span><br><span class="line"></span><br><span class="line">    huart-&gt;pTxBuffPtr = pData;</span><br><span class="line">    huart-&gt;TxXferSize = Size;</span><br><span class="line">    huart-&gt;TxXferCount = Size;</span><br><span class="line"></span><br><span class="line">    huart-&gt;ErrorCode = HAL_UART_ERROR_NONE;</span><br><span class="line">    huart-&gt;gState = HAL_UART_STATE_BUSY_TX;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Process Unlocked */</span></span><br><span class="line">    __HAL_UNLOCK(huart);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Enable the UART Transmit data register empty Interrupt */</span></span><br><span class="line">    __HAL_UART_ENABLE_IT(huart, UART_IT_TXE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> HAL_OK;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> HAL_BUSY;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，这边实际上就是，制定好他要发送的内存起始地址和字节数，然后<code>__HAL_UART_ENABLE_IT</code>打开发送中断，这样，一旦发送是空的就直接开始拷贝发送了，就实现了<strong>非阻塞发送</strong>。</p>
+<p>可以看到，在hal的uart1的中断处理函数里面：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* UART in mode Transmitter ------------------------------------------------*/</span></span><br><span class="line"><span class="keyword">if</span> (((isrflags &amp; USART_SR_TXE) != RESET) &amp;&amp; ((cr1its &amp; USART_CR1_TXEIE) != RESET))</span><br><span class="line">&#123;</span><br><span class="line">  UART_Transmit_IT(huart);</span><br><span class="line">  <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* UART in mode Transmitter end --------------------------------------------*/</span></span><br><span class="line"><span class="keyword">if</span> (((isrflags &amp; USART_SR_TC) != RESET) &amp;&amp; ((cr1its &amp; USART_CR1_TCIE) != RESET))</span><br><span class="line">&#123;</span><br><span class="line">  UART_EndTransmit_IT(huart);</span><br><span class="line">  <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，下面这个就是在开启了非阻塞发送后，<strong>每次进入发送空中断</strong>后执行的内容，<strong>每次写一个字节的函数</strong>。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> HAL_StatusTypeDef <span class="title function_">UART_Transmit_IT</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">uint16_t</span> *tmp;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check that a Tx process is ongoing */</span></span><br><span class="line">  <span class="keyword">if</span> (huart-&gt;gState == HAL_UART_STATE_BUSY_TX)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ((huart-&gt;Init.WordLength == UART_WORDLENGTH_9B) &amp;&amp; (huart-&gt;Init.Parity == UART_PARITY_NONE))</span><br><span class="line">    &#123;</span><br><span class="line">      tmp = (<span class="type">uint16_t</span> *) huart-&gt;pTxBuffPtr;</span><br><span class="line">      huart-&gt;Instance-&gt;DR = (<span class="type">uint16_t</span>)(*tmp &amp; (<span class="type">uint16_t</span>)<span class="number">0x01FF</span>);</span><br><span class="line">      huart-&gt;pTxBuffPtr += <span class="number">2U</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      huart-&gt;Instance-&gt;DR = (<span class="type">uint8_t</span>)(*huart-&gt;pTxBuffPtr++ &amp; (<span class="type">uint8_t</span>)<span class="number">0x00FF</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (--huart-&gt;TxXferCount == <span class="number">0U</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">/* Disable the UART Transmit Complete Interrupt */</span></span><br><span class="line">      __HAL_UART_DISABLE_IT(huart, UART_IT_TXE);</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Enable the UART Transmit Complete Interrupt */</span></span><br><span class="line">      __HAL_UART_ENABLE_IT(huart, UART_IT_TC);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> HAL_OK;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> HAL_BUSY;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-uart-接收"><a href="#2-uart-接收" class="headerlink" title="2. uart 接收"></a>2. uart 接收</h3><p>所以，根据上面对发送的分析，有用中断的非阻塞，和不用中断的阻塞方式</p>
+<p>下面接收，更是直接在usart_init()里面，开启了<strong>非阻塞接收</strong>。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 该函数会开启接收中断：标志位UART_IT_RXNE，并且设置接收缓冲以及接收缓冲接收最大数据量 */</span></span><br><span class="line">HAL_UART_Receive_IT(&amp;g_uart1_handle, (<span class="type">uint8_t</span> *)g_rx_buffer, RXBUFFERSIZE); </span><br></pre></td></tr></table></figure>
+
+
+<p>下面来仔细剖析一下，他这个非阻塞接收的实现。</p>
+<p><code>HAL_UART_Receive_IT</code>()</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HAL_StatusTypeDef <span class="title function_">HAL_UART_Receive_IT</span><span class="params">(UART_HandleTypeDef *huart, <span class="type">uint8_t</span> *pData, <span class="type">uint16_t</span> Size)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* Check that a Rx process is not already ongoing */</span></span><br><span class="line">  <span class="keyword">if</span> (huart-&gt;RxState == HAL_UART_STATE_READY)</span><br><span class="line">  &#123;</span><br><span class="line">    huart-&gt;pRxBuffPtr = pData;</span><br><span class="line">    huart-&gt;RxXferCount = Size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Enable the UART Data Register not empty Interrupt */</span></span><br><span class="line">    __HAL_UART_ENABLE_IT(huart, UART_IT_RXNE);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> HAL_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>可以看到核心就两件事，</p>
+<ol>
+<li>指定一个接收缓冲区内存的起始地址 &#x3D; huart-&gt;pRxBuffPtr</li>
+<li>记录下要接收的字节数（缓冲区的长度）&#x3D; huart-&gt;RxXferCount</li>
+<li>打开<strong>接收区空中断</strong></li>
+</ol>
+<p>这样之后，收到一个字节，就会触发一次接收中断，进入<code>HAL_UART_IRQHandler</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_IRQHandler</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">   <span class="comment">//此时收到了一个字节在DB里面</span></span><br><span class="line">    <span class="comment">/* UART in mode Receiver -------------------------------------------------*/</span></span><br><span class="line">    <span class="keyword">if</span> (((isrflags &amp; USART_SR_RXNE) != RESET) &amp;&amp; ((cr1its &amp; USART_CR1_RXNEIE) != RESET))</span><br><span class="line">    &#123;</span><br><span class="line">      UART_Receive_IT(huart);</span><br><span class="line">      <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>UART_Receive_IT来处理这个接收到的字节</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> HAL_StatusTypeDef <span class="title function_">UART_Receive_IT</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">uint8_t</span>  *pdata8bits;</span><br><span class="line">  <span class="type">uint16_t</span> *pdata16bits;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* Check that a Rx process is ongoing */</span></span><br><span class="line">  <span class="keyword">if</span> (huart-&gt;RxState == HAL_UART_STATE_BUSY_RX)</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span> ((huart-&gt;Init.WordLength == UART_WORDLENGTH_9B) &amp;&amp; (huart-&gt;Init.Parity == UART_PARITY_NONE))</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 1. 往指针指向的地方，写入一个字节。然后指针→移</span></span><br><span class="line">      pdata8bits  = <span class="literal">NULL</span>;</span><br><span class="line">      pdata16bits = (<span class="type">uint16_t</span> *) huart-&gt;pRxBuffPtr;</span><br><span class="line">      *pdata16bits = (<span class="type">uint16_t</span>)(huart-&gt;Instance-&gt;DR &amp; (<span class="type">uint16_t</span>)<span class="number">0x01FF</span>);</span><br><span class="line">      huart-&gt;pRxBuffPtr += <span class="number">2U</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      pdata8bits = (<span class="type">uint8_t</span> *) huart-&gt;pRxBuffPtr;</span><br><span class="line">      pdata16bits  = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> ((huart-&gt;Init.WordLength == UART_WORDLENGTH_9B) || ((huart-&gt;Init.WordLength == UART_WORDLENGTH_8B) &amp;&amp; (huart-&gt;Init.Parity == UART_PARITY_NONE)))</span><br><span class="line">      &#123;</span><br><span class="line">        *pdata8bits = (<span class="type">uint8_t</span>)(huart-&gt;Instance-&gt;DR &amp; (<span class="type">uint8_t</span>)<span class="number">0x00FF</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">      &#123;</span><br><span class="line">        *pdata8bits = (<span class="type">uint8_t</span>)(huart-&gt;Instance-&gt;DR &amp; (<span class="type">uint8_t</span>)<span class="number">0x007F</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      huart-&gt;pRxBuffPtr += <span class="number">1U</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 剩余需要待接收的字节计数--， 并判断是否 == 0， 缓冲区收满了，就关掉接收中断</span></span><br><span class="line">    <span class="keyword">if</span> (--huart-&gt;RxXferCount == <span class="number">0U</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">/* Disable the UART Data Register not empty Interrupt */</span></span><br><span class="line">      __HAL_UART_DISABLE_IT(huart, UART_IT_RXNE);</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Disable the UART Parity Error Interrupt */</span></span><br><span class="line">      __HAL_UART_DISABLE_IT(huart, UART_IT_PE);</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Disable the UART Error Interrupt: (Frame error, noise error, overrun error) */</span></span><br><span class="line">      __HAL_UART_DISABLE_IT(huart, UART_IT_ERR);</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* Rx process is completed, restore huart-&gt;RxState to Ready */</span></span><br><span class="line">      huart-&gt;RxState = HAL_UART_STATE_READY;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> (USE_HAL_UART_REGISTER_CALLBACKS == 1)</span></span><br><span class="line">      <span class="comment">/*Call registered Rx complete callback*/</span></span><br><span class="line">      huart-&gt;RxCpltCallback(huart);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">      <span class="comment">//缓冲区收满了，开始处理回调</span></span><br><span class="line">      HAL_UART_RxCpltCallback(huart);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* USE_HAL_UART_REGISTER_CALLBACKS */</span></span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> HAL_OK;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> HAL_OK;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> HAL_BUSY;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以,进行一次非阻塞接收，就会一直开始接收，知道收满整个缓冲区为止。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">HAL_UART_Receive_IT(&amp;g_uart1_handle, (<span class="type">uint8_t</span> *)g_rx_buffer, RXBUFFERSIZE); </span><br></pre></td></tr></table></figure>
+
+<p>注意，当每次接收一个字节，发现收完了之后，会调用一个回调函数：<br><code>HAL_UART_RxCpltCallback</code></p>
+<p>这是个若定义，我们重新实现这个针对<code>这个收满的缓冲区g_rx_buffer</code>的回调函数。这些实际上，就是些字符串判断+处理了。没什么好说的。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">HAL_UART_RxCpltCallback</span><span class="params">(UART_HandleTypeDef *huart)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (huart-&gt;Instance == USART_UX)                    <span class="comment">/* 如果是串口1 */</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> ((g_usart_rx_sta &amp; <span class="number">0x8000</span>) == <span class="number">0</span>)             <span class="comment">/* 接收未完成 */</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (g_usart_rx_sta &amp; <span class="number">0x4000</span>)                <span class="comment">/* 接收到了0x0d（即回车键） */</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (g_rx_buffer[<span class="number">0</span>] != <span class="number">0x0a</span>)             <span class="comment">/* 接收到的不是0x0a（即不是换行键） */</span></span><br><span class="line">                &#123;</span><br><span class="line">                    g_usart_rx_sta = <span class="number">0</span>;                 <span class="comment">/* 接收错误,重新开始 */</span></span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span>                                    <span class="comment">/* 接收到的是0x0a（即换行键） */</span></span><br><span class="line">                &#123;</span><br><span class="line">                    g_usart_rx_sta |= <span class="number">0x8000</span>;           <span class="comment">/* 接收完成了 */</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span>                                        <span class="comment">/* 还没收到0X0d（即回车键） */</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (g_rx_buffer[<span class="number">0</span>] == <span class="number">0x0d</span>)</span><br><span class="line">                    g_usart_rx_sta |= <span class="number">0x4000</span>;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    g_usart_rx_buf[g_usart_rx_sta &amp; <span class="number">0X3FFF</span>] = g_rx_buffer[<span class="number">0</span>];</span><br><span class="line">                    g_usart_rx_sta++;</span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span> (g_usart_rx_sta &gt; (USART_REC_LEN - <span class="number">1</span>))</span><br><span class="line">                    &#123;</span><br><span class="line">                        g_usart_rx_sta = <span class="number">0</span>;             <span class="comment">/* 接收数据错误,重新开始接收 */</span></span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        HAL_UART_Receive_IT(&amp;g_uart1_handle, (<span class="type">uint8_t</span> *)g_rx_buffer, RXBUFFERSIZE);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每次进入这个回调函数，说明这个缓冲区已经收满了，并且接收中断也关了，这个时候，就再执行一次<code>HAL_UART_Receive_IT（）</code>,再次开启下一轮的非阻塞接收。</p>
+<p>这样就实现了，<strong>不停的对接收的字符串，进行处理</strong>。</p>
+<p>然后主进程里面判断一下，上次接收的字符串如果符合要求，就发送字符串（里面是阻塞发送）</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/03/RK3399-android10-%E9%80%82%E9%85%8Dxxx%E6%A8%A1%E5%9D%97-md/" rel="prev" title="RK3399-android10-适配xxx模块.md">
+                  <i class="fa fa-angle-left"></i> RK3399-android10-适配xxx模块.md
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" rel="next" title="IMX6U RGBLCD 学习笔记">
+                  IMX6U RGBLCD 学习笔记 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32-uart*</span>
+            </li>
+          
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

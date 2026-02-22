@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="backtrace理解trampoline -&gt; trap -&gt; trampoline从用户到内核我们可以把这个过程想象成一次“紧急避险”。 1. 第一阶段：（uservec）(trampoline.S) 这是Trap发生后的第一站。此时最尴尬的是：所有登记都存着用户的数据，你一个都不能动，不然用户数据就丢了。 交换a0：利用sscratch寄存器，先把用户的a0内存，换回一个指向的T">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xv6 lab4">
+<meta property="og:url" content="http://example.com/2026/01/31/xv6-lab4/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="backtrace理解trampoline -&gt; trap -&gt; trampoline从用户到内核我们可以把这个过程想象成一次“紧急避险”。 1. 第一阶段：（uservec）(trampoline.S) 这是Trap发生后的第一站。此时最尴尬的是：所有登记都存着用户的数据，你一个都不能动，不然用户数据就丢了。 交换a0：利用sscratch寄存器，先把用户的a0内存，换回一个指向的T">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/19.1.png">
+<meta property="article:published_time" content="2026-01-31T04:39:32.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.756Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="XV6">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/19.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/01/31/xv6-lab4/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/01/31/xv6-lab4/","path":"2026/01/31/xv6-lab4/","title":"xv6 lab4"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>xv6 lab4 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#backtrace"><span class="nav-number">1.</span> <span class="nav-text">backtrace</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%90%86%E8%A7%A3trampoline-trap-trampoline"><span class="nav-number">1.1.</span> <span class="nav-text">理解trampoline -&gt; trap -&gt; trampoline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8ETRAPFRAME%E9%87%8C%E9%9D%A2%E5%86%99%E5%85%A5%E5%86%85%E6%A0%B8Usertrap%E6%A0%88%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9C%B0%E5%9D%80%E6%98%AF%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80%E5%90%97%EF%BC%9F%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%86%99%E5%88%B0trapframe%E4%B8%AD%E7%9A%84%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">从TRAPFRAME里面写入内核Usertrap栈的一些地址是物理地址吗？什么时候写到trapframe中的？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%88%9B%E5%BB%BA%E7%9A%84trapframe%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E7%8A%B6%E6%80%81%EF%BC%9F"><span class="nav-number">1.2.1.</span> <span class="nav-text">关于什么时候创建的trapframe中的内核状态？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B5%E9%9D%A2%E9%94%99%E8%AF%AF%E5%BC%82%E5%B8%B8%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">页面错误异常的应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E5%86%85%E6%A0%B8%E6%A0%88%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">1.4.</span> <span class="nav-text">关于内核栈的结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.5.</span> <span class="nav-text">实现</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#alarm"><span class="nav-number">2.</span> <span class="nav-text">alarm</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%80%81%E5%86%85%E6%A0%B8%E6%80%81%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90"><span class="nav-number">2.1.</span> <span class="nav-text">用户态内核态切换分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#c%E8%AF%AD%E8%A8%80%E5%8F%98%E9%87%8F%E5%9C%A8%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4%E5%88%86%E5%B8%83"><span class="nav-number">2.2.</span> <span class="nav-text">c语言变量在虚拟内存空间分布</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#alarm%E8%A7%A3%E6%B3%95"><span class="nav-number">2.3.</span> <span class="nav-text">alarm解法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.4.</span> <span class="nav-text">代码实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E7%BB%AD%E6%80%9D%E8%80%83"><span class="nav-number">2.5.</span> <span class="nav-text">后续思考</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/31/xv6-lab4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="xv6 lab4 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xv6 lab4
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-01-31 12:39:32" itemprop="dateCreated datePublished" datetime="2026-01-31T12:39:32+08:00">2026-01-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="backtrace"><a href="#backtrace" class="headerlink" title="backtrace"></a>backtrace</h1><h2 id="理解trampoline-trap-trampoline"><a href="#理解trampoline-trap-trampoline" class="headerlink" title="理解trampoline -&gt; trap -&gt; trampoline"></a>理解trampoline -&gt; trap -&gt; trampoline</h2><p>从用户到内核<br>我们可以把这个过程想象成一次“紧急避险”。</p>
+<p><strong>1. 第一阶段：（uservec）(trampoline.S)</strong></p>
+<p>这是Trap发生后的第一站。此时最尴尬的是：所有登记都存着用户的数据，你一个都不能动，不然用户数据就丢了。</p>
+<p><code>交换a0</code>：利用sscratch寄存器，先把用户的a0内存，换回一个指向的TRAPFRAME地址。</p>
+<p><code>保存现场</code>：现在有了a0指向的TRAPFRAME空间，赶紧把剩下的31个已注册的全存进去。</p>
+<p><code>加载内核环境</code>：从TRAPFRAME里加载内核栈、内核页表、usertrap的地址。(这些在第一次进程创建的时候，通过trap获取到的，之后都是fork复制)</p>
+<p><code>跳入C语言</code>：跳转到<strong>usertrap</strong>。</p>
+<p><strong>2. 第二阶段：usertrap(trap.c)</strong></p>
+<p>到了这里，我们已经进入了真正的内核世界。</p>
+<p><code>修改中断提示</code>：把<code>stvec</code>改成指向kernelvec。因为现在已经在内核了，如果再发生中断，处理方式和在用户状态是不一样的。</p>
+<p><code>分流处理</code>：</p>
+<ul>
+<li><p>如果是ecall（系统调用），调syscall()。</p>
+</li>
+<li><p>如果是硬件中断，调节devintr()。</p>
+</li>
+<li><p>如果是非法操作，杀掉进程。</p>
+</li>
+</ul>
+<p><strong>3. 第三阶段：返回 (usertrapret -&gt; userret)(trap.c-&gt;trampoline.S)</strong></p>
+<p>原路返回，但在userret自定义里，会satp切回用户页表，并恢复所有用户注册，最后执行sret回到用户态。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">用户态 (User Mode)           |    内核态 (Supervisor Mode)</span><br><span class="line">-----------------------------------------------------------</span><br><span class="line">[ 执行用户程序 ]              |</span><br><span class="line">      |                      |</span><br><span class="line">(发生 Trap: ecall/中断)        |</span><br><span class="line">      |                      |</span><br><span class="line">      V                      |</span><br><span class="line">[ TRAMPOLINE (uservec) ] &lt;---|--- <span class="number">1.</span> 硬件将 PC 指向这里 (stvec)</span><br><span class="line">      |                      |    <span class="number">2.</span> 还在使用【用户页表】</span><br><span class="line">      | (保存寄存器到         |</span><br><span class="line">      |  TRAPFRAME)          |</span><br><span class="line">      |                      |</span><br><span class="line">      | (切换 satp) --------&gt;|--- <span class="number">3.</span> 切换到【内核页表】</span><br><span class="line">      |                      |</span><br><span class="line">      V                      |</span><br><span class="line">[ usertrap (C code) ]        |--- <span class="number">4.</span> 处理业务逻辑</span><br><span class="line">      |                      |</span><br><span class="line">      V                      |</span><br><span class="line">[ TRAMPOLINE (userret) ] &lt;---|--- <span class="number">5.</span> 准备切回用户态</span><br><span class="line">      |                      |</span><br><span class="line">      | (切换 satp) --------&gt;|--- <span class="number">6.</span> 切换回【用户页表】</span><br><span class="line">      |                      |</span><br><span class="line">      V                      |</span><br><span class="line">(执行 sret) ----------------&gt;|--- <span class="number">7.</span> 回到用户程序下一行</span><br></pre></td></tr></table></figure>
+
+<p><strong>重点理解：<code>Trapframe</code>到底是什么？</strong></p>
+<p><code>对用户状态（用户层）而言</code>：它是唯一的避风港，用于暂存那32个注册。</p>
+<p><code>对内核态（C语言层）而言</code>：它是一个结构体struct trapframe，内核可以随时读取或修改用户之前留下的寄存器值（比如获取系统调用的参数）。</p>
+<p><code>Trampoline</code>：代码中转站。在两个页表里的地址完全一样，保证切换页表时代码不会跑飞。</p>
+<p><code>Trapframe</code>：数据中转站。保存了用户的注册，也保存了内核需要用于“接手”的参数（如内核栈指针）。</p>
+<h2 id="从TRAPFRAME里面写入内核Usertrap栈的一些地址是物理地址吗？什么时候写到trapframe中的？"><a href="#从TRAPFRAME里面写入内核Usertrap栈的一些地址是物理地址吗？什么时候写到trapframe中的？" class="headerlink" title="从TRAPFRAME里面写入内核Usertrap栈的一些地址是物理地址吗？什么时候写到trapframe中的？"></a>从TRAPFRAME里面写入内核Usertrap栈的一些地址是物理地址吗？什么时候写到trapframe中的？</h2><p>不是，它们都是<code>内核页表的虚拟地址</code>。</p>
+<p><code>内核页表地址（kernel_satp）</code>：这是一个要写入<code>satp</code>注册的值，虽然satp最终指向物理内存，但在代码逻辑层面，我们把它当作内核地址空间的“根”。</p>
+<p><code>内核栈指针（kernel_sp）</code>：这是<code>内核栈</code>在<code>内核页表中</code>的虚拟地址。</p>
+<p><code>usertrap指针</code>：这是<code>usertrap函数(trap.c)</code>在内核页表中的虚拟地址。</p>
+<p>为什么必须是虚拟地址？ 因为在 <code>uservec</code> 执行过程中，一旦你完成了 csrw satp, a1（切换页表）这一行指令，CPU 的 MMU 就会立即按照新页表（<code>内核页表</code>）来解析地址。<code>如果此时 sp 或跳转地址是物理地址</code>，而内核页表没做等值映射（Identity Mapping），程序就会立刻崩溃</p>
+<h3 id="关于什么时候创建的trapframe中的内核状态？"><a href="#关于什么时候创建的trapframe中的内核状态？" class="headerlink" title="关于什么时候创建的trapframe中的内核状态？"></a>关于什么时候创建的trapframe中的内核状态？</h3><p><strong>1. 第一个进程 (initproc) 的“无中生有”</strong></p>
+<p>init 进程不是被 fork 出来的，而是由内核手动“捏”出来的。</p>
+<p>内核启动：在 <code>main.c</code> 中调用 <code>userinit()</code>。</p>
+<p>手动搭建：userinit <code>调用 allocproc</code> 分配 <code>trapframe</code> 和 <code>kstack</code>。</p>
+<p>伪造现场：内核手动把初始的用户指令（即 <code>initcode.S</code> 编译后的二进制）<code>加载到用户内存起始位置</code>。</p>
+<p>设置“返程票”：</p>
+<p>它手动设置 p-&gt;trapframe-&gt;epc &#x3D; 0（这样返回用户态后从第 0 行开始执行）。</p>
+<p>它手动设置 p-&gt;trapframe-&gt;sp &#x3D; PGSIZE（用户栈顶）。</p>
+<p>第一次“返回”：虽然它从来没去过用户态，但内核通过 scheduler 调度它，走 forkret -&gt; <code>usertrapret</code>。</p>
+<p>关键点：就在这里，执行了你之前搜到的那行代码，把 kernel_sp、kernel_satp 等信息填进了 trapframe。</p>
+<p>着陆：执行 userret，跳入用户态执行 init。</p>
+<p>此时，第一个进程的 trapframe 已经完美初始化了。</p>
+<p><strong>2. 后续进程的“克隆”</strong></p>
+<p>一旦有了第一个进程，剩下的确实如你所说，大多是通过 fork() 产生的。</p>
+<p>fork() 的逻辑：<br>完全拷贝：fork 会调用 uvmcopy 拷贝父进程的物理内存，也会拷贝父进程的 trapframe 内容。</p>
+<p><code>子进程的微调</code>：</p>
+<p>fork 会把子进程 trapframe 里的 a0 寄存器强制设为 0（这就是为什么 if(fork() &#x3D;&#x3D; 0) 能判断出子进程）。</p>
+<p>继承“路标”：因为父进程的 trapframe 里已经写好了正确的 kernel_sp、kernel_satp 等内核路标，子进程拷贝过去后，下次发生 Trap 时，子进程也能顺利找到内核的路。</p>
+<p><strong>3. 修正一个小细节：kernel_sp 真的能完全拷贝吗？</strong></p>
+<p>这里有一个非常细微但重要的点：每个进程的内核栈（kstack）是独立的。</p>
+<p>虽然 fork 拷贝了父进程 trapframe 的大部分内容，但子进程必须拥有自己独立的内核栈指针。</p>
+<p>在 fork() 调用 allocproc() 时，allocproc 会为子进程分配一个新的 kstack。</p>
+<p>随后在 <code>usertrapret 返回用户态之前</code>，那行 <code>p-&gt;trapframe-&gt;kernel_sp = p-&gt;kstack + PGSIZE</code>; 会再次执行。</p>
+<p>这意味着：<code>即使是从父进程拷贝过来的旧 kernel_sp，也会在返回用户态前的最后一刻，被修正为子进程自己的内核栈地址</code>。</p>
+<p><strong>总结你的疑问</strong></p>
+<ul>
+<li><p><strong>第一个进程</strong>：通过 userinit 手动创建，在第一次通过 usertrapret “返回”用户态时填满 trapframe。</p>
+</li>
+<li><p><strong>后续进程</strong>：通过 fork 拷贝。虽然拷贝了父进程的 trapframe，但每个进程在每次离开内核前，都会通过 usertrapret 重新刷新一遍 trapframe 里的内核信息，确保万无一失。</p>
+</li>
+</ul>
+<p><code>stvec寄存器</code>: 告诉CPU，当异常或中断（Trap）发生时，该跳到哪行代码去执行。</p>
+<h2 id="页面错误异常的应用"><a href="#页面错误异常的应用" class="headerlink" title="页面错误异常的应用"></a>页面错误异常的应用</h2><p>可以利用页面错误异常+页表，来实现：</p>
+<ol>
+<li><p>COW fork（写时复制）</p>
+<p>一开始父子进程共享一片物理内存，当开始写时，发生访问异常，进行复制，一般用在fork+exec处，因为父进程的内容是没什么用的。</p>
+</li>
+<li><p>惰性sbrk</p>
+<p>不是一次性的直接拓展完成，而是随着时间推移，当访问到了再开辟。</p>
+</li>
+<li><p>demand paging</p>
+<p> 由于应用程序可能很大并且从磁盘读取数据的成本很高，因此这种启动成本可能会引起用户的注意：当用户从 shell 启动大型应用程序时，用户可能需要很长时间才能看到响应。<strong>为了缩短响应时间</strong>，现代内核为用户地址空间创建页表，但将页面的 PTE 标记为无效。发生页面错误时，内核从磁盘读取页面内容并将其映射到用户地址空间。</p>
+</li>
+<li><p>paging to disk</p>
+<p> 只将一部分用户页面存储在 RAM 中，并将其余部</p>
+</li>
+</ol>
+<p>分存储在磁盘上 paging area，不在 RAM 中的内存相对<br>应的 PTE 标记为无效</p>
+<h2 id="关于内核栈的结构"><a href="#关于内核栈的结构" class="headerlink" title="关于内核栈的结构"></a>关于内核栈的结构</h2><p>在 RISC-V 中，<code>栈帧的结构并不是由 C 语言的 struct 定义的</code>，而是由 编译器（<code>GCC</code>）的<code>调用约定</code>（Calling Convention） 决定的。</p>
+<p>根据讲义和提示，RISC-V 的栈<code>向下增长</code>（从高地址往低地址），而 <code>s0</code> 寄存器（即<code>帧指针 fp</code>）指向<code>当前栈帧的顶部</code>（<code>高地址端</code>）。</p>
+<p>内核栈中的最小单元是一个帧，里面的结构如下：<br><img src="/../images/19.1.png" alt="alt text"></p>
+<p>当前帧指针fp指向的是每一帧的最高地址。<br>但是读取每一个内容还是从低地址到高地址来读取，</p>
+<p>所以fp-8是<code>该帧的返回地址</code> 的起始低地址，表示<code>调用当前函数后的下一条指令</code></p>
+<p>fp-16就是<code>上一帧的最高地址</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">地址偏移	        存储内容	                    说明</span><br><span class="line">fp - <span class="number">8</span>	        返回地址 (Return Address)	指向调用当前函数后的下一条指令。</span><br><span class="line">fp - <span class="number">16</span>	        前一个 fp (Previous Frame Pointer)	指向调用者（Caller）的栈帧起始位置。</span><br><span class="line">&lt;fp - <span class="number">16</span>	    局部变量/被保存的寄存器	    函数内部使用的其他数据。</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>那这个s0读出来的fp内核栈的栈帧指针，和sp指针有什么区别呢？</strong></p>
+<p>sp 是为了让程序跑下去，而 s0 是为了让程序能“回头”。 不管是 s0 还是 sp，在开启虚拟内存的 xv6 内核中，它们<code>指向的都是内核虚拟地址</code>。</p>
+</blockquote>
+<p>虽然它们都指向内核栈，但分工完全不同</p>
+<ul>
+<li><p><code>sp (栈指针)</code></p>
+<p>动态变化： 它是“最前线”的指针。每当函数内部定义局部变量、压栈寄存器时，sp 就会不断地向下移动（向低地址增长）。</p>
+</li>
+</ul>
+<blockquote>
+<p>用途： 它是 CPU 寻找当前栈顶的唯一依据。</p>
+</blockquote>
+<ul>
+<li><p><code>s0 / fp (帧指针)</code>：</p>
+<p>  静态快照： 当一个函数刚开始运行（函数序言阶段）时，它会将当前的 sp 记录在 s0 中。</p>
+</li>
+</ul>
+<blockquote>
+<p>用途： 在整个函数执行期间，<code>s0 的值保持不变。它就像是一个锚点</code>，无论 sp 怎么折腾，函数都可以通过 s0 加上固定的偏移量来找到函数的局部变量、返回地址和调用者的 fp。</p>
+</blockquote>
+<p><strong>如何理解“当前帧（Current Frame）?</strong></p>
+<p>当 Function A 调用 Function B 时：</p>
+<ul>
+<li><p>栈上会开辟一块新的领地（Frame）。</p>
+</li>
+<li><p>这块领地的“大门”地址就存放在 s0 (fp) 里。</p>
+</li>
+<li><p>在这块领地内，<code>Function B </code>存放着它的局部变量。</p>
+</li>
+<li><p>由于 <code>s0 指向当前帧的“起点”（高地址端）</code>，而 xv6 的布局规定：</p>
+</li>
+<li><p>s0 - 8 固定存放当前函数的返回地址 (ra)。</p>
+</li>
+<li><p>s0 - 16 固定存放上一个函数的帧指针 (previous fp)。</p>
+</li>
+</ul>
+<p>这就形成了一条链表。backtrace 实验其实就是在遍历这个以 s0 为头节点的单向链表。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">内核栈页面 (Kernel Stack Page)</span><br><span class="line">+---------------------------+ &lt;--- PGROUNDUP(fp) (栈底，起始地址)</span><br><span class="line">|      ... 上一帧 ...        |</span><br><span class="line">+---------------------------+</span><br><span class="line">|  Saved Return Address     | &lt;--- 当前 s0 - <span class="number">8</span> (这就是你要打印的地址)</span><br><span class="line">+---------------------------+</span><br><span class="line">|  Saved Previous fp  ------+-----&gt; 指向上一帧的 s0</span><br><span class="line">+---------------------------+ &lt;--- 当前 s0 (fp) 的位置</span><br><span class="line">|      局部变量              |</span><br><span class="line">|      ...                  |</span><br><span class="line">|      临时数据              |</span><br><span class="line">+---------------------------+ &lt;--- 当前 sp (指向最底部的动态位置)</span><br><span class="line">|                           |</span><br><span class="line">+---------------------------+ &lt;--- PGROUNDDOWN(fp) (栈顶边界，循环终止处)</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>为什么不用 sp 做 backtrace？</strong> </p>
+<p>因为 sp 是不固定的。编译器在不同的优化等级下，局部变量占用的空间可能不同，导致返回地址相对于 sp 的距离不固定。而返回地址相对于 s0 的偏移总是固定的（-8 和 -16）</p>
+</blockquote>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>该backtrace，其实就是把内核栈的东西溯源，打印出来，上面已经分析了内核栈的结构，当在sys_sleep中测试完成后，即可合并到panic中，这样，当出现panic之前，cpu会把当前的内核栈的函数调用全部打印出来。这样就可以知道是什么原因导致内核死掉了。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">From <span class="number">81</span>a2d27242d2d285b7ac70d7b733297f6b161685 Mon Sep <span class="number">17</span> <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> <span class="number">2001</span></span><br><span class="line">From: liangji-seu &lt;<span class="number">15262272286</span>@<span class="number">163.</span>com&gt;</span><br><span class="line">Date: Sat, <span class="number">31</span> Jan <span class="number">2026</span> <span class="number">16</span>:<span class="number">00</span>:<span class="number">42</span> +<span class="number">0800</span></span><br><span class="line">Subject: [PATCH <span class="number">1</span>/<span class="number">2</span>] feat: support <span class="title function_">backtrace</span><span class="params">()</span></span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"> kernel/defs.h    |  1 +</span><br><span class="line"> kernel/<span class="built_in">printf</span>.c  | 25 +++++++++++++++++++++++++</span><br><span class="line"> kernel/riscv.h   |  9 +++++++++</span><br><span class="line"> kernel/sysproc.c |  1 +</span><br><span class="line"> 4 files changed, 36 <span class="title function_">insertions</span><span class="params">(+)</span></span><br><span class="line"></span><br><span class="line">diff --git a/kernel/defs.h b/kernel/defs.h</span><br><span class="line">index 3564db4..9224b0f 100644</span><br><span class="line">--- a/kernel/defs.h</span><br><span class="line">+++ b/kernel/defs.h</span><br><span class="line">@@ -80,6 +80,7 @@ <span class="type">int</span>             <span class="title function_">pipewrite</span><span class="params">(<span class="keyword">struct</span> pipe*, uint64, <span class="type">int</span>)</span>;</span><br><span class="line"> <span class="type">void</span>            <span class="title function_">printf</span><span class="params">(<span class="type">char</span>*, ...)</span>;</span><br><span class="line"> <span class="type">void</span>            <span class="title function_">panic</span><span class="params">(<span class="type">char</span>*)</span> __<span class="title function_">attribute__</span><span class="params">((<span class="keyword">noreturn</span>))</span>;</span><br><span class="line"> <span class="type">void</span>            <span class="title function_">printfinit</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">+<span class="type">void</span>            <span class="title function_">backtrace</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"> </span><br><span class="line"> <span class="comment">// proc.c</span></span><br><span class="line"> <span class="type">int</span>             <span class="title function_">cpuid</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">diff --git a/kernel/<span class="built_in">printf</span>.c b/kernel/<span class="built_in">printf</span>.c</span><br><span class="line">index e1347de..ec8d335 <span class="number">100644</span></span><br><span class="line">--- a/kernel/<span class="built_in">printf</span>.c</span><br><span class="line">+++ b/kernel/<span class="built_in">printf</span>.c</span><br><span class="line">@@ <span class="number">-114</span>,<span class="number">6</span> +<span class="number">114</span>,<span class="number">30</span> @@ <span class="built_in">printf</span>(<span class="type">char</span> *fmt, ...)</span><br><span class="line">     release(&amp;pr.lock);</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">+<span class="comment">// seu liangji add</span></span><br><span class="line">+<span class="type">void</span> <span class="title function_">backtrace</span><span class="params">()</span></span><br><span class="line">+&#123;</span><br><span class="line">+    <span class="comment">//<span class="doctag">TODO:</span> trace the function call on the stack above the point </span></span><br><span class="line">+    <span class="comment">//at which the error occurred.</span></span><br><span class="line">+    uint64 fp = r_fp();</span><br><span class="line">+    uint64 kernel_stack_top = PGROUNDUP(fp);</span><br><span class="line">+    uint64 kernel_stack_bottom = PGROUNDDOWN(fp);</span><br><span class="line">+</span><br><span class="line">+    <span class="built_in">printf</span>(<span class="string">&quot;backtrace:\n&quot;</span>);</span><br><span class="line">+    <span class="keyword">while</span>(fp &gt;= kernel_stack_bottom &amp;&amp; fp &lt; kernel_stack_top)</span><br><span class="line">+    &#123;</span><br><span class="line">+        <span class="comment">// get the return address</span></span><br><span class="line">+        uint64 ret_addr = *(uint64*)(fp - <span class="number">8</span>);</span><br><span class="line">+</span><br><span class="line">+        <span class="built_in">printf</span>(<span class="string">&quot;%p\n&quot;</span>, ret_addr);</span><br><span class="line">+</span><br><span class="line">+        <span class="comment">// set fp = last stack frame point</span></span><br><span class="line">+        fp = *(uint64*)(fp - <span class="number">16</span>);</span><br><span class="line">+    &#125;</span><br><span class="line">+&#125;</span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line"> <span class="type">void</span></span><br><span class="line"> <span class="title function_">panic</span><span class="params">(<span class="type">char</span> *s)</span></span><br><span class="line"> &#123;</span><br><span class="line">@@ <span class="number">-122</span>,<span class="number">6</span> +<span class="number">146</span>,<span class="number">7</span> @@ panic(<span class="type">char</span> *s)</span><br><span class="line">   <span class="built_in">printf</span>(s);</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">   panicked = <span class="number">1</span>; <span class="comment">// freeze uart output from other CPUs</span></span><br><span class="line">+  backtrace();</span><br><span class="line">   <span class="keyword">for</span>(;;)</span><br><span class="line">     ;</span><br><span class="line"> &#125;</span><br><span class="line">diff --git a/kernel/riscv.h b/kernel/riscv.h</span><br><span class="line">index <span class="number">1691f</span>af..<span class="number">7</span>de406b <span class="number">100644</span></span><br><span class="line">--- a/kernel/riscv.h</span><br><span class="line">+++ b/kernel/riscv.h</span><br><span class="line">@@ <span class="number">-364</span>,<span class="number">3</span> +<span class="number">364</span>,<span class="number">12</span> @@ sfence_vma()</span><br><span class="line"> </span><br><span class="line"> <span class="keyword">typedef</span> uint64 <span class="type">pte_t</span>;</span><br><span class="line"> <span class="keyword">typedef</span> uint64 *<span class="type">pagetable_t</span>; <span class="comment">// 512 PTEs</span></span><br><span class="line">+</span><br><span class="line">+<span class="comment">// gcc will put fp-&gt;now function into s0 register</span></span><br><span class="line">+<span class="type">static</span> <span class="keyword">inline</span> uint64</span><br><span class="line">+r_fp()</span><br><span class="line">+&#123;</span><br><span class="line">+  uint64 x;</span><br><span class="line">+  <span class="keyword">asm</span> <span class="title function_">volatile</span><span class="params">(<span class="string">&quot;mv %0, s0&quot;</span> : <span class="string">&quot;=r&quot;</span> (x) )</span>;</span><br><span class="line">+  <span class="keyword">return</span> x;</span><br><span class="line">+&#125;</span><br><span class="line">diff --git a/kernel/sysproc.c b/kernel/sysproc.c</span><br><span class="line">index e8bcda9..<span class="number">5f</span>0d204 <span class="number">100644</span></span><br><span class="line">--- a/kernel/sysproc.c</span><br><span class="line">+++ b/kernel/sysproc.c</span><br><span class="line">@@ <span class="number">-57</span>,<span class="number">6</span> +<span class="number">57</span>,<span class="number">7</span> @@ sys_sleep(<span class="type">void</span>)</span><br><span class="line"> &#123;</span><br><span class="line">   <span class="type">int</span> n;</span><br><span class="line">   uint ticks0;</span><br><span class="line">+  backtrace();</span><br><span class="line"> </span><br><span class="line">   <span class="keyword">if</span>(argint(<span class="number">0</span>, &amp;n) &lt; <span class="number">0</span>)</span><br><span class="line">     <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">-- </span><br><span class="line"><span class="number">2.25</span>.<span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h1 id="alarm"><a href="#alarm" class="headerlink" title="alarm"></a>alarm</h1><p><strong>实验要求解析</strong>：<br>按他的实验要求，就是要求用户进程先调用系统调用sigalarm，标记上该进程的tick阈值，以及用户进程中的回调函数。然后用户进程持续运行。</p>
+<p>之后每当内核的计时器中断（1个tick一次中断，进入usertrap），对该进程的tick计数开始增加，当增加到tick阈值后，触发一次中断回调函数。</p>
+<p>该<strong>实验的核心</strong>就在于，<strong>如何在内核态的中断事件中，执行用户态的函数</strong>。</p>
+<blockquote>
+<p><strong>Unix 信号机制（Signal）</strong> 工作原理：</p>
+<p><code>注册</code>：用户程序告诉内核“如果发生某事，请运行函数 X”。</p>
+<p><code>触发</code>：内核在处理中断&#x2F;异常时发现满足条件。</p>
+<p><code>传递</code>：内核在返回用户态前，强行修改用户的 PC 指针和栈。</p>
+<p><code>执行</code>：用户执行函数 X。</p>
+<p><code>恢复</code>：执行完后通过系统调用回到原始状态。</p>
+</blockquote>
+<p>所以要实现这个signal机制，需要先对xv6的整个用户态和内核态的切换做一个系统的理解</p>
+<h2 id="用户态内核态切换分析"><a href="#用户态内核态切换分析" class="headerlink" title="用户态内核态切换分析"></a>用户态内核态切换分析</h2><p>下面总结以下，risc v xv6 从用户态-内核态-用户态的一个过程：</p>
+<p><strong>1. cpu的核心控制状态寄存器（CSR）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────┬────────────────────────────────────────────┐</span><br><span class="line">│   寄存器     │                    作用                    │</span><br><span class="line">├─────────────┼────────────────────────────────────────────┤</span><br><span class="line">│   stvec     │ Trap入口地址 (指向 uservec)                 │</span><br><span class="line">│   sepc      │ 保存触发Trap时的用户PC                      │</span><br><span class="line">│   scause    │ Trap原因 (syscall=<span class="number">8</span>, 中断, 异常等)          │</span><br><span class="line">│   sscratch  │ 中转站: 用户态时存trapframe地址             │</span><br><span class="line">│   sstatus   │ 状态寄存器 (SPP位记录之前的特权级)           │</span><br><span class="line">│   satp      │ 页表基址寄存器                              │</span><br><span class="line">│   x0-x31,sp │ cpu的通用寄存器                              │</span><br><span class="line">└─────────────┴────────────────────────────────────────────┘</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 完整流程图</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">用户态 (U-Mode)                        内核态 (S-Mode)</span><br><span class="line">══════════════                        ═══════════════</span><br><span class="line">      │</span><br><span class="line">      │  用户程序执行 write() 等系统调用</span><br><span class="line">      │</span><br><span class="line">      ▼</span><br><span class="line"> ┌─────────┐</span><br><span class="line"> │  ecall  │  ←── 用户代码触发陷入</span><br><span class="line"> └────┬────┘</span><br><span class="line">      │</span><br><span class="line">      │ ┌──────────────────────────────────┐</span><br><span class="line">      │ │  ★ 硬件自动完成 (瞬间)            │</span><br><span class="line">      │ │  <span class="number">1.</span> sepc ← PC (保存用户PC)        │</span><br><span class="line">      │ │  <span class="number">2.</span> 切换到 S-Mode                 │</span><br><span class="line">      │ │  <span class="number">3.</span> PC ← stvec (跳转到uservec)    │</span><br><span class="line">      │ │  <span class="number">4.</span> scause ← <span class="number">8</span> (syscall)         │</span><br><span class="line">      │ └──────────────────────────────────┘</span><br><span class="line">      │</span><br><span class="line">      ▼</span><br><span class="line"> ┌─────────────────────────────────────────────────────┐</span><br><span class="line"> │              uservec (trampoline.S)                 │</span><br><span class="line"> │  ─────────────────────────────────────────────────  │</span><br><span class="line"> │  此时: S-Mode + 用户页表 + 用户寄存器                │</span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">1.</span> <span class="comment">//a0指向trapframe                                  │</span></span><br><span class="line"> │     csrrw a0, sscratch, a0                          │</span><br><span class="line"> │     (a0 ↔ sscratch, 现在a0指向trapframe)            │</span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">2.</span> sd ra, <span class="number">40</span>(a0)   <span class="comment">// 保存用户态所有通用寄存器，包括sp到trapframe  │</span></span><br><span class="line"> │     sd sp, <span class="number">48</span>(a0)                                   │</span><br><span class="line"> │     sd t0, <span class="number">56</span>(a0)                                   │</span><br><span class="line"> │     ...                                             │</span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">3.</span> ld sp, <span class="number">8</span>(a0)    <span class="comment">// 切换内核态 栈指针                 │</span></span><br><span class="line"> │     ld tp, <span class="number">32</span>(a0)   <span class="comment">// 加载 hartid                   │</span></span><br><span class="line"> │     ld t0, <span class="number">16</span>(a0)   <span class="comment">// 加载 下一个跳转指令usertrap 地址到寄存器            │</span></span><br><span class="line"> │     ld t1, <span class="number">0</span>(a0)    <span class="comment">// 加载 内核页表 到寄存器                  │</span></span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">4.</span> csrw satp, t1   <span class="comment">// 切换到内核页表                 │</span></span><br><span class="line"> │     sfence.vma      <span class="comment">// 刷新 TLB                      │</span></span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">5.</span> jr t0           <span class="comment">// 跳转到 usertrap()             │</span></span><br><span class="line"> └─────────────────────────────────────────────────────┘</span><br><span class="line">      │</span><br><span class="line">      ▼</span><br><span class="line"> ┌─────────────────────────────────────────────────────┐</span><br><span class="line"> │              usertrap() (trap.c)                    │</span><br><span class="line"> │  ─────────────────────────────────────────────────  │</span><br><span class="line"> │  此时: S-Mode + 内核页表 + 内核栈                    │</span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">1.</span> 修改 stvec 指向 kernelvec (防止嵌套trap)        │</span><br><span class="line"> │  <span class="number">2.</span> 保存 sepc 到 p-&gt;trapframe-&gt;epc                  │</span><br><span class="line"> │  <span class="number">3.</span> 判断 scause:                                    │</span><br><span class="line"> │     - syscall → syscall()                          │</span><br><span class="line"> │     - 中断    → devintr()                          │</span><br><span class="line"> │     - 异常    → kill process                       │</span><br><span class="line"> │  <span class="number">4.</span> 调用 usertrapret() 准备返回                     │</span><br><span class="line"> └─────────────────────────────────────────────────────┘</span><br><span class="line">      │</span><br><span class="line">      ▼</span><br><span class="line"> ┌─────────────────────────────────────────────────────┐</span><br><span class="line"> │           usertrapret() (trap.c)                    │</span><br><span class="line"> │  ─────────────────────────────────────────────────  │</span><br><span class="line"> │  <span class="number">1.</span> 关中断                                          │</span><br><span class="line"> │  <span class="number">2.</span> 设置 stvec 指回 uservec                         │</span><br><span class="line"> │  <span class="number">3.</span> 准备 trapframe:                                 │</span><br><span class="line"> │     - kernel_satp, kernel_sp, usertrap地址          │</span><br><span class="line"> │  <span class="number">4.</span> 设置 sstatus (SPP=<span class="number">0</span>, SPIE=<span class="number">1</span>)                    │</span><br><span class="line"> │  <span class="number">5.</span> 设置 sepc = p-&gt;trapframe-&gt;epc                   │</span><br><span class="line"> │  <span class="number">6.</span> 计算用户页表 satp 值                             │</span><br><span class="line"> │  <span class="number">7.</span> 跳转到 userret (在trampoline中)                 │</span><br><span class="line"> └─────────────────────────────────────────────────────┘</span><br><span class="line">      │</span><br><span class="line">      ▼</span><br><span class="line"> ┌─────────────────────────────────────────────────────┐</span><br><span class="line"> │              userret (trampoline.S)                 │</span><br><span class="line"> │  ─────────────────────────────────────────────────  │</span><br><span class="line"> │  参数: a0=trapframe地址, a1=用户satp                │</span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">1.</span> csrw satp, a1   <span class="comment">// 切换回用户页表                 │</span></span><br><span class="line"> │     sfence.vma      <span class="comment">// 刷新 TLB                      │</span></span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">2.</span> ld ra, <span class="number">40</span>(a0)   <span class="comment">// 从trapframe恢复用户态      │</span></span><br><span class="line"> │     ld sp, <span class="number">48</span>(a0)                                   │</span><br><span class="line"> │     ld t0, <span class="number">56</span>(a0)                                   │</span><br><span class="line"> │     ...                                             │</span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">3.</span> csrw sscratch, a0  <span class="comment">// 把trapframe地址存回sscratch│</span></span><br><span class="line"> │     ld a0, <span class="number">112</span>(a0)     <span class="comment">// 恢复用户态的a0               │</span></span><br><span class="line"> │                                                     │</span><br><span class="line"> │  <span class="number">4.</span> sret            <span class="comment">// 返回用户态!                   │</span></span><br><span class="line"> └─────────────────────────────────────────────────────┘</span><br><span class="line">      │</span><br><span class="line">      │ ┌──────────────────────────────────┐</span><br><span class="line">      │ │  ★ sret 硬件自动完成             │</span><br><span class="line">      │ │  <span class="number">1.</span> PC ← sepc (恢复用户PC)       │</span><br><span class="line">      │ │  <span class="number">2.</span> 切换到 U-Mode (根据SPP)      │</span><br><span class="line">      │ │  <span class="number">3.</span> 开启中断 (根据SPIE)          │</span><br><span class="line">      │ └──────────────────────────────────┘</span><br><span class="line">      │</span><br><span class="line">      ▼</span><br><span class="line"> ┌─────────┐</span><br><span class="line"> │ 用户代码 │  ←── ecall 的下一条指令继续执行</span><br><span class="line"> └─────────┘</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>3. sscratch的用法总结</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">时间线 ─────────────────────────────────────────────────────────►</span><br><span class="line"></span><br><span class="line">用户态运行时:</span><br><span class="line">┌──────────┐     ┌───────────┐</span><br><span class="line">│ sscratch │ ──► │ trapframe │  (存着trapframe地址，备用)</span><br><span class="line">└──────────┘     └───────────┘</span><br><span class="line">      │</span><br><span class="line">      │  csrrw a0, sscratch, a0 (进入uservec时交换)</span><br><span class="line">      ▼</span><br><span class="line">内核态运行时:</span><br><span class="line">┌──────────┐     </span><br><span class="line">│ sscratch │ ──► 用户的 a0 值  (暂存用户a0)</span><br><span class="line">└──────────┘     </span><br><span class="line">┌──────────┐     ┌───────────┐</span><br><span class="line">│    a0    │ ──► │ trapframe │  (现在用a0访问trapframe)</span><br><span class="line">└──────────┘     └───────────┘</span><br><span class="line">      │</span><br><span class="line">      │  返回前再次交换</span><br><span class="line">      ▼</span><br><span class="line">用户态恢复:</span><br><span class="line">┌──────────┐     ┌───────────┐</span><br><span class="line">│ sscratch │ ──► │ trapframe │  (恢复原状，等待下次trap)</span><br><span class="line">└──────────┘     └───────────┘</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>4. 页表切换时机</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">          用户页表                    内核页表</span><br><span class="line">         ┌────────┐                  ┌────────┐</span><br><span class="line">         │ 用户代码 │                  │ 内核代码 │</span><br><span class="line">         │ 用户数据 │                  │ 内核数据 │</span><br><span class="line">         │ 用户栈   │                  │ 内核栈   │</span><br><span class="line">         ├────────┤                  ├────────┤</span><br><span class="line"> 相同 ──►│trampoline│◄── 映射到同一物理地址 ──►│trampoline│◄── 相同</span><br><span class="line">         │ (顶部)   │                  │ (顶部)   │</span><br><span class="line">         └────────┘                  └────────┘</span><br><span class="line"></span><br><span class="line">为什么 trampoline 必须在两个页表中映射到相同虚拟地址？</span><br><span class="line">因为切换 satp 的那一刻，PC 还在执行 trampoline 中的代码！</span><br><span class="line">如果地址不同，切换后 PC 就会跳到错误的地方。</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>5. trapframe结构布局</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">trapframe</span> &#123;</span>    <span class="comment">// 偏移量</span></span><br><span class="line">  uint64 kernel_satp;   <span class="comment">//   0  内核页表</span></span><br><span class="line">  uint64 kernel_sp;     <span class="comment">//   8  内核栈指针</span></span><br><span class="line">  uint64 kernel_trap;   <span class="comment">//  16  usertrap() 地址</span></span><br><span class="line">  uint64 epc;           <span class="comment">//  24  用户 PC (来自sepc)</span></span><br><span class="line">  uint64 kernel_hartid; <span class="comment">//  32  CPU 核心号</span></span><br><span class="line">  uint64 ra;            <span class="comment">//  40  ─┐</span></span><br><span class="line">  uint64 sp;            <span class="comment">//  48   │</span></span><br><span class="line">  uint64 gp;            <span class="comment">//  56   │</span></span><br><span class="line">  uint64 tp;            <span class="comment">//  64   │</span></span><br><span class="line">  uint64 t0-t6;         <span class="comment">//  ...  ├─ 31个通用寄存器</span></span><br><span class="line">  uint64 s0-s11;        <span class="comment">//  ...  │</span></span><br><span class="line">  uint64 a0-a7;         <span class="comment">//  ...  │</span></span><br><span class="line">  ...                   <span class="comment">//      ─┘</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="c语言变量在虚拟内存空间分布"><a href="#c语言变量在虚拟内存空间分布" class="headerlink" title="c语言变量在虚拟内存空间分布"></a>c语言变量在虚拟内存空间分布</h2><p><strong>1. 进程虚拟地址空间布局</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">高地址</span><br><span class="line">┌─────────────────────────────────────┐ <span class="number">0xFFFFFFFF</span> (<span class="number">32</span>位) 或更高</span><br><span class="line">│           内核空间                   │ ← 用户不可访问</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│             栈 (Stack)              │ ← 向下增长 ↓</span><br><span class="line">│         局部变量、函数参数            │</span><br><span class="line">│                 ↓                   │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│                                     │</span><br><span class="line">│           (未分配区域)               │</span><br><span class="line">│                                     │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│                 ↑                   │</span><br><span class="line">│             堆 (Heap)               │ ← 向上增长 ↑</span><br><span class="line">│         <span class="built_in">malloc</span>/new 分配              │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│             BSS 段                   │ ← 未初始化的全局/静态变量</span><br><span class="line">│         (Block Started by Symbol)    │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│            Data 段                   │ ← 已初始化的全局/静态变量</span><br><span class="line">│           (数据段)                   │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│           rodata 段                  │ ← 只读数据 (字符串常量等)</span><br><span class="line">│          (只读数据段)                 │</span><br><span class="line">├─────────────────────────────────────┤</span><br><span class="line">│           Text 段                    │ ← 代码/指令</span><br><span class="line">│           (代码段)                   │</span><br><span class="line">└─────────────────────────────────────┘ <span class="number">0x00000000</span></span><br><span class="line">低地址</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 各变量存储位置</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌────────────────────┬─────────────┬──────────────────────────────┐</span><br><span class="line">│      变量类型       │   存储位置   │            示例              │</span><br><span class="line">├────────────────────┼─────────────┼──────────────────────────────┤</span><br><span class="line">│ 局部变量            │    栈       │ <span class="type">void</span> <span class="title function_">f</span><span class="params">()</span> &#123; <span class="type">int</span> x = <span class="number">1</span>; &#125;      │</span><br><span class="line">│ 函数参数            │    栈       │ <span class="type">void</span> <span class="title function_">f</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span>         │</span><br><span class="line">│ 局部数组            │    栈       │ <span class="type">void</span> <span class="title function_">f</span><span class="params">()</span> &#123; <span class="type">int</span> arr[<span class="number">10</span>]; &#125;    │</span><br><span class="line">├────────────────────┼─────────────┼──────────────────────────────┤</span><br><span class="line">│ <span class="built_in">malloc</span>/<span class="built_in">calloc</span>/new  │    堆       │ <span class="type">int</span> *p = <span class="built_in">malloc</span>(<span class="number">100</span>);        │</span><br><span class="line">├────────────────────┼─────────────┼──────────────────────────────┤</span><br><span class="line">│ 全局变量(已初始化)   │   Data段    │ <span class="type">int</span> g = <span class="number">100</span>;                 │</span><br><span class="line">│ 静态变量(已初始化)   │   Data段    │ <span class="type">static</span> <span class="type">int</span> s = <span class="number">100</span>;          │</span><br><span class="line">├────────────────────┼─────────────┼──────────────────────────────┤</span><br><span class="line">│ 全局变量(未初始化)   │   BSS段     │ <span class="type">int</span> g;                       │</span><br><span class="line">│ 静态变量(未初始化)   │   BSS段     │ <span class="type">static</span> <span class="type">int</span> s;                │</span><br><span class="line">│ 初始化为<span class="number">0</span>的全局/静态 │   BSS段     │ <span class="type">int</span> g = <span class="number">0</span>; <span class="type">static</span> <span class="type">int</span> s = <span class="number">0</span>; │</span><br><span class="line">├────────────────────┼─────────────┼──────────────────────────────┤</span><br><span class="line">│ 字符串常量          │  rodata段   │ <span class="type">char</span> *s = <span class="string">&quot;hello&quot;</span>;           │</span><br><span class="line">│ <span class="type">const</span>全局变量       │  rodata段   │ <span class="type">const</span> <span class="type">int</span> MAX = <span class="number">100</span>;         │</span><br><span class="line">├────────────────────┼─────────────┼──────────────────────────────┤</span><br><span class="line">│ 函数代码            │   Text段    │ <span class="type">void</span> <span class="title function_">foo</span><span class="params">()</span> &#123; ... &#125;           │</span><br><span class="line">└────────────────────┴─────────────┴──────────────────────────────┘</span><br><span class="line"></span><br><span class="line"><span class="comment">//字符串的特殊情况</span></span><br><span class="line"><span class="type">char</span> *p = <span class="string">&quot;hello&quot;</span>;           <span class="type">char</span> s[] = <span class="string">&quot;hello&quot;</span>;</span><br><span class="line">                             </span><br><span class="line">   栈                            栈</span><br><span class="line">┌──────┐                     ┌──────────────┐</span><br><span class="line">│  p   │──────┐              │ h e l l o \<span class="number">0</span> │  ← 数据直接在栈上</span><br><span class="line">└──────┘      │              └──────────────┘</span><br><span class="line">              │              </span><br><span class="line">              ▼              </span><br><span class="line">   rodata段                  </span><br><span class="line">┌──────────────┐             </span><br><span class="line">│ h e l l o \<span class="number">0</span> │  ← 只读！    </span><br><span class="line">└──────────────┘             </span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>3. static变量的特点</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Data段（或BSS段）里的值直接被修改。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> count = <span class="number">0</span>;  <span class="comment">// 程序启动时在 BSS段 分配</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">f</span><span class="params">()</span> &#123;</span><br><span class="line">    count = <span class="number">5</span>;  <span class="comment">// 直接修改 BSS段 中那个固定地址的值</span></span><br><span class="line">    count++;    <span class="comment">// BSS段 中的值变为 6</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="alarm解法"><a href="#alarm解法" class="headerlink" title="alarm解法"></a>alarm解法</h2><p>所以<strong>关于如何在内核态执行用户态的回调函数</strong>，<code>不能直接执行</code>，必须通过<code>重返用户态执行</code>，但是重返用户态，又只能重返陷入内核之前的trapframe，也就是继续执行<code>旧的用户态</code>。</p>
+<p>所以<strong>关键</strong>就在于<code>sigreturn()</code>, 这个又是一个系统调用，</p>
+<p>说明<code>如果切换回用户态执行回调函数后，又会执行系统调用陷入内核态</code>, 相当于截断了用户态的执行。</p>
+<p>所以：<strong>解决方案</strong>就是：</p>
+<ul>
+<li>自己<code>新增一个中间的用户态</code>（trapframe）,备份旧的用户态,<code>一个用户态状态就是一个trapframe</code></li>
+</ul>
+<p>   也就是说，我们<code>如果有一个新的用户态，直接飞过去执行用户态回调函数，然后由sigreturn系统调用结束这个用户态</code>。<strong>再次进入内核态</strong>后，才恢复原来的用户态。</p>
+<blockquote>
+<p>这样就相当于可以<code>在原来用户态继续执行前，插入一个用户态的函数执行</code>。</p>
+</blockquote>
+<blockquote>
+<p>并且由于，该回调函数里面只涉及虚拟空间的<strong>代码段</strong>和<strong>data段</strong>，不涉及栈，所以两个用户态可以相互交换信息。</p>
+</blockquote>
+<h2 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">From dd29a06e07bfa92c225fe4434579a2ba2ed1dee3 Mon Sep <span class="number">17</span> <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> <span class="number">2001</span></span><br><span class="line">From: liangji-seu &lt;<span class="number">15262272286</span>@<span class="number">163.</span>com&gt;</span><br><span class="line">Date: Sat, <span class="number">31</span> Jan <span class="number">2026</span> <span class="number">21</span>:<span class="number">37</span>:<span class="number">21</span> +<span class="number">0800</span></span><br><span class="line">Subject: [PATCH] feat: support signal</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line">From <span class="number">642</span>dcb9609338240accf1ff4a0493065414bb16e Mon Sep <span class="number">17</span> <span class="number">00</span>:<span class="number">00</span>:<span class="number">00</span> <span class="number">2001</span></span><br><span class="line">From: liangji-seu &lt;<span class="number">15262272286</span>@<span class="number">163.</span>com&gt;</span><br><span class="line">Date: Sat, <span class="number">31</span> Jan <span class="number">2026</span> <span class="number">21</span>:<span class="number">37</span>:<span class="number">21</span> +<span class="number">0800</span></span><br><span class="line">Subject: [PATCH] feat: support signal</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"> Makefile         |  <span class="number">1</span> +</span><br><span class="line"> kernel/proc.c    |  <span class="number">6</span> ++++++</span><br><span class="line"> kernel/proc.h    | <span class="number">10</span> ++++++++++</span><br><span class="line"> kernel/syscall.c |  <span class="number">4</span> ++++</span><br><span class="line"> kernel/syscall.h |  <span class="number">2</span> ++</span><br><span class="line"> kernel/sysproc.c | <span class="number">30</span> ++++++++++++++++++++++++++++++</span><br><span class="line"> kernel/trap.c    | <span class="number">31</span> +++++++++++++++++++++++++++++++</span><br><span class="line"> user/user.h      |  <span class="number">4</span> ++++</span><br><span class="line"> user/usys.pl     |  <span class="number">2</span> ++</span><br><span class="line"> <span class="number">9</span> files changed, <span class="number">90</span> insertions(+)</span><br><span class="line"></span><br><span class="line">diff --git a/Makefile b/Makefile</span><br><span class="line">index <span class="number">7</span>a7e380..<span class="number">8</span>de30a0 <span class="number">100644</span></span><br><span class="line">--- a/Makefile</span><br><span class="line">+++ b/Makefile</span><br><span class="line">@@ <span class="number">-183</span>,<span class="number">6</span> +<span class="number">183</span>,<span class="number">7</span> @@ UPROGS=\</span><br><span class="line"> 	$U/_mkdir\</span><br><span class="line"> 	$U/_rm\</span><br><span class="line"> 	$U/_sh\</span><br><span class="line">+	$U/_alarmtest\</span><br><span class="line"> 	$U/_stressfs\</span><br><span class="line"> 	$U/_usertests\</span><br><span class="line"> 	$U/_grind\</span><br><span class="line">diff --git a/kernel/proc.c b/kernel/proc.c</span><br><span class="line">index <span class="number">22e7</span>ce4..<span class="number">6</span>c0300b <span class="number">100644</span></span><br><span class="line">--- a/kernel/proc.c</span><br><span class="line">+++ b/kernel/proc.c</span><br><span class="line">@@ <span class="number">-141</span>,<span class="number">6</span> +<span class="number">141</span>,<span class="number">12</span> @@ found:</span><br><span class="line">   p-&gt;context.ra = (uint64)forkret;</span><br><span class="line">   p-&gt;context.sp = p-&gt;kstack + PGSIZE;</span><br><span class="line"> </span><br><span class="line">+  <span class="comment">// init ticks and alarm;</span></span><br><span class="line">+  p-&gt;ticks_cnt = <span class="number">0</span>;</span><br><span class="line">+  p-&gt;ticks_inv = <span class="number">0</span>;</span><br><span class="line">+  p-&gt;func_cb = <span class="number">0</span>;</span><br><span class="line">+  p-&gt;ticks_lock = <span class="number">0</span>;</span><br><span class="line">+</span><br><span class="line">   <span class="keyword">return</span> p;</span><br><span class="line"> &#125;</span><br><span class="line"> </span><br><span class="line">diff --git a/kernel/proc.h b/kernel/proc.h</span><br><span class="line">index f6ca8b7..<span class="number">4913318</span> <span class="number">100644</span></span><br><span class="line">--- a/kernel/proc.h</span><br><span class="line">+++ b/kernel/proc.h</span><br><span class="line">@@ <span class="number">-47</span>,<span class="number">6</span> +<span class="number">47</span>,<span class="number">9</span> @@ <span class="class"><span class="keyword">struct</span> <span class="title">trapframe</span> &#123;</span></span><br><span class="line">   <span class="comment">/*  16 */</span> uint64 kernel_trap;   <span class="comment">// usertrap()</span></span><br><span class="line">   <span class="comment">/*  24 */</span> uint64 epc;           <span class="comment">// saved user program counter</span></span><br><span class="line">   <span class="comment">/*  32 */</span> uint64 kernel_hartid; <span class="comment">// saved kernel tp</span></span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line">+  <span class="comment">// save common register</span></span><br><span class="line">   <span class="comment">/*  40 */</span> uint64 ra;</span><br><span class="line">   <span class="comment">/*  48 */</span> uint64 sp;</span><br><span class="line">   <span class="comment">/*  56 */</span> uint64 gp;</span><br><span class="line">@@ <span class="number">-105</span>,<span class="number">4</span> +<span class="number">108</span>,<span class="number">11</span> @@ <span class="class"><span class="keyword">struct</span> <span class="title">proc</span> &#123;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">ofile</span>[<span class="title">NOFILE</span>];</span>  <span class="comment">// Open files</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">cwd</span>;</span>           <span class="comment">// Current directory</span></span><br><span class="line">   <span class="type">char</span> name[<span class="number">16</span>];               <span class="comment">// Process name (debugging)</span></span><br><span class="line">+</span><br><span class="line">+  <span class="type">int</span> ticks_cnt;</span><br><span class="line">+  <span class="type">int</span> ticks_inv;</span><br><span class="line">+  uint64 func_cb;</span><br><span class="line">+  <span class="type">int</span> ticks_lock;</span><br><span class="line">+  <span class="class"><span class="keyword">struct</span> <span class="title">trapframe</span> *<span class="title">trapframe_signal_backup</span>;</span></span><br><span class="line">+</span><br><span class="line"> &#125;;</span><br><span class="line">diff --git a/kernel/syscall.c b/kernel/syscall.c</span><br><span class="line">index c1b3670..a74be20 <span class="number">100644</span></span><br><span class="line">--- a/kernel/syscall.c</span><br><span class="line">+++ b/kernel/syscall.c</span><br><span class="line">@@ <span class="number">-104</span>,<span class="number">6</span> +<span class="number">104</span>,<span class="number">8</span> @@ <span class="keyword">extern</span> uint64 <span class="title function_">sys_unlink</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"> <span class="keyword">extern</span> uint64 <span class="title function_">sys_wait</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"> <span class="keyword">extern</span> uint64 <span class="title function_">sys_write</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"> <span class="keyword">extern</span> uint64 <span class="title function_">sys_uptime</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">+<span class="keyword">extern</span> uint64 <span class="title function_">sys_sigalarm</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">+<span class="keyword">extern</span> uint64 <span class="title function_">sys_sigreturn</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"> </span><br><span class="line"> <span class="type">static</span> <span class="title function_">uint64</span> <span class="params">(*syscalls[])</span><span class="params">(<span class="type">void</span>)</span> = &#123;</span><br><span class="line"> [SYS_fork]    sys_fork,</span><br><span class="line">@@ <span class="number">-127</span>,<span class="number">6</span> +<span class="number">129</span>,<span class="number">8</span> @@ <span class="type">static</span> <span class="title function_">uint64</span> <span class="params">(*syscalls[])</span><span class="params">(<span class="type">void</span>)</span> = &#123;</span><br><span class="line"> [SYS_link]    sys_link,</span><br><span class="line"> [SYS_mkdir]   sys_mkdir,</span><br><span class="line"> [SYS_close]   sys_close,</span><br><span class="line">+[SYS_sigalarm]   sys_sigalarm,</span><br><span class="line">+[SYS_sigreturn]   sys_sigreturn,</span><br><span class="line"> &#125;;</span><br><span class="line"> </span><br><span class="line"> <span class="type">void</span></span><br><span class="line">diff --git a/kernel/syscall.h b/kernel/syscall.h</span><br><span class="line">index bc5f356..<span class="number">7b</span>88b81 <span class="number">100644</span></span><br><span class="line">--- a/kernel/syscall.h</span><br><span class="line">+++ b/kernel/syscall.h</span><br><span class="line">@@ <span class="number">-20</span>,<span class="number">3</span> +<span class="number">20</span>,<span class="number">5</span> @@</span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> SYS_link   19</span></span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> SYS_mkdir  20</span></span><br><span class="line"> <span class="meta">#<span class="keyword">define</span> SYS_close  21</span></span><br><span class="line">+<span class="meta">#<span class="keyword">define</span> SYS_sigalarm  22</span></span><br><span class="line">+<span class="meta">#<span class="keyword">define</span> SYS_sigreturn  23</span></span><br><span class="line">diff --git a/kernel/sysproc.c b/kernel/sysproc.c</span><br><span class="line">index <span class="number">5f</span>0d204..<span class="number">79b</span>d1a2 <span class="number">100644</span></span><br><span class="line">--- a/kernel/sysproc.c</span><br><span class="line">+++ b/kernel/sysproc.c</span><br><span class="line">@@ <span class="number">-96</span>,<span class="number">3</span> +<span class="number">96</span>,<span class="number">33</span> @@ sys_uptime(<span class="type">void</span>)</span><br><span class="line">   release(&amp;tickslock);</span><br><span class="line">   <span class="keyword">return</span> xticks;</span><br><span class="line"> &#125;</span><br><span class="line">+</span><br><span class="line">+uint64 <span class="title function_">sys_sigalarm</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">+&#123;</span><br><span class="line">+    <span class="class"><span class="keyword">struct</span> <span class="title">proc</span>* <span class="title">p</span> =</span> myproc();</span><br><span class="line">+    <span class="type">int</span> ticks_interval;</span><br><span class="line">+    <span class="keyword">if</span>(argint(<span class="number">0</span>, &amp;ticks_interval) &lt; <span class="number">0</span>)</span><br><span class="line">+    &#123;</span><br><span class="line">+        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    uint64 function_callback;</span><br><span class="line">+    <span class="keyword">if</span>(argaddr(<span class="number">1</span>, &amp;function_callback) &lt; <span class="number">0</span>)</span><br><span class="line">+    &#123;</span><br><span class="line">+        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">+    &#125;</span><br><span class="line">+</span><br><span class="line">+    p-&gt;ticks_inv = ticks_interval;</span><br><span class="line">+    p-&gt;func_cb = function_callback;</span><br><span class="line">+    <span class="comment">//printf(&quot;sys_sigalarm, set p-&gt;ticks_inv = %d, func_cb va = %p\n&quot;, p-&gt;ticks_inv, p-&gt;func_cb);</span></span><br><span class="line">+    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">+&#125;</span><br><span class="line">+uint64 <span class="title function_">sys_sigreturn</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">+&#123;</span><br><span class="line">+    <span class="class"><span class="keyword">struct</span> <span class="title">proc</span> *<span class="title">p</span> =</span> myproc();</span><br><span class="line">+    memmove(p-&gt;trapframe, p-&gt;trapframe_signal_backup, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> trapframe));</span><br><span class="line">+    p-&gt;ticks_lock = <span class="number">0</span>;</span><br><span class="line">+    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">+&#125;</span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line">diff --git a/kernel/trap.c b/kernel/trap.c</span><br><span class="line">index a63249e..<span class="number">0</span>c62033 <span class="number">100644</span></span><br><span class="line">--- a/kernel/trap.c</span><br><span class="line">+++ b/kernel/trap.c</span><br><span class="line">@@ <span class="number">-49</span>,<span class="number">6</span> +<span class="number">49</span>,<span class="number">37</span> @@ usertrap(<span class="type">void</span>)</span><br><span class="line">   </span><br><span class="line">   <span class="comment">// save user program counter.</span></span><br><span class="line">   p-&gt;trapframe-&gt;epc = r_sepc();</span><br><span class="line">+</span><br><span class="line">+</span><br><span class="line">+  <span class="comment">// seu liangji add, to use timer intr</span></span><br><span class="line">+  <span class="keyword">if</span>(devintr() == <span class="number">2</span> &amp;&amp; ((p-&gt;func_cb !=<span class="number">0</span>) || (p-&gt;ticks_inv !=<span class="number">0</span>)))&#123;</span><br><span class="line">+</span><br><span class="line">+      p-&gt;ticks_cnt++;</span><br><span class="line">+</span><br><span class="line">+      <span class="comment">//printf(&quot;p-&gt;ticks_cnt = %d\n&quot;, p-&gt;ticks_cnt);</span></span><br><span class="line">+      <span class="keyword">if</span>( p-&gt;ticks_inv != <span class="number">0</span> &amp;&amp; p-&gt;ticks_cnt &gt;= p-&gt;ticks_inv &amp;&amp; p-&gt;ticks_lock == <span class="number">0</span>)&#123;</span><br><span class="line">+          <span class="comment">//printf(&quot;hint!, cnt = %d\n&quot;, p-&gt;ticks_cnt);</span></span><br><span class="line">+          p-&gt;ticks_cnt = <span class="number">0</span>;</span><br><span class="line">+          <span class="comment">//get lock</span></span><br><span class="line">+          p-&gt;ticks_lock = <span class="number">1</span>;</span><br><span class="line">+          <span class="comment">// need to run signal callback function, first should copy trapframe, and then use sigreturn to return trapframe</span></span><br><span class="line">+          <span class="comment">// Allocate a trapframe page.</span></span><br><span class="line">+          acquire(&amp;p-&gt;lock);</span><br><span class="line">+          <span class="keyword">if</span>((p-&gt;trapframe_signal_backup = (<span class="keyword">struct</span> trapframe *)kalloc()) == <span class="number">0</span>)&#123;</span><br><span class="line">+              panic(<span class="string">&quot;fail to kalloc trapframe_signal_backup&quot;</span>);</span><br><span class="line">+          &#125;</span><br><span class="line">+          release(&amp;p-&gt;lock);</span><br><span class="line">+          <span class="comment">// copy trapframe , old user space</span></span><br><span class="line">+          memmove(p-&gt;trapframe_signal_backup, p-&gt;trapframe, <span class="keyword">sizeof</span>(<span class="keyword">struct</span> trapframe));</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">// change user space</span></span><br><span class="line">+          <span class="comment">// because func_cb is just involve static var(BSS), not use stack, so just jump pc to func_cb</span></span><br><span class="line">+          p-&gt;trapframe-&gt;epc = p-&gt;func_cb;</span><br><span class="line">+</span><br><span class="line">+          <span class="comment">//not unlock until sigreturn, callback is ok</span></span><br><span class="line">+          <span class="comment">//p-&gt;ticks_lock = 0;</span></span><br><span class="line">+      &#125;</span><br><span class="line">+  &#125;</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">if</span>(r_scause() == <span class="number">8</span>)&#123;</span><br><span class="line">     <span class="comment">// system call</span></span><br><span class="line">diff --git a/user/user.h b/user/user.h</span><br><span class="line">index b71ecda..fd97ee2 <span class="number">100644</span></span><br><span class="line">--- a/user/user.h</span><br><span class="line">+++ b/user/user.h</span><br><span class="line">@@ <span class="number">-40</span>,<span class="number">3</span> +<span class="number">40</span>,<span class="number">7</span> @@ <span class="type">void</span> <span class="title function_">free</span><span class="params">(<span class="type">void</span>*)</span>;</span><br><span class="line"> <span class="type">int</span> <span class="title function_">atoi</span><span class="params">(<span class="type">const</span> <span class="type">char</span>*)</span>;</span><br><span class="line"> <span class="type">int</span> <span class="title function_">memcmp</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *, <span class="type">const</span> <span class="type">void</span> *, uint)</span>;</span><br><span class="line"> <span class="type">void</span> *<span class="title function_">memcpy</span><span class="params">(<span class="type">void</span> *, <span class="type">const</span> <span class="type">void</span> *, uint)</span>;</span><br><span class="line">+</span><br><span class="line">+<span class="comment">//alarm</span></span><br><span class="line">+<span class="type">int</span> <span class="title function_">sigalarm</span><span class="params">(<span class="type">int</span> ticks, <span class="type">void</span> (*handler)())</span>;</span><br><span class="line">+<span class="type">int</span> <span class="title function_">sigreturn</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line">diff --git a/user/usys.pl b/user/usys.pl</span><br><span class="line">index <span class="number">01e426</span>e..fa548b0 <span class="number">100755</span></span><br><span class="line">--- a/user/usys.pl</span><br><span class="line">+++ b/user/usys.pl</span><br><span class="line">@@ <span class="number">-36</span>,<span class="number">3</span> +<span class="number">36</span>,<span class="number">5</span> @@ entry(<span class="string">&quot;getpid&quot;</span>);</span><br><span class="line"> entry(<span class="string">&quot;sbrk&quot;</span>);</span><br><span class="line"> entry(<span class="string">&quot;sleep&quot;</span>);</span><br><span class="line"> entry(<span class="string">&quot;uptime&quot;</span>);</span><br><span class="line">+entry(<span class="string">&quot;sigalarm&quot;</span>);</span><br><span class="line">+entry(<span class="string">&quot;sigreturn&quot;</span>);</span><br><span class="line">-- </span><br><span class="line"><span class="number">2.25</span>.<span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="后续思考"><a href="#后续思考" class="headerlink" title="后续思考"></a>后续思考</h2><p><strong>1. 必须写sigreturn()系统调用来终止吗？</strong></p>
+<p>在计算机科学中，这被称为信号处理的收尾（Signal Cleanup）。</p>
+<p>虽然看起来麻烦，但<strong>所有的异步信号机制都需要类似的收尾逻辑</strong>。原因是：</p>
+<ul>
+<li><strong>栈和寄存器的隔离</strong>：当信号（或中断）发生时，它是异步的。用户程序可能运行在任何指令处。如果没有一个机制（如系统调用）告诉内核“我已经处理完了，请把刚才偷走的寄存器还给我”，CPU 根本无法自动找回之前的执行状态。</li>
+</ul>
+<p><code>主流系统的做法</code>：</p>
+<blockquote>
+<p><strong>Linux&#x2F;Unix</strong>：实际上也是这么做的。内核会在<code>用户栈上放置一段微型的代码（称为 Signal Trampoline）</code>，这段代码的唯一作用就是执行 sigreturn 系统调用。</p>
+</blockquote>
+<p><code>封装</code>：在标准库（如 Glibc）中，这些细节都被封装好了。程序员只需要写 handler，而库函数会自动帮你处理跳转和收尾。</p>
+<p><strong>2. 对回调函数（Handler）的要求</strong></p>
+<p>你提到的“对栈的要求”切中了要害。</p>
+<p><strong>栈的破坏问题</strong></p>
+<p>目前的实验版本中，<code>handler回调函数</code> 直接运行在原程序的<code>用户栈</code>上。如果：</p>
+<ul>
+<li>handler 函数定义了巨大的局部变量。</li>
+</ul>
+<p>原程序本来就已经快把栈用完了（Stack Overflow）。 那么执行 handler 就会彻底破坏原程序的栈数据，导致 sigreturn 之后原程序依然崩溃。</p>
+<p><strong>解决方案</strong>：<code>信号栈（Signal Stack）</code></p>
+<p>为了解决这个问题，高级系统（如 Linux）允许进程通过 sigaltstack 系统调用<strong>注册一个独立的信号栈</strong>。当信号发生时，内核不但修改 <code>epc</code>，还会修改 trapframe-&gt;<code>sp</code> 指向这个<code>独立的栈空间</code>。</p>
+<p><strong>数据段的影响</strong></p>
+<p>正如你所观察到的，<strong>handler 和原程序共享数据段</strong>：</p>
+<p><code>副作用</code>：如果 handler 修改了全局变量，原程序确实会感知到。</p>
+<p><code>重入性限制</code>：这要求 handler 尽量是“<code>可重入</code>”的。<br>如果在 handler 里调用了像 printf 或 malloc 这样使用了全局锁的函数，而原程序恰好在被中断时也持有这些锁，就会发生死锁。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/OS/" rel="tag"># OS</a>
+              <a href="/tags/XV6/" rel="tag"># XV6</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/01/27/xv6-lab3/" rel="prev" title="xv6 lab3">
+                  <i class="fa fa-angle-left"></i> xv6 lab3
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/03/xv6-lab5/" rel="next" title="xv6 lab5">
+                  xv6 lab5 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>xv6 lab4</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

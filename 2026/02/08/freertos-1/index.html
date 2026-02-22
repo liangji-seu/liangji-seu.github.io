@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Freertos 基础实现freertos 代码结构分析 stm32中，freertos内存分布预览stm32f103zet6 rtos的内存分布 [ 高地址 (High Address) ]  0x2001 0000 (SRAM 结束&#x2F;64KB)          |          v+------------------------------------------+|">
+<meta property="og:type" content="article">
+<meta property="og:title" content="freertos 基础实现">
+<meta property="og:url" content="http://example.com/2026/02/08/freertos-1/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="Freertos 基础实现freertos 代码结构分析 stm32中，freertos内存分布预览stm32f103zet6 rtos的内存分布 [ 高地址 (High Address) ]  0x2001 0000 (SRAM 结束&#x2F;64KB)          |          v+------------------------------------------+|">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/21.1.png">
+<meta property="og:image" content="http://example.com/images/21.2.png">
+<meta property="og:image" content="http://example.com/images/21.3.png">
+<meta property="og:image" content="http://example.com/images/21.4.png">
+<meta property="og:image" content="http://example.com/images/21.5.png">
+<meta property="og:image" content="http://example.com/images/21.6.png">
+<meta property="og:image" content="http://example.com/images/21.7.png">
+<meta property="og:image" content="http://example.com/images/21.8.png">
+<meta property="og:image" content="http://example.com/images/21.9.png">
+<meta property="og:image" content="http://example.com/images/21.10.png">
+<meta property="og:image" content="http://example.com/images/21.11.png">
+<meta property="og:image" content="http://example.com/images/21.12.png">
+<meta property="og:image" content="http://example.com/images/21.13.png">
+<meta property="og:image" content="http://example.com/images/21.14.png">
+<meta property="article:published_time" content="2026-02-08T09:26:23.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.743Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="RTOS">
+<meta property="article:tag" content="freertos">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/21.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/08/freertos-1/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/08/freertos-1/","path":"2026/02/08/freertos-1/","title":"freertos 基础实现"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>freertos 基础实现 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Freertos-%E5%9F%BA%E7%A1%80%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.</span> <span class="nav-text">Freertos 基础实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#freertos-%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">freertos 代码结构分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#stm32%E4%B8%AD%EF%BC%8Cfreertos%E5%86%85%E5%AD%98%E5%88%86%E5%B8%83%E9%A2%84%E8%A7%88"><span class="nav-number">1.2.</span> <span class="nav-text">stm32中，freertos内存分布预览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E7%9F%A5%E8%AF%86-%EF%BC%8CCM3%E4%B8%AD%E6%96%AD"><span class="nav-number">1.3.</span> <span class="nav-text">(前置知识)，CM3中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#A-freertos-%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE"><span class="nav-number">1.4.</span> <span class="nav-text">A. freertos 中断配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-freertos-%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.5.</span> <span class="nav-text">B. freertos 任务</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1task"><span class="nav-number">1.5.1.</span> <span class="nav-text">任务task</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#task%E5%88%9B%E5%BB%BA"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">task创建</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E9%93%BE%E8%A1%A8%E4%B8%8E%E4%BB%BB%E5%8A%A1%E8%8A%82%E7%82%B9"><span class="nav-number">1.5.2.</span> <span class="nav-text">任务链表与任务节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%93%BE%E8%A1%A8%EF%BC%8C%E8%8A%82%E7%82%B9%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.5.3.</span> <span class="nav-text">链表，节点的使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#freertos%E7%9A%84%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="nav-number">1.6.</span> <span class="nav-text">freertos的启动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E8%A3%B8%E6%9C%BA"><span class="nav-number">1.6.1.</span> <span class="nav-text">1. 裸机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BC%80%E5%90%AF%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-number">1.6.2.</span> <span class="nav-text">2. 开启任务调度器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%90%AF%E5%8A%A8%E7%AC%AC%E4%B8%80%E4%B8%AA%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.6.3.</span> <span class="nav-text">3. 启动第一个任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%BB%BB%E5%8A%A1%E7%8A%B6%E6%80%81%E5%88%97%E8%A1%A8"><span class="nav-number">1.6.4.</span> <span class="nav-text">4. 任务状态列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E4%BB%BB%E5%8A%A1%E7%9A%84%E6%93%8D%E4%BD%9C-%E4%B8%8E-%E4%BB%BB%E5%8A%A1%E7%8A%B6%E6%80%81"><span class="nav-number">1.6.5.</span> <span class="nav-text">5. 任务的操作 与 任务状态</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#xTaskCreate"><span class="nav-number">1.6.5.1.</span> <span class="nav-text">xTaskCreate()</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#prvInitialiseNewTask-%E5%88%9D%E5%A7%8B%E5%8C%96TCB"><span class="nav-number">1.6.5.1.1.</span> <span class="nav-text">prvInitialiseNewTask() 初始化TCB</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#pxPortInitialiseStack-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%BB%BB%E5%8A%A1%E6%A0%88"><span class="nav-number">1.6.5.1.2.</span> <span class="nav-text">pxPortInitialiseStack() 初始化任务栈</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#prvAddNewTaskToReadyList-%E5%8A%A0%E5%85%A5%E5%B0%B1%E7%BB%AA%E9%98%9F%E5%88%97"><span class="nav-number">1.6.5.1.3.</span> <span class="nav-text">prvAddNewTaskToReadyList() 加入就绪队列</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vTaskDelete-%E5%88%A0%E9%99%A4%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.6.5.2.</span> <span class="nav-text">vTaskDelete() 删除任务</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#prvDeleteTCB-%E5%85%B7%E4%BD%93%E5%88%A0%E9%99%A4%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.6.5.2.1.</span> <span class="nav-text">prvDeleteTCB() 具体删除任务</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vTaskSuspend-%E6%8C%82%E8%B5%B7%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.6.5.3.</span> <span class="nav-text">vTaskSuspend() 挂起任务</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9ApendSV-%E4%BF%9D%E5%AD%98%E5%BD%93%E5%89%8D%E4%BB%BB%E5%8A%A1%E7%8E%B0%E5%9C%BA%E6%93%8D%E4%BD%9C"><span class="nav-number">1.6.5.3.1.</span> <span class="nav-text">补充：pendSV 保存当前任务现场操作</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9ApendSV%E4%B8%AD%E6%96%AD%E5%AE%9E%E7%8E%B0%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E7%9A%84%E8%AF%A6%E7%BB%86%E8%BF%87%E7%A8%8B"><span class="nav-number">1.6.5.3.2.</span> <span class="nav-text">补充：pendSV中断实现任务切换的详细过程</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.6.5.4.</span> <span class="nav-text">恢复任务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E7%A9%BA%E9%97%B2%E4%BB%BB%E5%8A%A1"><span class="nav-number">1.6.6.</span> <span class="nav-text">6. 空闲任务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2"><span class="nav-number">1.7.</span> <span class="nav-text">任务切换</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SVC%E4%B8%AD%E6%96%AD%EF%BC%8CpendSV%E4%B8%AD%E6%96%AD%EF%BC%8Csystick%E4%B8%AD%E6%96%AD"><span class="nav-number">1.7.1.</span> <span class="nav-text">SVC中断，pendSV中断，systick中断</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-SVC%E4%B8%AD%E6%96%AD%EF%BC%9A"><span class="nav-number">1.7.1.1.</span> <span class="nav-text">1. SVC中断：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-systick%E4%B8%AD%E6%96%AD"><span class="nav-number">1.7.1.2.</span> <span class="nav-text">2. systick中断</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-pendSV%E4%B8%AD%E6%96%AD"><span class="nav-number">1.7.1.3.</span> <span class="nav-text">3. pendSV中断</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/08/freertos-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="freertos 基础实现 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          freertos 基础实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-08 17:26:23" itemprop="dateCreated datePublished" datetime="2026-02-08T17:26:23+08:00">2026-02-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/RTOS/" itemprop="url" rel="index"><span itemprop="name">RTOS</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="Freertos-基础实现"><a href="#Freertos-基础实现" class="headerlink" title="Freertos 基础实现"></a>Freertos 基础实现</h1><h2 id="freertos-代码结构分析"><a href="#freertos-代码结构分析" class="headerlink" title="freertos 代码结构分析"></a>freertos 代码结构分析</h2><p><img src="/../images/21.1.png" alt="alt text"></p>
+<h2 id="stm32中，freertos内存分布预览"><a href="#stm32中，freertos内存分布预览" class="headerlink" title="stm32中，freertos内存分布预览"></a>stm32中，freertos内存分布预览</h2><p>stm32f103zet6 rtos的内存分布</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">[ 高地址 (High Address) ]  <span class="number">0x2001</span> <span class="number">0000</span> (SRAM 结束/<span class="number">64</span>KB)</span><br><span class="line">          |</span><br><span class="line">          v</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|          System <span class="title function_">Stack</span> <span class="params">(MSP)</span>              | &lt;--- 栈顶<span class="params">(Top)</span>, 向下生长 ↓</span><br><span class="line">| <span class="params">(用于中断服务 ISR、启动前的 main 函数)</span>      |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|                <span class="params">(空闲区)</span>                   |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|        FreeRTOS <span class="title function_">Heap</span> <span class="params">(ucHeap[])</span>          | &lt;--- 这里的管理是源码阅读重点</span><br><span class="line">|  +------------------------------------+  |</span><br><span class="line">|  | [空闲堆内存] <span class="params">(Free Heap Block)</span>      |  |</span><br><span class="line">|  +------------------------------------+  |</span><br><span class="line">|  | Task B <span class="title function_">Stack</span> <span class="params">(任务B栈)</span>              |  |</span><br><span class="line">|  | Task B <span class="title function_">TCB</span> <span class="params">(任务B控制块)</span>            |  |</span><br><span class="line">|  +------------------------------------+  |</span><br><span class="line">|  | Task A <span class="title function_">Stack</span> <span class="params">(任务A栈)</span>              |  |</span><br><span class="line">|  | Task A <span class="title function_">TCB</span> <span class="params">(任务A控制块)</span>            |  |</span><br><span class="line">|  +------------------------------------+  |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|          .<span class="title function_">bss</span> <span class="params">(未初始化的全局变量)</span>         | &lt;--- 包括上面的 ucHeap 数组</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|          .<span class="title function_">data</span> <span class="params">(已初始化的全局变量)</span>         |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">   [ 低地址 <span class="params">(Low Address)</span> ]   0x2000 0000 <span class="params">(SRAM 起始)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">----------------- 物理分界线 <span class="params">(SRAM vs Flash)</span> -----------------</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   [ 高地址 <span class="params">(High Address)</span> ]  0x0808 0000 <span class="params">(Flash 结束/<span class="number">512</span>KB)</span></span><br><span class="line">          |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|          .<span class="title function_">rodata</span> <span class="params">(只读常量)</span>               |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|          .<span class="title function_">text</span> <span class="params">(程序代码/FreeRTOS源码)</span>     |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">|          Vector <span class="title function_">Table</span> <span class="params">(中断向量表)</span>        |</span><br><span class="line">+------------------------------------------+</span><br><span class="line">   [ 低地址 <span class="params">(Low Address)</span> ]   0x0800 0000 <span class="params">(Flash 起始)</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="前置知识-，CM3中断"><a href="#前置知识-，CM3中断" class="headerlink" title="(前置知识)，CM3中断"></a>(前置知识)，CM3中断</h2><p>rtos本质上是要依赖mcu的中断来实现的，所以有必要先复习一下cm3内核的中断相关的知识了。</p>
+<blockquote>
+<p><strong>中断</strong>是 CPU 的一种常见特性，中断一般由硬件产生，当中断发生后，会中断 CPU 当前正<br>在执行的程序而跳转到中断对应的服务程序种去执行</p>
+<p>ARM Cortex-M 内核的 MCU 具有一个用于中断管理的嵌套向量中断控制器（<strong>NVIC</strong>，全称：Nested vectored interrupt controller）。</p>
+</blockquote>
+<p>STM32的NVIC 最多支持<strong>256个中断源</strong>（<code>16个系统中断</code> + <code>240个外部中断</code>）</p>
+<p>(zet6只用到了10个系统中断 + 60个外部中断)</p>
+<p><strong>1. 外部中断优先级配置</strong></p>
+<p>NVIC这个外设，在芯片定义层的结构体定义：我们主要使用<code>IP</code>，来设置<code>外部中断优先级</code>，<strong>一共240个字节，刚好对应240个外部中断</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"> __IOM <span class="type">uint32_t</span> ISER[<span class="number">8U</span>]; <span class="comment">/* 中断使能寄存器 */</span></span><br><span class="line"> <span class="type">uint32_t</span> RESERVED0[<span class="number">24U</span>];</span><br><span class="line"> __IOM <span class="type">uint32_t</span> ICER[<span class="number">8U</span>]; <span class="comment">/* 中断除能寄存器 */</span></span><br><span class="line"> <span class="type">uint32_t</span> RSERVED1[<span class="number">24U</span>];</span><br><span class="line"> __IOM <span class="type">uint32_t</span> ISPR[<span class="number">8U</span>]; <span class="comment">/* 中断使能挂起寄存器 */</span></span><br><span class="line"> <span class="type">uint32_t</span> RESERVED2[<span class="number">24U</span>];</span><br><span class="line"> __IOM <span class="type">uint32_t</span> ICPR[<span class="number">8U</span>]; <span class="comment">/* 中断除能挂起寄存器 */</span></span><br><span class="line"> <span class="type">uint32_t</span> RESERVED3[<span class="number">24U</span>];</span><br><span class="line"> __IOM <span class="type">uint32_t</span> IABR[<span class="number">8U</span>]; <span class="comment">/* 中断有效位寄存器 */</span></span><br><span class="line"> <span class="type">uint32_t</span> RESERVED4[<span class="number">56U</span>];</span><br><span class="line"> __IOM <span class="type">uint8_t</span> IP[<span class="number">240U</span>]; <span class="comment">/* 中断优先级寄存器 */</span></span><br><span class="line"> <span class="type">uint32_t</span> RESERVED5[<span class="number">644U</span>];</span><br><span class="line"> __OM <span class="type">uint32_t</span> STIR; <span class="comment">/* 软件触发中断寄存器 */</span></span><br><span class="line">&#125; NVIC_Type;</span><br></pre></td></tr></table></figure>
+
+<p>IP的每一个字节，对应一种外部中断的优先级，但是<strong>8位只用到了高4位</strong>（里面又可以<strong>再细分为抢占优先级+子优先级</strong>），一般设置成抢占式4位，子优先级不用，这样最简单。</p>
+<p><strong>2. 系统中断优先级配置</strong></p>
+<p><code>系统中断优先级配置</code>，由独立的<code>SHPR1、SHPR2、SHPR3</code>来进行配置，不是通过NVIC（因为不是嵌套嘛）。<br>里面，比较重要的就是<code>PendSV</code>中断和 <code>SysTick</code> 中断，<code>SVCall</code> 中断优先级</p>
+<p><strong>3. 三个中断屏蔽寄存器</strong></p>
+<ol>
+<li>PRIMASK<ol>
+<li>屏蔽除 NMI 和 HardFault 外的所有异常和中断，</li>
+</ol>
+</li>
+<li>FAULTMASK <ol>
+<li>屏蔽除 NMI 外的所有异常和中断</li>
+</ol>
+</li>
+<li>BASEPRI<ol>
+<li>中断优先级<code>低于</code> BASEPRI <code>阈值</code>的中断就都会被屏蔽掉</li>
+</ol>
+</li>
+</ol>
+<p>我们主要关注的是BASEPRI这个</p>
+<blockquote>
+<p>除了NMI 和 hardfault， reset这些中断是无法设置优先级的外</p>
+<p>剩下的所有中断（系统中断（由CM3自己受理） + 外部中断（由st的NVIC受理）），他们对外都是一致的，<br>也就是都可以被上面3个屏蔽寄存器屏蔽。</p>
+<p>也就意味着freertos可以通过设置systick中断+pendSV中断（系统中断）的优先级为15（最低），<br>同时设置阈值5-15为rtos可控制中断，在进入临界区的时候，就可以关中断+关闭任务调度了。</p>
+</blockquote>
+<p><strong>总结</strong>：</p>
+<p><code>中断的“两个家族”</code></p>
+<p>在 Cortex-M3 内核中，所有的中断统称为“异常（Exception）”，但管理上分为两派：</p>
+<ul>
+<li><p>系统异常 (System Exceptions)： 由 ARM 内核定义（如 <code>SVC</code>, <code>PendSV</code>, <code>SysTick</code>），由 <code>SCB </code>寄存器管理。</p>
+</li>
+<li><p>外部中断 (External Interrupts&#x2F;IRQs)： 由芯片厂家（如 ST）定义（如 UART, Timer, DMA），由 <code>NVIC</code> 寄存器管理。</p>
+</li>
+</ul>
+<blockquote>
+<p>统一规则： 无论属于哪个家族，优先级逻辑是通用的——数字越小，优先级越高。<strong>对外地位等价</strong></p>
+</blockquote>
+<p><code> 核心机制</code>：</p>
+<ul>
+<li>BASEPRI 与“围栏”BASEPRI 寄存器： 是 FreeRTOS 实现临界区保护的“秘密武器”。</li>
+<li><strong>工作原理</strong>： 当 RTOS 进入临界区，会将 BASEPRI 设为 0x50。此时，硬件会自动屏蔽掉所有优先级 $\ge 5$ 的中断。</li>
+<li>系统心脏： <strong>SysTick 和 PendSV 必须被设为最低优先级 (15)</strong>。这样它们永远不会打断硬件中断。它们在临界区内会<strong>被一起屏蔽</strong>，保证任务切换时内核数据（如就绪列表）的绝对安全。</li>
+<li>API 调用禁区： 如果在 0-4 级中断里调用了 API，会破坏 RTOS 内部链表的原子性，导致系统崩溃（通常卡在 configASSERT）。</li>
+</ul>
+<h2 id="A-freertos-中断配置"><a href="#A-freertos-中断配置" class="headerlink" title="A. freertos 中断配置"></a>A. freertos 中断配置</h2><p>根据freertos的框图架构，可以看出，freertos，利用NVIC和SHPR寄存器来配置内核中断+外部中断的优先级，</p>
+<p><strong>pendSV 中断和systick中断优先级配置</strong></p>
+<p>在port.c中</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//在port.c中，定义好pendSV, systick这两个内核中断的优先级</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> portNVIC_PENDSV_PRI                   ( ( ( uint32_t ) configKERNEL_INTERRUPT_PRIORITY ) &lt;&lt; 16UL )</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> portNVIC_SYSTICK_PRI                  ( ( ( uint32_t ) configKERNEL_INTERRUPT_PRIORITY ) &lt;&lt; 24UL )</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//这个才是实际的启动调度器，调度器内部会开始设置任务调度所需的任务的优先级。</span></span><br><span class="line">BaseType_t <span class="title function_">xPortStartScheduler</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line"> <span class="comment">/* ... */</span></span><br><span class="line"> </span><br><span class="line"> <span class="comment">/* 设置 PendSV 和 SysTick 的中断优先级为最低中断优先级 */</span></span><br><span class="line"> portNVIC_SHPR3_REG |= portNVIC_PENDSV_PRI;</span><br><span class="line"> portNVIC_SHPR3_REG |= portNVIC_SYSTICK_PRI;</span><br><span class="line"> </span><br><span class="line"> <span class="comment">/* ... */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//configKERNEL_INTERRUPT_PRIORITY 这个在FreeRTOSConfig.h中定义，内核中断优先级为15</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>开关中断的接口</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//portmacro.h 中定义实际用BASEPRI来控制可控制的中断</span></span><br><span class="line">    <span class="meta">#<span class="keyword">define</span> portDISABLE_INTERRUPTS()                  vPortRaiseBASEPRI()</span></span><br><span class="line">    <span class="meta">#<span class="keyword">define</span> portENABLE_INTERRUPTS()                   vPortSetBASEPRI( 0 )</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>freertos进出临界区api分两套</strong>：</p>
+<ol>
+<li>普通任务进出临界区：<ol>
+<li>可嵌套</li>
+<li>无需备份之前的basepri</li>
+</ol>
+</li>
+<li>中断进出临界区：<ol>
+<li>不可以嵌套</li>
+<li>需要备份之前的basepri</li>
+</ol>
+</li>
+</ol>
+<h2 id="B-freertos-任务"><a href="#B-freertos-任务" class="headerlink" title="B. freertos 任务"></a>B. freertos 任务</h2><p>在传统的裸机开发中，一般是一个while大循环，然后里面顺序的执行函数（后台），当中断来临，这时候进入中断服务程序（前台）。</p>
+<p>但是这在大型嵌入式系统设计中，实时性严重不足</p>
+<p><strong>多任务系统</strong>的多个任务可以“<code>同时</code>”运行，是从宏观的角度而言的，对于单核<br>的 CPU 而言，CPU 在同一时刻只能够处理一个任务</p>
+<p><img src="/../images/21.2.png" alt="alt text"><br>多任务系统的<strong>任务也是具有优先级的</strong>，高优先<br>级的任务可以像中断的抢占一样，抢占低优先级任务的 CPU 使用权</p>
+<p><strong>任务调度</strong>则分为<code>抢占式调度</code>+<code>时间片轮询</code></p>
+<p><strong>任务的状态</strong></p>
+<ol>
+<li><code>运行态</code>（正在占用cpu）</li>
+<li><code>就绪态</code>（排队等待执行）（当前有同或更高优先级的任务）</li>
+<li><code>阻塞态</code>（延时一段时间<code>vTaskDelay()</code>；等待外部事件发生(超时时间)）</li>
+<li><code>挂起态</code>（通过函数 <code>vTaskSuspend()</code>和函数 <code>vTaskResums()</code>进入和退出挂起态）<br><img src="/../images/21.3.png" alt="alt text"></li>
+</ol>
+<p><strong>任务优先级</strong></p>
+<p>每一个任务都被分配一个<code>0~(configMAX_PRIORITIES-1)</code>的任务优先级，宏 <code>configMAX_PRIORITIES</code> 在 <code>FreeRTOSConfig.h</code>文件中定义</p>
+<p>宏 <code>configMAX_PRIORITIES 的值不能超过 32</code>,原因是freertos里面有选择是否用硬件计算前导0指令，最大支持32位</p>
+<p>任务优先级<strong>高低</strong>与其对应的优先级数值，是成<strong>正比的</strong></p>
+<p><img src="/../images/21.4.png" alt="alt text"></p>
+<h3 id="任务task"><a href="#任务task" class="headerlink" title="任务task"></a>任务task</h3><p>在rtos中，task由TCB和栈空间组成。</p>
+<p><code>TCB结构体</code>如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">tskTaskControlBlock</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"> <span class="comment">/* 指向任务栈栈顶的指针 */</span></span><br><span class="line"> <span class="keyword">volatile</span> StackType_t * pxTopOfStack;</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( portUSING_MPU_WRAPPERS == 1 )</span></span><br><span class="line"> <span class="comment">/* MPU 相关设置 */</span></span><br><span class="line"> xMPU_SETTINGS xMPUSettings;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"> <span class="comment">/* 任务状态列表项 */</span></span><br><span class="line"> ListItem_t xStateListItem;</span><br><span class="line"> <span class="comment">/* 任务等待事件列表项 */</span></span><br><span class="line"> ListItem_t xEventListItem;</span><br><span class="line"> <span class="comment">/* 任务的任务优先级 */</span></span><br><span class="line"> UBaseType_t uxPriority;</span><br><span class="line"> <span class="comment">/* 任务栈的起始地址 */</span></span><br><span class="line"> StackType_t * pxStack;</span><br><span class="line"> <span class="comment">/* 任务的任务名 */</span></span><br><span class="line"> <span class="type">char</span> pcTaskName[ configMAX_TASK_NAME_LEN ];</span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( ( portSTACK_GROWTH &gt; 0 ) || ( configRECORD_STACK_HIGH_ADDRESS == 1 ) )</span></span><br><span class="line"> <span class="comment">/* 指向任务栈栈底的指针 */</span></span><br><span class="line"> StackType_t * pxEndOfStack;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( portCRITICAL_NESTING_IN_TCB == 1 )</span></span><br><span class="line"> <span class="comment">/* 记录任务独自的临界区嵌套次数 */</span></span><br><span class="line"> UBaseType_t uxCriticalNesting;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configUSE_TRACE_FACILITY == 1 )</span></span><br><span class="line"><span class="comment">/* 由系统分配（每创建一个任务，值增加一），分配任务的值都不同，用于调试 */</span></span><br><span class="line"> UBaseType_t uxTCBNumber;</span><br><span class="line"> <span class="comment">/* 由函数 vTaskSetTaskNumber()设置，用于调试 */</span></span><br><span class="line"> UBaseType_t uxTaskNumber;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configUSE_MUTEXES == 1 )</span></span><br><span class="line"> <span class="comment">/* 保存任务原始优先级，用于互斥信号量的优先级翻转 */</span></span><br><span class="line"> UBaseType_t uxBasePriority;</span><br><span class="line"> <span class="comment">/* 记录任务获取的互斥信号量数量 */</span></span><br><span class="line"> UBaseType_t uxMutexesHeld;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configUSE_APPLICATION_TASK_TAG == 1 )</span></span><br><span class="line"> <span class="comment">/* 用户可自定义任务的钩子函数用于调试 */</span></span><br><span class="line"> TaskHookFunction_t pxTaskTag;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configNUM_THREAD_LOCAL_STORAGE_POINTERS &gt; 0 )</span></span><br><span class="line"> <span class="comment">/* 保存任务独有的数据 */</span></span><br><span class="line"> <span class="type">void</span> *pvThreadLocalStoragePointers[configNUM_THREAD_LOCAL_STORAGE_POINTERS];</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configGENERATE_RUN_TIME_STATS == 1 )</span></span><br><span class="line"> <span class="comment">/* 记录任务处于运行态的时间 */</span></span><br><span class="line"> configRUN_TIME_COUNTER_TYPE ulRunTimeCounter;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configUSE_NEWLIB_REENTRANT == 1 )</span></span><br><span class="line"> <span class="comment">/* 用于 Newlib */</span></span><br><span class="line"> <span class="class"><span class="keyword">struct</span> _<span class="title">reent</span> <span class="title">xNewLib_reent</span>;</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configUSE_TASK_NOTIFICATIONS == 1 )</span></span><br><span class="line"> <span class="comment">/* 任务通知值 */</span></span><br><span class="line"> <span class="keyword">volatile</span> <span class="type">uint32_t</span> ulNotifiedValue[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];</span><br><span class="line"> <span class="comment">/* 任务通知状态 */</span></span><br><span class="line"> <span class="keyword">volatile</span> <span class="type">uint8_t</span> ucNotifyState[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE != 0 )</span></span><br><span class="line"> <span class="comment">/* 任务静态创建标志 */</span></span><br><span class="line"> <span class="type">uint8_t</span> ucStaticallyAllocated;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( INCLUDE_xTaskAbortDelay == 1 )</span></span><br><span class="line"> <span class="comment">/* 任务被中断延时标志 */</span></span><br><span class="line"> <span class="type">uint8_t</span> ucDelayAborted;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">if</span> ( configUSE_POSIX_ERRNO == 1 )</span></span><br><span class="line"> <span class="comment">/* 用于 POSIX */</span></span><br><span class="line"> <span class="type">int</span> iTaskErrno;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125; tskTCB;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* The old tskTCB name is maintained above then typedefed to the new TCB_t name</span></span><br><span class="line"><span class="comment"> * below to enable the use of older kernel aware debuggers. */</span></span><br><span class="line"><span class="keyword">typedef</span> tskTCB TCB_t;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">tskTaskControlBlock</span> * <span class="title">TaskHandle_t</span>;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以理解为，一个TCB（任务控制块），就是一个<code>任务的本体</code>。<br>一个任务TCB，里面包含了比如任务栈空间<code>栈顶的指针</code>，<code>优先级</code>，<code>临界区的嵌套次数</code>等等。</p>
+<blockquote>
+<p>可以看到<strong>所谓的任务句柄</strong>，实际上就是<strong>TCB内存块的指针</strong>。</p>
+</blockquote>
+<p>而<strong>栈空间</strong>，是和一个任务在运行过程中，和函数的局部变量，函数调用的现场和返回地址有关的，所以是在<strong>创建过程</strong>中开辟的一段内存。</p>
+<h4 id="task创建"><a href="#task创建" class="headerlink" title="task创建"></a>task创建</h4><p><code>通过静态创建，可以很清晰的看出一个任务的内存分布和内部结构。</code></p>
+<p><strong>1. 静态创建</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">if</span> ( configSUPPORT_STATIC_ALLOCATION == 1 )</span></span><br><span class="line"></span><br><span class="line">    TaskHandle_t <span class="title function_">xTaskCreateStatic</span><span class="params">( TaskFunction_t pxTaskCode,</span></span><br><span class="line"><span class="params">                                    <span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> pcName, </span></span><br><span class="line"><span class="params">                                    <span class="type">const</span> <span class="type">uint32_t</span> ulStackDepth,<span class="comment">// 栈空间长度（StackType_t（4字节） 的个数）</span></span></span><br><span class="line"><span class="params">                                    <span class="type">void</span> * <span class="type">const</span> pvParameters,</span></span><br><span class="line"><span class="params">                                    UBaseType_t uxPriority,</span></span><br><span class="line"><span class="params">                                    StackType_t * <span class="type">const</span> puxStackBuffer,</span></span><br><span class="line"><span class="params">                                    StaticTask_t * <span class="type">const</span> pxTaskBuffer )</span></span><br><span class="line">    &#123;</span><br><span class="line">        TCB_t * pxNewTCB; <span class="comment">//先声明一个指向TCB任务本体内存区域的指针</span></span><br><span class="line">        TaskHandle_t xReturn;</span><br><span class="line"></span><br><span class="line">        configASSERT( puxStackBuffer != <span class="literal">NULL</span> ); <span class="comment">//校验参数：任务栈空间的起始地址</span></span><br><span class="line">        configASSERT( pxTaskBuffer != <span class="literal">NULL</span> );<span class="comment">//校验参数：TCB内存起始地址</span></span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configASSERT_DEFINED == 1 )</span></span><br><span class="line">            &#123;</span><br><span class="line">               <span class="comment">//校验开辟的TCB内存大小是否符合sizeof(TCB_t)</span></span><br><span class="line">                <span class="keyword">volatile</span> <span class="type">size_t</span> xSize = <span class="keyword">sizeof</span>( StaticTask_t );</span><br><span class="line">                configASSERT( xSize == <span class="keyword">sizeof</span>( TCB_t ) );</span><br><span class="line">                ( <span class="type">void</span> ) xSize; <span class="comment">/* Prevent lint warning when configASSERT() is not used. */</span></span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configASSERT_DEFINED */</span></span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>( ( pxTaskBuffer != <span class="literal">NULL</span> ) &amp;&amp; ( puxStackBuffer != <span class="literal">NULL</span> ) )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//指定这块内存作为TCB，记录下他的起始地址</span></span><br><span class="line">            pxNewTCB = ( TCB_t * ) pxTaskBuffer; </span><br><span class="line">            <span class="comment">//在这块内存（TCB）中记录，属于这个任务的栈空间的起始地址</span></span><br><span class="line">            pxNewTCB-&gt;pxStack = ( StackType_t * ) puxStackBuffer;</span><br><span class="line"></span><br><span class="line">            <span class="meta">#<span class="keyword">if</span> ( tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE != 0 ) </span></span><br><span class="line">                    pxNewTCB-&gt;ucStaticallyAllocated = tskSTATICALLY_ALLOCATED_STACK_AND_TCB;</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */</span></span></span><br><span class="line"></span><br><span class="line">            <span class="comment">//初始化这块TCB，把其他剩余的TCB参数补全，并获得句柄</span></span><br><span class="line">            prvInitialiseNewTask( pxTaskCode, pcName, ulStackDepth, pvParameters, uxPriority, &amp;xReturn, pxNewTCB, <span class="literal">NULL</span> );</span><br><span class="line"></span><br><span class="line">            <span class="comment">//将这个新task（TCB内存空间的指针）加入就绪链表</span></span><br><span class="line">            prvAddNewTaskToReadyList( pxNewTCB );</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            xReturn = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">         <span class="comment">//返回task句柄</span></span><br><span class="line">        <span class="keyword">return</span> xReturn;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* SUPPORT_STATIC_ALLOCATION */</span></span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意：如果是选择静态创建，那么之后所有的任务创建都只能使用静态，包括空闲任务IDLE task， 和软件定时器服务任务<br>可以看开启调度器的逻辑：</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskStartScheduler</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    BaseType_t xReturn;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//如果选择静态创建</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configSUPPORT_STATIC_ALLOCATION == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            StaticTask_t * pxIdleTaskTCBBuffer = <span class="literal">NULL</span>;</span><br><span class="line">            StackType_t * pxIdleTaskStackBuffer = <span class="literal">NULL</span>;</span><br><span class="line">            <span class="type">uint32_t</span> ulIdleTaskStackSize;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//需要这个函数来获取你申请的IDLE任务的TCB，栈空间的内存</span></span><br><span class="line">            vApplicationGetIdleTaskMemory( &amp;pxIdleTaskTCBBuffer, &amp;pxIdleTaskStackBuffer, &amp;ulIdleTaskStackSize );</span><br><span class="line"></span><br><span class="line">            <span class="comment">//调度器自动帮你静态创建IDLE任务</span></span><br><span class="line">            xIdleTaskHandle = xTaskCreateStatic( prvIdleTask,</span><br><span class="line">                                                 configIDLE_TASK_NAME,</span><br><span class="line">                                                 ulIdleTaskStackSize,</span><br><span class="line">                                                 ( <span class="type">void</span> * ) <span class="literal">NULL</span>,       </span><br><span class="line">                                                 portPRIVILEGE_BIT,    </span><br><span class="line">                                                 pxIdleTaskStackBuffer,</span><br><span class="line">                                                 pxIdleTaskTCBBuffer ); </span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span>( xIdleTaskHandle != <span class="literal">NULL</span> )</span><br><span class="line">            &#123;</span><br><span class="line">                xReturn = pdPASS;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                xReturn = pdFAIL;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">else</span> <span class="comment">/* if ( configSUPPORT_STATIC_ALLOCATION == 1 ) */</span></span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//自动动态创建IDLE任务</span></span><br><span class="line">            xReturn = xTaskCreate( prvIdleTask,</span><br><span class="line">                                   configIDLE_TASK_NAME,</span><br><span class="line">                                   configMINIMAL_STACK_SIZE,</span><br><span class="line">                                   ( <span class="type">void</span> * ) <span class="literal">NULL</span>,</span><br><span class="line">                                   portPRIVILEGE_BIT,  </span><br><span class="line">                                   &amp;xIdleTaskHandle ); </span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configSUPPORT_STATIC_ALLOCATION */</span></span></span><br><span class="line"></span><br><span class="line">　　<span class="comment">//使用定时器</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_TIMERS == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>( xReturn == pdPASS )</span><br><span class="line">            &#123;</span><br><span class="line">                xReturn = xTimerCreateTimerTask();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_TIMERS */</span></span></span><br><span class="line">    <span class="comment">//...</span></span><br></pre></td></tr></table></figure>
+<p>调度器如果启用了定时器<code>xTimerCreateTimerTask()</code>，则需要创建定时器任务</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">BaseType_t <span class="title function_">xTimerCreateTimerTask</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    BaseType_t xReturn = pdFAIL;</span><br><span class="line"></span><br><span class="line">    prvCheckForValidListAndQueue();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>( xTimerQueue != <span class="literal">NULL</span> )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//静态创建</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configSUPPORT_STATIC_ALLOCATION == 1 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                StaticTask_t * pxTimerTaskTCBBuffer = <span class="literal">NULL</span>;</span><br><span class="line">                StackType_t * pxTimerTaskStackBuffer = <span class="literal">NULL</span>;</span><br><span class="line">                <span class="type">uint32_t</span> ulTimerTaskStackSize;</span><br><span class="line"></span><br><span class="line">                <span class="comment">//和IDLE一样，需要你自己手动申请定时器任务的TCB，stack内存空间</span></span><br><span class="line">                vApplicationGetTimerTaskMemory( &amp;pxTimerTaskTCBBuffer, &amp;pxTimerTaskStackBuffer, &amp;ulTimerTaskStackSize );</span><br><span class="line">                xTimerTaskHandle = xTaskCreateStatic( prvTimerTask,</span><br><span class="line">                                                      configTIMER_SERVICE_TASK_NAME,</span><br><span class="line">                                                      ulTimerTaskStackSize,</span><br><span class="line">                                                      <span class="literal">NULL</span>,</span><br><span class="line">                                                      ( ( UBaseType_t ) configTIMER_TASK_PRIORITY ) | portPRIVILEGE_BIT,</span><br><span class="line">                                                      pxTimerTaskStackBuffer,</span><br><span class="line">                                                      pxTimerTaskTCBBuffer );</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>( xTimerTaskHandle != <span class="literal">NULL</span> )</span><br><span class="line">                &#123;</span><br><span class="line">                    xReturn = pdPASS;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">else</span> <span class="comment">/* if ( configSUPPORT_STATIC_ALLOCATION == 1 ) */</span></span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//动态创建</span></span><br><span class="line">                xReturn = xTaskCreate( prvTimerTask,</span><br><span class="line">                                       configTIMER_SERVICE_TASK_NAME,</span><br><span class="line">                                       configTIMER_TASK_STACK_DEPTH,</span><br><span class="line">                                       <span class="literal">NULL</span>,</span><br><span class="line">                                       ( ( UBaseType_t ) configTIMER_TASK_PRIORITY ) | portPRIVILEGE_BIT,</span><br><span class="line">                                       &amp;xTimerTaskHandle );</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configSUPPORT_STATIC_ALLOCATION */</span></span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        mtCOVERAGE_TEST_MARKER();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    configASSERT( xReturn );</span><br><span class="line">    <span class="keyword">return</span> xReturn;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 动态创建</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">if</span> ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )</span></span><br><span class="line"></span><br><span class="line">    BaseType_t <span class="title function_">xTaskCreate</span><span class="params">( TaskFunction_t pxTaskCode,</span></span><br><span class="line"><span class="params">                            <span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> pcName, </span></span><br><span class="line"><span class="params">                            <span class="type">const</span> configSTACK_DEPTH_TYPE usStackDepth,<span class="comment">//直接就是表示任务栈空间的大小（字）</span></span></span><br><span class="line"><span class="params">                            <span class="type">void</span> * <span class="type">const</span> pvParameters,</span></span><br><span class="line"><span class="params">                            UBaseType_t uxPriority,</span></span><br><span class="line"><span class="params">                            TaskHandle_t * <span class="type">const</span> pxCreatedTask )</span><span class="comment">//最后这个参数返回自动创建的任务的TCB的地址</span></span><br><span class="line">    &#123;</span><br><span class="line">        TCB_t * pxNewTCB;</span><br><span class="line">        BaseType_t xReturn;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//portmacro.h中定义#define portSTACK_GROWTH          ( -1 )</span></span><br><span class="line">        <span class="comment">//表示栈是向下增长的。</span></span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( portSTACK_GROWTH &gt; 0 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//忽略</span></span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">else</span> <span class="comment">/* portSTACK_GROWTH */</span></span></span><br><span class="line">            &#123;</span><br><span class="line">                StackType_t * pxStack;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// 用port里面绑定的heap_4.c中的方法，分配栈空间</span></span><br><span class="line">                pxStack = pvPortMallocStack( ( ( ( <span class="type">size_t</span> ) usStackDepth ) * <span class="keyword">sizeof</span>( StackType_t ) ) ); </span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>( pxStack != <span class="literal">NULL</span> )</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">//开始开辟TCB的内存区域</span></span><br><span class="line">                    pxNewTCB = ( TCB_t * ) pvPortMalloc( <span class="keyword">sizeof</span>( TCB_t ) ); </span><br><span class="line"></span><br><span class="line">                    <span class="keyword">if</span>( pxNewTCB != <span class="literal">NULL</span> )</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="comment">//在这个TCB中记录好该任务的栈空间起始地址</span></span><br><span class="line">                        pxNewTCB-&gt;pxStack = pxStack;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span></span><br><span class="line">                    &#123;</span><br><span class="line">                        vPortFreeStack( pxStack );</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    pxNewTCB = <span class="literal">NULL</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* portSTACK_GROWTH */</span></span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>( pxNewTCB != <span class="literal">NULL</span> )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="meta">#<span class="keyword">if</span> ( tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE != 0 )</span></span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    pxNewTCB-&gt;ucStaticallyAllocated = tskDYNAMICALLY_ALLOCATED_STACK_AND_TCB;</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE */</span></span></span><br><span class="line"></span><br><span class="line">            <span class="comment">//和静态创建一样，开始初始化这个新的任务TCB，并返回该TCB的地址</span></span><br><span class="line">            prvInitialiseNewTask( pxTaskCode, pcName, ( <span class="type">uint32_t</span> ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, <span class="literal">NULL</span> );</span><br><span class="line">            <span class="comment">//将该TCB的地址加入就绪任务链表</span></span><br><span class="line">            prvAddNewTaskToReadyList( pxNewTCB );</span><br><span class="line">            xReturn = pdPASS;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            xReturn = errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> xReturn;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configSUPPORT_DYNAMIC_ALLOCATION */</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+<p><strong>3. 删除任务</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">if</span> ( INCLUDE_vTaskDelete == 1 )</span></span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> <span class="title function_">vTaskDelete</span><span class="params">( TaskHandle_t xTaskToDelete )</span></span><br><span class="line">    &#123;</span><br><span class="line">        TCB_t * pxTCB;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//进入临界区，关可控中断，关调度</span></span><br><span class="line">        taskENTER_CRITICAL();</span><br><span class="line">        &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//获取要删除任务的TCB内存指针</span></span><br><span class="line">            pxTCB = prvGetTCBFromHandle( xTaskToDelete );</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Remove task from the ready/delayed list. */</span></span><br><span class="line">            <span class="keyword">if</span>( uxListRemove( &amp;( pxTCB-&gt;xStateListItem ) ) == ( UBaseType_t ) <span class="number">0</span> )</span><br><span class="line">            &#123;</span><br><span class="line">                taskRESET_READY_PRIORITY( pxTCB-&gt;uxPriority );</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Is the task waiting on an event also? */</span></span><br><span class="line">            <span class="keyword">if</span>( listLIST_ITEM_CONTAINER( &amp;( pxTCB-&gt;xEventListItem ) ) != <span class="literal">NULL</span> )</span><br><span class="line">            &#123;</span><br><span class="line">                ( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xEventListItem ) );</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* Increment the uxTaskNumber also so kernel aware debuggers can</span></span><br><span class="line"><span class="comment">             * detect that the task lists need re-generating.  This is done before</span></span><br><span class="line"><span class="comment">             * portPRE_TASK_DELETE_HOOK() as in the Windows port that macro will</span></span><br><span class="line"><span class="comment">             * not return. */</span></span><br><span class="line">            uxTaskNumber++;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span>( pxTCB == pxCurrentTCB )</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* A task is deleting itself.  This cannot complete within the</span></span><br><span class="line"><span class="comment">                 * task itself, as a context switch to another task is required.</span></span><br><span class="line"><span class="comment">                 * Place the task in the termination list.  The idle task will</span></span><br><span class="line"><span class="comment">                 * check the termination list and free up any memory allocated by</span></span><br><span class="line"><span class="comment">                 * the scheduler for the TCB and stack of the deleted task. */</span></span><br><span class="line">                vListInsertEnd( &amp;xTasksWaitingTermination, &amp;( pxTCB-&gt;xStateListItem ) );</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* Increment the ucTasksDeleted variable so the idle task knows</span></span><br><span class="line"><span class="comment">                 * there is a task that has been deleted and that it should therefore</span></span><br><span class="line"><span class="comment">                 * check the xTasksWaitingTermination list. */</span></span><br><span class="line">                ++uxDeletedTasksWaitingCleanUp;</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* Call the delete hook before portPRE_TASK_DELETE_HOOK() as</span></span><br><span class="line"><span class="comment">                 * portPRE_TASK_DELETE_HOOK() does not return in the Win32 port. */</span></span><br><span class="line">                traceTASK_DELETE( pxTCB );</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* The pre-delete hook is primarily for the Windows simulator,</span></span><br><span class="line"><span class="comment">                 * in which Windows specific clean up operations are performed,</span></span><br><span class="line"><span class="comment">                 * after which it is not possible to yield away from this task -</span></span><br><span class="line"><span class="comment">                 * hence xYieldPending is used to latch that a context switch is</span></span><br><span class="line"><span class="comment">                 * required. */</span></span><br><span class="line">                portPRE_TASK_DELETE_HOOK( pxTCB, &amp;xYieldPending );</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                --uxCurrentNumberOfTasks;</span><br><span class="line">                traceTASK_DELETE( pxTCB );</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* Reset the next expected unblock time in case it referred to</span></span><br><span class="line"><span class="comment">                 * the task that has just been deleted. */</span></span><br><span class="line">                prvResetNextTaskUnblockTime();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        taskEXIT_CRITICAL();</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* If the task is not deleting itself, call prvDeleteTCB from outside of</span></span><br><span class="line"><span class="comment">         * critical section. If a task deletes itself, prvDeleteTCB is called</span></span><br><span class="line"><span class="comment">         * from prvCheckTasksWaitingTermination which is called from Idle task. */</span></span><br><span class="line">        <span class="keyword">if</span>( pxTCB != pxCurrentTCB )</span><br><span class="line">        &#123;</span><br><span class="line">            prvDeleteTCB( pxTCB );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* Force a reschedule if it is the currently running task that has just</span></span><br><span class="line"><span class="comment">         * been deleted. */</span></span><br><span class="line">        <span class="keyword">if</span>( xSchedulerRunning != pdFALSE )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>( pxTCB == pxCurrentTCB )</span><br><span class="line">            &#123;</span><br><span class="line">                configASSERT( uxSchedulerSuspended == <span class="number">0</span> );</span><br><span class="line">                portYIELD_WITHIN_API();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* INCLUDE_vTaskDelete */</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<blockquote>
+<p>任务挂起和恢复则需要结合任务列表一起分析，见下</p>
+</blockquote>
+<h3 id="任务链表与任务节点"><a href="#任务链表与任务节点" class="headerlink" title="任务链表与任务节点"></a>任务链表与任务节点</h3><p>FreeRTOS 中的列表和列表项就是数据结构中的<strong>链表</strong>和<strong>节点</strong>。</p>
+<p><strong>链表</strong></p>
+<p>FreeRTOS 中的<strong>链表</strong>是一个<strong>双向链表</strong>，具体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">xLIST</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    listFIRST_LIST_INTEGRITY_CHECK_VALUE <span class="comment">/* 校验值 */</span></span><br><span class="line">    <span class="keyword">volatile</span> UBaseType_t uxNumberOfItems; <span class="comment">/* 列表中列表项的数量 */</span></span><br><span class="line">    ListItem_t * configLIST_VOLATILE pxIndex; <span class="comment">/* 用于遍历列表 */</span></span><br><span class="line">    MiniListItem_t xListEnd; <span class="comment">/* 最后一个列表项 */</span></span><br><span class="line">    listSECOND_LIST_INTEGRITY_CHECK_VALUE <span class="comment">/* 校验值 */</span></span><br><span class="line">&#125; List_t;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>这里面的两个校验值，只是用来检查链表的数据是否遭到破坏</li>
+<li>成员变量 <code>xListEnd</code> 是一个<code>迷你链表项</code>（详见 7.1.3 小节），链表中迷你链表项的值一般被设置为最大值，用于将链表中的所有链表项按升序排序时，排在最末尾；同时 xListEnd 也用于挂载其他插入到链表中的链表项。<blockquote>
+<p>所以<code>xListEnd</code> 仅仅只是作为链表的末尾节点存在，不计入链表节点的个数。</p>
+</blockquote>
+</li>
+<li><code>ListItem_t</code>, 也就是用于遍历链表的pxIndex的指针类型，才是链表节点的真是类型。</li>
+</ul>
+<p>freertos中链表的结构示意图如下：<br><img src="/../images/21.5.png" alt="alt text"></p>
+<p><strong>节点</strong>：</p>
+<p>freertos中链表节点的定义</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE <span class="comment">/* 用于检测列表项的数据完整性 */</span></span><br><span class="line">    configLIST_VOLATILE TickType_t xItemValue; <span class="comment">/* 列表项的值 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxNext</span>;</span> <span class="comment">/* 下一个列表项 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxPrevious</span>;</span> <span class="comment">/* 上一个列表项 */</span></span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> * pvOwner; <span class="comment">/* 列表项的拥有者 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xLIST</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxContainer</span>;</span> <span class="comment">/* 列表项所在列表 */</span></span><br><span class="line">    listSECOND_LIST_ITEM_INTEGRITY_CHECK_VALUE <span class="comment">/* 用于检测列表项的数据完整性 */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> <span class="title">ListItem_t</span>;</span><span class="comment">/* 重定义成 ListItem_t */</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>可以看到，每个链表节点，都拥有一个<code>前向指针</code>和一个<code>后向指针</code>,也就是双向。</li>
+<li><code>xItemValue</code> 为列表项的值，这个值多用于按<code>升序</code>对链表中的节点进行排序。</li>
+<li>每个链表节点，都知道，自己是属于哪一个链表的。</li>
+<li><code>pxOwner</code> 用于指向包含列表项的对象（通常是任务控制块）,<strong>这样就可以把任务TCB和链表节点挂钩</strong></li>
+</ul>
+<p>节点结构的示意图如下：</p>
+<p><img src="/../images/21.6.png" alt="alt text"></p>
+<p><strong>迷你链表项</strong></p>
+<p>前面在链表的组成结构中，我们发现，每个链表都持有一个迷你链表项。</p>
+<blockquote>
+<p>仅用于<strong>标记列表的末尾</strong>和挂载其他<strong>插入</strong>列表中的列表项，<strong>用户是用不到迷你列表项的</strong></p>
+</blockquote>
+<p>定义如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">xMINI_LIST_ITEM</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE<span class="comment">/* 用于检测列表项的数据完整性 */</span></span><br><span class="line">    configLIST_VOLATILE TickType_t xItemValue; <span class="comment">/* 列表项的值 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxNext</span>;</span> <span class="comment">/* 下一个列表项 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxPrevious</span>;</span> <span class="comment">/* 上一个列表项 */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">xMINI_LIST_ITEM</span> <span class="title">MiniListItem_t</span>;</span><span class="comment">/* 重定义成 MiniListItem_t */</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看出：</p>
+<ol>
+<li>迷你列表项支持检测数据完整性</li>
+<li>xItemValue 为列表项的值，用于升序排序到最后</li>
+<li>pxNext 和 pxPrevious用于指向上一个和下一个链表节点</li>
+<li>只用于标记列表的末尾和挂载其他插入列表中的列表项，因此不需要成员变量 pxOwner 和 pxContainer</li>
+</ol>
+<p>以上总结了，freertos中，链表和节点的组成部分</p>
+<h3 id="链表，节点的使用"><a href="#链表，节点的使用" class="headerlink" title="链表，节点的使用"></a>链表，节点的使用</h3><p><strong>1. 链表的初始化</strong>：</p>
+<p>就是写初始化List_t的内容，因为是空的，多数都是0，指向最后的迷你节点</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInitialise</span><span class="params">(</span></span><br><span class="line"><span class="params"> List_t * <span class="type">const</span> pxList)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 初始化时，列表中只有 xListEnd，因此 pxIndex 指向 xListEnd */</span></span><br><span class="line">    pxList-&gt;pxIndex = ( ListItem_t * ) &amp;( pxList-&gt;xListEnd );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* xListEnd 的值初始化为最大值，用于列表项升序排序时，排在最后 */</span></span><br><span class="line">    pxList-&gt;xListEnd.xItemValue = portMAX_DELAY;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 初始化时，列表中只有 xListEnd，因此上一个和下一个列表项都为 xListEnd 本身 */</span></span><br><span class="line">    pxList-&gt;xListEnd.pxNext = ( ListItem_t * ) &amp;( pxList-&gt;xListEnd );</span><br><span class="line">    pxList-&gt;xListEnd.pxPrevious = ( ListItem_t * ) &amp;( pxList-&gt;xListEnd );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*初始化时，列表中的列表项数量为 0（不包含 xListEnd） */</span></span><br><span class="line">    pxList-&gt;uxNumberOfItems = ( UBaseType_t ) <span class="number">0U</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 初始化用于检测列表数据完整性的校验值 */</span></span><br><span class="line">    listSET_LIST_INTEGRITY_CHECK_1_VALUE( pxList );</span><br><span class="line">    listSET_LIST_INTEGRITY_CHECK_2_VALUE( pxList );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/../images/21.7.png" alt="alt text"></p>
+<p><strong>2. 链表节点的初始化</strong></p>
+<p>可以看到，也仅仅只是初始化一个空的节点，既没有指向TCB内容，也没有归属那个链表</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInitialiseItem</span><span class="params">(</span></span><br><span class="line"><span class="params"> ListItem_t * <span class="type">const</span> pxItem)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 初始化时，列表项所在列表设为空 */</span></span><br><span class="line">    pxItem-&gt;pxContainer = <span class="literal">NULL</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 初始化用于检测列表项数据完整性的校验值 */</span></span><br><span class="line">    listSET_FIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE( pxItem );</span><br><span class="line">    listSET_SECOND_LIST_ITEM_INTEGRITY_CHECK_VALUE( pxItem );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. vListInsertEnd插入到end</strong></p>
+<p>是一种无序的插入方法</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInsertEnd</span><span class="params">(</span></span><br><span class="line"><span class="params"> List_t * <span class="type">const</span> pxList,</span></span><br><span class="line"><span class="params"> ListItem_t * <span class="type">const</span> pxNewListItem)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 获取列表 pxIndex 指向的列表项 */</span></span><br><span class="line">    ListItem_t * <span class="type">const</span> pxIndex = pxList-&gt;pxIndex;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 检查参数是否正确 */</span></span><br><span class="line">    listTEST_LIST_INTEGRITY( pxList );</span><br><span class="line">    listTEST_LIST_ITEM_INTEGRITY( pxNewListItem );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 更新待插入列表项的指针成员变量 */</span></span><br><span class="line">    pxNewListItem-&gt;pxNext = pxIndex;</span><br><span class="line">    pxNewListItem-&gt;pxPrevious = pxIndex-&gt;pxPrevious;</span><br><span class="line">    <span class="comment">/* 测试使用，不用理会 */</span></span><br><span class="line">    mtCOVERAGE_TEST_DELAY();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 更新列表中原本列表项的指针成员变量 */</span></span><br><span class="line">    pxIndex-&gt;pxPrevious-&gt;pxNext = pxNewListItem;</span><br><span class="line">    pxIndex-&gt;pxPrevious = pxNewListItem;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 更新待插入列表项的所在列表成员变量 */</span></span><br><span class="line">    pxNewListItem-&gt;pxContainer = pxList;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 更新列表中列表项的数量 */</span></span><br><span class="line">    ( pxList-&gt;uxNumberOfItems )++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>将待插入的列表项<strong>插入到列表 pxIndex 指向列表项的前面</strong>，要注意的是，<strong>pxIndex 不一定指向 xListEnd，而是有可能指向列表中任意一个列表项</strong></p>
+</blockquote>
+<p>示意图如下：<br><img src="/../images/21.8.png" alt="alt text"></p>
+<blockquote>
+<p>可以直接想象成整个链表节点，<strong>构成一个圈</strong>：里面每个节点两两相连，可以前向，后向移动。用miniEND节点表示末尾</p>
+</blockquote>
+<p><strong>4. vListInsert()</strong></p>
+<p>将节点，按照节点值，<strong>升序插入到列表</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInsert</span><span class="params">(</span></span><br><span class="line"><span class="params"> List_t * <span class="type">const</span> pxList,</span></span><br><span class="line"><span class="params"> ListItem_t * <span class="type">const</span> pxNewListItem)</span></span><br><span class="line">&#123;</span><br><span class="line">    ListItem_t * pxIterator;</span><br><span class="line">    <span class="type">const</span> TickType_t xValueOfInsertion = pxNewListItem-&gt;xItemValue;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 检查参数是否正确 */</span></span><br><span class="line">    listTEST_LIST_INTEGRITY( pxList );</span><br><span class="line">    listTEST_LIST_ITEM_INTEGRITY( pxNewListItem );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 如果待插入列表项的值为最大值 */</span></span><br><span class="line">    <span class="keyword">if</span>( xValueOfInsertion == portMAX_DELAY )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 插入的位置为列表 xListEnd 前面 */</span></span><br><span class="line">        pxIterator = pxList-&gt;xListEnd.pxPrevious;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 遍历列表中的列表项，找到插入的位置 */</span></span><br><span class="line">        <span class="keyword">for</span>( pxIterator = ( ListItem_t * ) &amp;( pxList-&gt;xListEnd );</span><br><span class="line">        pxIterator-&gt;pxNext-&gt;xItemValue &lt;= xValueOfInsertion;</span><br><span class="line">        pxIterator = pxIterator-&gt;pxNext )</span><br><span class="line">        &#123;</span><br><span class="line">        </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 将待插入的列表项插入指定位置 */</span></span><br><span class="line">    pxNewListItem-&gt;pxNext = pxIterator-&gt;pxNext;</span><br><span class="line">    pxNewListItem-&gt;pxNext-&gt;pxPrevious = pxNewListItem;</span><br><span class="line">    pxNewListItem-&gt;pxPrevious = pxIterator;</span><br><span class="line">    pxIterator-&gt;pxNext = pxNewListItem;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 更新待插入列表项所在列表 */</span></span><br><span class="line">    pxNewListItem-&gt;pxContainer = pxList;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 更新列表中列表项的数量 */</span></span><br><span class="line">    ( pxList-&gt;uxNumberOfItems )++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>可以看出：在将待插入列表项插入列表之前，会前<strong>遍历列表</strong>，找到待插入列表项需要<strong>插入的位置</strong></p>
+</blockquote>
+<p><img src="/../images/21.9.png" alt="alt text"></p>
+<p><code>为什么值的类型是 TickType_t？</code></p>
+<blockquote>
+<p>这是由 FreeRTOS 的核心应用场景决定的。<br>在 RTOS 中，需要用到“升序排列链表”最主要的场景是**“延时任务列表”（Delayed Task List）**。</p>
+</blockquote>
+<blockquote>
+<p>为了快速查找： 当多个任务都在延时（阻塞）时，内核需要知道“谁该第一个醒来”。</p>
+</blockquote>
+<blockquote>
+<p>排序的基准是时间： 如果链表按“唤醒时间点”升序排列，那么表头（第一个节点）永远是那个最先到期的任务。</p>
+</blockquote>
+<blockquote>
+<p>类型一致性： 系统时钟（Tick Count）的类型是 TickType_t，为了能够直接存储和比较时间点，避免溢出或类型转换错误，xItemValue 必须使用相同的类型。</p>
+</blockquote>
+<p><strong>5. 链表移除节点</strong></p>
+<p>这个就很简单了，不用细说了</p>
+<p><strong>6. 链表的操作</strong></p>
+<p>这里已经提供给我们了，有很多方便的宏，可以帮助我们直接操作链表和节点<br><img src="/../images/21.10.png" alt="alt text"><br><img src="/../images/21.11.png" alt="alt text"></p>
+<h2 id="freertos的启动流程"><a href="#freertos的启动流程" class="headerlink" title="freertos的启动流程"></a>freertos的启动流程</h2><p>上面已经分析了freertos的中断设置，任务，链表节点，下面来看一下freertos的启动流程来</p>
+<p><strong>讲解 FreeRTOS 系统启动到第一个任务开始运行的一整个流程</strong></p>
+<h3 id="1-裸机"><a href="#1-裸机" class="headerlink" title="1. 裸机"></a>1. 裸机</h3><p>这里就和普通的裸机程序一样，你要先初始化好所有需要的硬件，比如HAL的init，可以配置好基础的systick中断，定时器的初始化，lcd屏幕的初始化，key的初始化等。</p>
+<p>之后就是创建好任务xTaskCreate，在堆中开辟好你的任务的TCB+Stack内存。<br>之后就是启动任务调度器，接下来，调度器便会开始任务调度。</p>
+<blockquote>
+<p>调度器除非被关掉，否则不会再回到裸机的主程序中了。</p>
+</blockquote>
+<h3 id="2-开启任务调度器"><a href="#2-开启任务调度器" class="headerlink" title="2. 开启任务调度器"></a>2. 开启任务调度器</h3><p>开启任务调度器的代码如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskStartScheduler</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    BaseType_t xReturn;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Add the idle task at the lowest priority. */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configSUPPORT_STATIC_ALLOCATION == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//静态创建IDLE空闲任务</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">else</span> <span class="comment">/* if ( configSUPPORT_STATIC_ALLOCATION == 1 ) */</span></span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//动态创建IDLE空闲任务</span></span><br><span class="line">            xReturn = xTaskCreate( prvIdleTask,</span><br><span class="line">                                   configIDLE_TASK_NAME,</span><br><span class="line">                                   configMINIMAL_STACK_SIZE,</span><br><span class="line">                                   ( <span class="type">void</span> * ) <span class="literal">NULL</span>,</span><br><span class="line">                                   portPRIVILEGE_BIT,  <span class="comment">/* In effect ( tskIDLE_PRIORITY | portPRIVILEGE_BIT ), but tskIDLE_PRIORITY is zero. */</span></span><br><span class="line">                                   &amp;xIdleTaskHandle ); <span class="comment">/*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configSUPPORT_STATIC_ALLOCATION */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//创建定时器任务，如果启用软件定时器</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configUSE_TIMERS == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>( xReturn == pdPASS )</span><br><span class="line">            &#123;</span><br><span class="line">                xReturn = xTimerCreateTimerTask();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_TIMERS */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>( xReturn == pdPASS )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//此函数用于添加一些附加初始化，不用理会</span></span><br><span class="line">        <span class="meta">#<span class="keyword">ifdef</span> FREERTOS_TASKS_C_ADDITIONS_INIT</span></span><br><span class="line">            &#123;</span><br><span class="line">                freertos_tasks_c_additions_init();</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/* FreeRTOS 关闭中断，</span></span><br><span class="line"><span class="comment">        * 以保证在开启任务任务调度器之前或过程中，SysTick 不会产生中断，</span></span><br><span class="line"><span class="comment">        * 在第一个任务开始运行时，会重新打开中断。</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        portDISABLE_INTERRUPTS();</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_NEWLIB_REENTRANT == 1 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//newlib相关</span></span><br><span class="line">                _impure_ptr = &amp;( pxCurrentTCB-&gt;xNewLib_reent );</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_NEWLIB_REENTRANT */</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">//下一个距离取消任务阻塞的时间，初始化为最大值</span></span><br><span class="line">        xNextTaskUnblockTime = portMAX_DELAY;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//设置调度器状态为运行中</span></span><br><span class="line">        xSchedulerRunning = pdTRUE;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//滴答计数 == 0</span></span><br><span class="line">        xTickCount = ( TickType_t ) configINITIAL_TICK_COUNT;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 运行时间和任务状态统计相关定义 */</span></span><br><span class="line">        <span class="comment">/* FreeRTOSConfig.h中定义</span></span><br><span class="line"><span class="comment">                #define configGENERATE_RUN_TIME_STATS                   0                       /* 1: 使能任务运行时间统计功能, 默认: 0 </span></span><br><span class="line"><span class="comment">                #if configGENERATE_RUN_TIME_STATS</span></span><br><span class="line"><span class="comment">                #include &quot;./BSP/TIMER/btim.h&quot;</span></span><br><span class="line"><span class="comment">                #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()        ConfigureTimeForRunTimeStats()</span></span><br><span class="line"><span class="comment">                extern uint32_t FreeRTOSRunTimeTicks;</span></span><br><span class="line"><span class="comment">                #define portGET_RUN_TIME_COUNTER_VALUE()                FreeRTOSRunTimeTicks</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">        portCONFIGURE_TIMER_FOR_RUN_TIME_STATS();</span><br><span class="line"></span><br><span class="line">        traceTASK_SWITCHED_IN(); <span class="comment">/* 调试使用，不用理会 */</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 设置用于系统时钟节拍的硬件定时器（SysTick）</span></span><br><span class="line"><span class="comment">        * 会在这个函数中进入第一个任务，并开始任务调度</span></span><br><span class="line"><span class="comment">        * 任务调度开启后，便不会再返回</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="keyword">if</span>( xPortStartScheduler() != pdFALSE )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* Should not reach here as if the scheduler is running the</span></span><br><span class="line"><span class="comment">             * function will not return. */</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* Should only reach here if a task calls xTaskEndScheduler(). */</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">/* 动态方式创建空闲任务和定时器服务任务（如果有）时，因分配给 FreeRTOS 的堆空间</span></span><br><span class="line"><span class="comment">        * 不足，导致任务无法成功创建 */</span></span><br><span class="line">        configASSERT( xReturn != errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 防止编译器警告，不用理会 */</span></span><br><span class="line">    ( <span class="type">void</span> ) xIdleTaskHandle;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 调试使用，不用理会 */</span></span><br><span class="line">    ( <span class="type">void</span> ) uxTopUsedPriority;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以，task中启动调度器的核心就是另外创建两个task:IDLE + (软件定时器任务，如果需要)</p>
+<p>之后就是xPortStartScheduler来真正设置systick中断，来进行调度。</p>
+<p><strong>总结一下</strong>，启动调度器里面的工作：</p>
+<ol>
+<li>创建空闲任务</li>
+<li>创建定时器服务任务</li>
+<li>关闭中断，防止 SysTick 中断在任务调度器开启之前或过程中，产生中断。（在开始运行第一个任务时，重新打开中断）</li>
+<li>初始化一些全局变量，并将任务调度器的运行标志设置为已运行</li>
+<li>单开一个时基定时器，用于任务运行时间统计功能（如果不用就不需要）</li>
+<li>调用函数 xPortStartScheduler()</li>
+</ol>
+<p>下面看一下，实际进行任务调度的xPortStartScheduler()的实现：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">BaseType_t <span class="title function_">xPortStartScheduler</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configASSERT_DEFINED == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 检测用户在 FreeRTOSConfig.h 文件中对中断相关部分的配置是否有误，代码省略 */</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configASSERT_DEFINED */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 设置 PendSV 和 SysTick 的中断优先级为最低优先级 */</span></span><br><span class="line">    portNVIC_SHPR3_REG |= portNVIC_PENDSV_PRI;</span><br><span class="line">    portNVIC_SHPR3_REG |= portNVIC_SYSTICK_PRI;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 重新配置 SysTick的中断周期，比如说现在是1ms一次systick中断</span></span><br><span class="line"><span class="comment">        * 清空 SysTick 的计数值</span></span><br><span class="line"><span class="comment">        * 根据 configTICK_RATE_HZ 配置 SysTick 的重装载值</span></span><br><span class="line"><span class="comment">        * 开启 SysTick 计数和中断</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    vPortSetupTimerInterrupt();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化临界区嵌套次数计数器为 0 */</span></span><br><span class="line">    uxCriticalNesting = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 启动第一个任务 */</span></span><br><span class="line">    prvStartFirstTask();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Should not get here! */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>总结一下</strong>port里面，开启调度器的工作内容：</p>
+<ol>
+<li>断言配置的检查</li>
+<li>配置 PendSV 和 SysTick 的中断优先级为最低优先级</li>
+<li>根据FreeRTOSConfig.h 文件中配置的systick中断周期，重新设置systick中断, 然后启动 SysTick 计数和中断</li>
+<li>初始化临界区嵌套计数器为 0</li>
+<li>prvStartFirstTask()启动第一个任务</li>
+</ol>
+<h3 id="3-启动第一个任务"><a href="#3-启动第一个任务" class="headerlink" title="3. 启动第一个任务"></a>3. 启动第一个任务</h3><p>下面看一下是如何启动第一个任务的prvStartFirstTask()</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">__asm <span class="type">void</span> <span class="title function_">prvStartFirstTask</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//8 字节对齐</span></span><br><span class="line">    PRESERVE8</span><br><span class="line"></span><br><span class="line">    ldr r0, =<span class="number">0xE000ED08</span>  <span class="comment">/* 0xE000ED08 为 VTOR 地址 */</span></span><br><span class="line">    ldr r0, [ r0 ]      <span class="comment">/* 获取 VTOR 的值 */</span></span><br><span class="line">    ldr r0, [ r0 ]      <span class="comment">/* 获取 MSP 的初始值 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化 MSP ， 把栈指针指向起始地址*/</span></span><br><span class="line">    msr msp, r0</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 使能全局中断 */</span></span><br><span class="line">    cpsie i</span><br><span class="line">    cpsie f</span><br><span class="line">    dsb</span><br><span class="line">    isb</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 调用 SVC 启动第一个任务 */</span></span><br><span class="line">    svc <span class="number">0</span></span><br><span class="line">    nop</span><br><span class="line">    nop</span><br><span class="line"><span class="comment">/* *INDENT-ON* */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里实际开启第一个任务，已经完全由汇编来实现了。</p>
+<ol>
+<li><strong>保证8字节对齐</strong>，这是ARM 官方定义了一套标准，叫做 AAPCS，在调用公共接口（即函数切换、中断进入）时，堆栈指针 SP 必须保持 8 字节对齐，c程序在编译阶段，就会默认进行8字节对齐。</li>
+<li>读取0xE000ED08（VTOR）取值，存放的就是 MSP 的初始地址，在启动调度器前，彻底回收启动阶段占用的栈空间，<strong>让 MSP 重新回到最干净的状态</strong><ol>
+<li>实际Cotex-M提供了两个栈空间，<code>MSP</code>（主栈指针,系统内核使用，比如中断） 和 <code>PSP</code>（进程栈指针，任务栈使用），当使用不同的堆栈指针时，<code>SP</code> 会等于当前使用的堆栈指针</li>
+<li>0xE000ED08 是 VTOR（向量表偏移寄存器）的地址，<code>VTOR</code> 中保存了<strong>向量表的偏移地址</strong>。</li>
+<li>一般来说向量表是从其实地址 0x00000000 开始的</li>
+<li>ARM Corten-M 提供了 <code>VTOR</code> 对向量表进行<code>重定向</code>。而向量表是用来保存中断异常的入口函数地址，即栈顶地址的</li>
+</ol>
+</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//可以看到，中断向量表IVT的最初是存放MSP，也就是系统栈的起始地址，</span></span><br><span class="line">__Vectors   DCD __initial_sp ; 栈底指针</span><br><span class="line">            DCD Reset_Handler ; Reset Handler</span><br><span class="line">            DCD NMI_Handler ; NMI Handler</span><br><span class="line">            DCD HardFault_Handler ; Hard Fault Handler</span><br><span class="line">            DCD MemManage_Handler ; MPU Fault Handler</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>所以这个操作，相当于丢弃了程序之前保存在栈中的数据，因此也就无法返回，因为刷掉了内核栈空间</p>
+</blockquote>
+<ol start="3">
+<li>重新使能全局中断,因为在taskstartSchedule中，曾经关掉了可控的所有中断</li>
+<li>使用 <code>SVC 指令</code>，并传入<code>系统调用号 0</code>，触发 <code>SVC 中断</code></li>
+</ol>
+<p>既然，SVC是一个触发中断，那么CM3内核在接收到SVC 0的指令后，会跳转执行SVC中断服务程序：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//start.S中的IVT，可以看到，确实有SVC的中断服务程序</span></span><br><span class="line">                DCD     SVC_Handler                ; SVCall Handler</span><br></pre></td></tr></table></figure>
+
+<p>原本他是要跳转到SVC_Handler程序的，这本来定义在裸机的中断.c文件中，但是我们在移植freertos时，就已经把他屏蔽掉了，换成了我们自己的SVC中断处理程序<br>vPortSVCHandler（）</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">__asm <span class="type">void</span> <span class="title function_">vPortSVCHandler</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 8字节对齐*/</span></span><br><span class="line">    PRESERVE8</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 获取任务栈地址 */</span></span><br><span class="line">    ldr r3, = pxCurrentTCB   <span class="comment">/* r3 指向优先级最高的就绪态任务的任务控制块的内存块 */</span></span><br><span class="line">    ldr r1, [ r3 ]           <span class="comment">/* r1 为任务控制块地址 */</span></span><br><span class="line">    ldr r0, [ r1 ]           <span class="comment">/* r0 为任务控制块的第一个元素（栈顶） */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 模拟出栈，并设置 PSP */</span></span><br><span class="line">    ldmia r0 !, &#123; r4 - r11 &#125; <span class="comment">/* 任务栈弹出到 CPU 寄存器 */</span></span><br><span class="line">    msr psp, r0              <span class="comment">/* 设置 PSP 为任务栈指针 */</span></span><br><span class="line">    isb</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 使能所有中断 */</span></span><br><span class="line">    mov r0, # <span class="number">0</span></span><br><span class="line">    msr basepri, r0</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 使用 PSP 指针，并bx跳转到任务函数 */</span></span><br><span class="line">    orr r14, # <span class="number">0xd</span></span><br><span class="line">    bx r14</span><br><span class="line"><span class="comment">/* *INDENT-ON* */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里就是跳转到当前需要执行的第一个任务来执行：</p>
+<ol>
+<li><code>pxCurrentTCB</code> 是一个<code>全局变量</code>，根据他的第一个成员变量，可以得到这个<code>任务栈的地址</code>，在前面创建 start_task 任务、空闲任务、定时器处理任务时自动根据任务的优先级高低进行赋值的</li>
+</ol>
+<blockquote>
+<p>这里<strong>总结一下</strong>：<br>中断优先级（0-15，越小越大，所有pendSV, systick都是最小）<br>任务优先级（0-31，越大越大）<br>      start_task 任务   优先级 1<br>      IDLE任务          优先级 0<br>      定时器处理任务     优先级 31</p>
+</blockquote>
+<p>因此：因此当进入 <code>SVC 中断</code>时，<code>pxCurrentTCB</code> 就是指向了<code>定时器处理任务的任务控制块</code>。</p>
+<ol start="2">
+<li>将<code>任务栈</code>中的内容<code>出栈到 CPU 寄存器中</code>，任务栈中的内容在调用任务创建函数的时候<code>已经初始化了</code></li>
+<li>然后再设置 PSP 指针，那么，这么一来，任务的运行环境就准备好了</li>
+<li>开中断</li>
+<li>跳转任务的函数中去执行</li>
+</ol>
+<p>关于最后一句<strong>r14的寄存器是如何实现跳转执行的</strong>，这里面有一些技术细节：</p>
+<blockquote>
+<p>进入中断后 r14 为 <code>EXC_RETURN</code> 的具体应用就是，通过判断<code>EXC_RETURN</code> 的 bit4 是否为 0，来判断任务是否使用了浮点单元。最后通过 <code>bx r14 </code>指令，<strong>跳转到任务的任务函数中执行</strong>，执行此指令，CPU 会<code>自动从 PSP 指向的栈中出栈 R0、R1、R2、R3、R12、LR、PC、xPSR 寄存器</code>，并且如果 EXC_RETURN 的bit4 为 0（使用了浮点单元），那么 CPU 还会自动恢复浮点寄存器</p>
+</blockquote>
+<h3 id="4-任务状态列表"><a href="#4-任务状态列表" class="headerlink" title="4. 任务状态列表"></a>4. 任务状态列表</h3><p>以上，我们就分析了，<strong>freertos的启动流程</strong>，如何一步一步，从</p>
+<ol>
+<li>裸机初始化硬件，到</li>
+<li>创建任务，在堆区自己开辟出任务内存区域，然后</li>
+<li>调用task启动调度器函数<ol>
+<li>创建IDLE任务</li>
+<li>创建定时器任务（如有）</li>
+<li>port启动调度器<ol>
+<li>清楚MSP裸机的栈空间</li>
+<li>bx r14, 跳转第一个任务</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p>下面，我需要看一下，任务task,在freertos中是如何被编排调度的呢，前面我们说了，freertos中的任务状态：</p>
+<ol>
+<li>运行态</li>
+<li>就绪态</li>
+<li>阻塞态</li>
+<li>挂起态</li>
+</ol>
+<p><strong>那任务是如何体现自己当前是哪个态的呢？</strong></p>
+<blockquote>
+<p>答案：<strong>除了运行态</strong>，任务状态的<strong>其他三种</strong>任务都有<code>其对应的任务状态链表</code></p>
+</blockquote>
+<p>FreeRTOS 使用这些任务状态列表来管理处于不同状态的任务</p>
+<p><code>task.c</code>中对任务状态链表的定义如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 就绪态任务列表 */</span></span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t pxReadyTasksLists[ configMAX_PRIORITIES ]; </span><br><span class="line"></span><br><span class="line"><span class="comment">/* 阻塞态任务列表 */</span></span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t xDelayedTaskList1;                         </span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t xDelayedTaskList2;                         </span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t * <span class="keyword">volatile</span> pxDelayedTaskList;              </span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t * <span class="keyword">volatile</span> pxOverflowDelayedTaskList;     </span><br><span class="line"></span><br><span class="line"><span class="comment">/* 挂起态任务列表 */</span></span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t xPendingReadyList;                        </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，</p>
+<ol>
+<li><code>就绪态任务链表</code>，是一个链表数组，<strong>数组大小&#x3D;最大任务优先级</strong><ol>
+<li>就是说，每种优先级的任务，全部处在一个链表中</li>
+</ol>
+</li>
+<li><code>阻塞态任务列表</code>，阻塞态任务列表一共有<code>两个</code>，分别为是阻塞态任务列表 1 和阻塞态任务列表 2，并且该有<code>两个</code>阻塞态任务<code>列表指针</code>。<ol>
+<li>这么做的么的是<strong>为了解决任务阻塞时间溢出的问题(超时)</strong>，这个会在后续讲解阻塞相关的内容时，具体分析</li>
+</ol>
+</li>
+<li><code>挂起态任务列表</code>，被挂起的任务就会被添加到挂起态任务列表中</li>
+</ol>
+<h3 id="5-任务的操作-与-任务状态"><a href="#5-任务的操作-与-任务状态" class="headerlink" title="5. 任务的操作 与 任务状态"></a>5. 任务的操作 与 任务状态</h3><p>下面，要结合任务的创建，删除等任务操作，来看看，如何利用这些链表，来实现任务在不同状态的切换</p>
+<h4 id="xTaskCreate"><a href="#xTaskCreate" class="headerlink" title="xTaskCreate()"></a>xTaskCreate()</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">BaseType_t <span class="title function_">xTaskCreate</span><span class="params">( TaskFunction_t pxTaskCode,</span></span><br><span class="line"><span class="params">                        <span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> pcName,</span></span><br><span class="line"><span class="params">                        <span class="type">const</span> configSTACK_DEPTH_TYPE usStackDepth,</span></span><br><span class="line"><span class="params">                        <span class="type">void</span> * <span class="type">const</span> pvParameters,</span></span><br><span class="line"><span class="params">                        UBaseType_t uxPriority,</span></span><br><span class="line"><span class="params">                        TaskHandle_t * <span class="type">const</span> pxCreatedTask)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//申请TCB+STACK内存空间</span></span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 初始化TCB任务控制块中的成员变量 */</span></span><br><span class="line">    prvInitialiseNewTask( pxTaskCode,</span><br><span class="line">                        pcName,</span><br><span class="line">                        ( <span class="type">uint32_t</span> ) usStackDepth,</span><br><span class="line">                        pvParameters,</span><br><span class="line">                        uxPriority,</span><br><span class="line">                        pxCreatedTask,</span><br><span class="line">                        pxNewTCB,</span><br><span class="line">                        <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 将任务添加到就绪态任务列表中</span></span><br><span class="line"><span class="comment">    * 这个函数会同时比较就绪态任务列表中的任务优先级</span></span><br><span class="line"><span class="comment">    * 并更新 pxCurrentTCB 为就绪态任务列表中优先级最高的任务</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    prvAddNewTaskToReadyList( pxNewTCB );</span><br><span class="line">    <span class="comment">/* 返回 pdPASS，说明任务创建成功 */</span></span><br><span class="line">    xReturn = pdPASS;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//错误判断...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="prvInitialiseNewTask-初始化TCB"><a href="#prvInitialiseNewTask-初始化TCB" class="headerlink" title="prvInitialiseNewTask() 初始化TCB"></a>prvInitialiseNewTask() 初始化TCB</h5><p>那么核心就是<code>prvInitialiseNewTask()</code>他如何初始化一个任务TCB的，新创建的任务，是什么状态的？</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">prvInitialiseNewTask</span><span class="params">( TaskFunction_t pxTaskCode,</span></span><br><span class="line"><span class="params">                                  <span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> pcName, <span class="comment">/*lint !e971 Unqualified char types are allowed for strings and single characters only. */</span></span></span><br><span class="line"><span class="params">                                  <span class="type">const</span> <span class="type">uint32_t</span> ulStackDepth,</span></span><br><span class="line"><span class="params">                                  <span class="type">void</span> * <span class="type">const</span> pvParameters,</span></span><br><span class="line"><span class="params">                                  UBaseType_t uxPriority,</span></span><br><span class="line"><span class="params">                                  TaskHandle_t * <span class="type">const</span> pxCreatedTask,</span></span><br><span class="line"><span class="params">                                  TCB_t * pxNewTCB,</span></span><br><span class="line"><span class="params">                                  <span class="type">const</span> MemoryRegion_t * <span class="type">const</span> xRegions )</span></span><br><span class="line">&#123;</span><br><span class="line">    StackType_t * pxTopOfStack;</span><br><span class="line">    UBaseType_t x;</span><br><span class="line"></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( portUSING_MPU_WRAPPERS == 1 )</span></span><br><span class="line">        <span class="comment">//MPU 相关</span></span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> </span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//将新建任务的任务栈设置为已知值（由宏 tskSTACK_FILL_BYTE 定义）</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( tskSET_NEW_STACKS_TO_KNOWN_VALUE == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 将任务栈写满 tskSTACK_FILL_BYTE */</span></span><br><span class="line">            ( <span class="type">void</span> ) <span class="built_in">memset</span>( pxNewTCB-&gt;pxStack, ( <span class="type">int</span> ) tskSTACK_FILL_BYTE, ( <span class="type">size_t</span> ) ulStackDepth * <span class="keyword">sizeof</span>( StackType_t ) );</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 宏 portSTACK_GROWTH 用于定义栈的生长方向</span></span><br><span class="line"><span class="comment">    * STM32 的栈是向下生长的，</span></span><br><span class="line"><span class="comment">    * 因此宏 portSTACK_GROWTH 定义为-1</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( portSTACK_GROWTH &lt; 0 )</span></span><br><span class="line">           &#123;</span><br><span class="line">            <span class="comment">/* 获取任务栈的栈顶地址 */</span></span><br><span class="line">            pxTopOfStack = &amp;( pxNewTCB-&gt;pxStack[ ulStackDepth - ( <span class="type">uint32_t</span> ) <span class="number">1</span> ] );</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 对栈顶地址按宏 portBYTE_ALIGNMENT_MASK 进行字节对齐（8 字节对齐） */</span></span><br><span class="line">            pxTopOfStack = ( StackType_t * ) ( ( ( portPOINTER_SIZE_TYPE ) pxTopOfStack ) &amp; ( ~( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK ) ) ); </span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 断言检查是否对齐. */</span></span><br><span class="line">            configASSERT( ( ( ( portPOINTER_SIZE_TYPE ) pxTopOfStack &amp; ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK ) == <span class="number">0UL</span> ) );</span><br><span class="line"></span><br><span class="line">            <span class="comment">//此宏用于开启栈顶地址最大值记录功能（用于调试，不用理会）</span></span><br><span class="line">            <span class="meta">#<span class="keyword">if</span> ( configRECORD_STACK_HIGH_ADDRESS == 1 )</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">/* Also record the stack&#x27;s high address, which may assist</span></span><br><span class="line"><span class="comment">                     * debugging. */</span></span><br><span class="line">                    pxNewTCB-&gt;pxEndOfStack = pxTopOfStack;</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configRECORD_STACK_HIGH_ADDRESS */</span></span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">else</span> </span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//....</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化TCB中的任务名成员变量 */</span></span><br><span class="line">    <span class="keyword">if</span>( pcName != <span class="literal">NULL</span> )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 任务名的最大长度由宏 configMAX_TASK_NAME_LEN 定义 */</span></span><br><span class="line">        <span class="keyword">for</span>( x = ( UBaseType_t ) <span class="number">0</span>; x &lt; ( UBaseType_t ) configMAX_TASK_NAME_LEN; x++ )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 复制任务名 */</span></span><br><span class="line">            pxNewTCB-&gt;pcTaskName[ x ] = pcName[ x ];</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 任务名的长度不足宏 configMAX_TASK_NAME_LEN，则提前退出循环 */</span></span><br><span class="line">            <span class="keyword">if</span>( pcName[ x ] == ( <span class="type">char</span> ) <span class="number">0x00</span> )</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 在任务名成员变量末尾加上&#x27;\0&#x27; */</span></span><br><span class="line">        pxNewTCB-&gt;pcTaskName[ configMAX_TASK_NAME_LEN - <span class="number">1</span> ] = <span class="string">&#x27;\0&#x27;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 没主动命名，默认给个0 */</span></span><br><span class="line">        pxNewTCB-&gt;pcTaskName[ <span class="number">0</span> ] = <span class="number">0x00</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 检查任务优先级数值是否合法 */</span></span><br><span class="line">    configASSERT( uxPriority &lt; configMAX_PRIORITIES );</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 确保任务优先级数值合法 */</span></span><br><span class="line">    <span class="keyword">if</span>( uxPriority &gt;= ( UBaseType_t ) configMAX_PRIORITIES )</span><br><span class="line">    &#123;</span><br><span class="line">        uxPriority = ( UBaseType_t ) configMAX_PRIORITIES - ( UBaseType_t ) <span class="number">1U</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        mtCOVERAGE_TEST_MARKER();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化TCB中任务优先级成员变量 */</span></span><br><span class="line">    pxNewTCB-&gt;uxPriority = uxPriority;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于启用互斥信号量，置0互斥量递归持有数，以及应对优先级翻转的备份 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configUSE_MUTEXES == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            pxNewTCB-&gt;uxBasePriority = uxPriority;</span><br><span class="line">            pxNewTCB-&gt;uxMutexesHeld = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化 任务状态链表节点 和 事件链表节点 的成员变量 */</span></span><br><span class="line">    vListInitialiseItem( &amp;( pxNewTCB-&gt;xStateListItem ) );</span><br><span class="line">    vListInitialiseItem( &amp;( pxNewTCB-&gt;xEventListItem ) );</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 绑定 任务状态链表节点 和　任务TCB*/</span></span><br><span class="line">    listSET_LIST_ITEM_OWNER( &amp;( pxNewTCB-&gt;xStateListItem ), pxNewTCB );</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 初始化　事件链表节点　的值与任务优先级成反比（链表中的链表节点按照链表节点的值，以升序排序） */</span></span><br><span class="line">    listSET_LIST_ITEM_VALUE( &amp;( pxNewTCB-&gt;xEventListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxPriority ); </span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 绑定 事件链表节点 和　任务TCB */</span></span><br><span class="line">    listSET_LIST_ITEM_OWNER( &amp;( pxNewTCB-&gt;xEventListItem ), pxNewTCB );</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于启用任务单独临界区嵌套计数 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( portCRITICAL_NESTING_IN_TCB == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            pxNewTCB-&gt;uxCriticalNesting = ( UBaseType_t ) <span class="number">0U</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* portCRITICAL_NESTING_IN_TCB */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于用于自定义任务的钩子函数（用于调试，不用理会） */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configUSE_APPLICATION_TASK_TAG == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            pxNewTCB-&gt;pxTaskTag = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_APPLICATION_TASK_TAG */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于启用任务运行时间统计功能 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configGENERATE_RUN_TIME_STATS == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            pxNewTCB-&gt;ulRunTimeCounter = ( configRUN_TIME_COUNTER_TYPE ) <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configGENERATE_RUN_TIME_STATS */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏为 MPU 的相关配置，不用理会 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( portUSING_MPU_WRAPPERS == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            vPortStoreTaskMPUSettings( &amp;( pxNewTCB-&gt;xMPUSettings ), xRegions, pxNewTCB-&gt;pxStack, ulStackDepth );</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* Avoid compiler warning about unreferenced parameter. */</span></span><br><span class="line">            ( <span class="type">void</span> ) xRegions;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于保存任务独有数据 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configNUM_THREAD_LOCAL_STORAGE_POINTERS != 0 )</span></span><br><span class="line">        &#123;   <span class="comment">/* 任务独有数据记录数组初始化为 0 */</span></span><br><span class="line">            <span class="built_in">memset</span>( ( <span class="type">void</span> * ) &amp;( pxNewTCB-&gt;pvThreadLocalStoragePointers[ <span class="number">0</span> ] ), <span class="number">0x00</span>, <span class="keyword">sizeof</span>( pxNewTCB-&gt;pvThreadLocalStoragePointers ) );</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于启用任务通知功能 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configUSE_TASK_NOTIFICATIONS == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 任务通知值和任务通知状态初始化为 0 */</span></span><br><span class="line">            <span class="built_in">memset</span>( ( <span class="type">void</span> * ) &amp;( pxNewTCB-&gt;ulNotifiedValue[ <span class="number">0</span> ] ), <span class="number">0x00</span>, <span class="keyword">sizeof</span>( pxNewTCB-&gt;ulNotifiedValue ) );</span><br><span class="line">            <span class="built_in">memset</span>( ( <span class="type">void</span> * ) &amp;( pxNewTCB-&gt;ucNotifyState[ <span class="number">0</span> ] ), <span class="number">0x00</span>, <span class="keyword">sizeof</span>( pxNewTCB-&gt;ucNotifyState ) );</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏与 Newlib 相关，不用理会 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( configUSE_NEWLIB_REENTRANT == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            _REENT_INIT_PTR( ( &amp;( pxNewTCB-&gt;xNewLib_reent ) ) );</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏用于启用任务延时中断功能 */</span>  </span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( INCLUDE_xTaskAbortDelay == 1 )</span></span><br><span class="line">        &#123;<span class="comment">/* 任务被中断延时标志初始化为假 */</span></span><br><span class="line">            pxNewTCB-&gt;ucDelayAborted = pdFALSE;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 此宏为 MPU 的相关配置，不用理会 */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( portUSING_MPU_WRAPPERS == 1 )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//......</span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">else</span></span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 此部分用于初始化任务栈</span></span><br><span class="line"><span class="comment">            * 分为三种情况</span></span><br><span class="line"><span class="comment">            * 1. 启用了栈溢出检测功能并且栈的生长方向向下</span></span><br><span class="line"><span class="comment">            * 2. 启用了栈溢出检测功能并且栈的生长方向向上</span></span><br><span class="line"><span class="comment">            * 3. 未启用栈溢出检测功能（本教程着重分析这种情况）</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            <span class="meta">#<span class="keyword">if</span> ( portHAS_STACK_OVERFLOW_CHECKING == 1 )</span></span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="meta">#<span class="keyword">if</span> ( portSTACK_GROWTH &lt; 0 )</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            <span class="comment">//初始化任务栈</span></span><br><span class="line">                            pxNewTCB-&gt;pxTopOfStack = pxPortInitialiseStack( pxTopOfStack, pxNewTCB-&gt;pxStack, pxTaskCode, pvParameters );</span><br><span class="line">                        &#125;</span><br><span class="line">                    <span class="meta">#<span class="keyword">else</span> <span class="comment">/* portSTACK_GROWTH */</span></span></span><br><span class="line">                        &#123;</span><br><span class="line">                            <span class="comment">//....</span></span><br><span class="line">                        &#125;</span><br><span class="line">                    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* portSTACK_GROWTH */</span></span></span><br><span class="line">                &#125;</span><br><span class="line">            <span class="meta">#<span class="keyword">else</span> <span class="comment">/* portHAS_STACK_OVERFLOW_CHECKING */</span></span></span><br><span class="line">                &#123;</span><br><span class="line">                    pxNewTCB-&gt;pxTopOfStack = pxPortInitialiseStack( pxTopOfStack, pxTaskCode, pvParameters );</span><br><span class="line">                &#125;</span><br><span class="line">            <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* portHAS_STACK_OVERFLOW_CHECKING */</span></span></span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* portUSING_MPU_WRAPPERS */</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//返回任务句柄</span></span><br><span class="line">    <span class="keyword">if</span>( pxCreatedTask != <span class="literal">NULL</span> )</span><br><span class="line">    &#123;</span><br><span class="line">        *pxCreatedTask = ( TaskHandle_t ) pxNewTCB;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        mtCOVERAGE_TEST_MARKER();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上就是函数 <code>prvInitialiseNewTask()</code>的具体代码，可以看到函数 <code>prvInitialiseNewTask()</code>就是<br><strong>初始化了任务控制块TCB中的成员变量</strong>，其中比较重要的操作就是调用函数 <code>pxPortInitialiseStack</code>()初始化了任务栈。</p>
+<p>那么<code>pxPortInitialiseStack()</code>他是如何<strong>初始化任务栈</strong>的呢？</p>
+<h5 id="pxPortInitialiseStack-初始化任务栈"><a href="#pxPortInitialiseStack-初始化任务栈" class="headerlink" title="pxPortInitialiseStack() 初始化任务栈"></a>pxPortInitialiseStack() 初始化任务栈</h5><blockquote>
+<p>这里的初始化栈，就是要在任务切换到这个task的时候，从栈中弹出要执行的环境，就是用以<strong>恢复该任务的上下文</strong><br>包括 <code>xPSR 寄存器的初始值</code>、任务的函数地址（<code>PC</code> 寄存器）、任务错误退出函数地址（<code>LR</code> 寄存器）、任务函数的<code>传入参数（R0 寄存器</code>）以及为 <code>R1~R12 寄存器预留空间</code>，若使用了浮点单元，那么还会有 EXC_RETURN 的值。<br>同时该函数会<strong>返回更新后的栈顶指针</strong></p>
+</blockquote>
+<blockquote>
+<p><strong>注意</strong>：<br>针 对 ARM Cortex-M3 和针对 ARM Cortex-M4 和 ARM Cortex-M7 内 核 的 函 数<br>pxPortInitialiseStack()稍有不同，原因在于 ARM Cortex-M4 和 ARM Cortex-M7 内核具有浮点单<br>元，因此在任务栈中还需保存浮点寄存器的值</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * See header file for description.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">StackType_t * <span class="title function_">pxPortInitialiseStack</span><span class="params">( StackType_t * pxTopOfStack,<span class="comment">/* 任务栈顶指针 */</span></span></span><br><span class="line"><span class="params">                                     TaskFunction_t pxCode,<span class="comment">/* 任务函数地址 */</span></span></span><br><span class="line"><span class="params">                                     <span class="type">void</span> * pvParameters )</span><span class="comment">/* 任务函数传入参数 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 模拟栈的格式将信息保存到任务栈中，用于上下文切换 */</span></span><br><span class="line">    pxTopOfStack--;                                                      </span><br><span class="line">    <span class="comment">/* xPSR 寄存器初始值为 0x01000000 */</span></span><br><span class="line">    *pxTopOfStack = portINITIAL_XPSR;                                    <span class="comment">/* xPSR */</span></span><br><span class="line">    pxTopOfStack--;</span><br><span class="line">    <span class="comment">/* 任务函数的地址（PC 寄存器） */</span></span><br><span class="line">    *pxTopOfStack = ( ( StackType_t ) pxCode ) &amp; portSTART_ADDRESS_MASK; <span class="comment">/* PC */</span></span><br><span class="line">    pxTopOfStack--;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 任务错误退出函数地址（LR 寄存器） */</span></span><br><span class="line">    *pxTopOfStack = ( StackType_t ) prvTaskExitError;                    <span class="comment">/* LR */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 为 R12、R3、R2、R1 寄存器预留空间 */</span></span><br><span class="line">    pxTopOfStack -= <span class="number">5</span>;                                                   </span><br><span class="line">    <span class="comment">/* 任务函数的传入参数（R0 寄存器） */</span></span><br><span class="line">    *pxTopOfStack = ( StackType_t ) pvParameters;                        <span class="comment">/* R0 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 为 R11、R10、R9、R8、R7、R6、R5、R4 寄存器预留空间 */</span></span><br><span class="line">    pxTopOfStack -= <span class="number">8</span>;                                                   </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 返回更新后的任务栈指针</span></span><br><span class="line"><span class="comment">    * 后续任务运行时需要用到栈的地方，</span></span><br><span class="line"><span class="comment">    * 将从这个地址开始保存信息</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">return</span> pxTopOfStack;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果是M4、M7的内核，还有什么浮点数相关的地方，也要预留栈的位置</p>
+<p>最终，初始化任务栈构造出来的栈内容如下所示<br><img src="/../images/21.12.png" alt="alt text"></p>
+<h5 id="prvAddNewTaskToReadyList-加入就绪队列"><a href="#prvAddNewTaskToReadyList-加入就绪队列" class="headerlink" title="prvAddNewTaskToReadyList() 加入就绪队列"></a>prvAddNewTaskToReadyList() 加入就绪队列</h5><p><code>prvAddNewTaskToReadList()</code>用于将新建的任务添加到就绪态任务列表中</p>
+<p>函数同样定义在task.c中</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">prvAddNewTaskToReadyList</span><span class="params">( TCB_t * pxNewTCB )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* 进入临界区，确保在操作就绪态任务列表时，中断不会访问链表 */</span></span><br><span class="line">    taskENTER_CRITICAL();</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 此全局变量用于记录系统中任务数量 */</span></span><br><span class="line">        uxCurrentNumberOfTasks++;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 此pxCurrentTCB全局变量用于指示当前系统中处于就 绪态任务中 优先级最高 的任务</span></span><br><span class="line"><span class="comment">            * 如果该全局变量为空（NULL），</span></span><br><span class="line"><span class="comment">            * 即表示当前创建的任务为系统中的唯一的就绪任务</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="keyword">if</span>( pxCurrentTCB == <span class="literal">NULL</span> )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 系统中无其他就绪任务，因此优先级最高的就绪态任务（下一个待执行的任务）为当前创建的任务 */</span></span><br><span class="line">            pxCurrentTCB = pxNewTCB;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 如果当前系统中任务数量为 1，</span></span><br><span class="line"><span class="comment">                * 即表示当前创建的任务为系统中第一个任务</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">            <span class="keyword">if</span>( uxCurrentNumberOfTasks == ( UBaseType_t ) <span class="number">1</span> )</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* 初始化任务列表（就绪态任务链表，任务阻塞链表） */</span></span><br><span class="line">                prvInitialiseTaskLists();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 判断任务调度器是否运行 */</span></span><br><span class="line">            <span class="keyword">if</span>( xSchedulerRunning == pdFALSE )</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* </span></span><br><span class="line"><span class="comment">                * 将 pxCurrentTCB 更新为优先级最高的就绪态任务</span></span><br><span class="line"><span class="comment">                */</span></span><br><span class="line">                <span class="keyword">if</span>( pxCurrentTCB-&gt;uxPriority &lt;= pxNewTCB-&gt;uxPriority )</span><br><span class="line">                &#123;</span><br><span class="line">                    pxCurrentTCB = pxNewTCB;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    mtCOVERAGE_TEST_MARKER();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* 用于调试，不用理会 */</span></span><br><span class="line">        uxTaskNumber++;</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_TRACE_FACILITY == 1 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* Add a counter into the TCB for tracing only. */</span></span><br><span class="line">                pxNewTCB-&gt;uxTCBNumber = uxTaskNumber;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_TRACE_FACILITY */</span></span></span><br><span class="line">        traceTASK_CREATE( pxNewTCB );</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 将任务添加到就绪态任务列表中 */</span></span><br><span class="line">        prvAddTaskToReadyList( pxNewTCB );</span><br><span class="line"></span><br><span class="line">        portSETUP_TCB( pxNewTCB );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 退出临界区 */</span></span><br><span class="line">    taskEXIT_CRITICAL();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 如果任务调度器正在运行，</span></span><br><span class="line"><span class="comment">    * 那么就需要判断，当前新建的任务优先级是否最高</span></span><br><span class="line"><span class="comment">    * 如果是，则需要切换任务</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span>( xSchedulerRunning != pdFALSE )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 如果当前新建的任务优先级高于 pxCurrentTCB 的优先级 */</span></span><br><span class="line">        <span class="keyword">if</span>( pxCurrentTCB-&gt;uxPriority &lt; pxNewTCB-&gt;uxPriority )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 进行任务切换 */</span></span><br><span class="line">            taskYIELD_IF_USING_PREEMPTION();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        mtCOVERAGE_TEST_MARKER();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>总之，<code>prvAddTaskToReadyList()</code>主要就完成两件事:</p>
+<ol>
+<li>记录任务优先级(FreeRTOS 会以<code>位图</code>的方式记录就绪态任务列表中就绪态任务的优先级，这样能够提<br>高切换任务时的<code>效率</code>)</li>
+<li>根据任务调度器的运行状态,决 定 是 否 进 行 任 务 切 换,<code>taskYIELD_IF_USING_PREEMPTION</code>()进行任务切换,关于任务切换，后面讨论</li>
+</ol>
+<h4 id="vTaskDelete-删除任务"><a href="#vTaskDelete-删除任务" class="headerlink" title="vTaskDelete() 删除任务"></a>vTaskDelete() 删除任务</h4><p>task.c中定义</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskDelete</span><span class="params">( TaskHandle_t xTaskToDelete )</span></span><br><span class="line">&#123;</span><br><span class="line">    TCB_t * pxTCB;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 进入临界区 */</span></span><br><span class="line">    taskENTER_CRITICAL();</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 如果传入的任务句柄为空（NULL）</span></span><br><span class="line"><span class="comment">        * 此函数会将待删除的任务设置为调用该函数的任务本身</span></span><br><span class="line"><span class="comment">        * 因此，如果要在任务中删除任务本身，</span></span><br><span class="line"><span class="comment">        * 那么可以调用函数 vTaskDelete()，并传入任务句柄，</span></span><br><span class="line"><span class="comment">        * 或传入 NULL</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        pxTCB = prvGetTCBFromHandle( xTaskToDelete );</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 将任务从任务所在任务状态列表（就绪态任务列表 或 阻塞态任务列表）中移除</span></span><br><span class="line"><span class="comment">        * 如果移除后列表中的列表项数量为 0</span></span><br><span class="line"><span class="comment">        * 那么就需要更新任务优先级记录</span></span><br><span class="line"><span class="comment">        * 因为此时系统中可能已经没有和被删除任务相同优先级的任务了*/</span></span><br><span class="line">        <span class="keyword">if</span>( uxListRemove( &amp;( pxTCB-&gt;xStateListItem ) ) == ( UBaseType_t ) <span class="number">0</span> )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 更新任务优先级记录 */</span></span><br><span class="line">            taskRESET_READY_PRIORITY( pxTCB-&gt;uxPriority );</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 判断被删除的任务是否还有等待的事件 */</span></span><br><span class="line">        <span class="keyword">if</span>( listLIST_ITEM_CONTAINER( &amp;( pxTCB-&gt;xEventListItem ) ) != <span class="literal">NULL</span> )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 将被删除任务的事件列表项，从所在事件列表中移除 */</span></span><br><span class="line">            ( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xEventListItem ) );</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 调试相关 */</span></span><br><span class="line">        uxTaskNumber++;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 判断被删除的任务是否为正在运行的任务（即任务本身） */</span></span><br><span class="line">        <span class="keyword">if</span>( pxTCB == pxCurrentTCB )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 任务是无法删除任务本身的，于是需要将任务添加到任务待删除列表中</span></span><br><span class="line"><span class="comment">            * 空闲任务会处理任务待删除列表中的待删除任务</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            vListInsertEnd( &amp;xTasksWaitingTermination, &amp;( pxTCB-&gt;xStateListItem ) );</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 这个全局变量用来告诉空闲任务有多少个待删除任务需要被删除 */</span></span><br><span class="line">            ++uxDeletedTasksWaitingCleanUp;</span><br><span class="line"></span><br><span class="line">            <span class="comment">//调试用，不用管</span></span><br><span class="line">            traceTASK_DELETE( pxTCB );</span><br><span class="line">            portPRE_TASK_DELETE_HOOK( pxTCB, &amp;xYieldPending );</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 任务数量计数器减 1 */</span></span><br><span class="line">            --uxCurrentNumberOfTasks;</span><br><span class="line">            traceTASK_DELETE( pxTCB );</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* 更新下一个任务的阻塞超时时间，以防被删除的任务就是下一个阻塞超时的任务，？ */</span></span><br><span class="line">            prvResetNextTaskUnblockTime();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* 退出临界区 */</span></span><br><span class="line">    taskEXIT_CRITICAL();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 如果待删除任务不是任务本身 */</span></span><br><span class="line">    <span class="keyword">if</span>( pxTCB != pxCurrentTCB )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 此函数用于释放待删除任务占用的内存资源 */</span></span><br><span class="line">        prvDeleteTCB( pxTCB );</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 如果当前在执行任务</span></span><br><span class="line"><span class="comment">    * 如果是，则需要切换任务</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="keyword">if</span>( xSchedulerRunning != pdFALSE )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>( pxTCB == pxCurrentTCB )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 此时任务调度器不能处于挂起状态 */</span></span><br><span class="line">            configASSERT( uxSchedulerSuspended == <span class="number">0</span> );</span><br><span class="line">            <span class="comment">/* 进行任务切换 */</span></span><br><span class="line">            portYIELD_WITHIN_API();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>从上面可以看出，vTaskDelete()删除任务时，需要考虑两种情况，当前要删除的任务：</p>
+<ol>
+<li>是正在执行的任务（需要将当前任务添加到<code>任务待删除列表</code>中，<code>空闲任务</code>会处理这个任务待删除列表，将待删除的任务统一删除,后面空闲任务详细分析）</li>
+<li>不是正在执行的任务（直接删除prvDeleteTCB()）</li>
+</ol>
+<h5 id="prvDeleteTCB-具体删除任务"><a href="#prvDeleteTCB-具体删除任务" class="headerlink" title="prvDeleteTCB() 具体删除任务"></a>prvDeleteTCB() 具体删除任务</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">prvDeleteTCB</span><span class="params">( TCB_t * pxTCB )</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 当系统只支持动态内存管理时，</span></span><br><span class="line"><span class="comment">    * 任务待删除任务所占用的内存空间是通过 动态内存管理 分配的，</span></span><br><span class="line"><span class="comment">    * 因此只需要将内存空间通过 动态内存管理 释放掉即可</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">    * 当系统支持静态内存管理和动态内存管理时，</span></span><br><span class="line"><span class="comment">    * 则需要分情况讨论</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    <span class="meta">#<span class="keyword">if</span> ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) &amp;&amp; ( configSUPPORT_STATIC_ALLOCATION == 0 ) &amp;&amp; ( portUSING_MPU_WRAPPERS == 0 ) )</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 动态内存管理释放待删除任务的任务控制块和任务的栈空间 */</span></span><br><span class="line">            vPortFreeStack( pxTCB-&gt;pxStack );</span><br><span class="line">            vPortFree( pxTCB );</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">elif</span> ( tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE != 0 ) </span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//检查是否静态管理内存</span></span><br><span class="line">            <span class="keyword">if</span>( pxTCB-&gt;ucStaticallyAllocated == tskDYNAMICALLY_ALLOCATED_STACK_AND_TCB )</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//动态分配TCB+STACK</span></span><br><span class="line">                vPortFreeStack( pxTCB-&gt;pxStack );</span><br><span class="line">                vPortFree( pxTCB );</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span>( pxTCB-&gt;ucStaticallyAllocated == tskSTATICALLY_ALLOCATED_STACK_ONLY )</span><br><span class="line">            &#123;</span><br><span class="line">                </span><br><span class="line">                <span class="comment">//只是静态分配STACK，所以stack需要用户自己手动释放</span></span><br><span class="line">                vPortFree( pxTCB );</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* Neither the stack nor the TCB were allocated dynamically, so</span></span><br><span class="line"><span class="comment">                 * nothing needs to be freed. */</span></span><br><span class="line">                configASSERT( pxTCB-&gt;ucStaticallyAllocated == tskSTATICALLY_ALLOCATED_STACK_AND_TCB );</span><br><span class="line">                mtCOVERAGE_TEST_MARKER();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configSUPPORT_DYNAMIC_ALLOCATION */</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="vTaskSuspend-挂起任务"><a href="#vTaskSuspend-挂起任务" class="headerlink" title="vTaskSuspend() 挂起任务"></a>vTaskSuspend() 挂起任务</h4><p>task.c中定义</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskSuspend</span><span class="params">( TaskHandle_t xTaskToSuspend )</span></span><br><span class="line">&#123;</span><br><span class="line">    TCB_t * pxTCB;</span><br><span class="line">    <span class="comment">/* 进入临界区 */</span></span><br><span class="line">    taskENTER_CRITICAL();</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//锁定挂起的任务的TCB地址，NULL就是本身</span></span><br><span class="line">        pxTCB = prvGetTCBFromHandle( xTaskToSuspend );</span><br><span class="line"></span><br><span class="line">        traceTASK_SUSPEND( pxTCB );</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 将任务从任务所在任务状态列表（就绪态任务列表 或 阻塞态任务列表）中移除</span></span><br><span class="line"><span class="comment">        * 如果移除后列表中的列表项数量为 0</span></span><br><span class="line"><span class="comment">        * 那么就需要更新任务优先级记录</span></span><br><span class="line"><span class="comment">        * 因为此时系统中可能已经没有和被挂起任务相同优先级的任务了</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="keyword">if</span>( uxListRemove( &amp;( pxTCB-&gt;xStateListItem ) ) == ( UBaseType_t ) <span class="number">0</span> )</span><br><span class="line">        &#123;<span class="comment">/* 更新任务优先级记录 */</span></span><br><span class="line">            taskRESET_READY_PRIORITY( pxTCB-&gt;uxPriority );</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 判断被挂起的任务是否还有等待的事件 */</span></span><br><span class="line">        <span class="keyword">if</span>( listLIST_ITEM_CONTAINER( &amp;( pxTCB-&gt;xEventListItem ) ) != <span class="literal">NULL</span> )</span><br><span class="line">        &#123;<span class="comment">/* 将被挂起任务的事件列表项，从所在事件列表中移除 */</span></span><br><span class="line">            ( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xEventListItem ) );</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* 将待挂起任务的任务状态列表向插入到挂起态任务列表末尾 */</span></span><br><span class="line">        vListInsertEnd( &amp;xSuspendedTaskList, &amp;( pxTCB-&gt;xStateListItem ) );</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 此宏用于启用任务通知功能 */</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_TASK_NOTIFICATIONS == 1 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                BaseType_t x;</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* 遍历待挂起任务的所有任务通知状态 */</span></span><br><span class="line">                <span class="keyword">for</span>( x = <span class="number">0</span>; x &lt; configTASK_NOTIFICATION_ARRAY_ENTRIES; x++ )</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="comment">/* 如果有正在等待的任务通知，则取消等待</span></span><br><span class="line"><span class="comment">                    * 因为此时，任务已经被挂起</span></span><br><span class="line"><span class="comment">                    */</span></span><br><span class="line">                    <span class="keyword">if</span>( pxTCB-&gt;ucNotifyState[ x ] == taskWAITING_NOTIFICATION )</span><br><span class="line">                    &#123;</span><br><span class="line">                        pxTCB-&gt;ucNotifyState[ x ] = taskNOT_WAITING_NOTIFICATION;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* if ( configUSE_TASK_NOTIFICATIONS == 1 ) */</span></span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* 退出临界区 */</span></span><br><span class="line">    taskEXIT_CRITICAL();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//当前调度器在运行</span></span><br><span class="line">    <span class="keyword">if</span>( xSchedulerRunning != pdFALSE )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//更新下一个任务的阻塞超时时间，以防被挂起的任务就是下一个阻塞超时的任务</span></span><br><span class="line">        taskENTER_CRITICAL();</span><br><span class="line">        &#123;</span><br><span class="line">            prvResetNextTaskUnblockTime();</span><br><span class="line">        &#125;</span><br><span class="line">        taskEXIT_CRITICAL();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        mtCOVERAGE_TEST_MARKER();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 如果待挂起任务就是任务本身 */</span></span><br><span class="line">    <span class="keyword">if</span>( pxTCB == pxCurrentTCB )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 如果任务调度器正在运行，则需要切换任务 */</span></span><br><span class="line">        <span class="keyword">if</span>( xSchedulerRunning != pdFALSE )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 此时任务调度器不能处于挂起状态 */</span></span><br><span class="line">            configASSERT( uxSchedulerSuspended == <span class="number">0</span> );</span><br><span class="line">            <span class="comment">/* 进行任务切换, 底层原理： 它会触发一个 PendSV 异常 */</span></span><br><span class="line">            portYIELD_WITHIN_API();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/* 如果任务调度器没有运行，并且 pxCurrentTCB 又指向了待挂起的任务，</span></span><br><span class="line"><span class="comment">            * 那么就需要将 pxCurrentTCB 指向其他任务</span></span><br><span class="line"><span class="comment">            */</span></span><br><span class="line">            <span class="keyword">if</span>( listCURRENT_LIST_LENGTH( &amp;xSuspendedTaskList ) == uxCurrentNumberOfTasks ) </span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* 没有就绪的任务，则将 pxCurrentTCB 指向空（NULL） */</span></span><br><span class="line">                pxCurrentTCB = <span class="literal">NULL</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* 更新 pxCurrentTCB 为优先级最高的就绪态任务 */</span></span><br><span class="line">                vTaskSwitchContext();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        mtCOVERAGE_TEST_MARKER();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>A. 关于<strong>更新下一个任务的阻塞超时时间，以防被挂起的任务就是下一个阻塞超时的任务</strong>的问题：<br>先要知道：</p>
+</blockquote>
+<blockquote>
+<p>在 FreeRTOS 中，如果有多个任务进入了阻塞态（例如调用了 vTaskDelay），它们会被放入“延时列表（Delayed Task List）”。这个列表是按唤醒时间升序排列的。</p>
+<p><code>常规做法</code>：在每一次系统节拍中断（Tick Interrupt）中，扫描整个延时列表，看看有没有任务到期。但这太浪费 CPU 时间了。</p>
+<p><code>FreeRTOS 的优化</code>：内核维护了一个变量 <code>xNextTaskUnblockTime</code>，它<strong>记录了延时列表中最快要唤醒的那一个任务的时间点</strong>。</p>
+<p><code>带来的好处</code>：在 Tick 中断里，内核只需要简单判断一下：if (xTickCount &lt; xNextTaskUnblockTime)。如果当前时间还没到，说明列表里所有任务都没到期，中断可以立即退出。</p>
+</blockquote>
+<blockquote>
+<p><strong>B. 为什么要重置？（情景模拟）</strong></p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">假设现在有三个任务在延时列表中：</span><br><span class="line"></span><br><span class="line">任务 A：唤醒时间点为 <span class="number">100</span></span><br><span class="line"></span><br><span class="line">任务 B：唤醒时间点为 <span class="number">150</span></span><br><span class="line"></span><br><span class="line">任务 C：唤醒时间点为 <span class="number">200</span></span><br><span class="line"></span><br><span class="line">此时，全局变量 xNextTaskUnblockTime = <span class="number">100</span>。</span><br><span class="line"></span><br><span class="line">如果你现在调用 vTaskSuspend(任务 A)：</span><br><span class="line"></span><br><span class="line">任务 A 会从“延时列表”中被移除，搬移到“挂起列表（Suspended List）”。</span><br><span class="line"></span><br><span class="line">危机出现：此时延时列表中最快要唤醒的任务变成了任务 B（时间点 <span class="number">150</span>）。</span><br><span class="line"></span><br><span class="line">结果：如果此时不更新 xNextTaskUnblockTime，它的值依然是 <span class="number">100</span>。</span><br><span class="line"></span><br><span class="line">如果不更新会发生什么？ 当系统时间（Tick Count）到达 <span class="number">100</span> 时，Tick 中断触发，内核发现 xTickCount &gt;= xNextTaskUnblockTime，于是满心欢喜地去延时列表找任务 A，结果发现列表里第一个任务是 B（<span class="number">150</span>），A 已经不见了。这意味着内核在时间点 <span class="number">100</span> 做了一次无意义的唤醒检查。</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>C. 关于pxCurrentTCB</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">1.</span> 什么是 pxCurrentTCB？</span><br><span class="line">pxCurrentTCB 是 FreeRTOS 内核中最重要的全局指针，它永远指向当前正在占用 CPU 的那个任务的任务控制块（TCB）。</span><br><span class="line"></span><br><span class="line">运行态的标志： 在任何时刻，CPU 正在执行哪行代码，那个代码所属任务的 TCB 地址就存在 pxCurrentTCB 里。</span><br><span class="line"></span><br><span class="line">切换的基准： 调度器进行上下文切换时，本质就是把旧任务的现场保存到旧的 pxCurrentTCB 指向的栈里，然后让 pxCurrentTCB 指向新任务，再从新栈里恢复现场。</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>D. 如果是自挂，且在运行时，portYIELD_WITHIN_API()的实际作用是什么？</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">在 Cortex-M 架构中，PendSV（Pended Service Call）是一个非常特殊的系统异常。</span><br><span class="line"></span><br><span class="line"><span class="string">&quot;Pend&quot;</span>（悬挂）</span><br><span class="line"></span><br><span class="line">普通的硬件中断（如串口接收）是“立刻执行”的，但 PendSV 是可以“延迟执行”的。</span><br><span class="line"></span><br><span class="line"><span class="string">&quot;手动挂起&quot;</span>： 你代码中的 portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT; 实际上是向 CPU 发出了一个信号：“我这里有个换人的活儿要干，先在挂号处登记一下（Pending）。”</span><br><span class="line"></span><br><span class="line">等待时机： <span class="string">&quot;CPU 不会立刻跳进 PendSV&quot;</span>。它会先看一眼：“现在还有没有比 PendSV 优先级更高的中断在跑？”</span><br><span class="line"></span><br><span class="line">如果有，CPU 先把紧急的中断跑完。</span><br><span class="line"></span><br><span class="line">如果没有，或者等所有紧急中断都退出了，CPU 才会进入 <span class="string">&quot;PendSV_Handler&quot;</span>。</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">现在的逻辑（使用 PendSV）：</span><br><span class="line">任务自挂： 任务 A 调用 vTaskSuspend()。</span><br><span class="line"></span><br><span class="line">登记： vPortYield() 登记了一个 PendSV 请求。</span><br><span class="line"></span><br><span class="line">安全检查： CPU 检查发现当前没有其他中断，或者等到其他中断都跑完了。</span><br><span class="line"></span><br><span class="line">换人： 进入最低优先级的 PendSV_Handler，此时它是系统里唯一在跑的异常，可以安全地保存任务 A 的现场，切换 pxCurrentTCB 到任务 B，并恢复任务 B 的现场。</span><br></pre></td></tr></table></figure>
+<p>所以本质上，<strong>任务的切换</strong>，本质上是<strong>依赖pendSV中断(最低优先级)来实现</strong>的。</p>
+<p>而实际在触发pendSV中断前，用<code>vPortYield()</code>登记的时候，里面有两条汇编指令：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">__dsb( portSY_FULL_READ_WRITE );<span class="comment">//确保“把 PendSV 置 1”这个写内存的操作已经彻底完成，所有的数据都写进了寄存器</span></span><br><span class="line">__isb( portSY_FULL_READ_WRITE );<span class="comment">//清空流水线。确保在执行后面的代码之前，CPU 已经看到了前面 PendSV 置位带来的变化。</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>总结一下自挂的逻辑</strong>：</p>
+<ol>
+<li>发起请求： vTaskSuspend() 发现你要挂起自己，它把你从就绪链表挪到挂起链表。</li>
+<li>呼叫后台： 调用 vPortYield()，往 ICSR 寄存器里写一个比特位，触发 PendSV 登记。</li>
+<li>等待调度： 只要没有其他更高优先级的中断，CPU 就会立刻跳进 PendSV_Handler（这是由 FreeRTOS 写的汇编函数）。</li>
+<li>现场搬运：<ol>
+<li>把 CPU 现在的 $R4-R11$ 寄存器压入任务 A 的堆栈。</li>
+<li>把新的栈指针存入任务 A 的 TCB。</li>
+<li>找到 pxCurrentTCB 指向的新任务（比如任务 B）。</li>
+<li>从任务 B 的堆栈里弹出 $R4-R11$ 到 CPU 寄存器。</li>
+</ol>
+</li>
+<li>重生： 异常返回，CPU 此时拿的是任务 B 的寄存器和堆栈，任务 B 开始运行。<blockquote>
+<p><strong>vPortYield()</strong> 只是“登记”，真正的魔术全在汇编函数 <code>xPortPendSVHandler</code> 里面。</p>
+</blockquote>
+</li>
+</ol>
+<h5 id="补充：pendSV-保存当前任务现场操作"><a href="#补充：pendSV-保存当前任务现场操作" class="headerlink" title="补充：pendSV 保存当前任务现场操作"></a>补充：pendSV 保存当前任务现场操作</h5><p><strong>1. CM3内核寄存器</strong>：</p>
+<p>Cortex-M3 内核总共有 16 个主要寄存器：</p>
+<ul>
+<li>通用寄存器：$R0$ - $R12$</li>
+<li>栈指针 (SP)：$R13$</li>
+<li>链接寄存器 (LR)：$R14$</li>
+<li>程序计数器 (PC)：$R15$</li>
+<li>状态寄存器：$xPSR$</li>
+</ul>
+<p>当 <code>PendSV 中断触发</code>时，<code>硬件</code>和<code>软件</code>会分工合作，<code>共同完成这 16 个寄存器的保护</code></p>
+<p><strong>2. pendSV中断触发，硬件自动工作</strong>：</p>
+<p>硬件自动压栈 (Hardware Stacking)当异常发生的一瞬间，CPU 硬件会自动将以下 8 个寄存器压入当前任务的栈中：</p>
+<ul>
+<li>$xPSR$</li>
+<li>$PC$ ($R15$)</li>
+<li>$LR$ ($R14$)</li>
+<li>$R12$</li>
+<li>$R3$</li>
+<li>$R2$</li>
+<li>$R1$</li>
+<li>$R0$</li>
+</ul>
+<blockquote>
+<p>为什么是这几个？ 根据 ARM 的 AAPCS 标准，这些被称为“<code>调用者保存</code>（Caller-saved）”<code>寄存器</code>。硬件自动保存它们是为了保证中断退出后，<code>C 语言环境的函数逻辑不会乱套</code>。</p>
+</blockquote>
+<p><strong>3. pendSV中断触发，软件手动工作</strong>：</p>
+<p>剩下的寄存器硬件管不着，必须由 FreeRTOS 在汇编（xPortPendSVHandler）中手动保存：</p>
+<ul>
+<li>$R4, R5, R6, R7, R8, R9, R10, R11$</li>
+</ul>
+<p>这些被称为“<code>被调用者保存</code>（Callee-saved）”寄存器。因为<code>硬件不负责它们</code>，所以 FreeRTOS 必须手动<code>用一条汇编指令 stmdb sp!, {r4-r11} 把它们排队送入栈</code>中。</p>
+<blockquote>
+<p>注意这里的SP仍然使用的是PSP，所以保存的是A的任务栈中。以上当前任务的PC指针，各种环境都已经保存了。</p>
+</blockquote>
+<p><strong>4. CM3的双栈机制</strong></p>
+<p>以上可以得知，在pendSV中断中，处理压栈，此时<code>SP</code>指向的是当前任务栈(使用的是<code>PSP</code>)</p>
+<p>在 Cortex-M3 中，<code>R13 寄存器（即 SP）</code>实际上<code>有两个物理备份</code>：</p>
+<ul>
+<li>MSP (Main Stack Pointer)： 主堆栈指针。用于 OS 内核、中断服务程序（ISR）。</li>
+<li>PSP (Process Stack Pointer)： 进程堆栈指针。专门用于任务（Task）。</li>
+</ul>
+<h5 id="补充：pendSV中断实现任务切换的详细过程"><a href="#补充：pendSV中断实现任务切换的详细过程" class="headerlink" title="补充：pendSV中断实现任务切换的详细过程"></a>补充：pendSV中断实现任务切换的详细过程</h5><p>我们把这个过程拆解为三个清晰的阶段：</p>
+<hr>
+<p><strong>1. 第一阶段：硬件自动“序幕” (Hardware Entry)</strong></p>
+<p>当 <code>PendSV</code> 被悬起（Pending）且 CPU 决定执行它时，硬件会在<strong>执行汇编第一行代码前</strong>完成以下动作：</p>
+<ol>
+<li><p><strong>判定当前栈指针</strong>：CPU 发现当前任务正在使用$PSP$ 。</p>
+</li>
+<li><p><strong>硬件压栈 (Hardware Stacking)</strong>：CPU 自动向 $PSP$ 指向的内存压入 8 个寄存器（$xPSR, PC, LR, R12, R3, R2, R1, R0$）。此时 $PSP$ 的值会自动减小。</p>
+</li>
+<li><p><strong>模式与 SP 切换</strong>：</p>
+<ul>
+<li>CPU 从<strong>线程模式</strong>进入<strong>处理者模式</strong>（Handler Mode）。</li>
+<li><strong>关键：</strong> 硬件自动将当前使用的 SP 从 PSP 切换到 MSP。</li>
+</ul>
+</li>
+<li><p><strong>PC 跳转</strong>：CPU 从向量表中取 <code>PendSV_Handler</code> 的地址并赋值给 PC。</p>
+</li>
+</ol>
+<blockquote>
+<p>[!IMPORTANT]<br><strong>结论：</strong> 当你在 <code>PendSV_Handler</code> 汇编里看到的第一行指令执行时，此时的 SP 已经变成 MSP 了，而刚才压了一半寄存器的 PSP 正孤零零地指在任务栈的某个位置。</p>
+</blockquote>
+<hr>
+<p><strong>2. 第二阶段：软件手动“核心” (Software&#x2F;Assembly)</strong></p>
+<p>现在进入了 FreeRTOS 的汇编代码（<code>xPortPendSVHandler</code>）。因为硬件只存了“一半”现场，剩下的由软件补齐：</p>
+<ol>
+<li><p><strong>取出 PSP</strong>：由于现在的 SP 是 MSP，软件第一步必须执行 <code>mrs r0, psp</code>，把那个任务栈的地址（$PSP$）抢救回寄存器 R0 中。</p>
+</li>
+<li><p><strong>软件压栈 (Software Stacking)</strong>：利用刚才取回的$R0$（即 $PSP$），手动执行汇编指令将 $R4$ 至 $R11$压入任务栈。</p>
+<ul>
+<li>指令：<code>stmdb r0!, {r4-r11}</code>（ 指针会继续向下移动）。</li>
+</ul>
+</li>
+<li><p><strong>保存 SP 到 TCB</strong>：此时 $R0$  指向的是整个 16 个寄存器“全家福”的底部。</p>
+<ul>
+<li>动作：将 $R0$  的值写入 <code>pxCurrentTCB-&gt;pxTopOfStack</code>。<strong>至此，旧任务的灵魂被完整封印在它自己的栈里了。</strong></li>
+</ul>
+</li>
+<li><p><strong>寻找新任务</strong>：调用 <code>vTaskSwitchContext</code>。这个 C 函数会更新 <code>pxCurrentTCB</code> 指向最高优先级的就绪任务。</p>
+<ul>
+<li>重点在于调用了函数 <code>taskSELETE_HIGHEST_PRIORITY_TASK</code>() 更新<code>pxCurrentTCB</code> 指向优先级最高的<code>就绪态任务</code></li>
+</ul>
+</li>
+<li><p><strong>恢复新任务 SP</strong>：从新的 <code>pxCurrentTCB-&gt;pxTopOfStack</code> 中取出值存入 。</p>
+</li>
+<li><p><strong>软件出栈</strong>：手动弹出新任务栈里的  至 。</p>
+<ul>
+<li>指令：<code>ldmia r0!, {r4-r11}</code>。</li>
+</ul>
+</li>
+<li><p><strong>更新 PSP</strong>：将恢复后的 （指向剩下 8 个寄存器的地方）重新写回  寄存器。</p>
+</li>
+</ol>
+<hr>
+<p><strong>3. 第三阶段：硬件自动“尾声” (Hardware Exit)</strong></p>
+<p>汇编代码的最后一行通常是 <code>bx lr</code>（此时  是一个特殊的跳转值 <code>0xFFFFFFFD</code>）。</p>
+<ol>
+<li><strong>触发硬件返回</strong>：当硬件看到 $LR$ 是这个特殊值时，它知道异常结束了。</li>
+<li><strong>自动切换回 PSP</strong>：硬件根据返回指令，自动把 $SP$ 从 $MSP$ 切回 $PSP$。</li>
+<li><strong>硬件出栈 (Hardware Unstacking)</strong>：硬件自动从 $PSP$ 中弹出剩下的 8 个寄存器（（$R0-xPSR$）。）。</li>
+<li><strong>恢复运行</strong>：此时 $PC$ 被恢复为新任务上次离开时的位置，新任务正式复活。</li>
+</ol>
+<hr>
+<p><strong>4. 梳理对比表</strong></p>
+<p>为了防止混淆，请看这个精确的先后顺序：</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>执行者</th>
+<th>动作</th>
+<th>使用的 SP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><strong>硬件</strong></td>
+<td>压入 $R0-xPSR$</td>
+<td>$PSP$</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>硬件</strong></td>
+<td>切到 $MSP$，跳转到 Handler 地址</td>
+<td>$MSP$</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>软件</strong></td>
+<td>手动压入 $R4-R11$</td>
+<td>通过 $R0$ 间接操作 $PSP$</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>软件</strong></td>
+<td>更新 <code>pxCurrentTCB</code> (寻找新任务)</td>
+<td>$MSP$</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>软件</strong></td>
+<td>手动弹出新任务的 $R4-R11$</td>
+<td>通过 $R0$ 间接操作 $PSP$</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>硬件</strong></td>
+<td>切回 $PSP$，弹出 $R0-xPSR$</td>
+<td>$PSP$</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>你已经打通了任务切换的“任督二脉”。现在你可能会好奇：<strong>“既然任务切换靠 PendSV，那如果我在代码里写一个死循环而不调用任何 API（不触发 Yield），FreeRTOS 还能切换任务吗？”</strong></p>
+</blockquote>
+<blockquote>
+<p>这就涉及到了 <code>SysTick</code> 这种“强制打断”的机制。<strong>你想聊聊 SysTick 是如何通过“强行挂号” PendSV 来实现时间片轮转的吗？</strong></p>
+</blockquote>
+<h4 id="恢复任务"><a href="#恢复任务" class="headerlink" title="恢复任务"></a>恢复任务</h4><p>恢复任务和挂起类似，比较简单。都需要判断</p>
+<ol>
+<li>确保有待恢复的任务</li>
+<li>确保恢复的不是当前正在运行的任务</li>
+<li>进入临界区<ol>
+<li>从 挂起态任务列表中，移除该节点</li>
+<li>添加到就绪态任务链表中</li>
+<li>判断优先级，是否需要进行任务抢占切换</li>
+</ol>
+</li>
+<li>退出临界区</li>
+</ol>
+<h3 id="6-空闲任务"><a href="#6-空闲任务" class="headerlink" title="6. 空闲任务"></a>6. 空闲任务</h3><p><strong>空闲任务</strong>主要用于处理<strong>待删除任务列表</strong>和<strong>低功耗</strong></p>
+<p>task.c中定义：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="title function_">portTASK_FUNCTION</span><span class="params">( prvIdleTask, pvParameters )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* Stop warnings. */</span></span><br><span class="line">    ( <span class="type">void</span> ) pvParameters;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不管</span></span><br><span class="line">    portALLOCATE_SECURE_CONTEXT( configMINIMAL_SECURE_STACK_SIZE );</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>( ; ; )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/* 处理待删除任务列表中的待删除任务 */</span></span><br><span class="line">        prvCheckTasksWaitingTermination();</span><br><span class="line"></span><br><span class="line">        <span class="comment">//是否使能抢占式调度</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_PREEMPTION == 0 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">//不使用抢占式调度，主动强制切换任务, 以确保其他任务（非空闲任务）可以获得 CPU 使用权</span></span><br><span class="line">                taskYIELD();</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 宏 configIDLE_SHOULD_YIELD 用于使能空闲任务可以被同优先级的任务抢占 */</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( ( configUSE_PREEMPTION == 1 ) &amp;&amp; ( configIDLE_SHOULD_YIELD == 1 ) )</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/* 如果存在与空闲任务相同优先级的任务，则进行任务切换 */</span></span><br><span class="line">                <span class="keyword">if</span>( listCURRENT_LIST_LENGTH( &amp;( pxReadyTasksLists[ tskIDLE_PRIORITY ] ) ) &gt; ( UBaseType_t ) <span class="number">1</span> )</span><br><span class="line">                &#123;</span><br><span class="line">                    taskYIELD();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    mtCOVERAGE_TEST_MARKER();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> </span></span><br><span class="line"></span><br><span class="line">        <span class="comment">//若使能空闲任务的钩子函数，需要用户自行定义</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_IDLE_HOOK == 1 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">vApplicationIdleHook</span><span class="params">( <span class="type">void</span> )</span>;</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* 调用空闲任务的钩子函数 */</span></span><br><span class="line">                vApplicationIdleHook();</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_IDLE_HOOK */</span></span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/* 此宏为低功耗的相关配置，不用理会 */</span></span><br><span class="line">        <span class="meta">#<span class="keyword">if</span> ( configUSE_TICKLESS_IDLE != 0 )</span></span><br><span class="line">            &#123;</span><br><span class="line">                TickType_t xExpectedIdleTime;</span><br><span class="line"></span><br><span class="line">                <span class="comment">/* It is not desirable to suspend then resume the scheduler on</span></span><br><span class="line"><span class="comment">                 * each iteration of the idle task.  Therefore, a preliminary</span></span><br><span class="line"><span class="comment">                 * test of the expected idle time is performed without the</span></span><br><span class="line"><span class="comment">                 * scheduler suspended.  The result here is not necessarily</span></span><br><span class="line"><span class="comment">                 * valid. */</span></span><br><span class="line">                xExpectedIdleTime = prvGetExpectedIdleTime();</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span>( xExpectedIdleTime &gt;= configEXPECTED_IDLE_TIME_BEFORE_SLEEP )</span><br><span class="line">                &#123;</span><br><span class="line">                    vTaskSuspendAll();</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="comment">/* Now the scheduler is suspended, the expected idle</span></span><br><span class="line"><span class="comment">                         * time can be sampled again, and this time its value can</span></span><br><span class="line"><span class="comment">                         * be used. */</span></span><br><span class="line">                        configASSERT( xNextTaskUnblockTime &gt;= xTickCount );</span><br><span class="line">                        xExpectedIdleTime = prvGetExpectedIdleTime();</span><br><span class="line"></span><br><span class="line">                        <span class="comment">/* Define the following macro to set xExpectedIdleTime to 0</span></span><br><span class="line"><span class="comment">                         * if the application does not want</span></span><br><span class="line"><span class="comment">                         * portSUPPRESS_TICKS_AND_SLEEP() to be called. */</span></span><br><span class="line">                        configPRE_SUPPRESS_TICKS_AND_SLEEP_PROCESSING( xExpectedIdleTime );</span><br><span class="line"></span><br><span class="line">                        <span class="keyword">if</span>( xExpectedIdleTime &gt;= configEXPECTED_IDLE_TIME_BEFORE_SLEEP )</span><br><span class="line">                        &#123;</span><br><span class="line">                            traceLOW_POWER_IDLE_BEGIN();</span><br><span class="line">                            portSUPPRESS_TICKS_AND_SLEEP( xExpectedIdleTime );</span><br><span class="line">                            traceLOW_POWER_IDLE_END();</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            mtCOVERAGE_TEST_MARKER();</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    ( <span class="type">void</span> ) xTaskResumeAll();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                &#123;</span><br><span class="line">                    mtCOVERAGE_TEST_MARKER();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        <span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_TICKLESS_IDLE */</span></span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="任务切换"><a href="#任务切换" class="headerlink" title="任务切换"></a>任务切换</h2><p>PendSV（Pended Service Call，可挂起服务调用）</p>
+<p>PendSV的中断优先级是可以编程的</p>
+<p>PendSV 的中断由将中断控制状态寄存器（<code>ICSR）中 PENDSVSET 为置一</code>触发</p>
+<blockquote>
+<p>PendSV 与 SVC 不同，<code>PendSV 的中断是非实时的</code>, 即 PendSV 的中断可以在更高优先级的中断中触发，但是在<code>更高优先级中断结束后才执行</code></p>
+</blockquote>
+<p>利用 PendSV 的这个<code>可挂起特性</code>，在设计 RTOS 时，可以<code>将 PendSV 的中断优先级</code>设置为<br><code>最低的中断优先级</code>, 任务切换时，就需要用到 PendSV 的这个特性</p>
+<p>下面看一下任务切换的基本概念：</p>
+<p>在典型的 RTOS 中，<strong>任务的处理时间被分为多个时间片</strong>，<strong>OS 内核</strong>的执行可以有<strong>两种触发方式</strong></p>
+<ul>
+<li>一种是通过在应用任务中<code>通过 SVC 指令触发</code>，<ul>
+<li>例如在应用任务在等待某个时间发生而需要停止的时候，那么就可以通过 SVC 指令来触发 OS<br>内核的执行，以切换到其他任务；</li>
+</ul>
+</li>
+<li>第二种方式是，<code>SysTick 周期性的中断</code>，来触发 OS 内核的执行。</li>
+</ul>
+<p>图演示了只有两个任务的 RTOS 中，两个任务交替执行的过程：</p>
+<p><img src="/../images/21.13.png" alt="alt text"></p>
+<p>在操作系统中，任务调度器决定是否切换任务。图 9.1.1 中的任务及切换都是在 <code>SysTick</code> 中<br>断中完成的，<code>SysTick 的每一次中断</code>都会<code>切换</code>到其他任务</p>
+<blockquote>
+<p>如果一个中断请求（IRQ）在 SysTick 中断产生之前产生，那么 SysTick 就可能抢占该中断<br>请求，这就会导致该中断请求被延迟处理，<strong>这在实时操作系统中是不允许的</strong>，因为这将会影响<br>到实时操作系统的实时性</p>
+</blockquote>
+<p><img src="/../images/21.14.png" alt="alt text"></p>
+<p>并且，当 SysTick 完成任务的上下文切换，准备返回任务中运行时，由于存在中断请求，<br>ARM Cortex-M <code>不允许返回线程模式</code>，因此，将会产生<code>用法错误异常（Usage Fault）</code>。</p>
+<p>在一些 RTOS 的设计中，会通过<code>判断是否存在中断请求</code>，来<code>决定是否进行任务切换</code>。虽然<br>可以通过检查 xPSR 或 NVIC 中的中断活跃寄存器来判断是否存在中断请求，但是这样可能会<br>影响系统的性能，甚至可能出现中断源在 SysTick 中断前后不断产生中断请求，导致系统无法<br>进行任务切换的情况。</p>
+<p><code>PendSV</code> 通过<code>延迟执行任务切换</code>，<code>直到处理完所有的中断请求</code>，以解决上述问题。为了达到<br>这样的效果，<code>必须将 PendSV 的中断优先级设置为最低的中断优先等级</code>。如果操作系统决定切<br>换任务，那么就将 PendSV 设置为挂起状态，并在 PendSV 的中断服务函数中执行任务切换</p>
+<h3 id="SVC中断，pendSV中断，systick中断"><a href="#SVC中断，pendSV中断，systick中断" class="headerlink" title="SVC中断，pendSV中断，systick中断"></a>SVC中断，pendSV中断，systick中断</h3><h4 id="1-SVC中断："><a href="#1-SVC中断：" class="headerlink" title="1. SVC中断："></a><strong>1. SVC中断：</strong></h4><p>作用单一：它主要用于<code>启动第一个任务</code>。</p>
+<p>它的使命：当你调用 <code>vTaskStartScheduler()</code> 启动调度器时，最终会触发 <code>svc 0</code>。</p>
+<p>执行过程：</p>
+<ul>
+<li><code>vPortSVCHandler</code> 汇编函数被激活。</li>
+<li>它去获取最高优先级任务的栈顶指针（pxCurrentTCB-&gt;px<code>TopOfStack</code>）。</li>
+<li>它<code>手动恢复该任务的寄存器环境</code>。</li>
+</ul>
+<p>最后通过修改 <code>CONTROL</code> 寄存器，让 <code>CPU 切换到使用 PSP</code>，并<code>PC跳转到任务入口</code>。</p>
+<blockquote>
+<p>为什么只用一次？：一旦第一个任务跑起来了，后续的任务切换全部交给 <code>PendSV</code> 处理。SVC 在 FreeRTOS 的标准移植层里基本就“光荣退休”了。</p>
+</blockquote>
+<h4 id="2-systick中断"><a href="#2-systick中断" class="headerlink" title="2. systick中断"></a><strong>2. systick中断</strong></h4><p>这个中断的优先级，依然是最低优先级，作用就是<code>系统节拍计数</code>+<code>维护延迟阻塞任务列表到就绪列表</code></p>
+<p>它的核心职责：</p>
+<ul>
+<li>维持时间轴：每次中断，全局变量 <code>xTickCount</code> 加 1。</li>
+<li>唤醒任务：检查“<code>延时列表</code>”里有没有任务的时间到了。如果有任务该醒了，就把它从延时列表挪回“就绪列表”。</li>
+<li>强制打断（时间片轮转）：如果配置了 configUSE_PREEMPTION（抢占式），SysTick 会检查当前任务是否跑得太久了，或者是否有更高优先级的任务刚醒过来。</li>
+</ul>
+<blockquote>
+<p>它与 PendSV 的联动： 如果 SysTick 发现需要换人，它不会自己去换。它会顺手悬起（Pending）一个 <code>PendSV 中断</code>。</p>
+</blockquote>
+<blockquote>
+<p>形象理解：SysTick 发现时间到了，在黑板上写下“该换人了”，然后退出。因为 PendSV 也是最低优先级，CPU 接着就会自动进入 PendSV 去执行真正的搬运工作。</p>
+</blockquote>
+<p><strong>场景1：systick中断，判断抢占式调度</strong></p>
+<p>——“有更重要的人醒了”</p>
+<p>即便当前任务没有运行太久，只要有更高优先级的任务“醒了”，SysTick 就会强制打断当前任务。</p>
+<ul>
+<li><p>触发逻辑：在 SysTick 中断调用的 xTaskIncrementTick() 内部，内核会检查延时任务列表。</p>
+</li>
+<li><p>发生过程：</p>
+<ul>
+<li>假设任务 A（优先级 2）正在运行，任务 B（优先级 3）正在 vTaskDelay(10) 睡觉。</li>
+<li>当第 10 次 SysTick 响起时，内核发现任务 B 的时间到了。</li>
+<li>内核将任务 B 从阻塞态搬回就绪态。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>关键点：由于任务 B（3）的优先级比当前运行的任务 A（2）高，SysTick 会立刻标记需要进行切换（悬起 PendSV）。</p>
+</blockquote>
+<blockquote>
+<p>结果：这被称为基于优先级的抢占。它不是因为任务 A 跑太久了，而是因为 B 更紧急。</p>
+</blockquote>
+<p><strong>2. 场景二：时间片轮转（针对相同优先级）</strong><br>——“大家级别一样，换个班吧”</p>
+<ul>
+<li><p>触发逻辑：如果配置了 configUSE_TIME_SLICING &#x3D; 1，且就绪列表中有多个任务处于相同最高优先级。</p>
+</li>
+<li><p>发生过程：</p>
+<ul>
+<li><p>假设任务 C 和任务 D 优先级都是 2，且没有更高优先级的任务在跑。</p>
+</li>
+<li><p>SysTick 每次响起时，都会检查当前优先级列表中是否有其他同级任务。</p>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>逻辑：如果当前优先级列表里不止一个任务，SysTick 会请求一次任务切换（悬起 PendSV）。</p>
+</blockquote>
+<blockquote>
+<p>结果：这样在下一次中断后，任务 D 就能跑 1ms，然后换回任务 C。这就是同优先级的时间片轮转。</p>
+</blockquote>
+<blockquote>
+<p>在 同优先级时间片轮转（<code>Time Slicing</code>）的默认配置下，<code>每个任务执行一个 SysTick 周期</code>（通常是 <code>1ms</code>），然后就会把 CPU <code>转交给下一个同优先级的任务</code></p>
+</blockquote>
+<blockquote>
+<p>[!IMPORTANT]<br>一般也推荐使用 SysTick 作为 RTOS 的时钟节拍，当然啦，用户也可以用其他的<code>硬件定时器</code>为 RTOS<br>提供时钟节拍。</p>
+</blockquote>
+<p>systick中断处理函数定义在delay.c中，但是内部的实现，在rtos的源码中提供了相应的回调办法：<code>xPortSysTickHandler</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">systick_handler()</span><br><span class="line">-&gt;xPortSysTickHandler</span><br><span class="line">  -&gt;xTaskIncrementTick() <span class="comment">//处理了系统时钟节拍、阻塞任务列表、时间片调度等</span></span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment"> 处理系统时钟节拍，就是在每次 SysTick 中断发生的时候，将全局变量 xTickCount 的值加</span></span><br><span class="line"><span class="comment">1，也就是将系统时钟节拍计数器的值加 1。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">处理阻塞任务列表，就是判断阻塞态任务列表中是否有阻塞任务超时，如果有，就将阻塞</span></span><br><span class="line"><span class="comment">时间超时的阻塞态任务移到就绪态任务列表中，准备执行。同时在系统时钟节拍计数器</span></span><br><span class="line"><span class="comment">xTickCount 的加 1 溢出后，将两个阻塞态任务列表调换，这是 FreeRTOS 处理系统时钟节拍计</span></span><br><span class="line"><span class="comment">数器溢出的一种机制。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">处理时间片调度，就是在每次系统时钟节拍加 1 后，切换到另外一个同等优先级的任务中</span></span><br><span class="line"><span class="comment">运行，要注意的是，此函数只是做了需要进行任务切换的标记，在函数退出后，会统一进行任</span></span><br><span class="line"><span class="comment">务切换，因此时间片调度导致的任务切换，也可能因为有更高优先级的阻塞任务就绪导致任务</span></span><br><span class="line"><span class="comment">切换，而出现任务切换后运行的任务比任务切换前运行任务的优先级高，而非相等优先级。</span></span><br><span class="line"><span class="comment">  */</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-pendSV中断"><a href="#3-pendSV中断" class="headerlink" title="3. pendSV中断"></a><strong>3. pendSV中断</strong></h4><p>这个上面有解析过，负责具体的任务切换。</p>
+<p>以上就是freertos的基本实现，后面就是一些使用，比如队列，信号量，互斥量，事件组，任务通知，延迟，定时器等，这些都比较简单。下一篇会简单介绍。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/RTOS/" rel="tag"># RTOS</a>
+              <a href="/tags/freertos/" rel="tag"># freertos</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/03/xv6-lab5/" rel="prev" title="xv6 lab5">
+                  <i class="fa fa-angle-left"></i> xv6 lab5
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/" rel="next" title="stm32 sys层实现*">
+                  stm32 sys层实现* <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>freertos 基础实现</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

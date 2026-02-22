@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="介绍 存储架构对比 stm32f103zet6 esp32s3-N16R8 imx6ull 总结对比   cache 总线，数据总线，指令总线 两种基础架构：冯·诺依曼 vs. 哈佛 stm32的总线 imx中的总线 esp32的总线 哈佛架构的工作模式 Cache 的“动态搬运”过程   程序段和存储器 1. 为什么内部 ROM 地址是分成两块的？ 2. ICache 和 DCache 是从内">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32-esp32s3-imx 存储架构讨论">
+<meta property="og:url" content="http://example.com/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="介绍 存储架构对比 stm32f103zet6 esp32s3-N16R8 imx6ull 总结对比   cache 总线，数据总线，指令总线 两种基础架构：冯·诺依曼 vs. 哈佛 stm32的总线 imx中的总线 esp32的总线 哈佛架构的工作模式 Cache 的“动态搬运”过程   程序段和存储器 1. 为什么内部 ROM 地址是分成两块的？ 2. ICache 和 DCache 是从内">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/31.1.png">
+<meta property="og:image" content="http://example.com/images/31.2.png">
+<meta property="article:published_time" content="2026-02-21T06:11:06.000Z">
+<meta property="article:modified_time" content="2026-02-22T04:46:06.269Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/31.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/","path":"2026/02/21/stm32-esp32s3-imx-存储架构讨论/","title":"stm32-esp32s3-imx 存储架构讨论"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32-esp32s3-imx 存储架构讨论 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E5%AF%B9%E6%AF%94"><span class="nav-number">2.</span> <span class="nav-text">存储架构对比</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#stm32f103zet6"><span class="nav-number">2.1.</span> <span class="nav-text">stm32f103zet6</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#esp32s3-N16R8"><span class="nav-number">2.2.</span> <span class="nav-text">esp32s3-N16R8</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#imx6ull"><span class="nav-number">2.3.</span> <span class="nav-text">imx6ull</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E5%AF%B9%E6%AF%94"><span class="nav-number">2.4.</span> <span class="nav-text">总结对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#cache"><span class="nav-number">3.</span> <span class="nav-text">cache</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BA%BF%EF%BC%8C%E6%95%B0%E6%8D%AE%E6%80%BB%E7%BA%BF%EF%BC%8C%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BA%BF"><span class="nav-number">4.</span> <span class="nav-text">总线，数据总线，指令总线</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E7%A7%8D%E5%9F%BA%E7%A1%80%E6%9E%B6%E6%9E%84%EF%BC%9A%E5%86%AF%C2%B7%E8%AF%BA%E4%BE%9D%E6%9B%BC-vs-%E5%93%88%E4%BD%9B"><span class="nav-number">4.1.</span> <span class="nav-text">两种基础架构：冯·诺依曼 vs. 哈佛</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#stm32%E7%9A%84%E6%80%BB%E7%BA%BF"><span class="nav-number">4.2.</span> <span class="nav-text">stm32的总线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#imx%E4%B8%AD%E7%9A%84%E6%80%BB%E7%BA%BF"><span class="nav-number">4.3.</span> <span class="nav-text">imx中的总线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#esp32%E7%9A%84%E6%80%BB%E7%BA%BF"><span class="nav-number">4.4.</span> <span class="nav-text">esp32的总线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%93%88%E4%BD%9B%E6%9E%B6%E6%9E%84%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="nav-number">4.5.</span> <span class="nav-text">哈佛架构的工作模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache-%E7%9A%84%E2%80%9C%E5%8A%A8%E6%80%81%E6%90%AC%E8%BF%90%E2%80%9D%E8%BF%87%E7%A8%8B"><span class="nav-number">4.6.</span> <span class="nav-text">Cache 的“动态搬运”过程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A8%8B%E5%BA%8F%E6%AE%B5%E5%92%8C%E5%AD%98%E5%82%A8%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">程序段和存储器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%86%85%E9%83%A8-ROM-%E5%9C%B0%E5%9D%80%E6%98%AF%E5%88%86%E6%88%90%E4%B8%A4%E5%9D%97%E7%9A%84%EF%BC%9F"><span class="nav-number">5.1.</span> <span class="nav-text">1. 为什么内部 ROM 地址是分成两块的？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-ICache-%E5%92%8C-DCache-%E6%98%AF%E4%BB%8E%E5%86%85%E9%83%A8-RAM-%E5%88%86%E5%87%BA%E6%9D%A5%E7%9A%84%E5%90%97%EF%BC%9F"><span class="nav-number">5.2.</span> <span class="nav-text">2. ICache 和 DCache 是从内部 RAM 分出来的吗？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8C%E4%B8%80%E5%9D%97%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4%EF%BC%8C%E6%97%A2%E8%B5%B0%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BA%BF%EF%BC%8C%E5%8F%88%E8%B5%B0%E6%95%B0%E6%8D%AE%E6%80%BB%E7%BA%BF"><span class="nav-number">5.3.</span> <span class="nav-text">同一块存储空间，既走指令总线，又走数据总线</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%B0%E5%9D%80%E8%A6%81%E6%98%A0%E5%B0%84%E6%88%90%E4%B8%A4%E4%BB%BD%EF%BC%9F%EF%BC%88%E6%B6%88%E9%99%A4%E7%AB%9E%E4%BA%89%EF%BC%89"><span class="nav-number">5.4.</span> <span class="nav-text">为什么地址要映射成两份？（消除竞争）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#esp32s3%E4%BB%8B%E7%BB%8D"><span class="nav-number">6.</span> <span class="nav-text">esp32s3介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%EF%BC%8C%E5%A0%86%E7%9A%84%E7%94%B3%E8%AF%B7"><span class="nav-number">6.1.</span> <span class="nav-text">内存，堆的申请</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E9%80%9F%E5%BA%A6"><span class="nav-number">6.2.</span> <span class="nav-text">访问速度</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mmu-%E6%80%BB%E7%BA%BF%E7%9F%A9%E9%98%B5"><span class="nav-number">7.</span> <span class="nav-text">mmu,总线矩阵</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BA%BF"><span class="nav-number">7.1.</span> <span class="nav-text">总线</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#esp32%E7%9A%84%E5%A4%96%E9%83%A8RAM-%E5%AF%B9%E6%AF%94-imx%E7%9A%84ddr"><span class="nav-number">7.1.1.</span> <span class="nav-text">esp32的外部RAM 对比 imx的ddr</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%A0%E5%B0%84%E5%88%B0%E4%B8%80%E5%A5%97%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4"><span class="nav-number">7.2.</span> <span class="nav-text">映射到一套地址空间</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%87%E6%B3%A8"><span class="nav-number">8.</span> <span class="nav-text">备注</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%EF%BC%88%E6%9C%80%E9%A1%B6%E5%B1%82%E7%9A%84%E2%80%9C%E6%A0%B9%E2%80%9D%EF%BC%89"><span class="nav-number">8.1.</span> <span class="nav-text">1. 内核架构（最顶层的“根”）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%AD%98%E5%82%A8%E5%99%A8%E6%9E%B6%E6%9E%84%EF%BC%88%E4%BD%A0%E8%AF%B4%E7%9A%84%E5%AE%8C%E5%85%A8%E5%AF%B9%EF%BC%89"><span class="nav-number">8.2.</span> <span class="nav-text">2. 存储器架构（你说的完全对）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E6%80%BB%E7%BA%BF%E6%9E%B6%E6%9E%84%EF%BC%88%E4%BD%A0%E6%8A%93%E4%BD%8F%E5%85%B3%E9%94%AE%E4%BA%86%EF%BC%89"><span class="nav-number">8.3.</span> <span class="nav-text">3. 总线架构（你抓住关键了）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E8%BF%90%E8%A1%8C%E6%97%B6%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%EF%BC%88%E4%BB%A3%E7%A0%81%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%EF%BC%89"><span class="nav-number">8.4.</span> <span class="nav-text">4. 运行时内存模型（代码内存结构）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-Cache%EF%BC%88%E4%BD%A0%E5%86%99%E5%BE%97%E5%BE%88%E6%A0%87%E5%87%86%EF%BC%89"><span class="nav-number">8.5.</span> <span class="nav-text">5. Cache（你写得很标准）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E4%B8%8E%E5%9C%B0%E5%9D%80%E7%BF%BB%E8%AF%91%EF%BC%88%E4%BD%A0%E8%AF%B4%E7%9A%84-MMU-%E5%B1%9E%E4%BA%8E%E8%BF%99%E9%87%8C%EF%BC%89"><span class="nav-number">8.6.</span> <span class="nav-text">6. 地址空间与地址翻译（你说的 MMU 属于这里）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E6%97%B6%E9%92%9F%E4%B8%8E%E5%A4%8D%E4%BD%8D%EF%BC%88%E5%BA%95%E5%B1%82%E6%9C%80%E5%9F%BA%E7%A1%80%E7%9A%84%E2%80%9C%E5%BF%83%E8%B7%B3%E2%80%9D%EF%BC%89"><span class="nav-number">8.7.</span> <span class="nav-text">7. 时钟与复位（底层最基础的“心跳”）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-%E5%A4%96%E8%AE%BE%E4%B8%8E-IO-%E5%AD%90%E7%B3%BB%E7%BB%9F"><span class="nav-number">8.8.</span> <span class="nav-text">8. 外设与 IO 子系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E5%90%AF%E5%8A%A8%E4%B8%8E-Boot-%E6%B5%81%E7%A8%8B%EF%BC%88%E7%9C%9F%E6%AD%A3%E2%80%9C%E5%BA%95%E5%B1%82%E5%88%B0%E5%BA%95%E2%80%9D%EF%BC%89"><span class="nav-number">8.9.</span> <span class="nav-text">9. 启动与 Boot 流程（真正“底层到底”）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93%E4%BD%A0%E5%8E%9F%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">9.</span> <span class="nav-text">一句话总结你原来的问题：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-MMU-%E6%98%AF%E6%80%8E%E4%B9%88%E6%8E%A7%E5%88%B6%E7%9A%84%EF%BC%9F%E9%A1%B5%E8%A1%A8%E5%9C%A8%E5%93%AA%E9%87%8C%E6%8F%90%E4%BE%9B%E7%BB%99%E5%AE%83%EF%BC%9F"><span class="nav-number">9.1.</span> <span class="nav-text">1. MMU 是怎么控制的？页表在哪里提供给它？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%88%91%E9%9C%80%E8%A6%81%E8%87%AA%E5%B7%B1%E6%8C%87%E5%AE%9A%E8%B5%B0%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BA%BF%E8%BF%98%E6%98%AF%E6%95%B0%E6%8D%AE%E6%80%BB%E7%BA%BF%E5%90%97%EF%BC%9F"><span class="nav-number">9.2.</span> <span class="nav-text">2. 我需要自己指定走指令总线还是数据总线吗？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%88%91%E9%9C%80%E8%A6%81%E7%81%B5%E6%B4%BB%E5%AE%89%E6%8E%92%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%BC%8F%E5%90%97%EF%BC%9F"><span class="nav-number">9.3.</span> <span class="nav-text">3. 我需要灵活安排代码运行模式吗？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-Linux-%E5%86%85%E6%A0%B8%E4%B8%8E-MMU-%E7%9A%84%E7%BB%88%E6%9E%81%E4%BA%A4%E4%BA%92%EF%BC%9A%E7%BC%BA%E9%A1%B5%E5%BC%82%E5%B8%B8-Page-Fault"><span class="nav-number">9.4.</span> <span class="nav-text">4. Linux 内核与 MMU 的终极交互：缺页异常 (Page Fault)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A%E4%BD%A0%E7%9A%84%E6%88%90%E9%95%BF%E8%B7%AF%E5%BE%84"><span class="nav-number">9.5.</span> <span class="nav-text">总结：你的成长路径</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32-esp32s3-imx 存储架构讨论 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32-esp32s3-imx 存储架构讨论
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-21 14:11:06" itemprop="dateCreated datePublished" datetime="2026-02-21T14:11:06+08:00">2026-02-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-22 12:46:06" itemprop="dateModified" datetime="2026-02-22T12:46:06+08:00">2026-02-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#%E4%BB%8B%E7%BB%8D">介绍</a></li>
+<li><a href="#%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E5%AF%B9%E6%AF%94">存储架构对比</a><ul>
+<li><a href="#stm32f103zet6">stm32f103zet6</a></li>
+<li><a href="#esp32s3-n16r8">esp32s3-N16R8</a></li>
+<li><a href="#imx6ull">imx6ull</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93%E5%AF%B9%E6%AF%94">总结对比</a></li>
+</ul>
+</li>
+<li><a href="#cache">cache</a></li>
+<li><a href="#%E6%80%BB%E7%BA%BF%E6%95%B0%E6%8D%AE%E6%80%BB%E7%BA%BF%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BA%BF">总线，数据总线，指令总线</a><ul>
+<li><a href="#%E4%B8%A4%E7%A7%8D%E5%9F%BA%E7%A1%80%E6%9E%B6%E6%9E%84%E5%86%AF%E8%AF%BA%E4%BE%9D%E6%9B%BC-vs-%E5%93%88%E4%BD%9B">两种基础架构：冯·诺依曼 vs. 哈佛</a></li>
+<li><a href="#stm32%E7%9A%84%E6%80%BB%E7%BA%BF">stm32的总线</a></li>
+<li><a href="#imx%E4%B8%AD%E7%9A%84%E6%80%BB%E7%BA%BF">imx中的总线</a></li>
+<li><a href="#esp32%E7%9A%84%E6%80%BB%E7%BA%BF">esp32的总线</a></li>
+<li><a href="#%E5%93%88%E4%BD%9B%E6%9E%B6%E6%9E%84%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F">哈佛架构的工作模式</a></li>
+<li><a href="#cache-%E7%9A%84%E5%8A%A8%E6%80%81%E6%90%AC%E8%BF%90%E8%BF%87%E7%A8%8B">Cache 的“动态搬运”过程</a></li>
+</ul>
+</li>
+<li><a href="#%E7%A8%8B%E5%BA%8F%E6%AE%B5%E5%92%8C%E5%AD%98%E5%82%A8%E5%99%A8">程序段和存储器</a><ul>
+<li><a href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%86%85%E9%83%A8-rom-%E5%9C%B0%E5%9D%80%E6%98%AF%E5%88%86%E6%88%90%E4%B8%A4%E5%9D%97%E7%9A%84">1. 为什么内部 ROM 地址是分成两块的？</a></li>
+<li><a href="#2-icache-%E5%92%8C-dcache-%E6%98%AF%E4%BB%8E%E5%86%85%E9%83%A8-ram-%E5%88%86%E5%87%BA%E6%9D%A5%E7%9A%84%E5%90%97">2. ICache 和 DCache 是从内部 RAM 分出来的吗？</a></li>
+<li><a href="#%E5%90%8C%E4%B8%80%E5%9D%97%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4%E6%97%A2%E8%B5%B0%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BA%BF%E5%8F%88%E8%B5%B0%E6%95%B0%E6%8D%AE%E6%80%BB%E7%BA%BF">同一块存储空间，既走指令总线，又走数据总线</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%B0%E5%9D%80%E8%A6%81%E6%98%A0%E5%B0%84%E6%88%90%E4%B8%A4%E4%BB%BD%E6%B6%88%E9%99%A4%E7%AB%9E%E4%BA%89">为什么地址要映射成两份？（消除竞争）</a></li>
+</ul>
+</li>
+<li><a href="#esp32s3%E4%BB%8B%E7%BB%8D">esp32s3介绍</a><ul>
+<li><a href="#%E5%86%85%E5%AD%98%E5%A0%86%E7%9A%84%E7%94%B3%E8%AF%B7">内存，堆的申请</a></li>
+<li><a href="#%E8%AE%BF%E9%97%AE%E9%80%9F%E5%BA%A6">访问速度</a></li>
+</ul>
+</li>
+<li><a href="#mmu%E6%80%BB%E7%BA%BF%E7%9F%A9%E9%98%B5">mmu,总线矩阵</a><ul>
+<li><a href="#%E6%80%BB%E7%BA%BF">总线</a><ul>
+<li><a href="#esp32%E7%9A%84%E5%A4%96%E9%83%A8ram-%E5%AF%B9%E6%AF%94-imx%E7%9A%84ddr">esp32的外部RAM 对比 imx的ddr</a></li>
+</ul>
+</li>
+<li><a href="#%E6%98%A0%E5%B0%84%E5%88%B0%E4%B8%80%E5%A5%97%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4">映射到一套地址空间</a></li>
+</ul>
+</li>
+<li><a href="#%E5%A4%87%E6%B3%A8">备注</a><ul>
+<li><a href="#1-%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%E6%9C%80%E9%A1%B6%E5%B1%82%E7%9A%84%E6%A0%B9">1. 内核架构（最顶层的“根”）</a></li>
+<li><a href="#2-%E5%AD%98%E5%82%A8%E5%99%A8%E6%9E%B6%E6%9E%84%E4%BD%A0%E8%AF%B4%E7%9A%84%E5%AE%8C%E5%85%A8%E5%AF%B9">2. 存储器架构（你说的完全对）</a></li>
+<li><a href="#3-%E6%80%BB%E7%BA%BF%E6%9E%B6%E6%9E%84%E4%BD%A0%E6%8A%93%E4%BD%8F%E5%85%B3%E9%94%AE%E4%BA%86">3. 总线架构（你抓住关键了）</a></li>
+<li><a href="#4-%E8%BF%90%E8%A1%8C%E6%97%B6%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E4%BB%A3%E7%A0%81%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84">4. 运行时内存模型（代码内存结构）</a></li>
+<li><a href="#5-cache%E4%BD%A0%E5%86%99%E5%BE%97%E5%BE%88%E6%A0%87%E5%87%86">5. Cache（你写得很标准）</a></li>
+<li><a href="#6-%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E4%B8%8E%E5%9C%B0%E5%9D%80%E7%BF%BB%E8%AF%91%E4%BD%A0%E8%AF%B4%E7%9A%84-mmu-%E5%B1%9E%E4%BA%8E%E8%BF%99%E9%87%8C">6. 地址空间与地址翻译（你说的 MMU 属于这里）</a></li>
+<li><a href="#7-%E6%97%B6%E9%92%9F%E4%B8%8E%E5%A4%8D%E4%BD%8D%E5%BA%95%E5%B1%82%E6%9C%80%E5%9F%BA%E7%A1%80%E7%9A%84%E5%BF%83%E8%B7%B3">7. 时钟与复位（底层最基础的“心跳”）</a></li>
+<li><a href="#8-%E5%A4%96%E8%AE%BE%E4%B8%8E-io-%E5%AD%90%E7%B3%BB%E7%BB%9F">8. 外设与 IO 子系统</a></li>
+<li><a href="#9-%E5%90%AF%E5%8A%A8%E4%B8%8E-boot-%E6%B5%81%E7%A8%8B%E7%9C%9F%E6%AD%A3%E5%BA%95%E5%B1%82%E5%88%B0%E5%BA%95">9. 启动与 Boot 流程（真正“底层到底”）</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E6%80%BB%E7%BB%93%E4%BD%A0%E5%8E%9F%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98">一句话总结你原来的问题：</a><ul>
+<li><a href="#1-mmu-%E6%98%AF%E6%80%8E%E4%B9%88%E6%8E%A7%E5%88%B6%E7%9A%84%E9%A1%B5%E8%A1%A8%E5%9C%A8%E5%93%AA%E9%87%8C%E6%8F%90%E4%BE%9B%E7%BB%99%E5%AE%83">1. MMU 是怎么控制的？页表在哪里提供给它？</a></li>
+<li><a href="#2-%E6%88%91%E9%9C%80%E8%A6%81%E8%87%AA%E5%B7%B1%E6%8C%87%E5%AE%9A%E8%B5%B0%E6%8C%87%E4%BB%A4%E6%80%BB%E7%BA%BF%E8%BF%98%E6%98%AF%E6%95%B0%E6%8D%AE%E6%80%BB%E7%BA%BF%E5%90%97">2. 我需要自己指定走指令总线还是数据总线吗？</a></li>
+<li><a href="#3-%E6%88%91%E9%9C%80%E8%A6%81%E7%81%B5%E6%B4%BB%E5%AE%89%E6%8E%92%E4%BB%A3%E7%A0%81%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%BC%8F%E5%90%97">3. 我需要灵活安排代码运行模式吗？</a></li>
+<li><a href="#4-linux-%E5%86%85%E6%A0%B8%E4%B8%8E-mmu-%E7%9A%84%E7%BB%88%E6%9E%81%E4%BA%A4%E4%BA%92%E7%BC%BA%E9%A1%B5%E5%BC%82%E5%B8%B8-page-fault">4. Linux 内核与 MMU 的终极交互：缺页异常 (Page Fault)</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93%E4%BD%A0%E7%9A%84%E6%88%90%E9%95%BF%E8%B7%AF%E5%BE%84">总结：你的成长路径</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>这篇文档，主要记录我在初步认识esp32s3开发板的存储架构的时候，和stm32, imx6ull的存储架构的不同的讨论</p>
+<p>借这个机会，了解启动流程，代码运行，mmu，哈佛架构，数据总线，指令总线，寻址地址，块设备，存储架构,cache这些的了解。</p>
+<h1 id="存储架构对比"><a href="#存储架构对比" class="headerlink" title="存储架构对比"></a>存储架构对比</h1><p>下面先来对比一下，stm32,esp32s3,imx的存储器架构</p>
+<h2 id="stm32f103zet6"><a href="#stm32f103zet6" class="headerlink" title="stm32f103zet6"></a>stm32f103zet6</h2><p>这个的存储器架构，之前就已经分析过了，就是内部ROM，内部RAM。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">[ ARM Cortex-M3 ]</span><br><span class="line">             |</span><br><span class="line">    +--------+--------+ </span><br><span class="line">    |  System Bus     |</span><br><span class="line">    +---|---------|---+</span><br><span class="line">        |         |</span><br><span class="line">+-------v---+ +---v-------+</span><br><span class="line">| Int. ROM  | | Int. RAM  |</span><br><span class="line">| (<span class="number">512</span> KB)  | | (<span class="number">64</span> KB)   |</span><br><span class="line">| 存放/运行  | | 存放变量  |</span><br><span class="line">| 程序代码   | | 堆栈      |</span><br><span class="line">+-----------+ +-----------+</span><br></pre></td></tr></table></figure>
+
+<p>stm32的bin用户代码，就烧录在内部ROM里面，上电后，start.S会把.data,.bss拷贝到内部RAM中，这样来运行。</p>
+<blockquote>
+<p>由于都是内部ROM，RAM，所以<strong>无需mmu映射</strong>，单纯靠总线矩阵，就可以实现存储空间到寻址空间的映射</p>
+</blockquote>
+<h2 id="esp32s3-N16R8"><a href="#esp32s3-N16R8" class="headerlink" title="esp32s3-N16R8"></a>esp32s3-N16R8</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">            [ Xtensa® Dual-Core LX7 ]</span><br><span class="line">                         |</span><br><span class="line">            +------------v------------+</span><br><span class="line">            | Cache / MMU (地址映射中心) |</span><br><span class="line">            +------------|------------+</span><br><span class="line">                         |</span><br><span class="line">      +------------------+------------------+</span><br><span class="line">      |                  |                  |</span><br><span class="line">+-----v-----+      +-----v-----+      +-----v-----+</span><br><span class="line">| Int. ROM  |      | Int. RAM  |      |  SPI Bus  |</span><br><span class="line">| (<span class="number">384</span> KB)  |      | (<span class="number">512</span> KB)  |      | (外部总线) |</span><br><span class="line">| 固化Boot/ |      | 极速数据  |      +-----|-----+</span><br><span class="line">| 算法库    |      | 关键代码  |            |</span><br><span class="line">+-----------+      +-----------+     /------+------\</span><br><span class="line">                                    |              |</span><br><span class="line">                           +--------v-------+ +----v-----------+</span><br><span class="line">                           | Ext. SPI Flash | | Ext. SPI RAM   |</span><br><span class="line">                           | (N16: <span class="number">16</span> MB)   | | (R8: <span class="number">8</span> MB)     |</span><br><span class="line">                           | 存放固件/文件   | | 存放UI/大数据库 |</span><br><span class="line">                           +----------------+ +----------------+</span><br></pre></td></tr></table></figure>
+
+<p>esp32和单片机stm32的存储架构有些不同，他和跑linux的系统，有些类似，但是同时具备单片机的轻量和系统a核的那种性能，他同时具备：</p>
+<ul>
+<li>内部ROM（384KB）<ul>
+<li>内部相当于存放bootROM代码</li>
+</ul>
+</li>
+<li>内部RAM<ul>
+<li>内存要求不高时，充当内存ram</li>
+</ul>
+</li>
+<li>外部ROM<ul>
+<li>实际bin文件存储的位置</li>
+</ul>
+</li>
+<li>外部RAM<ul>
+<li>用于扩展内存，比如需要存储很大的图片，原来的512KB肯定不够。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>esp32s3和imx不同，他的外部存储器（ROM，RAM）都是通过SPI来进行访问的，所以：</p>
+<ul>
+<li>如果<strong>没有启用MMU</strong>，那么外部存储器全部都是普通的块设备。</li>
+<li>如果<strong>开启MMU</strong>，则外部存储器，比如外部ROM，就可以通过MMU来把物理存储空间，映射到寻址空间中</li>
+</ul>
+</blockquote>
+<p><strong>为什么esp32s3不像imx一样，用外部RAM？</strong></p>
+<p><code>ESP32-S3</code> 支持外接<code>高达 1GB</code> 的外部 RAM（通常是 <code>PSRAM</code>，即伪静态随机存储器）。</p>
+<ul>
+<li><p><strong>为什么你在基础教程里没看到</strong>？ 因为内置的 512KB SRAM 对跑一个简单的 Wi-Fi 联网或 LED 闪烁程序已经绰绰有余了。</p>
+</li>
+<li><p><strong>什么时候会用</strong>？ 当你要跑 LVGL 图形界面、摄像头拍照、AI 语音识别或者本地 Web 服务器时，512KB 瞬间就会满，这时候你买的开发板通常会带一个 8MB 或 16MB 的 PSRAM 颗粒。</p>
+</li>
+</ul>
+<hr>
+<p>当你按下复位键，<strong>ESP32-S3 的内存会经历这个过程</strong>：</p>
+<ul>
+<li><p><strong>代码段 (.text)</strong>: 留在外部 Flash 里，通过 ICache 映射到 0x4200_0000。</p>
+</li>
+<li><p><strong>常量 (.rodata)</strong>: 留在外部 Flash 里，通过 DCache 映射到 0x3C00_0000。</p>
+</li>
+<li><p><strong>变量 (.data &#x2F; .bss)</strong>: 必须搬运到 内部 SRAM，地址在 0x3FC8_0000 附近。</p>
+</li>
+<li><p>如果你开启了 <code>PSRAM</code>(<strong>外部RAM</strong>): 那么你可以通过 <code>heap_caps_malloc</code>(<code>MALLOC_CAP_SPIRAM</code>) 在外部 RAM 里开辟巨大的缓冲区。</p>
+</li>
+</ul>
+<h2 id="imx6ull"><a href="#imx6ull" class="headerlink" title="imx6ull"></a>imx6ull</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">            [ ARM Cortex-A7 ]</span><br><span class="line">                   |</span><br><span class="line">          +--------v--------+</span><br><span class="line">          |   Bus Matrix    |</span><br><span class="line">          +---|--------|----+</span><br><span class="line">              |        |</span><br><span class="line">      +-------+        +-------+--------------+</span><br><span class="line">      |                        |              |</span><br><span class="line">+-----v-----+            +-----v-----+  +-----v-------+</span><br><span class="line">| Boot ROM  |            | Int. RAM  |  | DDR Control |</span><br><span class="line">| (<span class="number">96</span> KB)   |            | (OCRAM)   |  | (高速控制器) |</span><br><span class="line">| 芯片自检  |            | (<span class="number">128</span> KB)  |  +-----|-------+</span><br><span class="line">| 找启动介质|            | 搬运代码用|        |</span><br><span class="line">+-----------+            +-----------+  +-----v-------+</span><br><span class="line">      |                                 | Ext. DDR3   |</span><br><span class="line">+-----v-------------+                   | (<span class="number">256</span>/<span class="number">512</span> MB)|</span><br><span class="line">| Ext. eMMC / NAND  |                   | 真正的运行区 |</span><br><span class="line">| (几个GB的程序镜像)| ----------------&gt; | (代码+系统)  |</span><br><span class="line">+-------------------+ (由Bootloader搬运) +-------------+</span><br></pre></td></tr></table></figure>
+
+<p>这个架构就是标准的linux开发板的架构，具体不多说了。</p>
+<blockquote>
+<p>imx的外部存储器和esp32不太一样。</p>
+<ul>
+<li><strong>外部ROM</strong>，imx的是sd卡，emmc这些，因为存储空间非常大，16G，32G，寻址空间没这么多，所以一般不用MMU映射到寻址空间，而是<strong>单纯的用作块设备</strong>。</li>
+<li><strong>外部RAM</strong>，也就是DDR，imx是有<strong>独立的ddr总线</strong>进行连接，所以是可以映射到寻址空间的。</li>
+</ul>
+</blockquote>
+<blockquote>
+<p>注意，这三个都是哈佛架构，也就是CPU有数据总线和指令总线，具体使用在下面讲</p>
+</blockquote>
+<h2 id="总结对比"><a href="#总结对比" class="headerlink" title="总结对比"></a>总结对比</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">特性,       STM32 (F1系列),     ESP32-S3 (及类似芯片),              i.MX (及其他 MPU)</span><br><span class="line">代码位置,   内部 Flash (片上),      外部 Flash,                     外部 Flash / eMMC</span><br><span class="line">运行内存,   内部 SRAM (小),         内部 SRAM + 外部 PSRAM,         外部 DDR RAM</span><br><span class="line">核心机制,    直接寻址 (简单直接),    XIP (就地执行) + Cache,          Bootloader 搬运到 RAM 运行</span><br><span class="line">角色定位,   纯种单片机,             “缝合怪” (单片机皮，电脑心),        小型电脑处理器</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>为什么 ESP32-S3 的过程感觉像 i.MX？</strong></p>
+<p>你感觉像 i.MX 是因为它们都引入了 MMU (内存管理单元) 和 Cache (缓存)。</p>
+<ul>
+<li><p><strong>i.MX 的逻辑</strong>： 外部存储（Flash&#x2F;SD卡）太慢，必须在上电后把整个 Linux 内核和大程序全部搬运到外部 DDR RAM 里跑。</p>
+</li>
+<li><p><strong>ESP32-S3 的逻辑 (XIP)</strong>： 外部 Flash 虽然慢，但我有一个聪明的 Cache。CPU 想读哪段代码，Cache 就去 Flash 搬哪段，映射到虚拟地址空间。</p>
+</li>
+</ul>
+<p>这就是为什么 ESP32 即使不接外部 RAM 也能跑： 它把内部 SRAM 的一部分临时当成了外部 Flash 的“窗口”。</p>
+<hr>
+<p><strong>既然像 i.MX，为什么不默认全用外部 RAM？</strong></p>
+<p>既然可以外接 1GB，为什么不干脆像 i.MX 那样全跑在外部 RAM？主要有三个考量：</p>
+<ul>
+<li><p><strong>功耗控制</strong>： 访问外部总线（SPI&#x2F;QPI）非常耗电。单片机首要任务是低功耗，能用内部 SRAM 解决的就绝不出门。</p>
+</li>
+<li><p><strong>延迟 (Latency)</strong>： 内部 SRAM 是单周期访问（快如闪电）；外部 RAM 即使有 Cache，也存在未命中时的等待时间。</p>
+</li>
+<li><p><strong>引脚资源</strong>： i.MX 为了接 DDR 动辄占用几十个引脚；ESP32-S3 常用 SPI 接口，虽然节省了引脚，但带宽上限封死了。</p>
+</li>
+</ul>
+<h1 id="cache"><a href="#cache" class="headerlink" title="cache"></a>cache</h1><p>上面，已经整理了stm32,esp32,imx的存储架构的区别。下面来具体讨论，经常看到说，<strong>cache可以加速访问RAM，ROM，为什么</strong>？</p>
+<p><strong>如果最终都要从慢速的外部 ROM 搬东西，那 Cache 凭什么能快？</strong></p>
+<ul>
+<li>Cache 聪明的点在于：它不是“按需取一个”，而是“<strong>顺便带一堆</strong>”<ul>
+<li><p><strong>第一次读取</strong> (<code>Cache Miss</code>): 当 CPU 第一次要读某个地址的代码时，Cache 确实得苦哈哈地去外部 Flash 搬运。这时候 CPU 必须等待（Stall），<code>速度确实慢</code>。</p>
+</li>
+<li><p><strong>空间局部性</strong> (<code>Spatial Locality</code>): 你的代码通常是<code>顺序执行的</code>。当你读地址 0x01 时，Cache 预判你马上要读 0x02, 0x03… 所以它会<strong>一次性从 Flash 搬回一个缓存行 (Cache Line)</strong>，比如 32 字节或 64 字节。</p>
+</li>
+<li><p><strong>时间局部性</strong> (<code>Temporal Locality</code>): 代码里有很多 for 循环或函数调用。一段代码被搬进 Cache 后，循环 1000 次，除了第一次是慢的，剩下的 999 次都是直接从内部 SRAM 读。</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>cache，相当于是内部RAM中，对于外部ROM的一段动态窗口映射</strong></p>
+<p>在 ESP32-S3 中，确实会划出一部分 Internal SRAM（比如 SRAM 0 的一部分）专门给 Cache 使用。但这块 SRAM 并不是死死地对应 Flash 的某一段，而是一个动态池子。</p>
+<ul>
+<li><p><strong>标签 (Tag) 机制</strong>： Cache 内部会维护一张表。它记录了：“我现在这块 SRAM 里存的到底是从 Flash 哪个地址搬过来的东西？”</p>
+</li>
+<li><p><strong>动态替换</strong>： 比如你划了 <code>32KB</code> 的 SRAM 做 <code>Cache</code>。</p>
+<ul>
+<li><p>当你运行程序 A 段时，这 32KB 填满了 A 段的代码。</p>
+</li>
+<li><p>当你突然跳转到程序 B 段（在 Flash 另一个很远的地方），Cache 发现这 32KB 里没有 B，它就会把旧的 A 代码踢出去，从 Flash 搬 B 段进来覆盖掉。</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>ESP32-S3 的特殊性：ICache 与 DCache</strong></p>
+<p>ESP32-S3 把这个“替身”分得更细：</p>
+<ul>
+<li><p><code>ICache (Instruction Cache)</code>: 专门给指令总线用。CPU 读代码去执行时走这里。它只读不写，所以逻辑简单，速度极快。</p>
+</li>
+<li><p><code>DCache (Data Cache)</code>: 专门给数据总线用。如果你在 Flash 里存了一些大的图片、常量表，CPU 读取它们时走这里。</p>
+</li>
+</ul>
+<blockquote>
+<p>注意： 在 ESP32-S3 中，你可以通过配置，决定到底拿多少 SRAM 出来当 Cache。</p>
+</blockquote>
+<ul>
+<li><p>如果你<strong>不设 Cache</strong>，那这部分 SRAM 就能当普通的 RAM 存变量。</p>
+</li>
+<li><p>如果你<strong>设了 Cache</strong>，这部分 SRAM 就不再受你控制，而是受 <code>MMU</code> (内存管理单元) <code>自动管理</code>，专门负责和外部 Flash 对接。</p>
+</li>
+</ul>
+<p>–</p>
+<blockquote>
+<p>以上就是对cache的一些认识，它本质上是一块SRAM区域，只不过这里面不是存储固定的内容，而是对其他存储器空间的一个动态映射。这样一次拷贝，可以把一整个映射区域的内容都拷贝过来，cpu读取内容就是在SRAM的cache中，而不是每次等待长时间来访问外部ROM</p>
+</blockquote>
+<h1 id="总线，数据总线，指令总线"><a href="#总线，数据总线，指令总线" class="headerlink" title="总线，数据总线，指令总线"></a>总线，数据总线，指令总线</h1><p>既然上面提到了总线，我看stm32，imx里面都没有提到数据总线，指令总线，<strong>当时就只是单纯的说cpu取PC指针的指令，执行</strong>。</p>
+<p>事实是：<strong>STM32 和 i.MX 都有指令总线和数据总线</strong>，只是它们的表现形式和重视程度不同</p>
+<h2 id="两种基础架构：冯·诺依曼-vs-哈佛"><a href="#两种基础架构：冯·诺依曼-vs-哈佛" class="headerlink" title="两种基础架构：冯·诺依曼 vs. 哈佛"></a>两种基础架构：冯·诺依曼 vs. 哈佛</h2><ul>
+<li><p><strong>冯·诺依曼架构 (Von Neumann)</strong>: 指令和数据全都挤在一根总线上。就像一条单行道，CPU 要么取指令，要么取数据，不能同时干。</p>
+</li>
+<li><p><strong>哈佛架构 (Harvard)</strong>: 指令和数据有各自独立的总线。就像双向八车道，CPU 可以一边取下一条指令，一边读内存里的变量。</p>
+</li>
+</ul>
+<h2 id="stm32的总线"><a href="#stm32的总线" class="headerlink" title="stm32的总线"></a>stm32的总线</h2><p>在 <code>STM32F103 (Cortex-M3)</code> 中：<br>其实它也是<strong>哈佛架构</strong>。如果你翻开《STM32参考手册》的“存储器架构”一节，你会看到三根总线：</p>
+<ul>
+<li><p><strong>I-Code 总线</strong>： 专门去 Flash 取指令。</p>
+</li>
+<li><p><strong>D-Code 总线</strong>： 专门去 Flash 取常量（Literal data）。</p>
+</li>
+<li><p><strong>System 总线</strong>： 去 SRAM 读写变量。</p>
+</li>
+</ul>
+<p>为什么你没感觉？ 因为 STM32 内部有一个叫 <strong>总线矩阵 (Bus Matrix)</strong> 的东西。它像一个交通警察，自动把这些请求分流了。对开发者来说，你只需要操作地址空间（0x0800… 或 0x2000…），感觉好像只有一套内存。</p>
+<h2 id="imx中的总线"><a href="#imx中的总线" class="headerlink" title="imx中的总线"></a>imx中的总线</h2><p>在 i.MX (Cortex-A 系列) 中：</p>
+<p>i.MX 这种高性能处理器更是彻头彻尾的<strong>哈佛架构</strong>。它的 <code>L1 Cache</code>（一级缓存） 是严格分成 <code>I-Cache</code> 和 <code>D-Cache</code> 的。</p>
+<p>为什么你没感觉？ 因为 i.MX 运行的是 Linux 或复杂的系统，<strong>这些底层的总线路由完全由内核和硬件 MMU 自动处理了</strong>，应用层根本碰不到。</p>
+<h2 id="esp32的总线"><a href="#esp32的总线" class="headerlink" title="esp32的总线"></a>esp32的总线</h2><p>为什么 ESP32-S3 显得这么“显眼”？</p>
+<p><code>ESP32-S3</code> 把<strong>指令总线</strong>和<strong>数据总线</strong>拎出来强调，是因为它的<strong>外部存储架构太特殊</strong>了：</p>
+<ul>
+<li><p><strong>物理上的割裂</strong>： ESP32-S3 的<strong>代码存在片外 Flash</strong>。CPU 想运行代码，必须通过<strong>指令总线</strong>走 <code>ICache</code> 去 Flash 搬运。</p>
+</li>
+<li><p><strong>地址映射的强制划分</strong>： </p>
+<ul>
+<li><p>当你访问 <code>0x4200_0000</code> 开头的地址，硬件雷达就会识别：“这是<strong>指令总线</strong>请求！”，然后去触发 <code>ICache</code>。</p>
+</li>
+<li><p>当你访问 <code>0x3C00_0000</code> 开头的地址，硬件雷达会识别：“这是<strong>数据总线</strong>请求！”，然后去触发 <code>DCache</code>。</p>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>这些都是硬件自动执行的，软件OS只需关注访问寄存器即可</p>
+</blockquote>
+<ul>
+<li><strong>开发者的控制权</strong>： 在 ESP32 中，你可以<strong>手动决定</strong>把一段代码<strong>放进 SRAM</strong>（为了快）还是<strong>留在 Flash</strong>（为了省空间）。由于 SRAM 0&#x2F;1&#x2F;2 的访问限制不同，你必须清楚哪根总线能通向哪块内存。</li>
+</ul>
+<h2 id="哈佛架构的工作模式"><a href="#哈佛架构的工作模式" class="headerlink" title="哈佛架构的工作模式"></a>哈佛架构的工作模式</h2><p>CPU 可以一边通过“<strong>指令总线</strong>”抓取下一条指令，一边通过“<strong>数据总线</strong>”读取当前指令需要的数据</p>
+<p>举例：</p>
+<p>工厂有两条独立的传送带：指令带和数据带。</p>
+<ul>
+<li><p>时刻 1： 指令带把“<strong>指令 1</strong>”运给工人 B。</p>
+</li>
+<li><p>时刻 2（高潮来了）：</p>
+<ul>
+<li><p>工人 B 正在执行“指令 1”（比如：把变量 X 加 1）。他通过<strong>数据总线</strong>去 SRAM 里读变量 X。</p>
+</li>
+<li><p>与此同时，工人 A 通过<strong>指令总线</strong>把“<strong>指令 2</strong>”运了过来。</p>
+</li>
+</ul>
+</li>
+<li><p>结果： <strong>两个动作同时发生</strong>，CPU 永远有指令可以跑，不用停下来等总线。</p>
+</li>
+</ul>
+<hr>
+<p><img src="/../images/31.1.png" alt="alt text"></p>
+<blockquote>
+<p>可以看到，CPU会根据你的指针指向的地址，自动判断，是走指令总线，还是数据总线。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">===========================================================</span><br><span class="line">       |                  CPU 双核 (Protagonist)                 |</span><br><span class="line">       |  [ PC寄存器 ] ----&gt; 指令总线 (IBUS)  数据总线 (DBUS) &lt;---- |</span><br><span class="line">       ==========================|===============|================</span><br><span class="line">                                 |               |</span><br><span class="line">       --------------------------v---------------v----------------</span><br><span class="line">       |                     Cache 系统 (高速缓存)                |</span><br><span class="line">       |   [ ICache (指令缓存) ]           [ DCache (数据缓存) ]   |</span><br><span class="line">       --------------------------|---------------|----------------</span><br><span class="line">                                 |               |</span><br><span class="line">       ==========================v===============v================</span><br><span class="line">       |                  MMU / 总线矩阵 (交通枢纽)               |</span><br><span class="line">       |         (根据 CPU 访问的地址，自动切换到不同的目的地)        |</span><br><span class="line">       ===========================================================</span><br><span class="line">                /                |               |             \</span><br><span class="line">  [ <span class="number">1.</span> 内部 ROM ]        [ <span class="number">2.</span> 内部 SRAM ] [ <span class="number">3.</span> 外部 Flash ] [ <span class="number">4.</span> 外部 RAM ]</span><br><span class="line">  (<span class="number">0x4000</span>_0000...)      (<span class="number">0x3FC8</span>_0000...) (<span class="number">0x4200</span>_0000...) (<span class="number">0x3C00</span>_0000...)</span><br><span class="line">  ----------------      ---------------- ---------------- ----------------</span><br><span class="line">  | 出厂固化代码 |      |  运行时的变量 | | 你的程序代码 | | 巨大的图片库 |</span><br><span class="line">  | (不可更改)   |      |  (栈/堆空间)  | | (.bin文件)   | | (PSRAM 扩展) |</span><br><span class="line">  ----------------      | 也可以存代码  | ---------------- ----------------</span><br><span class="line">                        |   (IRAM)     |</span><br><span class="line">                        ----------------</span><br></pre></td></tr></table></figure>
+<p>可以看到，当设置了Cache,那么SRAM中的cache部分，就不再由用户控制，而是受总线和mmu控制。</p>
+<h2 id="Cache-的“动态搬运”过程"><a href="#Cache-的“动态搬运”过程" class="headerlink" title="Cache 的“动态搬运”过程"></a>Cache 的“动态搬运”过程</h2><p>这是你之前最纠结的地方。请看图中的 外部 Flash:</p>
+<ul>
+<li><p>CPU 想运行地址 0x4200_1000 的代码。</p>
+</li>
+<li><p>ICache 检查自己：“我这儿有这段代码吗？”</p>
+<ul>
+<li><p>如果没有 (Miss): ICache 会通过外部 SPI 接口，从 Flash 猛吸一大块代码（比如 32 字节）存入 Cache（这部分其实占用了内部 SRAM 的一部分空间）。</p>
+</li>
+<li><p>如果有 (Hit): CPU 直接从 ICache 拿，速度和读内部 SRAM 一样快（1 个时钟周期）。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="程序段和存储器"><a href="#程序段和存储器" class="headerlink" title="程序段和存储器"></a>程序段和存储器</h1><p>下面来看看实际存储器的存储空间，是如何映射到寻址空间上的。</p>
+<p>下图是esp32s3的寻址空间映射表：</p>
+<p><img src="/../images/31.2.png" alt="alt text"><br>可以看到，实际内部ROM应该只有384KB，但是他这两段加起来都不止了。这是因为<strong>地址重叠</strong></p>
+<h2 id="1-为什么内部-ROM-地址是分成两块的？"><a href="#1-为什么内部-ROM-地址是分成两块的？" class="headerlink" title="1. 为什么内部 ROM 地址是分成两块的？"></a>1. 为什么内部 ROM 地址是分成两块的？</h2><p>在传统的 STM32 认知里，ROM 就是一块连续的地址。但在 ESP32-S3 中，ROM 地址的分开其实是为了<strong>总线分工</strong>：</p>
+<ul>
+<li><p>物理上： 内部 ROM 确实是一块完整的 384 KB 硅片。</p>
+</li>
+<li><p>逻辑上（地址映射）： </p>
+<ul>
+<li><p>Internal ROM 0 (0x4000_0000 开始)：专门映射到指令总线 (Instruction Bus)。CPU 只有通过这个地址段才能“执行” ROM 里的代码。</p>
+</li>
+<li><p>Internal ROM 1 (0x3FF0_0000 和 0x4004_0000)：它是一个双端口映射。它既可以从数据总线访问（读数据），也可以从指令总线访问（运行程序）。</p>
+</li>
+</ul>
+</li>
+<li><p>为什么要分开？ 这样设计的目的是<strong>为了实现并行访问</strong>。当 CPU 通过<code>指令总线</code>在 ROM 0 执行一段程序时，它依然可以通过<code>数据总线</code>从 ROM 1 读取一些预存的常量，两条总线互不干扰，效率最高。</p>
+</li>
+</ul>
+<h2 id="2-ICache-和-DCache-是从内部-RAM-分出来的吗？"><a href="#2-ICache-和-DCache-是从内部-RAM-分出来的吗？" class="headerlink" title="2. ICache 和 DCache 是从内部 RAM 分出来的吗？"></a>2. ICache 和 DCache 是从内部 RAM 分出来的吗？</h2><p>是的，你的理解完全正确。 它们不是独立的硬件存储器，而是“借用”了<strong>内部 SRAM</strong> 的空间。</p>
+<ul>
+<li><p>借用关系：</p>
+<ul>
+<li><p>ICache 借用的是 Internal SRAM 0 的一部分空间（最高可达 32 KB）。</p>
+</li>
+<li><p>DCache 借用的是 Internal SRAM 2 的一部分空间（最高可达 64 KB）。</p>
+</li>
+</ul>
+</li>
+<li><p>配置的代价：</p>
+<ul>
+<li>当你通过软件配置开启了 32 KB 的 ICache 后，你可用的通用 SRAM 指令空间就会减少 32 KB。</li>
+<li>如果你关掉 Cache，这部分空间就可以当作普通的 RAM 来存数据或跑程序。</li>
+</ul>
+</li>
+<li><p>为什么不设计独立的 Cache 硬件？</p>
+<ul>
+<li>为了灵活性。如果你开发的程序很小，根本不需要外部 Flash，那你就可以关掉 Cache，把所有 SRAM 都拿来当内存用，不浪费一点资源。</li>
+</ul>
+</li>
+</ul>
+<h2 id="同一块存储空间，既走指令总线，又走数据总线"><a href="#同一块存储空间，既走指令总线，又走数据总线" class="headerlink" title="同一块存储空间，既走指令总线，又走数据总线"></a>同一块存储空间，既走指令总线，又走数据总线</h2><p>这种既能走指令总线（IBUS）又能走数据总线（DBUS）的设计，主要服务于以下几种真实的开发场景：</p>
+<p><strong>1. 查找表与常量数据（Literal Pools）</strong></p>
+<p>这是最常见的情况。在编写 C 语言代码时，如果你定义了一个<strong>巨大的常量数组</strong>：<br><code>const char my_table[] = { ... }</code>;</p>
+<ul>
+<li><p><strong>编译器视角</strong>：它通常把这个数组放在 <code>.rodata</code>（只读数据段）里。</p>
+</li>
+<li><p><strong>CPU 执行视角</strong>：当 CPU 运行到 <code>x = my_table[i]</code> 时，它是通过<strong>数据总线</strong>去读取这个地址的。</p>
+</li>
+<li><p><strong>ESP32-S3 的特殊性</strong>：如果这个数组被<strong>编译器优化</strong>放到了代码段（<code>.text</code>）附近，或者就在 ROM 里。如果没有“数据总线访问代码区”的能力，CPU 只能执行代码，却无法读取代码中间夹杂的数据，程序就会崩溃。</p>
+</li>
+</ul>
+<h2 id="为什么地址要映射成两份？（消除竞争）"><a href="#为什么地址要映射成两份？（消除竞争）" class="headerlink" title="为什么地址要映射成两份？（消除竞争）"></a>为什么地址要映射成两份？（消除竞争）</h2><p>你上传的技术手册里提到，Internal ROM 1 的物理内容完全相同，但映射到了两段地址。</p>
+<p>这种设计被称为<strong>双端口访问</strong>（<code>Dual-port access</code>）：</p>
+<ul>
+<li><p>如果只有一段地址，当 CPU 正在通过这根总线取指令时，如果突然要读数据，总线就得停下来切换，这叫“流水线停顿”。</p>
+</li>
+<li><p>映射成两段后，CPU 可以同时从指令地址取指，从数据地址读数。虽然物理上是同一个 ROM 单元，但逻辑上它们像是在两个不同的车道上跑，互不打扰。</p>
+</li>
+</ul>
+<blockquote>
+<p>stm32也有，但是硬件自动处理了，保证了高带宽，但是esp32，它把指令通道（IBUS）和数据通道（DBUS）直接摆在你面前，甚至通过不同的地址空间让你手动选择“超车道”，从而压榨出每一分性能</p>
+</blockquote>
+<h1 id="esp32s3介绍"><a href="#esp32s3介绍" class="headerlink" title="esp32s3介绍"></a>esp32s3介绍</h1><p>我目前手头上的这个<code>esp32S3</code>，MODEL XH-S3E，WIFI + BT <code>N16R8</code></p>
+<ul>
+<li>内部ROM（384KB）</li>
+<li>内部RAM（512KB）</li>
+<li>外部ROM（16MB flash）</li>
+<li>外部RAM（8MB）</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">存储类型,           容量,       对应你文档中的位置,         物理位置,                   用途</span><br><span class="line">Internal ROM,       <span class="number">384</span> KB,     Internal ROM <span class="number">0</span>/<span class="number">1</span>,       芯片内核里,                 存放一上电就跑的引导代码 (First-stage Bootloader)。</span><br><span class="line">Internal SRAM,      <span class="number">512</span> KB,     Internal SRAM <span class="number">0</span>/<span class="number">1</span>/<span class="number">2</span>,    芯片内核里,最快最贵。       存放栈 (Stack) 和高频访问的变量（.data/.bss）。</span><br><span class="line">External Flash,     <span class="number">16</span> MB,      外部存储器,              芯片封装内/外 (SPI),       你的代码仓库。 存所有的代码段 (.text) 和常量 (.rodata)。</span><br><span class="line">External RAM,       <span class="number">8</span> MB,       外部 RAM,               芯片封装内/外 (SPI),        你的大缓存。 用于存图片、视频缓冲区或超大数组。</span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么 N16R8 这种型号更需要 Cache</strong>？</p>
+<p>你现在拥有 <code>16MB Flash</code> 和 <code>8MB RAM</code>，但 CPU 的地址总线能<strong>直接“摸”到</strong>的内部空间只有 <code>512KB SRAM</code>。这就完美解释了你之前看的文档里为什么要提 ICache 和 DCache：</p>
+<ul>
+<li><p>分流 (Mapping):</p>
+<ul>
+<li>由于<code>外部 Flash</code> 和 <code>PSRAM</code> 都是通过 <code>SPI</code> 连接的，物理地址不连续。ESP32-S3 的 <strong>MMU</strong> 会把这 <code>16MB Flash</code> 映射到<strong>指令总线</strong>的 <code>0x4200_0000</code> 窗口，把 <code>8MB PSRAM</code> 映射到<strong>数据总线</strong>的 <code>0x3C00_0000</code> 窗口。</li>
+</ul>
+</li>
+<li><p>缓存 (Caching):</p>
+<ul>
+<li>ICache: 负责从 <code>16MB Flash</code> 里预取<strong>代码</strong>到 <code>SRAM 0</code> 中，让 CPU 跑起来。</li>
+<li>DCache: 负责从 <code>8MB PSRAM</code> 里预取数据到 <code>SRAM 2</code> 中，解决 SPI 速度慢的问题。</li>
+</ul>
+</li>
+</ul>
+<h2 id="内存，堆的申请"><a href="#内存，堆的申请" class="headerlink" title="内存，堆的申请"></a>内存，堆的申请</h2><p><strong>堆（Heap）的申请</strong>：随心所欲的选择</p>
+<p>对于你手上的 N16R8（8MB PSRAM），ESP-IDF 提供了非常灵活的<code>内存分配</code>函数。</p>
+<ul>
+<li><p>默认 malloc()：通常会<strong>优先申请内部 SRAM</strong>，因为速度最快。</p>
+</li>
+<li><p>显式申请<strong>外部 RAM</strong>：</p>
+<ul>
+<li>如果你要处理一张 4K 图片，内部 SRAM 肯定放不下，你可以调用：</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 强制在外部 PSRAM 中申请内存</span></span><br><span class="line"><span class="type">char</span> *buf = (<span class="type">char</span> *)heap_caps_malloc(<span class="number">1024</span> * <span class="number">1024</span>, MALLOC_CAP_SPIRAM);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>显式申请<strong>内部 RAM</strong>：<ul>
+<li>如果是给中断服务程序用的缓冲区，必须极快，则调用：</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> *fast_buf = (<span class="type">char</span> *)heap_caps_malloc(<span class="number">1024</span>, MALLOC_CAP_INTERNAL);</span><br><span class="line">这就像是你手里有两张卡，一张是高带宽但容量小的“内部卡”，一张是超大容量但稍慢的“外部卡”，你可以根据业务需求切换。</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="访问速度"><a href="#访问速度" class="headerlink" title="访问速度"></a>访问速度</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">存储类型,           速度等级,       访问成本 (周期),        访问路径</span><br><span class="line">内部 SRAM,          极快,           ~<span class="number">1</span> cycle,              直接访问</span><br><span class="line">外部 PSRAM,         中等,           ~<span class="number">10</span><span class="number">-50</span> cycles,          经过 DCache -&gt; SPI 总线</span><br><span class="line">外部 Flash,         慢,             ~<span class="number">100</span>+ cycles,           经过 ICache/DCache -&gt; SPI 总线</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="mmu-总线矩阵"><a href="#mmu-总线矩阵" class="headerlink" title="mmu,总线矩阵"></a>mmu,总线矩阵</h1><h2 id="总线"><a href="#总线" class="headerlink" title="总线"></a>总线</h2><p>“总线”在物理层面就是一排平行的导线，但在逻辑层面，它是一套通信协议和身份证明。</p>
+<p><strong>1. 物理层面</strong></p>
+<p>就是排线</p>
+<p><strong>2. 逻辑层面</strong></p>
+<p>如果你只是把 16 根线连在一起，那叫“并排导线”。之所以叫“总线”，是因为它有一套<strong>地址分配机制</strong>。</p>
+<p>想象一条大街（总线），街边有很多房子（存储器）：</p>
+<ul>
+<li><p><strong>STM32 的总线</strong>：像是一条内部大街。</p>
+<ul>
+<li>CPU、内部 SRAM、内部 Flash 都在这条街上。</li>
+<li>因为大家都在芯片内部，距离极短，线可以铺得非常多（比如 32 位甚至 64 位），所以速度极快。</li>
+</ul>
+</li>
+<li><p><strong>ESP32-S3 的总线</strong>：它面临一个挑战。它的“大仓库”（16MB Flash 和 8MB PSRAM）在芯片外面。</p>
+<ul>
+<li>限制：芯片引脚有限，不可能在 PCB 上铺 32 根线去连 Flash。</li>
+<li>现状：所以它用了 <strong>SPI</strong>&#x2F;QPI&#x2F;OPI。你的 N16R8 型号中的 R8（PSRAM）通常使用的是 OPI (Octal SPI)，物理上只有 <strong>8 根数据线</strong>。</li>
+<li>魔法：虽然物理上只有 8 根线（串行&#x2F;并行组合），但 CPU 内部的总线矩阵会把这 <strong>8 根线</strong>“伪装”成 <strong>32 位的内部地址空间</strong></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">【芯片内部 (高速、宽阔)】                   【芯片引脚】          【外部 PCB (窄、长)】</span><br><span class="line">      CPU                                   |              </span><br><span class="line">       |                                    |              </span><br><span class="line"> [ <span class="number">32</span>位 IBUS/DBUS ]                         |              </span><br><span class="line">       |                                    |              </span><br><span class="line"> [ 总线矩阵 (Switch) ] &lt;---------------------&gt; [ SPI 控制器 ] &lt;==== (<span class="number">8</span>根线) ====&gt; [ <span class="number">8</span>MB PSRAM ]</span><br><span class="line">       |                                    | (转换器)      |              (物理颗粒)</span><br><span class="line"> [ 内部 SRAM (<span class="number">512</span>KB) ]                       |              |</span><br><span class="line"> (物理上由几十根金属线连接)                    |              | &lt;==== (<span class="number">4</span>根线) ====&gt; [ <span class="number">16</span>MB Flash ]</span><br><span class="line">                                            |                             (物理颗粒)</span><br></pre></td></tr></table></figure>
+
+<p><strong>为什么外部 RAM 感觉“慢”？</strong></p>
+<p>当你申请外部 RAM 时，数据要经历：</p>
+<ul>
+<li>CPU 发出 32 位指令。</li>
+<li>总线矩阵识别出地址属于外部映射区。</li>
+<li>Cache 检查是否命中。</li>
+<li>SPI 控制器 把 32 位数据拆成 4 次（8位宽时）发给外部颗粒。</li>
+<li>外部颗粒感应、充放电、传回。</li>
+</ul>
+<h3 id="esp32的外部RAM-对比-imx的ddr"><a href="#esp32的外部RAM-对比-imx的ddr" class="headerlink" title="esp32的外部RAM 对比 imx的ddr"></a>esp32的外部RAM 对比 imx的ddr</h3><p>同样是外部RAM，</p>
+<ul>
+<li>esp32还是依靠外设来访问，依靠mmu来实现块设备-&gt;地址空间的映射，<strong>MMU 是为了“伪装”</strong><ul>
+<li>在 ESP32 中，外部 RAM（PSRAM）在物理上确实是一个**“块设备”**（通过 SPI 这种一问一答的协议通信）。<ul>
+<li>没有 MMU 的话：你必须写类似 <code>spi_ram_read(address, buffer, len)</code> 的代码。这太痛苦了，也没法跑 C 语言的指针。</li>
+<li>有了 MMU 的作用：<strong>它把 SPI 的通信逻辑硬件化了</strong>。当你访问 0x3C00_0000 时，MMU 拦截这个地址，自动把它转成 SPI 指令发给外部芯片。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>本质：这里的 MMU 是为了**“接口转换”，把非总线接口**（SPI）伪装成总线接口。</p>
+</blockquote>
+<ul>
+<li>i.MX 的 DDR：<strong>MMU 是为了“管理”</strong><ul>
+<li>i.MX 的 DDR 控制器（DDRC）本身就是总线的一部分。即便你不开 MMU，CPU 只要上电初始化好 DDR 控制器，就能直接通过物理地址访问 DDR。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>既然硬件能直接访问，为什么还要 MMU？</p>
+</blockquote>
+<p>在 i.MX（尤其是跑 Linux）这种高性能系统中，MMU 的作用不再是“伪装接口”，<strong>而是</strong>“虚拟化”和“权限控制”<strong>：</strong></p>
+<ul>
+<li><p><strong>虚拟地址</strong> (Virtual Addressing)：让每个进程都以为自己拥有从 0x0000_0000 开始的完整 4GB 内存，而实际上它们分散在 DDR 的各个角落。</p>
+</li>
+<li><p><strong>内存保护</strong> (Protection)：防止用户程序（App）乱改内核（Kernel）的数据。如果 App 越界，MMU 硬件会立刻触发异常（Segmentation Fault）。</p>
+</li>
+<li><p><strong>缓存策略</strong>：告诉 CPU 哪块内存需要 Cache（比如代码区），哪块内存不需要 Cache（比如 DMA 缓冲区）。</p>
+</li>
+</ul>
+<h2 id="映射到一套地址空间"><a href="#映射到一套地址空间" class="headerlink" title="映射到一套地址空间"></a>映射到一套地址空间</h2><p>要把各种存储、外设映射到一套地址空间，其实是<strong>总线矩阵-静态</strong>和 <strong>MMU-动态</strong>分工合作的结果。</p>
+<ul>
+<li><p><strong>总线矩阵（Bus Matrix）</strong>—— “交通指挥中心”：</p>
+<ul>
+<li><p>作用：它决定了硬件上的固定物理地址。比如你手册里提到的 Internal SRAM 1 始终在 0x3FC8_8000。</p>
+</li>
+<li><p>本质：它是<strong>纯硬件电路</strong>。芯片设计时，工程师就把地址解码器焊死了。当 CPU 访问某个地址，矩阵就像拨动了物理开关，直接导向对应的设备。</p>
+</li>
+<li><p>无感性：它不需要你写代码去“开启”，上电就存在。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>MMU（Memory Management Unit）</strong>—— “地址翻译官”：</p>
+<ul>
+<li><p>作用：它把 CPU 想访问的“虚拟地址”翻译成“物理地址”。</p>
+</li>
+<li><p>开关区别：</p>
+<ul>
+<li><p>关闭 MMU：CPU 直接访问物理内存（实模式）。指令 0x42000000 就是去读电路板上对应的那个物理点。</p>
+</li>
+<li><p>开启 MMU：CPU 发出 0x42000000，MMU 查表发现它对应外部 Flash 的第 100 个扇区，于是去发指令读取。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>本质</strong>：它是纯硬件逻辑，但需要软件（OS 内核或 Bootloader）预先在内存里写好一张“映射表”。</p>
+</li>
+</ul>
+<p><strong>地址映射 vs. 块设备：为什么 ESP32 映射，i.MX 却不映射？</strong></p>
+<p>你敏锐地察觉到了：ESP32 确实把“块设备”（Flash）伪装成了“内存”。</p>
+<ul>
+<li><p>ESP32-S3 的做法（XIP - 就地执行）：</p>
+<ul>
+<li><p>它的 MMU 配合 Cache 做了一层特殊的映射。虽然 Flash 物理上是按“块”读写的，但 MMU 会以 64 KB 为单位把 Flash 映射到地址空间。</p>
+<ul>
+<li>原因：ESP32 的内部 RAM 太小（512 KB），放不下动辄几 MB 的程序，必须让 CPU 能直接在外部 Flash 上“跑”代码。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>i.MX 的做法（加载到 RAM 执行）：</p>
+<ul>
+<li><p>i.MX 也有 MMU，但它的 MMU 主要服务于 DDR RAM。</p>
+</li>
+<li><p>为什么不映射 SD&#x2F;eMMC？ </p>
+<ul>
+<li>延迟：SD 卡访问一次要几毫秒，如果映射到总线上，CPU 每一条指令都要等几毫秒，系统就卡死了。</li>
+<li>文件系统：SD 卡里有分区、目录。映射地址只能映射“原始字节”，没法映射“文件”。</li>
+<li>DDR 太强大：i.MX 有 1GB 的 DDR，它习惯先把程序一次性从 eMMC “搬运”到 DDR，然后在 DDR 里飞速运行。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>BootROM 怎么找到“第一行代码”？</strong></p>
+<p>这是一个“先有鸡还是先有蛋”的问题。既然没映射，BootROM 怎么读 SD 卡？</p>
+<p>答案是：<strong>BootROM 根本不查地址，它是在跑“驱动程序”</strong>。</p>
+<ul>
+<li><p>固化的逻辑：Internal ROM 里的代码是出厂就写死的。它里面内置了一个极其简化的 SD&#x2F;eMMC 驱动程序。</p>
+</li>
+<li><p>搬运工模式：</p>
+<ul>
+<li><p>上电后，CPU 跑 Internal ROM。</p>
+</li>
+<li><p>它不是去“访问地址”，而是通过特定的寄存器给 SD 控制器下命令：“读取 SD 卡前 4KB 的数据到 SRAM 地址 0x3FC80000”。</p>
+</li>
+<li><p>搬完后，CPU 的 PC 指针跳转到 SRAM 的 0x3FC80000。</p>
+</li>
+</ul>
+</li>
+<li><p>IVT 的秘密：<br>在 i.MX 中，这个过程叫 Bootloader 加载。IVT（指令向量表）就在被搬运的这几 KB 数据的开头。CPU 并不是在 SD 卡里直接读 IVT，而是在搬运到内部 SRAM 后才去读它的。</p>
+</li>
+</ul>
+<h1 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h1><p>讨论底层架构相关，主要是这些方面</p>
+<ul>
+<li><strong>存储器架构</strong><ul>
+<li>ROM，RAM</li>
+</ul>
+</li>
+<li><strong>代码内存结构</strong><ul>
+<li>代码段，数据段</li>
+</ul>
+</li>
+<li><strong>总线</strong>：<ul>
+<li>指令总线，数据总线</li>
+</ul>
+</li>
+<li><strong>cache</strong><ul>
+<li>（ICache, DCache）</li>
+</ul>
+</li>
+<li><strong>MMU</strong><ul>
+<li>（寻址的地址空间的物理映射）</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-内核架构（最顶层的“根”）"><a href="#1-内核架构（最顶层的“根”）" class="headerlink" title="1. 内核架构（最顶层的“根”）"></a>1. 内核架构（最顶层的“根”）</h2><ul>
+<li>ARM Cortex-M（STM32、ESP32）</li>
+<li>ARM Cortex-A（i.MX 系列）</li>
+<li>指令集：Thumb &#x2F; ARM &#x2F; RISC-V</li>
+<li>流水线、中断架构（NVIC）、异常模型</li>
+</ul>
+<blockquote>
+<p>内核决定：<strong>能跑什么、速度、实时性、有没有 MMU&#x2F;MPU</strong></p>
+</blockquote>
+<h2 id="2-存储器架构（你说的完全对）"><a href="#2-存储器架构（你说的完全对）" class="headerlink" title="2. 存储器架构（你说的完全对）"></a>2. 存储器架构（你说的完全对）</h2><ul>
+<li>Flash（程序存储）</li>
+<li>RAM（SRAM&#x2F;PSRAM）</li>
+<li>片上 ROM（BootROM）</li>
+<li>地址映射、存储器别名、奇偶校验&#x2F;ECC</li>
+</ul>
+<h2 id="3-总线架构（你抓住关键了）"><a href="#3-总线架构（你抓住关键了）" class="headerlink" title="3. 总线架构（你抓住关键了）"></a>3. 总线架构（你抓住关键了）</h2><ul>
+<li>系统总线（AHB&#x2F;AXI）</li>
+<li>外设总线（APB）</li>
+<li>指令总线 &#x2F; 数据总线（哈佛结构）</li>
+<li>总线矩阵、多主机、优先级</li>
+<li>DMA 通路（底层性能关键）</li>
+</ul>
+<h2 id="4-运行时内存模型（代码内存结构）"><a href="#4-运行时内存模型（代码内存结构）" class="headerlink" title="4. 运行时内存模型（代码内存结构）"></a>4. 运行时内存模型（代码内存结构）</h2><ul>
+<li>.text 代码段</li>
+<li>.rodata 常量</li>
+<li>.data 已初始化数据</li>
+<li>.bss 未初始化数据</li>
+<li>堆 &#x2F; 栈</li>
+<li>中断向量表位置</li>
+</ul>
+<h2 id="5-Cache（你写得很标准）"><a href="#5-Cache（你写得很标准）" class="headerlink" title="5. Cache（你写得很标准）"></a>5. Cache（你写得很标准）</h2><ul>
+<li>ICache 指令缓存</li>
+<li>DCache 数据缓存</li>
+<li>Cache 行、一致性、旁路策略</li>
+</ul>
+<h2 id="6-地址空间与地址翻译（你说的-MMU-属于这里）"><a href="#6-地址空间与地址翻译（你说的-MMU-属于这里）" class="headerlink" title="6. 地址空间与地址翻译（你说的 MMU 属于这里）"></a>6. 地址空间与地址翻译（你说的 MMU 属于这里）</h2><ul>
+<li><strong>MCU（Cortex‑M）：MPU &#x2F; 保护单元</strong></li>
+<li><strong>MPU（Cortex‑A，如 i.MX）：MMU + 虚拟地址 → 物理地址</strong></li>
+<li>外设寄存器地址映射</li>
+<li>启动地址、异常入口地址</li>
+</ul>
+<h2 id="7-时钟与复位（底层最基础的“心跳”）"><a href="#7-时钟与复位（底层最基础的“心跳”）" class="headerlink" title="7. 时钟与复位（底层最基础的“心跳”）"></a>7. 时钟与复位（底层最基础的“心跳”）</h2><ul>
+<li>时钟树：PLL、HSE&#x2F;HSI、分频</li>
+<li>时钟域、异步&#x2F;同步</li>
+<li>复位源、上电复位、系统复位</li>
+</ul>
+<h2 id="8-外设与-IO-子系统"><a href="#8-外设与-IO-子系统" class="headerlink" title="8. 外设与 IO 子系统"></a>8. 外设与 IO 子系统</h2><ul>
+<li>GPIO、UART、SPI、I2C、ADC、PWM…</li>
+<li>时钟使能、寄存器操作</li>
+<li>中断路由</li>
+</ul>
+<h2 id="9-启动与-Boot-流程（真正“底层到底”）"><a href="#9-启动与-Boot-流程（真正“底层到底”）" class="headerlink" title="9. 启动与 Boot 流程（真正“底层到底”）"></a>9. 启动与 Boot 流程（真正“底层到底”）</h2><ul>
+<li>BootROM 做什么</li>
+<li>启动配置（BOOT 引脚）</li>
+<li>重映射、向量表偏移</li>
+<li>应用程序入口</li>
+</ul>
+<hr>
+<h1 id="一句话总结你原来的问题："><a href="#一句话总结你原来的问题：" class="headerlink" title="一句话总结你原来的问题："></a>一句话总结你原来的问题：</h1><p><strong>对！你列的 存储器、代码段、总线、Cache、MMU 就是芯片底层最核心的 5 大块。</strong><br>再把 <strong>内核、时钟、启动、地址映射</strong> 补全，就是<strong>完整的芯片底层体系</strong>。</p>
+<p>你现在的状态非常真实——这正是从“应用层调库工程师”向“底层系统开发者”跨越时的必经阶段。</p>
+<p>其实，你不是不懂理论，你是卡在了**“软件代码”如何变成“硬件动作”**的那个边界上。</p>
+<p>简单直接的回答是：<strong>如果你写的是普通的 Linux 应用层软件（App）或者简单的 RTOS 任务，你完全不需要关心；但如果你要做底层 BSP（板级支持包）、写 Linux 驱动、优化系统性能、或者写 Bootloader，你不但要关心，而且必须精通。</strong></p>
+<p>我们把你这四个困惑，像剥洋葱一样一层层解开：</p>
+<hr>
+<h3 id="1-MMU-是怎么控制的？页表在哪里提供给它？"><a href="#1-MMU-是怎么控制的？页表在哪里提供给它？" class="headerlink" title="1. MMU 是怎么控制的？页表在哪里提供给它？"></a>1. MMU 是怎么控制的？页表在哪里提供给它？</h3><p>这是操作系统内核最核心的魔法。你不需要手工拿着电烙铁去连线，你是通过<strong>写特定的 CPU 寄存器</strong>来控制 MMU 的。</p>
+<p>以你熟悉的 i.MX（ARM 架构）运行 Linux 为例，软件和 MMU 的交互逻辑是这样的：</p>
+<ul>
+<li><strong>第一步：软件在内存（DDR）里建表</strong><br>Linux 内核启动时，会在真正的物理内存（DDR）里开辟一块连续的空间，往里面填数据。填好的这块数据，就是<strong>页表（Page Table）</strong>。</li>
+<li><strong>第二步：把表的地址告诉 MMU（核心动作）</strong><br>ARM 芯片内部有一个专门的协处理器寄存器，叫 <strong>TTBR</strong>（Translation Table Base Register，转换表基址寄存器）。<br>Linux 内核会用一段汇编代码，把刚才建好的页表的<strong>物理首地址</strong>写进这个 TTBR 寄存器。<br><code>asm volatile(&quot;mcr p15, 0, %0, c2, c0, 0&quot; : : &quot;r&quot; (page_table_physical_address));</code></li>
+<li><strong>第三步：软件打开 MMU 开关</strong><br>内核再往另一个控制寄存器（SCTLR）的第 0 位写 <code>1</code>。</li>
+<li><strong>交互逻辑完成！</strong><br>从这一刻起，MMU 硬件就被激活了。以后 CPU 只要发出一个虚拟地址，<strong>MMU 硬件会自动去读取 TTBR 寄存器里的地址，然后顺藤摸瓜去 DDR 里查那张表</strong>。查表的过程完全是纯硬件完成的（叫 Hardware Table Walk），不需要软件插手。</li>
+</ul>
+<hr>
+<h3 id="2-我需要自己指定走指令总线还是数据总线吗？"><a href="#2-我需要自己指定走指令总线还是数据总线吗？" class="headerlink" title="2. 我需要自己指定走指令总线还是数据总线吗？"></a>2. 我需要自己指定走指令总线还是数据总线吗？</h3><p><strong>绝大多数情况下，不需要。是编译器和硬件帮你自动决定的。</strong></p>
+<ul>
+<li><strong>硬件的自动判断</strong>：<br>当 CPU 的 PC（程序计数器）指针指向某个地址去<strong>取指令执行</strong>时，硬件总线控制器会自动走<strong>指令总线 (IBUS)</strong>。<br>当你的代码执行到 <code>int a = *ptr;</code> 去<strong>读写数据</strong>时，硬件会自动走<strong>数据总线 (DBUS)</strong>。</li>
+<li><strong>但是，地址是谁定的？（链接器的魔法）</strong><br>在 ESP32-S3 中，我们之前讲过，同一个 ROM&#x2F;RAM 有不同的地址段对应不同的总线。你是怎么告诉硬件去哪个地址的？<br>答案是：<strong>链接脚本（Linker Script，比如 <code>.ld</code> 文件）</strong>。<br>在 ESP-IDF 中，当你给一个函数加上 <code>IRAM_ATTR</code> 修饰符时：</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> IRAM_ATTR <span class="title function_">my_fast_function</span><span class="params">()</span> &#123; ... &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p>编译器看到这个标签，就会在链接阶段，强行把这个函数的机器码放到以 <code>0x4037_0000</code>（指令总线地址）开头的段里。你不需要手动干预总线，你只需要<strong>分配好内存的逻辑段</strong>，底层机制就自动闭环了。</p>
+<hr>
+<h3 id="3-我需要灵活安排代码运行模式吗？"><a href="#3-我需要灵活安排代码运行模式吗？" class="headerlink" title="3. 我需要灵活安排代码运行模式吗？"></a>3. 我需要灵活安排代码运行模式吗？</h3><p>如果你只是点个灯、连个 Wi-Fi，跟着官方教程完全没问题。但遇到以下情况，你就必须“灵活安排”了：</p>
+<ul>
+<li><strong>场景 A：致命的中断（ESP32 常见大坑）</strong><br>ESP32 的代码默认在外部 Flash 跑（XIP 模式）。如果你正在擦写 Flash（比如保存配置），此时 Flash 是被占用的，Cache 也会被禁用。如果这时候来了一个外部中断，CPU 跑去 Flash 取中断服务函数（ISR）的指令，就会直接<strong>内核崩溃（Core Panic）</strong>。<br><strong>解决办法</strong>：你必须把中断服务函数和它用到的变量，强行安排到内部 RAM 里运行。这就是打破默认运行模式的典型场景。</li>
+<li><strong>场景 B：极限性能优化</strong><br>一段音频解码算法，放在 Flash 里跑，Cache 没命中时会导致音频卡顿。你必须手动把它 Load 到内部高速 RAM 里去跑。</li>
+</ul>
+<hr>
+<h3 id="4-Linux-内核与-MMU-的终极交互：缺页异常-Page-Fault"><a href="#4-Linux-内核与-MMU-的终极交互：缺页异常-Page-Fault" class="headerlink" title="4. Linux 内核与 MMU 的终极交互：缺页异常 (Page Fault)"></a>4. Linux 内核与 MMU 的终极交互：缺页异常 (Page Fault)</h3><p>你说你知道页表怎么映射，但不知道交互逻辑。其实 Linux 内核和 MMU 之间最精彩的交互叫**“先上车，后补票”**。</p>
+<ol>
+<li>你写了一个 C 程序：<code>malloc(100 * 1024 * 1024);</code> (申请 100MB 内存)。</li>
+<li>Linux 操作系统是个“渣男”，它只会给你分配 100MB 的<strong>虚拟地址</strong>，但<strong>根本不在 MMU 页表里填真正的物理地址</strong>。</li>
+<li>你的程序开始运行，往第一个字节写数据：<code>ptr[0] = 1;</code>。</li>
+<li>MMU 硬件去查表，发现：“靠，这个虚拟地址没有对应的物理地址（或者权限不对）！”</li>
+<li><strong>交互发生</strong>：MMU 硬件立刻打断 CPU，触发一个<strong>缺页异常中断（Page Fault）</strong>。</li>
+<li>CPU 自动跳转到 Linux 内核的异常处理函数。内核这个时候才去物理 DDR 里找一块空闲的内存，把真正的物理地址填进 MMU 的页表里。</li>
+<li>填完后，内核让 CPU 重新执行 <code>ptr[0] = 1;</code> 这条指令。这一次，MMU 查表成功，数据顺利写入。</li>
+</ol>
+<p>这一切发生得极快，你的应用层软件根本感觉不到，还以为自己真的独占了连续的 100MB 大内存。</p>
+<hr>
+<h3 id="总结：你的成长路径"><a href="#总结：你的成长路径" class="headerlink" title="总结：你的成长路径"></a>总结：你的成长路径</h3><p>你现在的困惑，是因为你站在了<strong>驱动开发与系统架构</strong>的门口。</p>
+<ul>
+<li><strong>以前的你</strong>：调用 <code>malloc</code> 和 <code>printf</code>，不关心数据放哪，反正能跑。</li>
+<li><strong>现在的你</strong>：开始知道底层有总线、有 Cache、有 MMU，但不知道怎么用。</li>
+<li><strong>下一步的你</strong>：去看看开发板里的 <code>.ld</code> (链接脚本) 文件，或者去看看 Linux 源码里的 <code>head.S</code>（汇编启动代码）。那里就是软件第一次与总线、MMU 发生物理交互的“案发现场”。</li>
+</ul>
+<p><strong>你想先看懂 ESP32-S3 里面那个决定代码是放在 Flash 还是 RAM 里的“链接脚本（Linker Script）”长什么样吗？它能把你对内存地址的理论直接变成实际工程代码。</strong></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/" rel="prev" title="imx6ull 基础复盘*">
+                  <i class="fa fa-angle-left"></i> imx6ull 基础复盘*
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item current">
+              <span>stm32-esp32s3-imx 存储架构讨论</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="imx6ull 基础复盘 IMX6ULL 硬件板卡资源 单核Cotex-A7，多处理器架构，arm-cortex的关系 层级拆解 Cortex-A 处理器运行模型 Cortex-A 寄存器组 1. 对于每个工作模式来说，一共18个寄存器 2. 核心寄存器的实际对应关系     汇编基础 GNU 汇编语法 1. GNU 汇编的基础语法如下： 2. 用户可以使用.section 伪操作来定义一个段">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull 基础复盘*">
+<meta property="og:url" content="http://example.com/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="imx6ull 基础复盘 IMX6ULL 硬件板卡资源 单核Cotex-A7，多处理器架构，arm-cortex的关系 层级拆解 Cortex-A 处理器运行模型 Cortex-A 寄存器组 1. 对于每个工作模式来说，一共18个寄存器 2. 核心寄存器的实际对应关系     汇编基础 GNU 汇编语法 1. GNU 汇编的基础语法如下： 2. 用户可以使用.section 伪操作来定义一个段">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/30.1.png">
+<meta property="og:image" content="http://example.com/images/30.2.png">
+<meta property="og:image" content="http://example.com/images/30.3.png">
+<meta property="og:image" content="http://example.com/images/30.4.png">
+<meta property="og:image" content="http://example.com/images/30.5.png">
+<meta property="og:image" content="http://example.com/images/30.6.png">
+<meta property="og:image" content="http://example.com/images/30.7.png">
+<meta property="og:image" content="http://example.com/images/30.8.png">
+<meta property="article:published_time" content="2026-02-17T19:10:59.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.745Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/30.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/","path":"2026/02/18/imx6ull-基础复盘/","title":"imx6ull 基础复盘*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull 基础复盘* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98"><span class="nav-number">1.</span> <span class="nav-text">imx6ull 基础复盘</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IMX6ULL-%E7%A1%AC%E4%BB%B6%E6%9D%BF%E5%8D%A1%E8%B5%84%E6%BA%90"><span class="nav-number">1.1.</span> <span class="nav-text">IMX6ULL 硬件板卡资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E6%A0%B8Cotex-A7%EF%BC%8C%E5%A4%9A%E5%A4%84%E7%90%86%E5%99%A8%E6%9E%B6%E6%9E%84%EF%BC%8Carm-cortex%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-number">1.2.</span> <span class="nav-text">单核Cotex-A7，多处理器架构，arm-cortex的关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%82%E7%BA%A7%E6%8B%86%E8%A7%A3"><span class="nav-number">1.2.1.</span> <span class="nav-text">层级拆解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cortex-A-%E5%A4%84%E7%90%86%E5%99%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">Cortex-A 处理器运行模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cortex-A-%E5%AF%84%E5%AD%98%E5%99%A8%E7%BB%84"><span class="nav-number">1.2.3.</span> <span class="nav-text">Cortex-A 寄存器组</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%AF%B9%E4%BA%8E%E6%AF%8F%E4%B8%AA%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F%E6%9D%A5%E8%AF%B4%EF%BC%8C%E4%B8%80%E5%85%B118%E4%B8%AA%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">1. 对于每个工作模式来说，一共18个寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%A0%B8%E5%BF%83%E5%AF%84%E5%AD%98%E5%99%A8%E7%9A%84%E5%AE%9E%E9%99%85%E5%AF%B9%E5%BA%94%E5%85%B3%E7%B3%BB"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">2. 核心寄存器的实际对应关系</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B1%87%E7%BC%96%E5%9F%BA%E7%A1%80"><span class="nav-number">1.3.</span> <span class="nav-text">汇编基础</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GNU-%E6%B1%87%E7%BC%96%E8%AF%AD%E6%B3%95"><span class="nav-number">1.3.1.</span> <span class="nav-text">GNU 汇编语法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-GNU-%E6%B1%87%E7%BC%96%E7%9A%84%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95%E5%A6%82%E4%B8%8B%EF%BC%9A"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">1. GNU 汇编的基础语法如下：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%94%A8%E6%88%B7%E5%8F%AF%E4%BB%A5%E4%BD%BF%E7%94%A8-section-%E4%BC%AA%E6%93%8D%E4%BD%9C%E6%9D%A5%E5%AE%9A%E4%B9%89%E4%B8%80%E4%B8%AA%E6%AE%B5"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">2. 用户可以使用.section 伪操作来定义一个段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%B1%87%E7%BC%96%E7%B3%BB%E7%BB%9F%E9%A2%84%E5%AE%9A%E4%B9%89%E4%BA%86%E4%B8%80%E4%BA%9B%E6%AE%B5%E5%90%8D"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">3. 汇编系统预定义了一些段名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%B1%87%E7%BC%96%E7%A8%8B%E5%BA%8F%E7%9A%84%E9%BB%98%E8%AE%A4%E5%85%A5%E5%8F%A3%E6%A0%87%E5%8F%B7%E6%98%AF-start"><span class="nav-number">1.3.1.4.</span> <span class="nav-text">4. 汇编程序的默认入口标号是_start</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E4%BC%AA%E6%93%8D%E4%BD%9C"><span class="nav-number">1.3.1.5.</span> <span class="nav-text">5. 伪操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.1.6.</span> <span class="nav-text">6. 函数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cortex-A7-%E5%B8%B8%E7%94%A8%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4"><span class="nav-number">1.3.2.</span> <span class="nav-text">Cortex-A7 常用汇编指令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E5%99%A8%E5%86%85%E9%83%A8-%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%8C%87%E4%BB%A4"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">处理器内部 数据传输指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E5%99%A8%E8%AE%BF%E9%97%AE%E6%8C%87%E4%BB%A4"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">存储器访问指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%8B%E6%A0%88%E5%92%8C%E5%87%BA%E6%A0%88%E6%8C%87%E4%BB%A4"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">压栈和出栈指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">跳转指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%97%E6%9C%AF%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4-%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4"><span class="nav-number">1.3.2.5.</span> <span class="nav-text">算术运算指令 + 逻辑运算指令</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="nav-number">1.4.</span> <span class="nav-text">启动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">1.4.1.</span> <span class="nav-text">启动方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E5%88%B6%E4%BD%9C%EF%BC%8C%E4%BB%A3%E7%A0%81%E7%83%A7%E5%BD%95"><span class="nav-number">1.4.2.</span> <span class="nav-text">镜像制作，代码烧录</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#IVT-%E9%83%A8%E5%88%86"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">IVT 部分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Boot-Data-%E6%95%B0%E6%8D%AE"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">Boot Data 数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DCD-%E6%95%B0%E6%8D%AE"><span class="nav-number">1.4.2.3.</span> <span class="nav-text">DCD 数据</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.3.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%88%86%E5%B8%83%EF%BC%8C%E5%AF%B9%E6%AF%94stm32"><span class="nav-number">1.4.4.</span> <span class="nav-text">内存分布，对比stm32</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#stm32%E7%9A%84%E5%90%AF%E5%8A%A8"><span class="nav-number">1.4.4.1.</span> <span class="nav-text">stm32的启动</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%96%91%E9%97%AE1-data-bss%E7%9A%84%E6%8B%B7%E8%B4%9D%E6%97%B6%E6%9C%BA"><span class="nav-number">1.4.4.1.1.</span> <span class="nav-text">疑问1: .data,.bss的拷贝时机</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B1%87%E7%BC%96led%E7%82%B9%E7%81%AF-%E8%A3%B8%E6%9C%BA%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">1.5.</span> <span class="nav-text">汇编led点灯 裸机代码分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#c%E8%AF%AD%E8%A8%80led%E7%82%B9%E7%81%AF-%E8%A3%B8%E6%9C%BA%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">1.6.</span> <span class="nav-text">c语言led点灯 裸机代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#A-%E6%A0%B8%E8%A3%B8%E6%9C%BA%E6%A0%88%E7%AE%A1%E7%90%86%E7%9A%84-%E2%80%9C%E9%9A%90%E5%BD%A2%E8%A7%84%E5%88%99%E2%80%9D"><span class="nav-number">1.6.1.</span> <span class="nav-text">A 核裸机栈管理的 “隐形规则”</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gpio"><span class="nav-number">1.7.</span> <span class="nav-text">gpio</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD"><span class="nav-number">1.8.</span> <span class="nav-text">中断</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull 基础复盘* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull 基础复盘*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-18 03:10:59" itemprop="dateCreated datePublished" datetime="2026-02-18T03:10:59+08:00">2026-02-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98">imx6ull 基础复盘</a><ul>
+<li><a href="#imx6ull-%E7%A1%AC%E4%BB%B6%E6%9D%BF%E5%8D%A1%E8%B5%84%E6%BA%90">IMX6ULL 硬件板卡资源</a></li>
+<li><a href="#%E5%8D%95%E6%A0%B8cotex-a7%E5%A4%9A%E5%A4%84%E7%90%86%E5%99%A8%E6%9E%B6%E6%9E%84arm-cortex%E7%9A%84%E5%85%B3%E7%B3%BB">单核Cotex-A7，多处理器架构，arm-cortex的关系</a><ul>
+<li><a href="#%E5%B1%82%E7%BA%A7%E6%8B%86%E8%A7%A3">层级拆解</a></li>
+<li><a href="#cortex-a-%E5%A4%84%E7%90%86%E5%99%A8%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%9E%8B">Cortex-A 处理器运行模型</a></li>
+<li><a href="#cortex-a-%E5%AF%84%E5%AD%98%E5%99%A8%E7%BB%84">Cortex-A 寄存器组</a><ul>
+<li><a href="#1-%E5%AF%B9%E4%BA%8E%E6%AF%8F%E4%B8%AA%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F%E6%9D%A5%E8%AF%B4%E4%B8%80%E5%85%B118%E4%B8%AA%E5%AF%84%E5%AD%98%E5%99%A8"><strong>1. 对于每个工作模式来说，一共18个寄存器</strong></a></li>
+<li><a href="#2-%E6%A0%B8%E5%BF%83%E5%AF%84%E5%AD%98%E5%99%A8%E7%9A%84%E5%AE%9E%E9%99%85%E5%AF%B9%E5%BA%94%E5%85%B3%E7%B3%BB"><strong>2. 核心寄存器的实际对应关系</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E6%B1%87%E7%BC%96%E5%9F%BA%E7%A1%80">汇编基础</a><ul>
+<li><a href="#gnu-%E6%B1%87%E7%BC%96%E8%AF%AD%E6%B3%95">GNU 汇编语法</a><ul>
+<li><a href="#1-gnu-%E6%B1%87%E7%BC%96%E7%9A%84%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95%E5%A6%82%E4%B8%8B">1. GNU 汇编的<strong>基础语法</strong>如下：</a></li>
+<li><a href="#2-%E7%94%A8%E6%88%B7%E5%8F%AF%E4%BB%A5%E4%BD%BF%E7%94%A8section-%E4%BC%AA%E6%93%8D%E4%BD%9C%E6%9D%A5%E5%AE%9A%E4%B9%89%E4%B8%80%E4%B8%AA%E6%AE%B5">2. 用户可以使用<code>.section</code> <strong>伪操作</strong>来<strong>定义一个段</strong></a></li>
+<li><a href="#3-%E6%B1%87%E7%BC%96%E7%B3%BB%E7%BB%9F%E9%A2%84%E5%AE%9A%E4%B9%89%E4%BA%86%E4%B8%80%E4%BA%9B%E6%AE%B5%E5%90%8D">3. 汇编系统<strong>预定义了一些段名</strong></a></li>
+<li><a href="#4-%E6%B1%87%E7%BC%96%E7%A8%8B%E5%BA%8F%E7%9A%84%E9%BB%98%E8%AE%A4%E5%85%A5%E5%8F%A3%E6%A0%87%E5%8F%B7%E6%98%AF_start">4. 汇编程序的<strong>默认入口标号</strong>是<code>_start</code></a></li>
+<li><a href="#5-%E4%BC%AA%E6%93%8D%E4%BD%9C">5. 伪操作</a></li>
+<li><a href="#6-%E5%87%BD%E6%95%B0">6. 函数</a></li>
+</ul>
+</li>
+<li><a href="#cortex-a7-%E5%B8%B8%E7%94%A8%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4">Cortex-A7 常用汇编指令</a><ul>
+<li><a href="#%E5%A4%84%E7%90%86%E5%99%A8%E5%86%85%E9%83%A8-%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%8C%87%E4%BB%A4">处理器内部 数据传输指令</a></li>
+<li><a href="#%E5%AD%98%E5%82%A8%E5%99%A8%E8%AE%BF%E9%97%AE%E6%8C%87%E4%BB%A4">存储器访问指令</a></li>
+<li><a href="#%E5%8E%8B%E6%A0%88%E5%92%8C%E5%87%BA%E6%A0%88%E6%8C%87%E4%BB%A4">压栈和出栈指令</a></li>
+<li><a href="#%E8%B7%B3%E8%BD%AC%E6%8C%87%E4%BB%A4">跳转指令</a></li>
+<li><a href="#%E7%AE%97%E6%9C%AF%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4--%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97%E6%8C%87%E4%BB%A4">算术运算指令 + 逻辑运算指令</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B">启动流程</a><ul>
+<li><a href="#%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F">启动方式</a></li>
+<li><a href="#%E9%95%9C%E5%83%8F%E5%88%B6%E4%BD%9C%E4%BB%A3%E7%A0%81%E7%83%A7%E5%BD%95">镜像制作，代码烧录</a><ul>
+<li><a href="#ivt-%E9%83%A8%E5%88%86">IVT 部分</a></li>
+<li><a href="#boot-data-%E6%95%B0%E6%8D%AE">Boot Data 数据</a></li>
+<li><a href="#dcd-%E6%95%B0%E6%8D%AE">DCD 数据</a></li>
+</ul>
+</li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E5%88%86%E5%B8%83%E5%AF%B9%E6%AF%94stm32">内存分布，对比stm32</a><ul>
+<li><a href="#stm32%E7%9A%84%E5%90%AF%E5%8A%A8">stm32的启动</a><ul>
+<li><a href="#%E7%96%91%E9%97%AE1-databss%E7%9A%84%E6%8B%B7%E8%B4%9D%E6%97%B6%E6%9C%BA">疑问1: .data,.bss的拷贝时机</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E6%B1%87%E7%BC%96led%E7%82%B9%E7%81%AF-%E8%A3%B8%E6%9C%BA%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90">汇编led点灯 裸机代码分析</a></li>
+<li><a href="#c%E8%AF%AD%E8%A8%80led%E7%82%B9%E7%81%AF-%E8%A3%B8%E6%9C%BA%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90">c语言led点灯 裸机代码分析</a><ul>
+<li><a href="#a-%E6%A0%B8%E8%A3%B8%E6%9C%BA%E6%A0%88%E7%AE%A1%E7%90%86%E7%9A%84-%E9%9A%90%E5%BD%A2%E8%A7%84%E5%88%99"><strong>A 核裸机栈管理的 “隐形规则”</strong></a></li>
+</ul>
+</li>
+<li><a href="#gpio">gpio</a></li>
+<li><a href="#%E4%B8%AD%E6%96%AD">中断</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="imx6ull-基础复盘"><a href="#imx6ull-基础复盘" class="headerlink" title="imx6ull 基础复盘"></a>imx6ull 基础复盘</h1><p>这篇文档，主要从裸机，底层寄存器，单片机的角度，重新过一遍imx6ull的armv7架构，基础的汇编语法，基础的代码结构，内存分布，启动流程，中断管理这些。</p>
+<p>因为已经学过stm32和freertos了，对CM3的内核的理解比之前更加深了。</p>
+<p>为后面移植uboot，kernel，和外设驱动，做一个基础的复盘。</p>
+<h2 id="IMX6ULL-硬件板卡资源"><a href="#IMX6ULL-硬件板卡资源" class="headerlink" title="IMX6ULL 硬件板卡资源"></a>IMX6ULL 硬件板卡资源</h2><p><img src="/../images/30.1.png" alt="alt text"></p>
+<h2 id="单核Cotex-A7，多处理器架构，arm-cortex的关系"><a href="#单核Cotex-A7，多处理器架构，arm-cortex的关系" class="headerlink" title="单核Cotex-A7，多处理器架构，arm-cortex的关系"></a>单核Cotex-A7，多处理器架构，arm-cortex的关系</h2><p>之前我们使用的stm32的核心是CM3，单核的。而现在我们使用的这个IMX6的开发板，同样也是单核的，核心是CA7（cotex-A7）, </p>
+<p>下面介绍一下 Cortex-A7 架构的一些基本知识，如处理器模型、Cortex-A7 寄存器组</p>
+<p><img src="/../images/30.2.png" alt="alt text"></p>
+<p>这个是之前看到的介绍处理器的一张图，但是<strong>当时有些混淆</strong>：</p>
+<ol>
+<li>cortex xxx 和 armv7, armv8的关系？</li>
+<li>MPcore和cortex-a7有什么关系？</li>
+</ol>
+<hr>
+<h3 id="层级拆解"><a href="#层级拆解" class="headerlink" title="层级拆解"></a>层级拆解</h3><ul>
+<li><p><code>ARMv7</code> (<strong>架构</strong> &#x3D; 建筑图纸规范)</p>
+<ul>
+<li>这是<strong>一套规范（ISA）</strong>，规定了<strong>寄存器长什么样</strong>、<strong>指令怎么写</strong>、<strong>中断怎么跳</strong>。</li>
+</ul>
+</li>
+<li><p><code>Cortex-A7</code> (<strong>核</strong> &#x2F; Core &#x3D; 具体的单间房型)</p>
+<ul>
+<li>这是ARM工程师<strong>根据ARMv7规范</strong>设计出来的<strong>具体电路实现</strong>（流水线、ALU、FPU）。</li>
+<li>这才是真正干活的那个“脑子”。</li>
+</ul>
+</li>
+<li><p><code>Cortex-A7 MPCore</code> (<strong>处理器子系统 IP</strong> &#x3D; 户型图&#x2F;套房)</p>
+<ul>
+<li>ARM卖给芯片厂（如NXP、ST）的不仅仅是那个“标准卧室”，而是一整套<strong>套房设计方案</strong>。</li>
+<li>MPCore 的全称是 <code>Multi-Processor Core</code>。它是<code>一个壳子</code>（或者叫Cluster&#x2F;簇）。</li>
+<li>在这个壳子里，ARM 允许芯片厂塞进去 <strong>1到4个</strong> “Cortex-A7标准卧室”。</li>
+<li>除了卧室，这个壳子里还必须打包附送：<strong>SCU (Snoop Control Unit，负责多核间缓存一致性)</strong>、<strong>GIC (中断控制器)</strong>、<strong>L2 Cache控制器</strong>。因为多个核在一起工作，必须有这些管家来协调，否则数据就乱了。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>当你看到 <strong>NXP 的 i.MX6ULL</strong> 手册说它是 <strong>Cortex-A7</strong> 时：</p>
+<p>它买了 <strong>ARM 的 Cortex-A7 MPCore 授权</strong>。</p>
+<p>但是出于成本和定位考虑，NXP 在设计时，在这个“套房”里<strong>只配置了 1 个核</strong>。</p>
+<p>虽然只有1个核，它依然带着 MPCore 的外围电路（比如图中的 SCU 依然存在，只是只服务一个核）。</p>
+</blockquote>
+<blockquote>
+<p>当你看到 <strong>树莓派2 (BCM2836)</strong> 也说是 Cortex-A7 时：</p>
+<p>它也用了 Cortex-A7 MPCore 方案。</p>
+<p>它在套房里塞<strong>满了 4 个核</strong>。</p>
+</blockquote>
+<blockquote>
+<p>对比 Cortex-M3</p>
+<p>Cortex-M3：通常设计用于简单的单核微控制器。</p>
+<p>ARM 卖给 ST 的时候，基本就是卖那个“核”加上非常简单的调试接口。它<strong>不需要复杂的 SCU（缓存一致性单元）</strong>，因为 <strong>M3 通常不跑多核 SMP（对称多处理</strong>）系统。</p>
+</blockquote>
+<p>理解了这些之后，再回头看一下上面的MPcore的多核配置，就已经很清楚了。</p>
+<h3 id="Cortex-A-处理器运行模型"><a href="#Cortex-A-处理器运行模型" class="headerlink" title="Cortex-A 处理器运行模型"></a>Cortex-A 处理器运行模型</h3><p>前面梳理了一下，架构-核心（处理器）-多处理器架构的关系</p>
+<p>现在来看看<strong>具体的一个核心</strong>，又有那些东西，也就是我们<strong>A核的运行模型</strong></p>
+<p><img src="/../images/30.3.png" alt="alt text"></p>
+<p>以前的 ARM 处理器有 <code>7 种运行模型</code>：<strong>User</strong>、FIQ、IRQ、Supervisor(SVC)、Abort、Undef<br>和 System，其中 <code>User 是非特权模式</code>，其余 <code>6 种都是特权模式</code>。</p>
+<ul>
+<li><p>但新的 Cortex-A 架构加入了<strong>TrustZone 安全扩展</strong>，所以就<strong>新加了一种运行模式</strong>：<code>Monitor</code></p>
+</li>
+<li><p>新的处理器架构还<strong>支持虚拟化扩展</strong>，因此又加入了另一个运行模式：<code>Hyp</code></p>
+</li>
+</ul>
+<p>所以 <strong>Cortex-A7</strong> 处理器<strong>有 9 种处理模式</strong></p>
+<ul>
+<li>除了 <strong>User用户模式</strong>以外，<strong>其它 8 种</strong>运行模式都是<strong>特权模式</strong>。</li>
+<li>这几个运行模式可以通过<code>软件进行任意切换</code>，也可以通过<strong>中断</strong>或者<strong>异常</strong>来进行切换</li>
+</ul>
+<blockquote>
+<p>用户模式（非特权模式）访问资源受限，所以当要切换模式的时候，应用程序可以产生<strong>异常</strong>，在异常的处理过程中完成处理器模式切换</p>
+</blockquote>
+<p><strong>每一种模式</strong>都有<strong>一组寄存器</strong>供<code>异常处理程序</code>使用，这样的目的是为了保证在进入异常模式以后，用户模式下的寄存器不会被破坏</p>
+<blockquote>
+<p><strong>STM32 只有两种运行模式</strong>，特权模式和非特权模式，但是 Cortex-A 就有 9 种运行模式</p>
+<p>我们平常写stm32裸机程序，或者用freertos都是特权模式，都是在<strong>特权级-线程模式</strong>里面</p>
+<p>当进入中断后，就是运行在<strong>特权级-handler模式</strong></p>
+<p>但是，当你用freertos-mpu这种要求安全的版本上，就会有<strong>非特权模式</strong>出现</p>
+</blockquote>
+<h3 id="Cortex-A-寄存器组"><a href="#Cortex-A-寄存器组" class="headerlink" title="Cortex-A 寄存器组"></a>Cortex-A 寄存器组</h3><p>上面了解了处理器核心，有哪几种工作模式，其中，user模式是非特权模式，其他的都是特权模式。</p>
+<p>下面来看看该核心，使用的寄存器组。</p>
+<h4 id="1-对于每个工作模式来说，一共18个寄存器"><a href="#1-对于每个工作模式来说，一共18个寄存器" class="headerlink" title="1. 对于每个工作模式来说，一共18个寄存器"></a><strong>1. 对于每个工作模式来说，一共18个寄存器</strong></h4><p>ARM 架构提供了 <code>16</code> 个 <code>32 位</code>的<code>通用寄存器(R0~R15)</code>供软件使用</p>
+<ul>
+<li>前 15 个(R0~R14)可以用作通用的数据存储，<code>R15 是程序计数器 PC</code>，用来保存将要执行的指令。</li>
+<li>ARM 还提供了一个当<code>前程序状态寄存器 CPSR</code> 和一个<code>备份程序状态寄存器 SPSR</code>，SPSR 寄存器就是 CPSR 寄存器的备份</li>
+</ul>
+<p>下图展示了，当核心处于一种工作模式时，所能使用的核心寄存器组，一共18个，可以看到，比较<strong>核心的特殊寄存器</strong>就是：</p>
+<ul>
+<li>SP（栈指针）</li>
+<li>LR（函数调用返回地址）</li>
+<li>PC（程序计数指针）</li>
+<li>CPSR（程序状态，可以控制核心工作模式，中断开关等）</li>
+<li>SPSR（备份程序状态，用于切换工作模式）<br><img src="/../images/30.4.png" alt="alt text"></li>
+</ul>
+<h4 id="2-核心寄存器的实际对应关系"><a href="#2-核心寄存器的实际对应关系" class="headerlink" title="2. 核心寄存器的实际对应关系"></a><strong>2. 核心寄存器的实际对应关系</strong></h4><p><img src="/../images/30.5.png" alt="alt text"></p>
+<blockquote>
+<p><strong>蓝绿色</strong>是该工作模式<strong>独占</strong>，<strong>浅色</strong>表示<strong>共用一个物理寄存器</strong>。</p>
+</blockquote>
+<p>为了节省资源，肯定不是每种工作模式，都配一组18个的物理寄存器。<strong>肯定有的是可以复用的</strong>。</p>
+<p>可以看出：</p>
+<ol>
+<li><strong>低寄存器组 R0~R7</strong>是<strong>共享同一组物理</strong>寄存器的</li>
+<li><strong>R8-R12</strong>， 除了FIQ有独立的寄存器外，其余的也都是共享一组物理寄存器</li>
+<li><strong>SP，LR</strong>，除了sys和hyp模式外，都是独立拥有寄存器（<strong>每个模式有自己的栈指针和返回地址寄存器</strong></li>
+<li><strong>PC</strong>，所有模式共用一个物理寄存器</li>
+<li><strong>CPSR</strong>，所有模式共用一个物理寄存器</li>
+<li><strong>SPSR</strong>，每个模式都有自己的寄存器，用来保存本模式的当前cpu状态。</li>
+</ol>
+<hr>
+<p>下面详细说说这些寄存器，<strong>在某些模式下有什么用</strong>，为什么要独占，为什么共享？</p>
+<ol>
+<li><p><strong>R0-R7</strong>，大家都共用。无特殊用途，也叫做<strong>未备份寄存器</strong></p>
+</li>
+<li><p><strong>R8-R12</strong>，可以看到只有<code>FIQ模式</code>有自己的独占</p>
+<blockquote>
+<p><code>FIQ</code> 是<code>快速中断模式</code>，看名字就是知道这个中断模式<code>要求快速执行</code>,让这个模式有独占寄存器，就可以<strong>不用保存恢复现场了</strong>，非常迅速，从而<strong>加速中断的执行过程</strong></p>
+</blockquote>
+</li>
+<li><p><strong>R13，SP</strong>，</p>
+<ul>
+<li>基本上每种模式都有一个自己的 R13 物理寄存器，应用程序会初始化 R13，使其指向该模式专用的栈地址，这就是常说的<strong>初始化 SP 指针</strong></li>
+</ul>
+</li>
+<li><p><strong>R14</strong> 也称为<code>连接寄存器(LR)</code>,<strong>作用有两个</strong></p>
+<ol>
+<li>每种处理器模式使用 <code>R14(LR)</code>来存放当前<code>子程序的返回地址</code>，如果使用 <code>BL</code> 或者 <code>BLX</code>来调用子函数的话，<code>R14(LR)</code>被设置成该子函数的<code>返回地址</code>，在子函数中，将 <code>R14(LR)</code>中的值赋给 <code>R15(PC)</code>即可完成子函数返回</li>
+<li>当<strong>异常发生</strong>以后，该异常模式对应的 <code>R14寄存器</code>被设置成<strong>该异常模式将要返回的地址</strong>，</li>
+<li>R14 也可以当作<strong>普通寄存器</strong>使用</li>
+</ol>
+</li>
+<li><p><strong>R15</strong>, PC, 大家共用</p>
+<ul>
+<li>保存着<strong>当前执行的指令地址</strong>值加 <code>8 个字节</code>(<strong>一句指令占4字节</strong> &#x3D; <strong>地址大小</strong>)，这是因为 ARM的流水线机制导致的<blockquote>
+<p><code>R15 (PC)</code>值 &#x3D; 当前执行的程序位置 + <code>8 个字节</code></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p><strong>CPSR</strong>, 大家共用，<strong>任何模式下被访问</strong></p>
+<ol>
+<li>包含了<code>条件标志位</code>、<code>中断禁止位</code>、当前<code>处理器模式</code>标志等一些<strong>状态位</strong>以及一些<strong>控制位</strong></li>
+</ol>
+</li>
+<li><p><strong>SPSR</strong></p>
+<ul>
+<li>7 个模式每个都配备了一个<strong>专用的物理状态寄存器</strong>，叫做 <code>SPSR</code>(备份程序状态寄存器)，当特定的<strong>异常</strong> <strong>中断</strong>发生时，SPSR 寄存器用来<strong>保存当前程序状态寄存器CPSR</strong>的值，当异常退出以后可以用 SPSR 中保存的值来<strong>恢复 CPSR</strong></li>
+<li><code>User</code> 和 <code>Sys</code> 这两个模式<code>不是异常模式</code>，所以<code>并没有配备 SPSR</code></li>
+</ul>
+</li>
+</ol>
+<p><img src="/../images/30.6.png" alt="alt text"></p>
+<p>上图，是CPSR的寄存器的内部结构。下面列出比较重要的位</p>
+<blockquote>
+<ul>
+<li><strong>N</strong>(bit31) N&#x3D;1 表示运算对的结果为<strong>负数</strong></li>
+<li><strong>Z</strong>(bit30) Z&#x3D;1 表示运算<strong>结果为零</strong>, 对于 <code>CMP</code> 指令，Z&#x3D;1 表示进行比较的两个数大小相等</li>
+<li><strong>J</strong>(bit24) 和 <strong>T</strong>(bit5)位一起 表示<strong>当前所使用的指令集</strong></li>
+<li><strong>E</strong>(bit9)：<strong>大小端控制位</strong>，E&#x3D;1 表示大端模式，E&#x3D;0 表示小端模式</li>
+<li><strong>A</strong>(bit8)：禁止异步中断位，A&#x3D;1 表示禁止异步中断</li>
+<li><strong>I</strong>(bit7)：I&#x3D;1 禁止 IRQ，I&#x3D;0 <strong>使能 IRQ</strong>。</li>
+<li><strong>F</strong>(bit6)：F&#x3D;1 禁止 FIQ，F&#x3D;0 <strong>使能 FIQ</strong></li>
+<li><strong>M</strong>[4:0]：<strong>处理器模式控制位</strong></li>
+</ul>
+</blockquote>
+<p>可以看到，通过修改CPSR，就可以设置当前<strong>核心的工作模式</strong>，<strong>中断使能</strong></p>
+<blockquote>
+<p>以上，就讲解了，<strong>多核架构</strong>，<strong>单核模型</strong>，<strong>寄存器组</strong>。我们<strong>所有的底层</strong>都是围绕这些寄存器来进行的。包括后面的自己手写OS。这里，<strong>就是嵌入式所到达的最底层</strong>，再往下，就是芯片设计了。</p>
+</blockquote>
+<h2 id="汇编基础"><a href="#汇编基础" class="headerlink" title="汇编基础"></a>汇编基础</h2><p>下面，我们需要掌握汇编语言，因为<strong>汇编</strong>，是<strong>最贴近核心+寄存器底层的语言</strong></p>
+<p>我们只了解一些常用的指令即可</p>
+<p><code>I.MX6U-ALPHA</code> 使用的是 NXP 的 <code>I.MX6UL 芯片</code>，这是一款 <code>Cortex-A7</code> 内核的芯片，所以<br>我们主要讲的是 <code>Cortex-A 的汇编指令</code></p>
+<h3 id="GNU-汇编语法"><a href="#GNU-汇编语法" class="headerlink" title="GNU 汇编语法"></a>GNU 汇编语法</h3><p>当你使用stm32的MDK和IAR里面的汇编，发现里面的语法不一样。</p>
+<p>我们要编写的是 <code>ARM汇编</code>，编译使用的 <code>GCC 交叉编译器</code>，所以我们的<strong>汇编代码</strong>要符合 <strong>GNU 语法</strong></p>
+<blockquote>
+<p><strong>GNU 汇编语法</strong>适用于<strong>所有的架构</strong>，并不是 ARM 独享的</p>
+</blockquote>
+<h4 id="1-GNU-汇编的基础语法如下："><a href="#1-GNU-汇编的基础语法如下：" class="headerlink" title="1. GNU 汇编的基础语法如下："></a>1. GNU 汇编的<strong>基础语法</strong>如下：</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">label：instruction @ comment</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">label 即标号，表示地址位置</span></span><br><span class="line"><span class="comment">    1. 指令的地址: 有些指令前面可能会有标号，这样就可以通过这个标号得到指令的地址，</span></span><br><span class="line"><span class="comment">    2. 数据地址: 标号也可以用来表示数据地址。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">    注意 label 后面的“：”，任何以“：”结尾的标识符都会被识别为一个标号。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">instruction 即指令，也就是汇编指令或伪指令。</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment">@符号，表示后面的是注释，就跟 C 语言里面的“/*”和“*/</span>”一样</span><br><span class="line"></span><br><span class="line">*/</span><br></pre></td></tr></table></figure>
+
+<p>举例：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">add:</span><br><span class="line">MOVS R0, #<span class="number">0X12</span> @设置 R0=<span class="number">0X12</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h4 id="2-用户可以使用-section-伪操作来定义一个段"><a href="#2-用户可以使用-section-伪操作来定义一个段" class="headerlink" title="2. 用户可以使用.section 伪操作来定义一个段"></a>2. 用户可以使用<code>.section</code> <strong>伪操作</strong>来<strong>定义一个段</strong></h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.section .testsection @定义一个 testsetcion 段</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">每个段以段名开始，以下一段名或者文件结尾结束</span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
+<p>举例：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.section .test</span><br><span class="line"></span><br><span class="line">.test:</span><br><span class="line">    ldr r0, =<span class="number">0x12</span> @r0=<span class="number">0x12</span></span><br><span class="line">    ldr r0, =<span class="number">0x12</span> @r0=<span class="number">0x12</span>  <span class="comment">//这里的两句指令就是一个段</span></span><br><span class="line">.xxx:</span><br><span class="line">    xxx</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="3-汇编系统预定义了一些段名"><a href="#3-汇编系统预定义了一些段名" class="headerlink" title="3. 汇编系统预定义了一些段名"></a>3. 汇编系统<strong>预定义了一些段名</strong></h4><ul>
+<li>.text 表示代码段</li>
+<li>.rodata 只读数据段</li>
+<li>.data 初始化的数据段</li>
+<li>.bss 未初始化的数据段</li>
+</ul>
+<hr>
+<h4 id="4-汇编程序的默认入口标号是-start"><a href="#4-汇编程序的默认入口标号是-start" class="headerlink" title="4. 汇编程序的默认入口标号是_start"></a>4. 汇编程序的<strong>默认入口标号</strong>是<code>_start</code></h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.global _start </span><br><span class="line"></span><br><span class="line">_start:</span><br><span class="line">    ldr r0, =<span class="number">0x12</span> @r0=<span class="number">0x12</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>我们也可以不用在代码里面用_start来指定程序的入口，也可以在<strong>链接脚本</strong><code>lds</code>中使用 <code>ENTRY</code> 来指明其它的入口点</p>
+</blockquote>
+<hr>
+<h4 id="5-伪操作"><a href="#5-伪操作" class="headerlink" title="5. 伪操作"></a>5. 伪操作</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.byte   <span class="comment">//定义单字节数据，比如.byte 0x12。</span></span><br><span class="line">.<span class="type">short</span>  <span class="comment">//定义双字节数据，比如.short 0x1234。</span></span><br><span class="line">.<span class="type">long</span>   <span class="comment">//定义一个 4 字节数据，比如.long 0x12345678。</span></span><br><span class="line">.equ    <span class="comment">//赋值语句，格式为：.equ 变量名，表达式，比如.equ num, 0x12，表示 num=0x12。</span></span><br><span class="line">.align  <span class="comment">//数据字节对齐，比如：.align 4 表示 4 字节对齐。</span></span><br><span class="line">.end    <span class="comment">//表示源文件结束。</span></span><br><span class="line">.global <span class="comment">//定义一个全局符号，格式为：.global symbol，比如：.global _start。</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h4 id="6-函数"><a href="#6-函数" class="headerlink" title="6. 函数"></a>6. 函数</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">函数名:</span><br><span class="line">    函数体</span><br><span class="line">    返回语句</span><br></pre></td></tr></table></figure>
+<p>举例：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 未定义中断 */</span></span><br><span class="line">Undefined_Handler:</span><br><span class="line">    ldr r0, =Undefined_Handler</span><br><span class="line">    bx r0                               <span class="comment">//“bx”指令是返回指令，函数返回语句不是必须的</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="Cortex-A7-常用汇编指令"><a href="#Cortex-A7-常用汇编指令" class="headerlink" title="Cortex-A7 常用汇编指令"></a>Cortex-A7 常用汇编指令</h3><p>这里的指令，就是上面GNU汇编语法里面的<code>instruction</code>部分了</p>
+<h4 id="处理器内部-数据传输指令"><a href="#处理器内部-数据传输指令" class="headerlink" title="处理器内部 数据传输指令"></a>处理器内部 数据传输指令</h4><p>主要是：</p>
+<ul>
+<li>MOV（<code>&lt;-</code>）<ul>
+<li>将数据从一个寄存器拷贝到另外一个寄存器 </li>
+<li>将一个立即数传递到寄存器里面</li>
+</ul>
+</li>
+<li>MRS（<code>&lt;-</code>）<ul>
+<li>读<strong>特殊寄存器</strong>(如 CPSR 和 SPSR)</li>
+</ul>
+</li>
+<li>MSR（<code>&lt;-</code>）<ul>
+<li>写<strong>特殊寄存器</strong>(如 CPSR 和 SPSR)</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">MOV R0，R1              <span class="comment">//将寄存器 R1 中的数据传递给 R0，即 R0=R1</span></span><br><span class="line">MOV R0, #<span class="number">0X12</span>           <span class="comment">//将立即数 0X12 传递给 R0 寄存器，即 R0=0X12</span></span><br><span class="line"></span><br><span class="line">MRS R0, CPSR            <span class="comment">//将特殊寄存器 CPSR 里面的数据传递给 R0，即 R0=CPSR</span></span><br><span class="line"></span><br><span class="line">MSR CPSR, R0            <span class="comment">//将 R0 中的数据复制到 CPSR 中，即 CPSR=R0</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="存储器访问指令"><a href="#存储器访问指令" class="headerlink" title="存储器访问指令"></a>存储器访问指令</h4><p>ARM <strong>不能直接访问存储器，比如 RAM 中的数据</strong></p>
+<blockquote>
+<p>记住，核心能够直接访问的，只有自己的内核寄存器，访问RAM，要用存储器访问指令。常用的存储器访问指令有两种：</p>
+</blockquote>
+<ul>
+<li>LDR（<code>&lt;-</code>）</li>
+<li>STR（<code>-&gt;</code>）</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">LDR Rd, [Rn , <span class="meta">#offset]              <span class="comment">//从存储器 Rn+offset 的位置读取数据存放到 Rd 中。</span></span></span><br><span class="line"></span><br><span class="line">    LDR R0, =<span class="number">0X0209C004</span>             <span class="comment">//将寄存器地址 0X0209C004 加载到 R0 中，即 R0=0X0209C004</span></span><br><span class="line">    LDR R1, [R0]                    <span class="comment">//读取地址 0X0209C004 中的数据到 R1 寄存器中</span></span><br><span class="line"></span><br><span class="line">STR Rd, [Rn, <span class="meta">#offset]               <span class="comment">//将 Rd 中的数据写入到存储器中的 Rn+offset 位置。</span></span></span><br><span class="line"></span><br><span class="line">    STR R1, [R0]                    <span class="comment">//将 R1 中的值写入到 R0 中所保存的地址中</span></span><br></pre></td></tr></table></figure>
+
+<p>LDR 和 STR 都是按照<code>字</code>(<strong>4byte</strong>)进行读取和写入的，也就是操作的 <code>32 位数据</code></p>
+<p>如果要按照<code>字节</code>(<strong>1byte</strong>)、<code>半字</code>(<strong>2byte</strong>)进行操作的话可以在指令“LDR”后面加上 <code>B</code> 或 <code>H</code></p>
+<ul>
+<li>按<strong>字节</strong>操作的指令就是 <code>LDRB</code> 和<code>STRB</code>，</li>
+<li>按<strong>半字</strong>操作的指令就是 <code>LDRH</code> 和 <code>STRH</code></li>
+</ul>
+<h4 id="压栈和出栈指令"><a href="#压栈和出栈指令" class="headerlink" title="压栈和出栈指令"></a>压栈和出栈指令</h4><p>A函数跳转到B函数，需要保存当前处理器状态(就是保存 <code>R0~R15</code> 这些寄存器值)</p>
+<blockquote>
+<p>只涉及函数跳转，所以是16个寄存器，包括SP，LR，PC.</p>
+<p>CPSR的保存发生在模式切换，且保存到SPSR内</p>
+</blockquote>
+<p>当 <code>B 函数执行完成</code>以后再用前面保存的寄存器值恢复<code>R0~R15</code> 即可。<strong>保存 R0~R15</strong> 寄存器的操作就叫做<strong>现场保护</strong>，<strong>恢复 R0~R15</strong> 寄存器的操作就叫做<br><strong>恢复现场</strong></p>
+<p>在进行<strong>现场保护</strong>的时候需要进行<code>压栈</code>(入栈)操作，<strong>恢复现场</strong>就要进行<code>出栈</code>操作</p>
+<blockquote>
+<p>也就是说，这个现场，具体要<strong>保存在内存里面</strong>，这里的内存就是<strong>SP指针指向的栈空间</strong></p>
+</blockquote>
+<ul>
+<li><strong>压栈</strong>的指令为 <code>PUSH</code>(<code>&lt;-</code>) (从右往左，依次入栈)</li>
+<li><strong>出栈</strong>的指令为 <code>POP</code>(<code>-&gt;</code>) (从左往右，依次出栈)</li>
+</ul>
+<blockquote>
+<p>他们利用<strong>当前的栈指针 SP</strong>来<strong>生成地址</strong></p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">PUSH &lt;reg <span class="built_in">list</span>&gt;         <span class="comment">//将寄存器列表存入栈中</span></span><br><span class="line"></span><br><span class="line">    PUSH &#123;R0~R3, R12&#125;   <span class="comment">//将 R0~R3 和 R12 压栈</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">POP &lt;reg <span class="built_in">list</span>&gt;          <span class="comment">//从栈中恢复寄存器列表。</span></span><br><span class="line"></span><br><span class="line">    POP &#123;R0~R3,R12&#125;     <span class="comment">//在恢复 R0~R3,R12</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>栈空间的内存模型，一次压入一个寄存器，32位，4字节。</p>
+<p><img src="/../images/30.7.png" alt="alt text"></p>
+</blockquote>
+<h4 id="跳转指令"><a href="#跳转指令" class="headerlink" title="跳转指令"></a>跳转指令</h4><p>指令跳转：</p>
+<ul>
+<li>B（直接跳转，不返回）</li>
+<li>BL（直接跳转，返回）</li>
+<li>BX（间接跳转，不返回）</li>
+<li>BLX（间接跳转，返回）<blockquote>
+<p>L表示LR，表示记录下返回的地址</p>
+<p>X表示寄存器，表示跳转地址记录在寄存器里面</p>
+<p>这些跳转指令，<strong>后面接label</strong>，也就是地址&#x2F;指令的别名，比如<code>main</code>, <code>reset_handler</code></p>
+</blockquote>
+</li>
+</ul>
+<p>当然还有<strong>直接跳转</strong>：<strong>直接向 PC 寄存器里面写入数据</strong></p>
+<h4 id="算术运算指令-逻辑运算指令"><a href="#算术运算指令-逻辑运算指令" class="headerlink" title="算术运算指令 + 逻辑运算指令"></a>算术运算指令 + 逻辑运算指令</h4><p>这些都是加减法的运算指令，比如</p>
+<ul>
+<li><p>ADD</p>
+</li>
+<li><p>SUB<br>等等，都是（<code>&lt;-</code>）</p>
+</li>
+<li><p>AND</p>
+</li>
+<li><p>ORR</p>
+</li>
+<li><p>BIC</p>
+</li>
+<li><p>ORN</p>
+</li>
+<li><p>EOR<br>都是（<code>&lt;-</code>）</p>
+</li>
+</ul>
+<h2 id="启动流程"><a href="#启动流程" class="headerlink" title="启动流程"></a>启动流程</h2><p>上面，分析了处理器单核的运行模型，了解了配套的18个寄存器，然后补了一下GNU汇编基础。</p>
+<p>下面，来分析一下，imx6ull的启动方式，看看裸机代码是如何跑起来的。</p>
+<h3 id="启动方式"><a href="#启动方式" class="headerlink" title="启动方式"></a>启动方式</h3><p>首先，了解一下，imx6ull这块开发板支持的启动方式：</p>
+<ol>
+<li>FUSE启动</li>
+<li><strong>串行下载</strong><ol>
+<li>通过otg1&#x2F;uart 烧录到外部ROM里面，一般最终量产用</li>
+</ol>
+</li>
+<li><strong>内部boot模式</strong><ol>
+<li>芯片上电执行内部bootROM代码，进行硬件初始化<ol>
+<li><code>初始化时钟</code><ol>
+<li>内核时钟ARM PLL 396Mhz</li>
+<li>System PLL 528Mhz</li>
+<li>USB PLL 480Mhz</li>
+<li>AHB 132Mhz</li>
+<li>IPG 66Mh</li>
+</ol>
+</li>
+<li><code>打开MMU和cache</code>，加快执行速度（下载镜像，验证镜像，完成后关闭）</li>
+<li><code>中断向量偏移</code>设置到bootROM的起始位置，启动用户代码后，重新设置中断向量偏移(用户代码开始的地方)</li>
+</ol>
+</li>
+<li>bootROM从boot设备(emmc,sd卡)拷贝到RAM中(ddr)</li>
+</ol>
+<ul>
+<li>通过拨码(<strong>硬件gpio选择</strong>)，可以<strong>选择具体的启动设备</strong>（emmc,sd,eeprom,nandflash）</li>
+</ul>
+</li>
+</ol>
+<h3 id="镜像制作，代码烧录"><a href="#镜像制作，代码烧录" class="headerlink" title="镜像制作，代码烧录"></a>镜像制作，代码烧录</h3><p>我们自己编写了一个裸机的代码(<code>start.S + main.c</code>)</p>
+<p>然后我们肯定会通过交叉编译工具，来编译出我们自己的<code>bin</code>文件。</p>
+<ol>
+<li>xxx-gcc  .s&#x2F;.c -&gt; .o</li>
+<li>xxx-ld  .o -&gt; .elf (包含了运行地址:0x8780 0000)</li>
+<li>xxx-copy  .elf -&gt; bin (转换二进制格式)</li>
+</ol>
+<p>之后，会用imxdownload来为我们的逻辑，添加一些头</p>
+<ol start="4">
+<li>imxdownload      .bin -&gt; .imx &#x3D; (IVT+BD+DCD+.bin)</li>
+</ol>
+<blockquote>
+<p>学习 <code>STM32</code> 的时候我们可以直接将编译生成的<code>.bin</code> 文件烧写到 STM32 <code>内部 flash</code> 里面,</p>
+<p> I.MX6U 不能直接烧写编译生成的.bin 文件</p>
+</blockquote>
+<p>新增的头包括：</p>
+<ol>
+<li><code>IVT</code>： Image vector table，IVT 里面包含了一系列的<strong>地址信息</strong>，这些地址信息在ROM 中按照固定的地址存放着</li>
+<li><code>Boot data</code>，启动数据，包含了<code>镜像要拷贝到哪个地址</code>(运行地址)，拷贝的大小是多少等等</li>
+<li><code>Device configuration data</code>，简称 DCD，设备配置信息，重点是 <code>DDR3 的初始化配置</code></li>
+</ol>
+<p>内部 <code>BootROM</code> 会将 <code>load.imx</code> <strong>拷贝到 DDR 中</strong>，<code>用户代码(.bin)</code>是要一定要从 <code>0X8780 0000</code> 这个地方开始的</p>
+<blockquote>
+<p>DDR的地址范围为 0x80000000-xxxxxxxx</p>
+</blockquote>
+<p>因为<strong>链接地址</strong>为 <code>0X87800000</code>，<code>load.imx</code> 在用户代码前面又有 <code>3KByte</code> 的 <code>IVT+Boot Data+DCD</code> 数据，下面会讲为什么是 3KByte，因此 load.imx 在 DDR 中的起始地址就是 <code>0X8780 0000-3072</code>&#x3D;<code>0X877F F400</code></p>
+<blockquote>
+<p>前面这<code>3K</code>字节的头（IVT这些），是给bootROM看的。(<strong>有3千个字节，还是很多的</strong>。)</p>
+</blockquote>
+<p>以上，我们已经知道了，镜像的内部结构，以及镜像在运行地址的分布情况。下面，具体分析一下这些头的作用</p>
+<h4 id="IVT-部分"><a href="#IVT-部分" class="headerlink" title="IVT 部分"></a>IVT 部分</h4><p>IVT 包含了：</p>
+<ul>
+<li>镜像程序的入口点</li>
+<li>指向 DCD 的指针</li>
+<li>一些用作其它用途的指针。</li>
+</ul>
+<blockquote>
+<p><code>bootROM</code> 要求 <code>IVT</code> 应该放到<strong>指定的位置</strong>，<strong>不同的启动设备位置不同</strong>，而 IVT 在整个 load.imx 的最前面，其实就<strong>相当于要求 load.imx 在烧写的时候应该烧写到存储设备的指定位置去</strong>。整个位置都是<strong>相对于存储设备的起始地址的偏移</strong></p>
+<p><img src="/../images/30.8.png" alt="alt text"></p>
+<p>(<strong>加载地址计算</strong>) 以 <code>SD/EMMC</code> 为例，IVT 偏移为 <code>1Kbyte</code>，IVT+Boot data+DCD 的总大小为 4KByte-<br>1KByte&#x3D;3KByte。假如 SD&#x2F;EMMC <code>每个扇区为 512 字节</code>，那么 load.imx 应该从第三个扇区开始<br>烧写，<strong>前两个扇区要留出来</strong>，这样，这个才算一个合格的imx镜像，<strong>bootrom才愿意去读取</strong></p>
+</blockquote>
+<p>下面来看一下，<strong>IVT内部的具体内容</strong>，因为这三个头，一共占3k字节。具体内容如下：</p>
+<blockquote>
+<p>这里要<strong>事先说明</strong>，我们在编译链接阶段里面，让bin有地址信息，但是<code>bootROM</code>,是无法解析bin文件的，所以对bootROM来说，bin就是一串要拷贝的数据。</p>
+<p>你用 <code>arm-linux-gnueabihf-objcopy</code> 将 .elf 转换成 .bin 烧录到 SD 卡时，<code>ELF</code> 里的<code>符号表</code>、<code>链接地址（0x87800000）</code>等所有<code>元数据</code>都被彻底丢弃了。SD 卡里躺着的只是纯粹的<code>机器指令</code></p>
+<p>既然 .bin 自己不带说明书，<strong>NXP 就设计了 IVT 这个强制规范</strong>。你必须在二进制最开头显式告诉<strong>硬件瞎子</strong>：“搬完代码后，PC 指针去 0x87800000 执行”。<br><strong>IVT</strong></p>
+</blockquote>
+<ol>
+<li><p><strong>header</strong> (<code>BootROM 靠它来识别这块数据是不是合法的 IVT</code>)</p>
+<ol>
+<li>0xD1</li>
+<li>IVT的长度</li>
+<li>version</li>
+</ol>
+</li>
+<li><p><strong>入口地址</strong>：</p>
+<ol>
+<li>程序入口<strong>绝对地址</strong>（<code>DDR地址</code>）。BootROM 把你的代码搬运完毕后，PC 指针跳转去执行的第一个指令地址（通常就是你 start.S 中 _start 的<strong>链接物理地址</strong>,<code>0x87800000</code>）<blockquote>
+<p>entry (入口地址)：<code>0X8780 0000</code>，也就是代码镜像第一行指令链接的位置。</p>
+</blockquote>
+</li>
+</ol>
+</li>
+<li><p><strong>dcd</strong>：</p>
+<ol>
+<li>设备配置数据（DCD）<strong>绝对地址</strong>（<code>DDR地址</code>），让 BootROM 在跳转执行你的代码前帮你初始化 DDR 等核心外设，这样你的程序一启动就能直接跑在 DDR 里<blockquote>
+<p>dcd (DCD 地址)：<code>0X877F F42C</code></p>
+</blockquote>
+</li>
+</ol>
+</li>
+<li><p><strong>boot data</strong>：Boot Data <strong>绝对地址</strong>（<code>DDR地址</code>）。包含镜像的整体搬运信息（要把整个固件搬运到内存的哪个源地址、目标地址，以及固件总长度）</p>
+<blockquote>
+<p>boot data (Bd 地址)：<code>0X877F F420</code></p>
+</blockquote>
+</li>
+<li><p><strong>self：IVT 本身的绝对地址</strong>（<code>DDR地址</code>）。供 BootROM 内部做基址偏移计算用。</p>
+</li>
+</ol>
+<blockquote>
+<p>self (IVT 地址)：<code>0X877F F400</code>，表中明确标注这是“IVT 复制到 DDR 中以后的首地址”。</p>
+</blockquote>
+<hr>
+<blockquote>
+<p><strong>这些地址是怎么被 imxdownload 算出来的</strong>？</p>
+<p>它是以你给定的<code>链接地址</code>（0x87800000）为基准，逆向推导出来的：</p>
+<p><strong>确定 IVT 首地址(self)</strong>：已知镜像代码起始地址是 0X87800000，而前面预留给 IVT + Boot Data + DCD 的空间刚好是 <code>3KByte (0xC00)</code>，所以 IVT 的首地址 self 就是 0X87800000 - 0xC00 &#x3D; <code>0X877FF400</code>。</p>
+<p><strong>确定 DCD 地址</strong>：已知 <code>IVT 的首地址</code>是 0X877FF400，而通过查表得知 DCD 数据相对首地址的偏移量是 0X2C，所以 dcd 的绝对地址就是 0X877FF400 + 0X2C &#x3D; 0X877FF42C。</p>
+<p><strong>确定 Boot Data 搬运地址</strong>：因为 i.MX6ULL 从 SD 卡启动时，硬件要求镜像前面必须空出 1KByte (0x400) 的偏移量。所以整个 load.imx 最终在 DDR 里的总起始地址 start 是 0X877FF400 - 0x400 &#x3D; 0X877FF000。</p>
+</blockquote>
+<hr>
+<blockquote>
+<p>解开最大的悖论：<strong>DDR 还没初始化，BootROM 怎么去 DDR 读 DCD</strong>？</p>
+<p>这正是 NXP 硬件设计的精妙之处，也是我之前表述偏颇的地方。实际的启动搬运过程分为两步：</p>
+<p><strong>第一步（临时解析配置）</strong>：上电时，BootROM 确实无法访问 DDR。它会先把 SD 卡最前面这几 KB（包含 <code>IVT</code> 和<code> DCD</code>）读取到芯片<code>内部的 SRAM (OCRAM)</code> 中。BootROM 在内部 SRAM 里解析并执行这部分 DCD 数据，从而把外部 DDR 的时序、引脚等全部初始化完毕。</p>
+<p><strong>第二步（整体搬运到目的地）</strong>：DDR 初始化成功可用后，BootROM 才会去读取 <code>Boot Data</code> 里的指令。此时，它按照 start &#x3D; 0X877FF000 和设定的长度 length &#x3D; 0X00200000 (2MByte)，将 SD 卡上的整个镜像（包括那个 1KB 空白、IVT、DCD 以及你的 LED 代码），完整地搬运到 DDR 的目标地址中。</p>
+</blockquote>
+<h4 id="Boot-Data-数据"><a href="#Boot-Data-数据" class="headerlink" title="Boot Data 数据"></a>Boot Data 数据</h4><p>这个里面就是所谓的，整个imx镜像文件，的源地址（外部ROM），目的地址（DDR），拷贝大小。</p>
+<p>这个不用多说了。给bootROM看的，用来拷贝用。</p>
+<h4 id="DCD-数据"><a href="#DCD-数据" class="headerlink" title="DCD 数据"></a>DCD 数据</h4><p>这个里面，也是给bootROM看的，用来初始化ddr。</p>
+<p>复位以后，I.MX6U 片内的<strong>所有寄存器都会复位为默认值</strong>，但是这些默认值往往不是我们<br>想要的值，而且有些外设我们必须在使用之前初始化它。</p>
+<p>为此 I.MX6U 提出了一个 <code>DCD(Device Config Data)</code>的概念</p>
+<p><code>DCD</code> 其实就是 I.MX6U <code>寄存器地址</code>和<code>对应的配置</code>信息集合，Boot ROM 会使用这些寄存器地址和配置集合来<strong>初始化相应的寄存器</strong>，比如<code>开启某些外设的时钟</code>、<code>初始化 DDR </code>等等</p>
+<blockquote>
+<p>DCD 区域不能超过 1768Byte</p>
+</blockquote>
+<p>我们的imxdownload里面，对dcd的内容有：</p>
+<ol>
+<li>设置 CCGR0~CCGR6 这 7 个外设时钟使能寄存器，默认打开所有的外设时钟。</li>
+<li>配置 DDR3 所用的所有 IO。</li>
+<li>配置 MMDC 控制器，初始化 DDR3。</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这是我对豆包的描述</span></span><br><span class="line">我理解的imx6ull的启动：初始上电后，pc指针先指向内部rom，里面是bootrom程序，他会先把外部rom的ivt，bootdata，dcd，这三块拷贝到内部ram中，然后开始读取这个镜像头，从bd里面得知了，整个景象的源地址（外部rom），目的地址（ddr），拷贝大小，从ivt里面得知了ivt，dcd，bd，和用户程序最终在外部ram，ddr中的位置。从dcd里面得知初始化ddr的配置信息，</span><br><span class="line"></span><br><span class="line">接下来bootRom要开始做的事情是，按照dcd的内容，初始化ddr，然后按照bd的内容把我们整个imx的景象拷贝到ddr的位置（保证用户代码bin的开头处于<span class="number">0x87800000</span>），接下来就是pc指针跳转到<span class="number">87800000</span>开始执行我们的用户代码</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">我们的用户代码，里面会做设置核心的状态啊，初始化sp指针准备c环境，然后跳转c的世界，然后在c的世界里面，做一些时钟的初始化啊，外设的初始化之类的。是这样吗</span><br></pre></td></tr></table></figure>
+
+<p><strong>你的理解总结</strong>（我先复述一遍，确保我没听错）</p>
+<ul>
+<li>i.MX6ULL 上电 → PC 指向芯片<code>内部 BootROM</code>（出厂固化，不可改）</li>
+<li>BootROM 先从外部 Flash（SPI&#x2F;NAND&#x2F;SD 等） 读取：<ul>
+<li>IVT</li>
+<li>Boot Data</li>
+<li>DCD<blockquote>
+<p>把这头信息读到<code>内部 RAM</code></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li>解析：<ul>
+<li>IVT：告诉 BootROM 各种表、程序的地址</li>
+<li>DCD：DDR 初始化参数</li>
+<li>Boot Data：告诉从哪拷贝、拷到 DDR 哪里、拷多大</li>
+</ul>
+</li>
+<li><code>BootROM</code> 做：<ul>
+<li>用 <code>DCD</code> 初始化 DDR</li>
+<li>按 <code>BootData</code> 把整个镜像搬到 DDR（你说的 0x87800000）</li>
+</ul>
+</li>
+<li>然后 PC 跳 <code>0x87800000</code> 执行用户代码</li>
+<li>用户代码里：<ul>
+<li>设 CPU 状态</li>
+<li>初始化 SP，准备 C 环境</li>
+<li>跳 C 入口</li>
+<li>C 里初始化时钟、外设…</li>
+</ul>
+</li>
+</ul>
+<p><strong>流程图</strong>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">上电复位</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[PC = 芯片内部 BootROM 地址]  &lt;-- 出厂固化，不可改</span><br><span class="line">   |</span><br><span class="line">   |--- <span class="number">1.</span> 读取启动引脚 BOOT_CFG</span><br><span class="line">   |        决定从哪里读镜像：SD / NAND / SPI Nor / 等</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[从外部ROM(Flash/SD) 读取头部]</span><br><span class="line">   |</span><br><span class="line">   |--- 只读一小段：IVT + DCD + Boot Data</span><br><span class="line">   |--- 拷贝到 【芯片内部 RAM (OCRAM)】</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[解析头部]</span><br><span class="line">   |</span><br><span class="line">   |--- IVT:      入口地址、各类表的指针</span><br><span class="line">   |--- DCD:      DDR 初始化参数</span><br><span class="line">   |--- BootData: 源地址、目的地址、拷贝长度</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[执行 DCD，初始化 DDR]</span><br><span class="line">   |</span><br><span class="line">   |--- DDR 此时才被点亮！</span><br><span class="line">   |--- 之前只能用内部 RAM</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[根据 BootData 搬运整个镜像]</span><br><span class="line">   |</span><br><span class="line">   |--- 从外部ROM → 搬到 DDR 中</span><br><span class="line">   |--- 通常目的地址：<span class="number">0x87800000</span></span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[跳转到 IVT 中指定的入口地址]</span><br><span class="line">   |</span><br><span class="line">   |--- 通常就是 <span class="number">0x87800000</span></span><br><span class="line">   |--- 进入用户写的程序</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[用户启动代码（你的 start.S）]</span><br><span class="line">   |</span><br><span class="line">   |--- 关看门狗</span><br><span class="line">   |--- 设置 CPU 模式、栈指针 SP</span><br><span class="line">   |--- 初始化 .data / .bss</span><br><span class="line">   |--- 准备好 C 语言运行环境</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">[跳转到 C 入口：main / board_init]</span><br><span class="line">   |</span><br><span class="line">   |--- 时钟初始化</span><br><span class="line">   |--- 外设初始化</span><br><span class="line">   |--- 业务逻辑</span><br><span class="line">   |</span><br><span class="line">   v</span><br><span class="line">正常运行</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意，我们的链接地址<code>0x87800000</code>这个<strong>不是固定的</strong>，是我们的<strong>lds链接脚本</strong>决定的。然后imxdownload会根据这个来生成我们的IVT，指向lds里面设置的链接地址。</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">1.</span> 你写 .lds 链接脚本</span><br><span class="line">   ↓（指定运行地址 = DDR 里的地址，比如 <span class="number">0x87800000</span>）</span><br><span class="line"></span><br><span class="line">   <span class="comment">//. = 0x87800000;   // 这样即可。</span></span><br><span class="line"></span><br><span class="line"><span class="number">2.</span> 编译出来的 elf → bin</span><br><span class="line">   ↓（bin 里第一条指令的地址就是 <span class="number">0x87800000</span>）</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span> 运行 imxdownload 烧录</span><br><span class="line">   ↓（工具会读取你的 bin 文件第一条指令地址）</span><br><span class="line"></span><br><span class="line"><span class="number">4.</span> imxdownload **自动生成 IVT**</span><br><span class="line">   ↓（把 IVT 里的 entry 字段填成 <span class="number">0x87800000</span>）</span><br><span class="line"></span><br><span class="line"><span class="number">5.</span> 烧录到 SD 卡</span><br><span class="line">   ↓</span><br><span class="line"></span><br><span class="line"><span class="number">6.</span> 上电</span><br><span class="line">   BootROM 读 IVT → 知道要跳去 <span class="number">0x87800000</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="内存分布，对比stm32"><a href="#内存分布，对比stm32" class="headerlink" title="内存分布，对比stm32"></a>内存分布，对比stm32</h3><p>我们先复习一下stm32的启动前后，内存的分布情况。由于stm32f103只有内部ram, 内部rom</p>
+<h4 id="stm32的启动"><a href="#stm32的启动" class="headerlink" title="stm32的启动"></a>stm32的启动</h4><p><strong>1. 基础地址（STM32F103ZE）</strong></p>
+<ul>
+<li><strong>内部 Flash (ROM)</strong>：<code>0x0800 0000</code> ~ <code>0x0807 FFFF</code>（512KB）</li>
+<li><strong>内部 SRAM (RAM)</strong>：<code>0x2000 0000</code> ~ <code>0x2000 FFFF</code>（64KB）</li>
+<li><strong>向量表</strong>：固定放在 <code>Flash</code> 起始</li>
+<li><strong>start.s</strong>：做的核心事：初始化栈、拷贝.data、清零.bss</li>
+</ul>
+<p><strong>2. 上电瞬间，（刚复位，还没有执行start.s）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//内部rom flash</span></span><br><span class="line"><span class="number">0x08000000</span>  +-----------------------+</span><br><span class="line">            |   栈顶地址(MSP)       |  &lt;-- 复位硬件自动加载到SP</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   复位向量(Reset_Handler) |  &lt;-- 硬件自动PC跳这里</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   其他中断向量表       |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   startup_stm32f10x.s |  &lt;-- start.s 代码</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   .text 程序代码       |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   .rodata 常量        |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   .data 初始化数据(初值) |  &lt;-- 存在Flash里</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   (Flash剩余空间)      |</span><br><span class="line"><span class="number">0x0807FFFF</span>  +-----------------------+</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//内部ram</span></span><br><span class="line"><span class="number">0x2000FFFF</span>  +-----------------------+</span><br><span class="line">            |      (未定义垃圾值)    |</span><br><span class="line">            |                       |</span><br><span class="line">            |      全是随机数        |</span><br><span class="line">            |                       |</span><br><span class="line"><span class="number">0x20000000</span>  +-----------------------+</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>3. 执行 start.s 过程中（关键三步）</strong></p>
+<ul>
+<li>设置<strong>栈指针 SP</strong> &#x3D; 0x2000FFFF（或稍小）</li>
+<li>从 Flash 拷贝 <code>.data</code> 到 <code>RAM</code></li>
+<li><code>RAM</code> 中 <code>.bss</code> 段清零</li>
+</ul>
+<p><strong>4. start.s 执行完成后（进入 main 前）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//内部rom flash</span></span><br><span class="line"><span class="number">0x08000000</span>  +-----------------------+</span><br><span class="line">            |   栈顶地址             |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   复位向量             |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   中断向量表           |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   start.s 代码         |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   .text / .rodata     |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |   .data 源数据(Flash)  |</span><br><span class="line">            +-----------------------+</span><br><span class="line"><span class="number">0x0807FFFF</span>  +-----------------------+</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//内部ram</span></span><br><span class="line"><span class="number">0x2000FFFF</span>  +-----------------------+</span><br><span class="line">            |       栈 (Stack)       | &lt;-- SP指向这里</span><br><span class="line">            |       (向下生长)       |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |                       |</span><br><span class="line">            |   动态内存/堆(可选)    |</span><br><span class="line">            |                       |</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |       .data 段        | &lt;-- 从Flash拷贝过来：有初值的全局/静态变量</span><br><span class="line">            +-----------------------+</span><br><span class="line">            |       .bss 段         | &lt;-- 已被start.s清零：全局/静态未初始化变量</span><br><span class="line">            +-----------------------+</span><br><span class="line"><span class="number">0x20000000</span>  +-----------------------+</span><br></pre></td></tr></table></figure>
+
+<h5 id="疑问1-data-bss的拷贝时机"><a href="#疑问1-data-bss的拷贝时机" class="headerlink" title="疑问1: .data,.bss的拷贝时机"></a>疑问1: .data,.bss的拷贝时机</h5><p>我已经知道了，上电开始执行，CM3读取<code>0x0800 0000</code>的4字节地址，作为<code>SP</code>指针，然后，读取<code>0x0800 0004</code>的4字节地址，作为<code>PC</code>指针。</p>
+<p>我知道这个是硬件自动执行的。我很好奇，这个RAM里面的<code>.data</code>, <code>.bss</code>这个是什么时候干的？是硬件自动执行的吗？我知道在写程序的时候，MDK里面会有ld链接脚本，规划好了栈空间在RAM的末尾，然后.data， .bss在RAM的低地址。但是，我很好奇，这个是什么时机开始弄得？</p>
+<blockquote>
+<p>就是说，栈空间，我们在链接脚本lds里面，已经规划好了，放到RAM的最后，SP指针，硬件自动设置了。但是<strong>开头的.data, .bss是在什么时候拷贝过来的</strong>？</p>
+</blockquote>
+<p>首先说明，.data, .bss不是硬件自动执行的。因为<strong>这也是c语言的执行环境的一部分</strong>，所以需要软件设置，</p>
+<p>所以在<strong>start.s中设置</strong>。</p>
+<p>他的具体操作为：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Reset_Handler:</span><br><span class="line">    <span class="comment">/* 1. 从Flash拷贝 .data 到 RAM */</span></span><br><span class="line">    ldr r0, =_sidata   @ Flash中.data的源地址（链接脚本定义）</span><br><span class="line">    ldr r1, =_sdata    @ RAM中.data的目标起始</span><br><span class="line">    ldr r2, =_edata    @ RAM中.data的目标结束</span><br><span class="line">copy_data:</span><br><span class="line">    ldr r3, [r0], #<span class="number">4</span></span><br><span class="line">    str r3, [r1], #<span class="number">4</span></span><br><span class="line">    cmp r1, r2</span><br><span class="line">    bne copy_data</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 2. 清零 .bss 段 */</span></span><br><span class="line">    ldr r0, =_sbss     @ RAM中.bss的起始</span><br><span class="line">    ldr r1, =_ebss     @ RAM中.bss的结束</span><br><span class="line">    mov r2, #<span class="number">0</span>         @ 要写入的<span class="number">0</span></span><br><span class="line">clear_bss:</span><br><span class="line">    str r2, [r0], #<span class="number">4</span></span><br><span class="line">    cmp r0, r1</span><br><span class="line">    bne clear_bss</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 3. 跳转到C语言入口main */</span></span><br><span class="line">    b main</span><br></pre></td></tr></table></figure>
+
+<p>你看，这就是你 “没看见” 的那部分代码：</p>
+<ul>
+<li>.data：是从 Flash 里的 “备份” 拷贝到 RAM 里的</li>
+<li>.bss：是在 RAM 里把一段空间全部写 0</li>
+</ul>
+<p><strong>链接脚本（.ld&#x2F;MDK 里的设置）又起什么作用?</strong></p>
+<p>链接脚本的作用是 <strong>“规划”</strong>，而不是 “执行”：</p>
+<ul>
+<li>它告诉编译器：<ul>
+<li><code>.text</code>（代码）放在 Flash 哪里</li>
+<li><code>.data</code>（有初值的全局变量）在 Flash 里的备份位置，以及在 RAM 里的运行位置</li>
+<li><code>.bss</code>（无初值的全局变量）在 RAM 里的位置</li>
+<li><code>栈顶</code>（_estack）放在 RAM 的末尾</li>
+</ul>
+</li>
+<li>它会生成一些符号，比如 <code>_sidata</code>, <code>_sdata</code>,<code> _edata</code>, <code>_sbss</code>, <code>_ebss</code>, <code>_estack</code>，这些符号就是上面 start.S 里用到的地址。</li>
+</ul>
+<p><strong>所以整个流程是</strong>：</p>
+<ol>
+<li><code>链接脚本</code>：画好地图（内存布局）</li>
+<li><code>硬件</code>：只负责把 PC 和 SP 指向地图的入口</li>
+<li><code>start.S</code>：拿着地图，一步一步把东西搬到正确的地方</li>
+</ol>
+<p><strong>那为什么stm32的start.s中没有看到实际拷贝.data, .bss的部分</strong>？</p>
+<p>下面是stm32的demo的start.s中的PC执行的部分，没有拷贝的指令，但是实际上是拷贝了。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Reset_Handler   PROC</span><br><span class="line">    EXPORT  Reset_Handler             [WEAK]</span><br><span class="line">    IMPORT  __main          ; 重点：导入了__main（不是你写的main！）</span><br><span class="line">    IMPORT  SystemInit</span><br><span class="line">    LDR     R0, =SystemInit</span><br><span class="line">    BLX     R0               ; 第一步：初始化系统时钟</span><br><span class="line">    LDR     R0, =__main      ; 第二步：跳转到__main</span><br><span class="line">    BX      R0</span><br><span class="line">    ENDP</span><br></pre></td></tr></table></figure>
+
+<p><strong>原因</strong>：</p>
+<p><code>__main</code> 是 ARM 编译器（ARMCC）提供的<code>C 库启动函数</code>，它藏在编译器的<code>运行时库（RTL）</code>里，你看不到源码</p>
+<p><strong>实际流程</strong>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">Reset_Handler → SystemInit → __main → 你的main()</span><br><span class="line">                 ↑            ↑</span><br><span class="line">                 时钟初始化    核心操作：</span><br><span class="line">                             <span class="number">1.</span> 拷贝.data段（Flash→RAM）</span><br><span class="line">                             <span class="number">2.</span> 清零.bss段（RAM写<span class="number">0</span>）</span><br><span class="line">                             <span class="number">3.</span> 初始化堆（Heap）</span><br><span class="line">                             <span class="number">4.</span> 最终跳转到你的main()</span><br></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p>简单说：MDK 把 “拷贝.data&#x2F; 清零.bss” 这些脏活，都<strong>封装到了 __main 里</strong>，所以你在 start.s 里看不到，但它确实执行了。</p>
+</blockquote>
+<h2 id="汇编led点灯-裸机代码分析"><a href="#汇编led点灯-裸机代码分析" class="headerlink" title="汇编led点灯 裸机代码分析"></a>汇编led点灯 裸机代码分析</h2><p>下面分析一下，汇编版本的led点灯代码</p>
+<p>Makefile</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">led.bin:led.s</span><br><span class="line">	arm-linux-gnueabihf-gcc -g -c led.s -o led.o</span><br><span class="line">	arm-linux-gnueabihf-ld -Ttext <span class="number">0X87800000</span> led.o -o led.elf</span><br><span class="line">	arm-linux-gnueabihf-objcopy -O binary -S -g led.elf led.bin</span><br><span class="line">	arm-linux-gnueabihf-objdump -D led.elf &gt; led.dis</span><br><span class="line">clean:</span><br><span class="line">	rm -rf *.o led.bin led.elf led.dis</span><br></pre></td></tr></table></figure>
+
+<p>led.s</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**************************************************************</span></span><br><span class="line"><span class="comment">Copyright © zuozhongkai Co., Ltd. 1998-2019. All rights reserved.</span></span><br><span class="line"><span class="comment">文件名	: 	 mian.c</span></span><br><span class="line"><span class="comment">作者	   : 左忠凯</span></span><br><span class="line"><span class="comment">版本	   : V1.0</span></span><br><span class="line"><span class="comment">描述	   : 裸机实验1 汇编点灯</span></span><br><span class="line"><span class="comment">			 使用汇编来点亮开发板上的LED灯，学习和掌握如何用汇编语言来</span></span><br><span class="line"><span class="comment">			 完成对I.MX6U处理器的GPIO初始化和控制。</span></span><br><span class="line"><span class="comment">其他	   : 无</span></span><br><span class="line"><span class="comment">论坛 	   : www.wtmembed.com</span></span><br><span class="line"><span class="comment">日志	   : 初版V1.0 2019/1/3 左忠凯创建</span></span><br><span class="line"><span class="comment">**************************************************************/</span></span><br><span class="line"></span><br><span class="line">.global _start  <span class="comment">/* 全局标号 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 描述：	_start函数，程序从此函数开始执行此函数完成时钟使能、</span></span><br><span class="line"><span class="comment"> *		  GPIO初始化、最终控制GPIO输出低电平来点亮LED灯。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">_start:</span><br><span class="line">	<span class="comment">/* 例程代码 */</span></span><br><span class="line">	<span class="comment">/* 1、使能所有时钟 */</span></span><br><span class="line">	ldr r0, =<span class="number">0X020C4068</span> 	<span class="comment">/* CCGR0 */</span></span><br><span class="line">	ldr r1, =<span class="number">0XFFFFFFFF</span>  </span><br><span class="line">	str r1, [r0]		</span><br><span class="line">	</span><br><span class="line">	ldr r0, =<span class="number">0X020C406C</span>  	<span class="comment">/* CCGR1 */</span></span><br><span class="line">	str r1, [r0]</span><br><span class="line"></span><br><span class="line">	ldr r0, =<span class="number">0X020C4070</span>  	<span class="comment">/* CCGR2 */</span></span><br><span class="line">	str r1, [r0]</span><br><span class="line">	</span><br><span class="line">	ldr r0, =<span class="number">0X020C4074</span>  	<span class="comment">/* CCGR3 */</span></span><br><span class="line">	str r1, [r0]</span><br><span class="line">	</span><br><span class="line">	ldr r0, =<span class="number">0X020C4078</span>  	<span class="comment">/* CCGR4 */</span></span><br><span class="line">	str r1, [r0]</span><br><span class="line">	</span><br><span class="line">	ldr r0, =<span class="number">0X020C407C</span>  	<span class="comment">/* CCGR5 */</span></span><br><span class="line">	str r1, [r0]</span><br><span class="line">	</span><br><span class="line">	ldr r0, =<span class="number">0X020C4080</span>  	<span class="comment">/* CCGR6 */</span></span><br><span class="line">	str r1, [r0]</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 2、设置GPIO1_IO03复用为GPIO1_IO03 */</span></span><br><span class="line">	ldr r0, =<span class="number">0X020E0068</span>	<span class="comment">/* 将寄存器SW_MUX_GPIO1_IO03_BASE加载到r0中 */</span></span><br><span class="line">	ldr r1, =<span class="number">0X5</span>		<span class="comment">/* 设置寄存器SW_MUX_GPIO1_IO03_BASE的MUX_MODE为5 */</span></span><br><span class="line">	str r1,[r0]</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 3、配置GPIO1_IO03的IO属性	</span></span><br><span class="line"><span class="comment">	 *bit 16:0 HYS关闭</span></span><br><span class="line"><span class="comment">	 *bit [15:14]: 00 默认下拉</span></span><br><span class="line"><span class="comment">     *bit [13]: 0 kepper功能</span></span><br><span class="line"><span class="comment">     *bit [12]: 1 pull/keeper使能</span></span><br><span class="line"><span class="comment">     *bit [11]: 0 关闭开路输出</span></span><br><span class="line"><span class="comment">     *bit [7:6]: 10 速度100Mhz</span></span><br><span class="line"><span class="comment">     *bit [5:3]: 110 R0/6驱动能力</span></span><br><span class="line"><span class="comment">     *bit [0]: 0 低转换率</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    ldr r0, =<span class="number">0X020E02F4</span>	<span class="comment">/*寄存器SW_PAD_GPIO1_IO03_BASE */</span></span><br><span class="line">    ldr r1, =<span class="number">0X10B0</span></span><br><span class="line">    str r1,[r0]</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 4、设置GPIO1_IO03为输出 */</span></span><br><span class="line">    ldr r0, =<span class="number">0X0209C004</span>	<span class="comment">/*寄存器GPIO1_GDIR */</span></span><br><span class="line">    ldr r1, =<span class="number">0X0000008</span>		</span><br><span class="line">    str r1,[r0]</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 5、打开LED0</span></span><br><span class="line"><span class="comment">	 * 设置GPIO1_IO03输出低电平</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	ldr r0, =<span class="number">0X0209C000</span>	<span class="comment">/*寄存器GPIO1_DR */</span></span><br><span class="line">   ldr r1, =<span class="number">0</span>		</span><br><span class="line">   str r1,[r0]</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 描述：	loop死循环</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">loop:</span><br><span class="line">	b loop 				</span><br></pre></td></tr></table></figure>
+
+<p>这个就是非常简单的一个汇编代码，所以也不需要c语言的环境</p>
+<p>实际内存分变化：</p>
+<p><strong>1. 上电前（仅外部 ROM 有数据，DDR 空）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────┐  外部ROM (SD卡)</span><br><span class="line">│ <span class="number">0x00000000</span> ~ <span class="number">0x0000</span>xxxx         │  ← imxdownload烧录的内容：</span><br><span class="line">│  ┌─────────────┐                │     IVT + DCD + BootData + 你的汇编指令</span><br><span class="line">│  │ IVT         │                │     （IVT里entry=<span class="number">0X87800000</span>）</span><br><span class="line">│  │ DCD         │                │</span><br><span class="line">│  │ BootData    │                │</span><br><span class="line">│  │ 汇编指令    │                │</span><br><span class="line">│  └─────────────┘                │</span><br><span class="line">│  剩余空间：空                   │</span><br><span class="line">└─────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌─────────────────────────────────┐  DDR (<span class="number">0X80000000</span> ~ <span class="number">0X9FFFFFFF</span>)</span><br><span class="line">│ <span class="number">0X87800000</span> ~ <span class="number">0X8780</span>xxxx         │  ← 全是随机垃圾值（未初始化）</span><br><span class="line">│  全未使用，无有效数据           │</span><br><span class="line">│  剩余空间：空                   │</span><br><span class="line">└─────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>2. 上电后（BootROM 完成搬运，DDR 有指令）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────┐  外部ROM (SD卡)</span><br><span class="line">│ <span class="number">0x00000000</span> ~ <span class="number">0x0000</span>xxxx         │  ← 内容不变（只读）</span><br><span class="line">│  ┌─────────────┐                │</span><br><span class="line">│  │ IVT         │                │</span><br><span class="line">│  │ DCD         │                │</span><br><span class="line">│  │ BootData    │                │</span><br><span class="line">│  │ 汇编指令    │                │</span><br><span class="line">│  └─────────────┘                │</span><br><span class="line">└─────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌─────────────────────────────────┐  DDR (核心变化！)</span><br><span class="line">│ <span class="number">0X87800000</span> ~ <span class="number">0X8780</span>xxxx         │  ← BootROM搬运过来的汇编指令</span><br><span class="line">│  ┌─────────────────────────┐    │</span><br><span class="line">│  │ _start:                 │    │  ← 第一条指令地址（<span class="number">0X87800000</span>）</span><br><span class="line">│  │   ldr r0, =<span class="number">0X020C4068</span>   │    │</span><br><span class="line">│  │   ldr r1, =<span class="number">0XFFFFFFFF</span>   │    │</span><br><span class="line">│  │   ...（时钟/IO配置指令）│    │</span><br><span class="line">│  │ loop:                   │    │</span><br><span class="line">│  │   b loop                │    │</span><br><span class="line">│  └─────────────────────────┘    │</span><br><span class="line">│  剩余空间：空                   │</span><br><span class="line">└─────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. 最终执行阶段（PC 跳转到 DDR 执行）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────┐  DDR</span><br><span class="line">│ <span class="number">0X87800000</span>                      │  ← PC指针指向这里，开始执行指令</span><br><span class="line">│  ┌─────────────────────────┐    │</span><br><span class="line">│  │ 执行：使能所有时钟       │    │</span><br><span class="line">│  │ 执行：配置GPIO1_IO03复用 │    │</span><br><span class="line">│  │ 执行：配置IO属性         │    │</span><br><span class="line">│  │ 执行：设置GPIO为输出     │    │</span><br><span class="line">│  │ 执行：GPIO输出低电平（点灯）│</span><br><span class="line">│  │ 执行：b loop（死循环）   │    │</span><br><span class="line">│  └─────────────────────────┘    │</span><br><span class="line">└─────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><strong>代码特性</strong>：<strong>这段汇编只有指令（.text 段）</strong>，没有定义任何全局变量、静态变量，自然不需要.data（存初始化值）和.bss（存未初始化值）；</p>
+<p><strong>启动简化</strong>：因为没有.data&#x2F;.bss，你的汇编代码里也不需要像 STM32 那样做 “拷贝 &#x2F; 清零” 操作，_start 直接开始配置硬件 —— 这是裸机汇编最简洁的优势</p>
+</blockquote>
+<h2 id="c语言led点灯-裸机代码分析"><a href="#c语言led点灯-裸机代码分析" class="headerlink" title="c语言led点灯 裸机代码分析"></a>c语言led点灯 裸机代码分析</h2><p>下面看看c语言版本的逻辑代码</p>
+<p><strong>Makefile</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">objs := start.o main.o</span><br><span class="line"></span><br><span class="line">ledc.bin:$(objs)</span><br><span class="line">	arm-linux-gnueabihf-ld -Timx6ul.lds -o ledc.elf $^</span><br><span class="line">	arm-linux-gnueabihf-objcopy -O binary -S ledc.elf $@</span><br><span class="line">	arm-linux-gnueabihf-objdump -D -m arm ledc.elf &gt; ledc.dis</span><br><span class="line">	</span><br><span class="line">%.o:%.s</span><br><span class="line">	arm-linux-gnueabihf-gcc -Wall -nostdlib -c -O2 -o $@ $&lt;</span><br><span class="line">	</span><br><span class="line">%.o:%.S</span><br><span class="line">	arm-linux-gnueabihf-gcc -Wall -nostdlib -c -O2 -o $@ $&lt;</span><br><span class="line">	</span><br><span class="line">%.o:%.c</span><br><span class="line">	arm-linux-gnueabihf-gcc -Wall -nostdlib -c -O2 -o $@ $&lt;</span><br><span class="line">	</span><br><span class="line">clean:</span><br><span class="line">	rm -rf *.o ledc.bin ledc.elf ledc.dis</span><br></pre></td></tr></table></figure>
+
+<p><strong>lds链接脚本</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">SECTIONS&#123;</span><br><span class="line">	. = <span class="number">0X87800000</span>;</span><br><span class="line">	.text :</span><br><span class="line">	&#123;</span><br><span class="line">		start.o </span><br><span class="line">		main.o </span><br><span class="line">		*(.text)</span><br><span class="line">	&#125;</span><br><span class="line">	.rodata <span class="title function_">ALIGN</span><span class="params">(<span class="number">4</span>)</span> : &#123;*(.rodata*)&#125;     </span><br><span class="line">	.data <span class="title function_">ALIGN</span><span class="params">(<span class="number">4</span>)</span>   : &#123; *(.data) &#125;    </span><br><span class="line">	__bss_start = .;    </span><br><span class="line">	.bss <span class="title function_">ALIGN</span><span class="params">(<span class="number">4</span>)</span>  : &#123; *(.bss)  *(COMMON) &#125;    </span><br><span class="line">	__bss_end = .;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>可以看到，lds指定了ddr里面的内存分布情况</p>
+</blockquote>
+<p><strong>start.s</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">.global _start  		<span class="comment">/* 全局标号 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 描述：	_start函数，程序从此函数开始执行，此函数主要功能是设置C</span></span><br><span class="line"><span class="comment"> *		 运行环境。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">_start:</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 进入SVC模式 */</span></span><br><span class="line">	mrs r0, cpsr</span><br><span class="line">	bic r0, r0, #<span class="number">0x1f</span> 	<span class="comment">/* 将r0寄存器中的低5位清零，也就是cpsr的M0~M4 	*/</span></span><br><span class="line">	orr r0, r0, #<span class="number">0x13</span> 	<span class="comment">/* r0或上0x13,表示使用SVC模式					*/</span></span><br><span class="line">	msr cpsr, r0		<span class="comment">/* 将r0 的数据写入到cpsr_c中 					*/</span></span><br><span class="line"></span><br><span class="line">	ldr sp, =<span class="number">0X80200000</span>	<span class="comment">/* 设置栈指针			 */</span></span><br><span class="line">	b main				<span class="comment">/* 跳转到main函数 		 */</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>main.c</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	clk_enable();		<span class="comment">/* 使能所有的时钟		 	*/</span></span><br><span class="line">	led_init();			<span class="comment">/* 初始化led 			*/</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>)			<span class="comment">/* 死循环 				*/</span></span><br><span class="line">	&#123;	</span><br><span class="line">		led_off();		<span class="comment">/* 关闭LED   			*/</span></span><br><span class="line">		delay(<span class="number">500</span>);		<span class="comment">/* 延时大约500ms 		*/</span></span><br><span class="line"></span><br><span class="line">		led_on();		<span class="comment">/* 打开LED		 	*/</span></span><br><span class="line">		delay(<span class="number">500</span>);		<span class="comment">/* 延时大约500ms 		*/</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意，我们的imx6ull，是会把镜像文件全部加载到DDR里面来运行的，所以没有拷贝.data这些。但是<strong>真实原因</strong>是：</p>
+</blockquote>
+<p><strong>先回顾 STM32 要拷贝的根本原因</strong></p>
+<p>STM32 的.data段有两个地址：</p>
+<ul>
+<li>加载地址（LMA）：Flash 里（0x0800xxxx）—— 存初始值</li>
+<li>运行地址（VMA）：RAM 里（0x2000xxxx）—— 程序运行时要访问的地址<blockquote>
+<p>所以<strong>必须把 Flash 里的初始值拷贝到 RAM</strong>，程序才能读到正确的全局变量值。</p>
+</blockquote>
+</li>
+</ul>
+<p><strong>再看 i.MX6ULL 的关键差异</strong></p>
+<p>你这份代码里，.data&#x2F;.bss的<code>加载地址</code> &#x3D; <code>运行地址</code>（都是 DDR 的 0x8780xxxx）：</p>
+<ul>
+<li><strong>BootROM 做的事</strong>：把外部 ROM 里的 “整个镜像（包括.text&#x2F;.rodata&#x2F;.data）”原样搬到 DDR 的 0x87800000 开始的地址；</li>
+<li>搬运完成后，.data 段已经在 “运行地址” 上了，且初始值也一起搬过来了 ——不需要二次拷贝；</li>
+<li>而<code>.bss</code> 段因为<strong>没有初始值</strong>，BootROM 搬运时不会处理（<strong>DDR 里还是随机值</strong>），你这份代码<strong>刚好没用到全局变量</strong>，所以没出问题。<blockquote>
+<p>所以这个c语言的裸机点灯代码，有隐患</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p>所以，<strong>需不需要拷贝的原因</strong>，是看<code>加载地址≠运行地址？</code>	</p>
+<ul>
+<li>是 → 必须拷贝	</li>
+<li>否 → 无需拷贝</li>
+</ul>
+</blockquote>
+<hr>
+<p><strong>你这份代码没出问题，是因为main.c 里没有定义全局变量 &#x2F; 静态变量</strong>：</p>
+<ul>
+<li>如果定义<code>int g_led_flag = 1</code>;（<code>.data 段</code>）：BootROM 会把初始值 1 一起搬到 DDR，main 里能读到正确值；</li>
+<li>如果定义<code>int g_delay_cnt</code>;（<code>.bss 段</code>）：DDR 里这个地址是随机值，main 里用<strong>这个变量会导致延时 &#x2F; 点灯异常</strong>；</li>
+</ul>
+<p><strong>正确的做法是</strong>：</p>
+<ul>
+<li>在start.s的b main前，<strong>加一段清零.bss 的代码</strong>（因为.bss 段没有初始值，BootROM 不会处理）</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">_start:</span><br><span class="line">  <span class="comment">/* 1. 切换SVC模式 */</span></span><br><span class="line">  mrs r0, cpsr</span><br><span class="line">  bic r0, r0, #<span class="number">0x1f</span></span><br><span class="line">  orr r0, r0, #<span class="number">0x13</span></span><br><span class="line">  msr cpsr, r0</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 2. 设置栈指针 */</span></span><br><span class="line">  ldr sp, =<span class="number">0X80200000</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 3. 清零.bss段（新增！） */</span></span><br><span class="line">  ldr r0, =__bss_start    <span class="comment">/* 链接脚本定义的bss起始 */</span></span><br><span class="line">  ldr r1, =__bss_end      <span class="comment">/* 链接脚本定义的bss结束 */</span></span><br><span class="line">  mov r2, #<span class="number">0</span></span><br><span class="line">bss_clear:</span><br><span class="line">  str r2, [r0], #<span class="number">4</span></span><br><span class="line">  cmp r0, r1</span><br><span class="line">  bne bss_clear</span><br><span class="line"></span><br><span class="line">  <span class="comment">/* 4. 跳main */</span></span><br><span class="line">  b main</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>和 STM32 的本质区别</strong>：</p>
+<ul>
+<li>STM32 是 “Flash 存初始值，RAM 跑程序”（需要软件拷贝），</li>
+<li>i.MX6ULL 是 “外部 ROM 存初始值，DDR 跑程序”（BootROM 一次性搬过去，无需二次拷贝）</li>
+<li>但是记住，bss段都需要清零，否则容易有异常风险</li>
+</ul>
+</blockquote>
+<hr>
+<p>下面展示内存的分布变化</p>
+<p><strong>1. 上电前（仅外部 ROM 有数据，DDR 全空）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐ 外部ROM (SD卡)</span><br><span class="line">│ <span class="number">0x00000000</span> ~ <span class="number">0x0000</span>xxxx                │ ← imxdownload烧录的完整镜像</span><br><span class="line">│  ┌─────────────┬─────────────────────┐  │</span><br><span class="line">│  │ IVT+DCD+BD  │  用户镜像           │  │</span><br><span class="line">│  │ (头信息)    │  ┌─────────────┐    │  │</span><br><span class="line">│  │             │  │ .text       │    │  │ ← start.s+main.c的指令</span><br><span class="line">│  │             │  │ .rodata     │    │  │ ← 常量（如字符串，本例无）</span><br><span class="line">│  │             │  │ .data       │    │  │ ← 有初值全局变量（本例无）</span><br><span class="line">│  │             │  └─────────────┘    │  │</span><br><span class="line">│  └─────────────┴─────────────────────┘  │</span><br><span class="line">│  剩余空间：空                           │</span><br><span class="line">└─────────────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌─────────────────────────────────────────┐ DDR (<span class="number">0X80000000</span> ~ <span class="number">0X9FFFFFFF</span>)</span><br><span class="line">│ <span class="number">0X87800000</span> ~ <span class="number">0X8780</span>xxxx                │ ← 全是随机垃圾值（未初始化）</span><br><span class="line">│  <span class="number">0X80200000</span> (栈地址)：随机值            │</span><br><span class="line">│  剩余空间：空                           │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 上电后 → BootROM 完成搬运（未执行 start.s）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐ 外部ROM (SD卡)</span><br><span class="line">│ 内容不变（只读）                        │ ← 头信息+用户镜像仍在</span><br><span class="line">└─────────────────────────────────────────┘</span><br><span class="line"></span><br><span class="line">┌─────────────────────────────────────────┐ DDR (核心变化：搬运完成)</span><br><span class="line">│ <span class="number">0X87800000</span> ~ <span class="number">0X8780</span>xxxx                │ ← BootROM原样搬运外部ROM的用户镜像</span><br><span class="line">│  ┌─────────────┬─────────────────────┐  │</span><br><span class="line">│  │ .text       │ 指令（start.s+main.c）│  │ ← 可直接执行</span><br><span class="line">│  │ .rodata     │ 常量（本例无）       │  │</span><br><span class="line">│  │ .data       │ 有初值全局变量（本例无）│</span><br><span class="line">│  │ .bss        │ 随机垃圾值           │  │ ← BootROM不处理，仍为DDR原始值</span><br><span class="line">│  └─────────────┴─────────────────────┘  │</span><br><span class="line">│  <span class="number">0X80200000</span> (栈地址)：随机值            │</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. 执行 start.s（清零.bss + 设置栈）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐ DDR</span><br><span class="line">│ <span class="number">0X87800000</span> ~ <span class="number">0X8780</span>xxxx                │</span><br><span class="line">│  ┌─────────────┬─────────────────────┐  │</span><br><span class="line">│  │ .text       │ 指令（无变化）       │  │</span><br><span class="line">│  │ .rodata     │ 常量（无变化）       │  │</span><br><span class="line">│  │ .data       │ 有初值全局变量（无变化）│</span><br><span class="line">│  │ .bss        │ 全<span class="number">0</span>（已清零）        │  │ ← start.s的bss_clear循环执行完成</span><br><span class="line">│  └─────────────┴─────────────────────┘  │</span><br><span class="line">│  <span class="number">0X80200000</span> (栈地址)：SP指向这里       │ ← 栈指针已设置，C环境就绪</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. 跳转到 main 执行（点灯循环）</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────────────┐ DDR</span><br><span class="line">│ <span class="number">0X87800000</span> ~ <span class="number">0X8780</span>xxxx                │</span><br><span class="line">│  ┌─────────────┬─────────────────────┐  │</span><br><span class="line">│  │ .text       │ 执行中：            │  │</span><br><span class="line">│  │             │  - clk_enable()      │  │</span><br><span class="line">│  │             │  - led_init()        │  │</span><br><span class="line">│  │             │  - <span class="keyword">while</span>(<span class="number">1</span>)点灯循环  │  │</span><br><span class="line">│  │ .rodata     │ 无                   │  │</span><br><span class="line">│  │ .data       │ 无                   │  │</span><br><span class="line">│  │ .bss        │ 全<span class="number">0</span>（无使用）        │  │</span><br><span class="line">│  └─────────────┴─────────────────────┘  │</span><br><span class="line">│  <span class="number">0X80200000</span> (栈地址)：栈空间使用中      │ ← main里的局部变量（如delay计数）存在这里</span><br><span class="line">└─────────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p><strong>这里有一个疑问</strong>，</p>
+<ul>
+<li><p>为什么stm32中，start.s中，有分配<strong>栈</strong>的大小，且栈被lds分配到<strong>ram的最后部分</strong>，然后<code>.data</code>, <code>.bss</code>在<strong>ram的前部</strong>。</p>
+</li>
+<li><p>而在imx6ull这里，因为DDR的地址范围<code>0x80000000 - xxxxxxxx</code>. 但是<strong>栈</strong>在0x80000000 - 0x80200000,<strong>在前面部分</strong>。， 而<code>.text, .data</code>这些在0x87800000这里的<strong>后面部分</strong>。</p>
+</li>
+</ul>
+<h3 id="A-核裸机栈管理的-“隐形规则”"><a href="#A-核裸机栈管理的-“隐形规则”" class="headerlink" title="A 核裸机栈管理的 “隐形规则”"></a><strong>A 核裸机栈管理的 “隐形规则”</strong></h3><p>栈的 “实际可用大小” 不是由链接脚本 &#x2F; 代码定义的，而是由栈顶地址和下一个可用内存地址的间距决定的</p>
+<h2 id="gpio"><a href="#gpio" class="headerlink" title="gpio"></a>gpio</h2><h2 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/16/%E5%AD%A6%E4%B9%A0%E8%AE%A1%E5%88%92/" rel="prev" title="学习计划">
+                  <i class="fa fa-angle-left"></i> 学习计划
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/" rel="next" title="stm32-esp32s3-imx 存储架构讨论">
+                  stm32-esp32s3-imx 存储架构讨论 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>imx6ull 基础复盘*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

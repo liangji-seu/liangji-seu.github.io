@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="lcd屏幕的分辨率定义：分辨率指的是绝对像素尺寸，比如  1080p &#x3D; 1920 px (x)* 1080px(y)  所以  同尺寸，分辨率越高越清晰 同分辨率，屏幕尺寸越小月清晰  lcd像素格式一个像素px，由r,g,b三个小灯控制，每个小灯8bit所以一个像素 为 3*8&#x3D;24bit &#x3D; 3byte. 成为 RGB888 若再加一个8bit的透明通道A，则变">
+<meta property="og:type" content="article">
+<meta property="og:title" content="IMX6U RGBLCD 学习笔记">
+<meta property="og:url" content="http://example.com/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="lcd屏幕的分辨率定义：分辨率指的是绝对像素尺寸，比如  1080p &#x3D; 1920 px (x)* 1080px(y)  所以  同尺寸，分辨率越高越清晰 同分辨率，屏幕尺寸越小月清晰  lcd像素格式一个像素px，由r,g,b三个小灯控制，每个小灯8bit所以一个像素 为 3*8&#x3D;24bit &#x3D; 3byte. 成为 RGB888 若再加一个8bit的透明通道A，则变">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/3.1.png">
+<meta property="og:image" content="http://example.com/images/3.2.png">
+<meta property="article:published_time" content="2025-12-12T06:14:23.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.738Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/3.1.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/","path":"2025/12/12/IMX6U-RGBLCD-学习笔记/","title":"IMX6U RGBLCD 学习笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>IMX6U RGBLCD 学习笔记 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#lcd%E5%B1%8F%E5%B9%95%E7%9A%84%E5%88%86%E8%BE%A8%E7%8E%87"><span class="nav-number">1.</span> <span class="nav-text">lcd屏幕的分辨率</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lcd%E5%83%8F%E7%B4%A0%E6%A0%BC%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">lcd像素格式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lcd%E5%B1%8F%E5%B9%95%E7%9A%84%E4%BF%A1%E5%8F%B7%E7%BA%BF%E6%8E%A5%E5%8F%A3"><span class="nav-number">3.</span> <span class="nav-text">lcd屏幕的信号线接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%96%E8%AE%BE%E6%8E%A5%E5%8F%A3%E5%8E%9F%E7%90%86%E5%9B%BE"><span class="nav-number">4.</span> <span class="nav-text">外设接口原理图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LCD%E5%B1%8F%E5%B9%95%E7%9A%84%E6%97%B6%E9%97%B4%E5%8F%82%E6%95%B0-%E5%8D%8F%E8%AE%AE"><span class="nav-number">5.</span> <span class="nav-text">LCD屏幕的时间参数(协议)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LCD%E5%B1%8F%E5%B9%95%E7%9A%84%E6%98%BE%E5%AD%98"><span class="nav-number">6.</span> <span class="nav-text">LCD屏幕的显存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LCD%E5%B1%8F%E5%B9%95%E7%9A%84eLCDIF%E6%8E%A5%E5%8F%A3"><span class="nav-number">7.</span> <span class="nav-text">LCD屏幕的eLCDIF接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LCD-%E5%B1%8F%E5%B9%95%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">8.</span> <span class="nav-text">LCD 屏幕驱动配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE%E6%80%9D%E8%B7%AF"><span class="nav-number">9.</span> <span class="nav-text">总结：驱动配置思路</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="IMX6U RGBLCD 学习笔记 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          IMX6U RGBLCD 学习笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-12 14:14:23" itemprop="dateCreated datePublished" datetime="2025-12-12T14:14:23+08:00">2025-12-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h2 id="lcd屏幕的分辨率"><a href="#lcd屏幕的分辨率" class="headerlink" title="lcd屏幕的分辨率"></a>lcd屏幕的分辨率</h2><p><strong>定义</strong>：<br>分辨率指的是绝对像素尺寸，比如</p>
+<ol>
+<li>1080p &#x3D; 1920 px (x)* 1080px(y)</li>
+</ol>
+<p>所以</p>
+<ol>
+<li>同尺寸，分辨率越高越清晰</li>
+<li>同分辨率，屏幕尺寸越小月清晰</li>
+</ol>
+<h2 id="lcd像素格式"><a href="#lcd像素格式" class="headerlink" title="lcd像素格式"></a>lcd像素格式</h2><p>一个像素px，由r,g,b三个小灯控制，每个小灯8bit<br>所以一个像素 为 3*8&#x3D;24bit &#x3D; 3byte. 成为 RGB888</p>
+<p>若再加一个8bit的透明通道A，则变成32bit的 4byte的 ARGB8888</p>
+<h2 id="lcd屏幕的信号线接口"><a href="#lcd屏幕的信号线接口" class="headerlink" title="lcd屏幕的信号线接口"></a>lcd屏幕的信号线接口</h2><p>我们所使用的imx6ull + ATK屏幕1024*600. 采用的是RGB接口，接口连线有：</p>
+<ol>
+<li>R[0:7]</li>
+<li>G[0:7]</li>
+<li>B[0:7]</li>
+<li>DE 数据使能</li>
+<li>VSYNC 垂直同步信号（表示新的一帧画面）</li>
+<li>HSYNC 行同步信号 （表示新的一行）</li>
+<li>PCLK 时钟信号</li>
+</ol>
+<ul>
+<li>我们目前的LCD屏幕有两种驱动模式：<ul>
+<li>DE模式（用DE线， 可以不用HSYNC线）</li>
+<li>HV模式（不用DE线）</li>
+</ul>
+</li>
+</ul>
+<h2 id="外设接口原理图"><a href="#外设接口原理图" class="headerlink" title="外设接口原理图"></a>外设接口原理图</h2><p><img src="/../images/3.1.png" alt="alt text"></p>
+<h2 id="LCD屏幕的时间参数-协议"><a href="#LCD屏幕的时间参数-协议" class="headerlink" title="LCD屏幕的时间参数(协议)"></a>LCD屏幕的时间参数(协议)</h2><p><img src="/../images/3.2.png" alt="alt text"></p>
+<p>每一帧图像的渲染，是按照从左到右，从上到下的顺序进行扫描的。所以是一行一行组成的。</p>
+<p><strong>时间参数</strong>：</p>
+<ol>
+<li><p><strong>HSYNC</strong>：（信号线）<br> 行同步信号，产生表示显示新行</p>
+</li>
+<li><p><strong>VSYNC</strong>：（信号线）<br> 帧同步信号，产生表示显示新一帧图像</p>
+</li>
+<li><p><strong>HBP</strong>：（时间）<br> 当显示完一行后会发出HSYNC信号，电子枪关闭，移动到屏幕左边，从HSYNC信号结束，到等待电子枪重新打开的这段延时&#x3D;HBP</p>
+</li>
+<li><p><strong>HFP</strong>：（时间）<br> 当显示完一行之后，电子枪关闭，到HSYNC信号产生之间的延时&#x3D;HFP。</p>
+</li>
+<li><p><strong>VFP</strong>：（时间）<br> 当显示完一帧图像之后，电子枪关闭，到VSYNC信号产生之间的延时</p>
+</li>
+<li><p><strong>VBP</strong>：（时间）<br> 当VSYNC信号结束，到电子枪打开的这段延时</p>
+</li>
+</ol>
+<p>HBP，HFP，VFP，VBP，这四个屏幕的参数，具体多少，需要参考LCD数据手册。</p>
+<ol start="7">
+<li><p><strong>HSPW</strong>：（时间）<br> 这个是HSYNC信号的时钟宽度</p>
+</li>
+<li><p><strong>VSPW</strong>：（时间）<br> 这个是VSYNC信号的时钟宽度</p>
+</li>
+<li><p><strong>LINE</strong>：（时间）<br> 显示完一帧图像所需时间</p>
+</li>
+<li><p><strong>HOZVAL</strong>：（时间）<br>显示完一行数据所需时间</p>
+</li>
+<li><p><strong>像素时钟</strong>：<br>就是LCD的时钟信号，即显示一帧图片需要多少个时钟数（因为频率已经确定了）<br>所以pxclk &#x3D; (VSPW+VSB+LINE+VFP)*（HSPW+HBP+HOZVAL+HFP）&#x3D; 853440个时钟。</p>
+<p>所以要保持60hz，就需要51.2Mhz时钟信号。</p>
+</li>
+</ol>
+<ul>
+<li>所以需要配置LCD屏幕的时钟源</li>
+</ul>
+<h2 id="LCD屏幕的显存"><a href="#LCD屏幕的显存" class="headerlink" title="LCD屏幕的显存"></a>LCD屏幕的显存</h2><p>一个px &#x3D; 4byte(ARGB8888)<br>所以一帧图片就是1024<em>600</em>4byte &#x3D; 2.4MB</p>
+<p>因为这款LCD内部没有存储器。所以需要从DDR3（我们板子的外置ROM）中分配。</p>
+<h2 id="LCD屏幕的eLCDIF接口"><a href="#LCD屏幕的eLCDIF接口" class="headerlink" title="LCD屏幕的eLCDIF接口"></a>LCD屏幕的eLCDIF接口</h2><p>这个eLCDIF是IMX6U自带的液晶屏接口，用于连接RGB LCD（可以把他想成是SOC上的连接至CA核心的外设）</p>
+<p>eLCDIF支持3种接口：</p>
+<ol>
+<li>MPU接口（SOC和LCD屏幕直接传输数据和指令，如STM32的MCU屏幕）</li>
+<li>VSYNC接口</li>
+<li><strong>DOTCLK接口</strong>（这个接口是用来连接RGBLCD的，包括VSYNC，HSYNC，DOTCLK，ENABLE这4个信号。也叫做RGB接口）</li>
+</ol>
+<p><strong>所以配置LCD驱动的关键，在于配置SOC上的eLCDIF的相关寄存器，配置好上面的一些时间参数。</strong></p>
+<p>主要配置一些：</p>
+<ol>
+<li>eLCDIF软复位（复位LCD，不是复位eLCDIF接口寄存器）</li>
+<li>工作模式（DOTCLK）</li>
+<li>数据大端小端</li>
+<li>数据总线宽度</li>
+<li>像素数据格式</li>
+<li>eLCDIF工作模式</li>
+<li>使能位</li>
+<li>数据线极性位</li>
+<li>数据线使能位</li>
+<li>脉冲宽度位</li>
+<li>像素个数等等</li>
+</ol>
+<h2 id="LCD-屏幕驱动配置"><a href="#LCD-屏幕驱动配置" class="headerlink" title="LCD 屏幕驱动配置"></a>LCD 屏幕驱动配置</h2><ol>
+<li>初始化LCD的IO<br>配置所有IO，复用为eLCDIF的IO口</li>
+<li>设置LCD的时钟源</li>
+<li>配置eLCDIF接口（SOC的接口外设，所有外设驱动适配，本质都是设置SOC的内置外设寄存器）、</li>
+<li>编写对外使用接口</li>
+</ol>
+<h2 id="总结：驱动配置思路"><a href="#总结：驱动配置思路" class="headerlink" title="总结：驱动配置思路"></a>总结：驱动配置思路</h2><p>我们所有<strong>配置驱动</strong>，都是在配置SOC内部连接在外设总线上的<strong>SOC外设</strong>，也叫资源</p>
+<ol>
+<li><strong>时钟</strong></li>
+<li><strong>IO</strong></li>
+<li><strong>协议-&gt;SOC内部寄存器-&gt;</strong><ol>
+<li>CR</li>
+<li>DR</li>
+<li>SR</li>
+</ol>
+</li>
+</ol>
+<p>所以，在适配外设的时候，要先搞清楚，外部设备是什么，实际的SOC外设资源是什么<br>比如</p>
+<p>SOC内部外设资源—————————–实际的外部设备<br>eLCDIF———————————————-LCD<br>uart————————————————uart<br>gpio————————————————led,beep,key<br>exti————————————————key</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/03/stm32-uart/" rel="prev" title="stm32-uart*">
+                  <i class="fa fa-angle-left"></i> stm32-uart*
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/" rel="next" title="imx6ull rtc 驱动学习">
+                  imx6ull rtc 驱动学习 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>IMX6U RGBLCD 学习笔记</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

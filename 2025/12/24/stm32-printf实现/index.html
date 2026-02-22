@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="1. 标准库 printf 原理2.1.1 printf函数的C标准库实现原理 printf 函数是 C 语言标准库中实现输入输出功能的一个核心函数。它通过可变参数列表（variadic function）的方式，允许开发者传递不同类型和数量的参数，并将这些参数格式化输出到标准输出设备。在内部， printf 利用格式化字符串来定义输出的格式，这个字符串包含了文本内容以及转换说明符（如 %d ,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 printf实现">
+<meta property="og:url" content="http://example.com/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="1. 标准库 printf 原理2.1.1 printf函数的C标准库实现原理 printf 函数是 C 语言标准库中实现输入输出功能的一个核心函数。它通过可变参数列表（variadic function）的方式，允许开发者传递不同类型和数量的参数，并将这些参数格式化输出到标准输出设备。在内部， printf 利用格式化字符串来定义输出的格式，这个字符串包含了文本内容以及转换说明符（如 %d ,">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-12-24T15:15:12.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.750Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/","path":"2025/12/24/stm32-printf实现/","title":"stm32 printf实现"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 printf实现 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E6%A0%87%E5%87%86%E5%BA%93-printf-%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">1. 标准库 printf 原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-stm32%E4%B8%AD%E7%9A%84printf%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">2. stm32中的printf实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF%E5%90%A6%E4%BD%BF%E7%94%A8%E5%BE%AE%E5%BA%93%E9%83%BD%E8%83%BD%E6%88%90%E5%8A%9F%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">3. 为什么是否使用微库都能成功？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%BE%AE%E5%BA%93%EF%BC%88Micro-LIB%EF%BC%89%E4%B8%8E%E6%A0%87%E5%87%86%E5%BA%93%E7%9A%84%E5%85%B1%E6%80%A7%EF%BC%9A%E4%BE%9D%E8%B5%96fputc%E4%BD%9C%E4%B8%BA%E8%BE%93%E5%87%BA%E5%85%A5%E5%8F%A3"><span class="nav-number">3.1.</span> <span class="nav-text">1. 微库（Micro LIB）与标准库的共性：依赖fputc作为输出入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BE%AE%E5%BA%93%E4%B8%8E%E6%A0%87%E5%87%86%E5%BA%93%E7%9A%84%E5%B7%AE%E5%BC%82%E4%B8%8D%E5%BD%B1%E5%93%8Dfputc%E7%9A%84%E9%87%8D%E5%86%99%E9%80%BB%E8%BE%91"><span class="nav-number">3.2.</span> <span class="nav-text">2. 微库与标准库的差异不影响fputc的重写逻辑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E9%87%8D%E5%86%99fputc%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%9A%E8%A6%86%E7%9B%96%E9%BB%98%E8%AE%A4%E8%BE%93%E5%87%BA%E7%9B%AE%E6%A0%87"><span class="nav-number">3.3.</span> <span class="nav-text">3. 重写fputc的本质：覆盖默认输出目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 printf实现 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 printf实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-24 23:15:12" itemprop="dateCreated datePublished" datetime="2025-12-24T23:15:12+08:00">2025-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="1-标准库-printf-原理"><a href="#1-标准库-printf-原理" class="headerlink" title="1. 标准库 printf 原理"></a>1. 标准库 printf 原理</h1><p>2.1.1 printf函数的C标准库实现原理</p>
+<p>printf 函数是 C 语言标准库中实现输入输出功能的一个核心函数。它通过可变参数列表（variadic function）的方式，允许开发者传递不同类型和数量的参数，并将这些参数格式化输出到标准输出设备。在内部， printf 利用格式化字符串来定义输出的格式，这个字符串包含了文本内容以及转换说明符（如 %d , %f , %s 等）。</p>
+<p>在 C 标准库中， printf 的实现通常涉及以下几个关键步骤：</p>
+<ol>
+<li>通过格式化字符串解析出转换说明符。</li>
+<li>根据转换说明符确定对应参数的类型。</li>
+<li>根据参数类型进行相应的数据解析和格式化处理。</li>
+<li>将格式化后的数据输出到标准输出。</li>
+</ol>
+<p>printf 在实际输出之前，通常会使用缓冲机制暂存输出数据，以减少实际的 I&#x2F;O 操作次数，提高效率。<br>2.1.2 标准输出的缓冲机制</p>
+<p>标准输出的缓冲机制是一种常见的优化手段，它使得数据在写入到输出设备之前可以先存储在缓冲区中。缓冲区的大小和策略会影响程序的性能，例如， printf 默认使用的是行缓冲（line buffering），这意味着当输出数据包含换行符（ \n ）或者缓冲区满时，缓冲区中的数据会被刷新（flush）到真正的输出设备。</p>
+<p>缓冲机制的设计对程序性能有着极大的影响。对于嵌入式系统而言，正确的管理缓冲区能有效减少 CPU 的使用率和内存的开销。 </p>
+<h1 id="2-stm32中的printf实现"><a href="#2-stm32中的printf实现" class="headerlink" title="2. stm32中的printf实现"></a>2. stm32中的printf实现</h1><p>由标准库的printf的实现原理，唯一的不同就在于，最后一步用fputc来将数据输出到标准输出，由于我们stm32里面没有标准输出。所以我们只有在main中初始化好usart，之后覆写fputc函数来将输出重定向到我们的usart串口中。</p>
+<h1 id="3-为什么是否使用微库都能成功？"><a href="#3-为什么是否使用微库都能成功？" class="headerlink" title="3. 为什么是否使用微库都能成功？"></a>3. 为什么是否使用微库都能成功？</h1><p>在STM32中，无论是使用<strong>微库（Micro LIB）</strong> 还是<strong>标准C库（Standard C Library）</strong>，都能通过重写<code>fputc</code>函数实现<code>printf</code>到串口的输出，核心原因是两者都遵循C语言标准库的<strong>接口约定</strong>，且<code>printf</code>的底层实现逻辑对“输出设备”的依赖性较弱。具体原因如下：</p>
+<h3 id="1-微库（Micro-LIB）与标准库的共性：依赖fputc作为输出入口"><a href="#1-微库（Micro-LIB）与标准库的共性：依赖fputc作为输出入口" class="headerlink" title="1. 微库（Micro LIB）与标准库的共性：依赖fputc作为输出入口"></a>1. 微库（Micro LIB）与标准库的共性：依赖<code>fputc</code>作为输出入口</h3><p><code>printf</code>函数的本质是“格式化字符串输出”，其核心逻辑是将格式化后的字符序列通过一个底层函数逐个输出。在C标准中，这个底层输出函数就是<code>fputc</code>（用于向指定的<code>FILE</code>流写入单个字符）。</p>
+<p>无论是微库还是标准库，<code>printf</code>的实现都会<strong>最终调用<code>fputc</code></strong> 来完成字符的实际输出。因此，只要重写<code>fputc</code>函数，将其指向串口发送，<code>printf</code>的输出就会被“劫持”到串口，与使用哪种库无关。</p>
+<h3 id="2-微库与标准库的差异不影响fputc的重写逻辑"><a href="#2-微库与标准库的差异不影响fputc的重写逻辑" class="headerlink" title="2. 微库与标准库的差异不影响fputc的重写逻辑"></a>2. 微库与标准库的差异不影响<code>fputc</code>的重写逻辑</h3><p>两者的主要区别体现在<strong>功能完整性、代码体积、底层实现细节</strong>上，但这些差异不影响对<code>fputc</code>的重写：</p>
+<ul>
+<li><p><strong>微库（Micro LIB）</strong>：<br>是为嵌入式系统优化的轻量级库，功能简化（如不支持完整的文件I&#x2F;O、多线程安全等），代码体积小，直接运行在裸机环境中。其<code>fputc</code>的默认实现可能是“空操作”或指向一个无效设备，但允许用户通过重写函数来替换默认行为。</p>
+</li>
+<li><p><strong>标准C库（如GNU C Library, Newlib）</strong>：<br>功能完整，支持复杂的I&#x2F;O操作（如文件、管道等），但代码体积较大。在嵌入式环境中，标准库通常需要“移植层”（如<code>syscalls.c</code>）来适配硬件，其中<code>fputc</code>的默认实现可能依赖底层的<code>write</code>系统调用，但用户仍可通过重写<code>fputc</code>（或<code>write</code>）来覆盖默认行为，将输出定向到串口。</p>
+</li>
+</ul>
+<h3 id="3-重写fputc的本质：覆盖默认输出目标"><a href="#3-重写fputc的本质：覆盖默认输出目标" class="headerlink" title="3. 重写fputc的本质：覆盖默认输出目标"></a>3. 重写<code>fputc</code>的本质：覆盖默认输出目标</h3><p>无论是哪种库，<code>fputc</code>都是一个<strong>可重定义的弱函数</strong>（或通过链接优先级被用户实现覆盖）。用户重写的<code>fputc</code>会取代库中的默认实现，成为<code>printf</code>调用的实际输出函数。</p>
+<p>例如：</p>
+<ul>
+<li>微库中，<code>fputc</code>的默认实现可能直接返回（无输出），用户重写后，<code>printf</code>会使用用户定义的串口发送逻辑。</li>
+<li>标准库中，<code>fputc</code>可能默认尝试向“标准输出设备（stdout）”写入，但在嵌入式系统中“stdout”无实际硬件对应，用户重写后，输出会被强制转向串口。</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>微库和标准库都能支持<code>printf</code>重定向到串口，核心原因是：<br><strong>两者都遵循<code>printf</code>依赖<code>fputc</code>输出字符的标准逻辑，而<code>fputc</code>的实现可以被用户重写，从而将输出目标从默认设备（无实际意义）改为串口</strong>。  </p>
+<p>差异仅在于库的底层实现细节（如是否需要额外的移植层文件），但不影响重定向的核心原理。因此，无论选择哪种库，只要正确重写<code>fputc</code>，就能实现串口输出。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/" rel="prev" title="stm32 delay实现">
+                  <i class="fa fa-angle-left"></i> stm32 delay实现
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/01/21/xv6-lab1/" rel="next" title="xv6 lab1">
+                  xv6 lab1 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 printf实现</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

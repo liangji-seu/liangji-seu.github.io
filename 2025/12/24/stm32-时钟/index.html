@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="stm32 时钟系统首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。 stm32主频可到72Mhz，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要几十 kHZ 的时钟即可 同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般都是采取多时钟源的方法来解决这些问题 所以必须得搞清楚：时钟源">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 时钟*">
+<meta property="og:url" content="http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="stm32 时钟系统首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。 stm32主频可到72Mhz，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要几十 kHZ 的时钟即可 同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般都是采取多时钟源的方法来解决这些问题 所以必须得搞清楚：时钟源">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/23.2.png">
+<meta property="og:image" content="http://example.com/images/23.3.png">
+<meta property="og:image" content="http://example.com/images/23.4.png">
+<meta property="article:published_time" content="2025-12-24T15:14:45.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.753Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/23.2.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/","path":"2025/12/24/stm32-时钟/","title":"stm32 时钟*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 时钟* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#stm32-%E6%97%B6%E9%92%9F%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.</span> <span class="nav-text">stm32 时钟系统</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4%E4%B8%AA%E6%97%B6%E9%92%9F%E6%BA%90"><span class="nav-number">1.1.</span> <span class="nav-text">4个时钟源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%94%81%E7%9B%B8%E7%8E%AFpll"><span class="nav-number">1.2.</span> <span class="nav-text">锁相环pll</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E6%97%B6%E9%92%9F-sysclk"><span class="nav-number">1.3.</span> <span class="nav-text">系统时钟 sysclk</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.</span> <span class="nav-text">实验</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 时钟* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 时钟*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-24 23:14:45" itemprop="dateCreated datePublished" datetime="2025-12-24T23:14:45+08:00">2025-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="stm32-时钟系统"><a href="#stm32-时钟系统" class="headerlink" title="stm32 时钟系统"></a>stm32 时钟系统</h1><p>首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。</p>
+<p>stm32主频可到<code>72Mhz</code>，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要<code>几十 kHZ</code> 的时钟即可</p>
+<p>同一个电路，<code>时钟越快功耗越大</code>，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般<br>都是采取<code>多时钟源</code>的方法来解决这些问题</p>
+<p>所以必须得搞清楚：<code>时钟源有哪些</code>，<code>时钟树的线路匹配</code>（时钟信号的传递）</p>
+<p>外设非常的多，为了<code>保持低功耗工作</code>，STM32 的主控<code>默认不开启这些外设功能</code>。这个<code>功能开关</code>在 STM32主控中也就是<code>各个外设的时钟</code>。</p>
+<blockquote>
+<p>所以<code>时钟</code>就是<code>外设的开关</code></p>
+</blockquote>
+<h2 id="4个时钟源"><a href="#4个时钟源" class="headerlink" title="4个时钟源"></a>4个时钟源</h2><p>STM32F1，<code>输入时钟源</code>（Input Clock）主要包括 <code>HSI</code>(内部高速)，<code>HSE</code>（外部高速），<code>LSI</code>（内部低速），<code>LSE</code>（外部低速）</p>
+<p><code>外部时钟源</code>就是从<code>外部</code>通过<strong>接晶振</strong>的方式获取时钟源，其中 HSE 和 LSE 是外部时钟源</p>
+<p><code>内部时钟源</code>，芯片<strong>上电即可产生</strong>，不需要借助外部电路</p>
+<p>下面详细说一下这4个时钟源：</p>
+<ol>
+<li><p>HSE（外部高速）</p>
+<ol>
+<li>外接<code>石英</code>、陶瓷瓷谐振器，频率为 4MHz~16MHz。本开发板使用的是 <code>8MHz</code></li>
+</ol>
+</li>
+<li><p>LSE (外部低速)</p>
+<ol>
+<li>外接 <code>32.768kHz</code> 石英晶体，主要作用于 RTC 的时钟源<blockquote>
+<p>可见，外部时钟，全部都是石英</p>
+</blockquote>
+</li>
+</ol>
+</li>
+<li><p>HSI（内部高速）</p>
+<ol>
+<li><code>内部 RC </code>振荡器产生，频率为 <code>8MHz</code></li>
+</ol>
+</li>
+<li><p>LSI(内部低速)</p>
+<ol>
+<li><code>内部 RC</code> 振荡器产生，频率为 <code>40kHz</code>，可作为<code>独立看门狗</code>的时钟源</li>
+</ol>
+</li>
+</ol>
+<blockquote>
+<p>芯片<strong>上电</strong>时默认由<strong>内部的 HSI 时钟启动</strong> (8Mhz)，如果用户进行了硬件和软件的配置，芯片才会根据<code>用户配置</code>调试尝试<code>切换到对应的外部时钟源</code></p>
+</blockquote>
+<h2 id="锁相环pll"><a href="#锁相环pll" class="headerlink" title="锁相环pll"></a>锁相环pll</h2><p>作用：<strong>输入时钟净化</strong>和<strong>倍频</strong></p>
+<p><img src="/../images/23.2.png" alt="alt text"></p>
+<p>所以，要实现 <code>72MHz</code> 的<code>主频率</code> <code>SYSCLK</code>，因为默认高速时钟是8Mhz, 所以pll倍频系数要为9</p>
+<h2 id="系统时钟-sysclk"><a href="#系统时钟-sysclk" class="headerlink" title="系统时钟 sysclk"></a>系统时钟 sysclk</h2><p>以上，介绍了时钟源，倍频pll，接下来就得到了我们的<strong>系统时钟sysclk</strong></p>
+<p><strong>系统时钟 SYSCLK 为整个芯片提供了时序信号</strong></p>
+<p><img src="/../images/23.3.png" alt="alt text"></p>
+<p>系统时钟为以下提供时钟信号：</p>
+<ol>
+<li>外设总线时钟</li>
+<li>内核时钟</li>
+<li>等等，均由sysclk分频得到。</li>
+</ol>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>该实验，就是让stm32工作在系统时钟sysclk &#x3D; 72Mhz下。</p>
+<p>之前讲到，内核上电后开始执行reset_handler, 里面有两个环节:</p>
+<ol>
+<li>SystemInit<ol>
+<li>配置外部sram（没用到）</li>
+<li>重定向ivt到内部ram（没用到）</li>
+</ol>
+</li>
+<li>main</li>
+</ol>
+<p>所以我们主要看main干了些什么</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint8_t</span> key;</span><br><span class="line"></span><br><span class="line">    HAL_Init();                             <span class="comment">/* 初始化HAL库 */</span></span><br><span class="line">    sys_stm32_clock_init(RCC_PLL_MUL9);     <span class="comment">/* 设置时钟, 72Mhz */</span></span><br><span class="line">    delay_init(<span class="number">72</span>);                         <span class="comment">/* 延时初始化 */</span></span><br><span class="line">    <span class="comment">//......</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到就直接在CM3用内部8M时钟的情况下，就直接跳转到main执行了。</p>
+<p>所以我们是在main里面重新设置时钟，配置主频为72Mhz的。</p>
+<p>先看一下<code>sys_stm32_clock_init</code>这个函数</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       系统时钟初始化函数</span></span><br><span class="line"><span class="comment"> * @param       plln: PLL倍频系数(PLL倍频), 取值范围: 2~16</span></span><br><span class="line"><span class="comment">                中断向量表位置在启动时已经在SystemInit()中初始化</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sys_stm32_clock_init</span><span class="params">(<span class="type">uint32_t</span> plln)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_StatusTypeDef ret = HAL_ERROR;</span><br><span class="line">    RCC_OscInitTypeDef rcc_osc_init = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    RCC_ClkInitTypeDef rcc_clk_init = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"></span><br><span class="line">    rcc_osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;       <span class="comment">/* 选择要配置HSE */</span></span><br><span class="line">    rcc_osc_init.HSEState = RCC_HSE_ON;                         <span class="comment">/* 打开HSE */</span></span><br><span class="line">    rcc_osc_init.HSEPredivValue = RCC_HSE_PREDIV_DIV1;          <span class="comment">/* HSE预分频系数 */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLState = RCC_PLL_ON;                     <span class="comment">/* 打开PLL */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;             <span class="comment">/* PLL时钟源选择HSE */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLMUL = plln;                             <span class="comment">/* PLL倍频系数 */</span></span><br><span class="line">    ret = HAL_RCC_OscConfig(&amp;rcc_osc_init);                     <span class="comment">/* 初始化 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != HAL_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>);                                              <span class="comment">/* 时钟初始化失败，之后的程序将可能无法正常执行，可以在这里加入自己的处理 */</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 选中PLL作为系统时钟源并且配置HCLK,PCLK1和PCLK2*/</span></span><br><span class="line">    rcc_clk_init.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);</span><br><span class="line">    rcc_clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;        <span class="comment">/* 设置系统时钟来自PLL */</span></span><br><span class="line">    rcc_clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;               <span class="comment">/* AHB分频系数为1 */</span></span><br><span class="line">    rcc_clk_init.APB1CLKDivider = RCC_HCLK_DIV2;                <span class="comment">/* APB1分频系数为2 */</span></span><br><span class="line">    rcc_clk_init.APB2CLKDivider = RCC_HCLK_DIV1;                <span class="comment">/* APB2分频系数为1 */</span></span><br><span class="line">    ret = HAL_RCC_ClockConfig(&amp;rcc_clk_init, FLASH_LATENCY_2);  <span class="comment">/* 同时设置FLASH延时周期为2WS，也就是3个CPU周期。 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != HAL_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>);                                              <span class="comment">/* 时钟初始化失败，之后的程序将可能无法正常执行，可以在这里加入自己的处理 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>干了两件事：</p>
+<ol>
+<li>配置 <code>PLL = 9倍频</code> 相关参数确定系统时钟<code>SYSCLK = 72Mhz</code></li>
+<li>配置了 <code>AHB</code>、<code>APB1</code> 和 <code>APB2</code> 的分频系数，也就是确定了 HCLK，PCLK1和 PCLK2 的时钟值</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">SYSCLK(系统时钟) =<span class="number">72</span>MHz</span><br><span class="line">PLL 主时钟 =<span class="number">72</span>MHz</span><br><span class="line">AHB 总线时钟（HCLK=SYSCLK/<span class="number">1</span>） =<span class="number">72</span>MHz</span><br><span class="line">APB1 总线时钟（PCLK1=HCLK/<span class="number">2</span>） =<span class="number">36</span>MHz</span><br><span class="line">APB2 总线时钟（PCLK2=HCLK/<span class="number">1</span>） =<span class="number">72</span>MHz</span><br></pre></td></tr></table></figure>
+
+<p>如果要打开某个外设：</p>
+<p>上一节我们讲解了时钟系统配置步骤。在<code>配置好时钟系统之后</code>，如果我们要<code>使用某些外设</code>，例如 GPIO，ADC 等，我们还要<code>使能这些外设时钟</code>。</p>
+<p>这里大家必须注意，如果在使用外设之前没有使能外设时钟，这个外设是不可能正常运行的。</p>
+<blockquote>
+<p>STM32 的外设时钟使能是在 <code>RCC 相关寄存器中配置</code>的</p>
+</blockquote>
+<p><strong>HAL 库中</strong>，外设时钟使能操作都是在 RCC 相关固件库文件头文件<code>STM32F1xx_hal_rcc.h</code> 定义的. 每个<strong>外设的时钟使能</strong>，都通过<strong>宏</strong>来实现</p>
+<p><img src="/../images/23.4.png" alt="alt text"></p>
+<blockquote>
+<p>我们只需要在我们的用户程序中<strong>调用宏定义标识符</strong>就可以实现 GPIOA 时钟使能。</p>
+<p>禁止外设时钟使用方法和使能外设时钟非常类似</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" rel="prev" title="stm32 启动流程*">
+                  <i class="fa fa-angle-left"></i> stm32 启动流程*
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/" rel="next" title="stm32 中断与事件*">
+                  stm32 中断与事件* <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 时钟*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

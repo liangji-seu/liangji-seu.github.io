@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="stm32中断和事件stm32的中断资源NVIC 即嵌套向量中断控制器， 是内核的器件，M3 内核都是支持 256 个中断,总共包括：  16 个系统中断 240 个外部中断  但实际上，ZET6 的系统中断只用了 10 个，外部中断有 60 个   中断向量表在 STM32F103xx.h 文件中被定义  NVICNVIC 相关的寄存器定义了可以在 core_cm3.h 文件中找到 typede">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 中断与事件*">
+<meta property="og:url" content="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="stm32中断和事件stm32的中断资源NVIC 即嵌套向量中断控制器， 是内核的器件，M3 内核都是支持 256 个中断,总共包括：  16 个系统中断 240 个外部中断  但实际上，ZET6 的系统中断只用了 10 个，外部中断有 60 个   中断向量表在 STM32F103xx.h 文件中被定义  NVICNVIC 相关的寄存器定义了可以在 core_cm3.h 文件中找到 typede">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/11.3.png">
+<meta property="og:image" content="http://example.com/images/11.5.png">
+<meta property="og:image" content="http://example.com/images/11.6.png">
+<meta property="og:image" content="http://example.com/images/11.1.png">
+<meta property="og:image" content="http://example.com/images/11.2.png">
+<meta property="article:published_time" content="2025-12-24T15:14:54.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.752Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/11.3.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/","path":"2025/12/24/stm32-中断与事件/","title":"stm32 中断与事件*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 中断与事件* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#stm32%E4%B8%AD%E6%96%AD%E5%92%8C%E4%BA%8B%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">stm32中断和事件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#stm32%E7%9A%84%E4%B8%AD%E6%96%AD%E8%B5%84%E6%BA%90"><span class="nav-number">1.1.</span> <span class="nav-text">stm32的中断资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NVIC"><span class="nav-number">1.2.</span> <span class="nav-text">NVIC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EXTI"><span class="nav-number">1.3.</span> <span class="nav-text">EXTI</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A1%86%E5%9B%BE"><span class="nav-number">1.3.1.</span> <span class="nav-text">框图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A7%E7%94%9F%E4%B8%AD%E6%96%AD"><span class="nav-number">1.3.2.</span> <span class="nav-text">产生中断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A7%E7%94%9F%E8%84%89%E5%86%B2%E4%BA%8B%E4%BB%B6"><span class="nav-number">1.3.3.</span> <span class="nav-text">产生脉冲事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#EXTI%E6%94%AF%E6%8C%81%E8%BE%93%E5%85%A5"><span class="nav-number">1.3.4.</span> <span class="nav-text">EXTI支持输入</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.</span> <span class="nav-text">实验</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.5.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E4%BA%A7%E7%94%9F%E6%B5%81%E7%A8%8B"><span class="nav-number">1.6.</span> <span class="nav-text">中断产生流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NVIC-1"><span class="nav-number">1.7.</span> <span class="nav-text">NVIC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EXTI-1"><span class="nav-number">1.8.</span> <span class="nav-text">EXTI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%B5%81%E7%A8%8B%E6%80%9D%E8%B7%AF"><span class="nav-number">1.9.</span> <span class="nav-text">实现流程思路</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 中断与事件* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 中断与事件*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-24 23:14:54" itemprop="dateCreated datePublished" datetime="2025-12-24T23:14:54+08:00">2025-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="stm32中断和事件"><a href="#stm32中断和事件" class="headerlink" title="stm32中断和事件"></a>stm32中断和事件</h1><h2 id="stm32的中断资源"><a href="#stm32的中断资源" class="headerlink" title="stm32的中断资源"></a>stm32的中断资源</h2><p>NVIC 即嵌套向量中断控制器， 是内核的器件，<code>M3 内核</code>都是支持 <code>256 个中断</code>,总共包括：</p>
+<ul>
+<li><strong>16 个系统中断</strong></li>
+<li><strong>240 个外部中断</strong></li>
+</ul>
+<p>但实际上，ZET6 的<code>系统中断</code>只用了 <code>10</code> 个，<code>外部中断有 60</code> 个</p>
+<p><img src="/../images/11.3.png" alt="alt text"></p>
+<blockquote>
+<p>中断向量表在 <code>STM32F103xx.h</code> 文件中被定义</p>
+</blockquote>
+<h2 id="NVIC"><a href="#NVIC" class="headerlink" title="NVIC"></a>NVIC</h2><p>NVIC 相关的寄存器定义了可以在 <code>core_cm3.h</code> 文件中找到</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  __IOM <span class="type">uint32_t</span> ISER[<span class="number">8U</span>];               <span class="comment">/* 中断使能寄存器 */</span></span><br><span class="line">        <span class="type">uint32_t</span> RESERVED0[<span class="number">24U</span>];</span><br><span class="line">  __IOM <span class="type">uint32_t</span> ICER[<span class="number">8U</span>];               <span class="comment">/* 中断清除使能寄存器 */</span></span><br><span class="line">        <span class="type">uint32_t</span> RSERVED1[<span class="number">24U</span>];</span><br><span class="line">  __IOM <span class="type">uint32_t</span> ISPR[<span class="number">8U</span>];               <span class="comment">/* 中断使能挂起寄存器 */</span></span><br><span class="line">        <span class="type">uint32_t</span> RESERVED2[<span class="number">24U</span>];</span><br><span class="line">  __IOM <span class="type">uint32_t</span> ICPR[<span class="number">8U</span>];               <span class="comment">/* 中断解挂寄存器 */</span></span><br><span class="line">        <span class="type">uint32_t</span> RESERVED3[<span class="number">24U</span>];</span><br><span class="line">  __IOM <span class="type">uint32_t</span> IABR[<span class="number">8U</span>];               <span class="comment">/* 中断有效位寄存器 */</span></span><br><span class="line">        <span class="type">uint32_t</span> RESERVED4[<span class="number">56U</span>];</span><br><span class="line">  __IOM <span class="type">uint8_t</span>  IP[<span class="number">240U</span>];               <span class="comment">/* 中断优先级寄存器（8Bit 位宽） */</span></span><br><span class="line">        <span class="type">uint32_t</span> RESERVED5[<span class="number">644U</span>];</span><br><span class="line">  __OM  <span class="type">uint32_t</span> STIR;                   <span class="comment">/* 软件触发中断寄存器 */</span></span><br><span class="line">&#125;  NVIC_Type;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>ISER</strong></p>
+<p>上面说了 CM3 内核总共支持 <code>256 个中断</code>，这里用 <code>8 个 32 位寄存器来控制</code>，刚好一一对应，每个位控制一个中断。但是STM32<code>F103的可屏蔽中断最多只有60个</code>，所以对我们来说，<code>有用的就是两个(ISER[0]和ISER[1])</code>，总共可以表示 64 个中断</p>
+<p>你要<code>使能某个中断</code>，必须<code>设置相应的 ISER 位为 1</code>，使该中断被使能(这里<code>仅仅是使能</code>，还要配合中断分组、屏蔽、IO 口映射等设置才算是一个完整的中断设置)</p>
+<p><strong>ICER</strong></p>
+<p>和ISER相反，作用是关闭中断</p>
+<p><strong>ISPR</strong></p>
+<p>中断使能挂起控制寄存器组，置 1，可以<code>将正在进行的中断挂起</code>，而<strong>执行同级或更高级别的中断</strong>。写 0 是无效的</p>
+<p><strong>ICPR</strong></p>
+<p>置 1，可以将挂起的<strong>中断解挂</strong>。写 0 无效</p>
+<p><strong>IABR</strong></p>
+<p>中断激活标志位寄存器组, 为 1，则表示该位所对应的<strong>中断正在被执行</strong>。这是一个只读寄存器，通过它可以<strong>知道当前在执行的中断是哪一个</strong>。在中断执行完了由<strong>硬件自动清零</strong></p>
+<p><strong>IP[240]</strong></p>
+<p>中断<strong>优先级</strong>控制的寄存器组。注意，这里是240个，因此这里NVIC只能管理<strong>240个外部中断</strong></p>
+<blockquote>
+<p>每个外部中断，一个8bit的优先级IP，实际有效位是只用了<code>高 4 位</code>, 这4位又分为，<code>抢占优先级</code>和<code>子优先级</code>。具体两种优先级如何组合，由<code>SCB-&gt;AIRCR</code> 中的中断分组设置来决定</p>
+</blockquote>
+<blockquote>
+<p>考虑到和rtos的兼容，我们一般选<strong>分组4</strong>，全部用抢占优先级</p>
+</blockquote>
+<p><img src="/../images/11.5.png" alt="alt text"></p>
+<blockquote>
+<p>总结：<br>以上，发现，NVIC寄存器组，可以设置<code>总体的优先级分组</code>，<code>外部中断的使能</code>，<code>优先级</code></p>
+</blockquote>
+<h2 id="EXTI"><a href="#EXTI" class="headerlink" title="EXTI"></a>EXTI</h2><p>EXTI 即是外部中断和事件控制器, 由 20 个产生事件&#x2F;中断请求的<strong>边沿检测器</strong>组成, 说白了，就是个边缘检测器，提供触发中断的硬件信号。</p>
+<p><strong>说白了，就是给一些没有中断功能的功能，提供中断</strong></p>
+<h3 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h3><p><img src="/../images/11.6.png" alt="alt text"></p>
+<p>可以看到，有两条主线，一条是<code>由输入线到 NVIC 中断控制器</code>，一条是<code>由输入线到脉冲发生器</code>。</p>
+<p>这就恰恰是 EXTI 的<strong>两大部分功能</strong>，</p>
+<ul>
+<li>产生中断</li>
+<li>产生事件</li>
+</ul>
+<p>两者从硬件上就存在不同</p>
+<h3 id="产生中断"><a href="#产生中断" class="headerlink" title="产生中断"></a>产生中断</h3><ul>
+<li>通过配置寄存器设置为任何一个 GPIO 口，或者是一些外设的事件。输入线一般都是<strong>存在电平变化的信号</strong></li>
+<li>经过<strong>边沿检测电路</strong>，捕获上升沿下降沿</li>
+<li>考虑判断是否<strong>软件中断</strong></li>
+<li>判断中断屏蔽IMR</li>
+</ul>
+<h3 id="产生脉冲事件"><a href="#产生脉冲事件" class="headerlink" title="产生脉冲事件"></a>产生脉冲事件</h3><ul>
+<li>事件产生，不多细说，方法差不多，核心就是，使脉冲发生器电路产生一个脉冲</li>
+</ul>
+<p>一般输出到如<code>定时器</code>，<code>模拟数字转换器</code>等，这样的脉冲信号一般用来触发 TIM 或者 ADC 开始转换</p>
+<blockquote>
+<p><code>产生中断</code>线路目的使把输入信号输入到 NVIC，进一步运行中断服务函数，实现功能。</p>
+<p><code>产生事件</code>线路目的是传输一个脉冲信号给其他外设使用，属于硬件级功能</p>
+</blockquote>
+<h3 id="EXTI支持输入"><a href="#EXTI支持输入" class="headerlink" title="EXTI支持输入"></a>EXTI支持输入</h3><p>EXTI 支持 19 个外部中断&#x2F;事件请求</p>
+<ol>
+<li>EXTI 线 0~15：对应外部 IO 口的输入中断</li>
+<li>EXTI 线 16：连接到 PVD 输出</li>
+<li>EXTI 线 17：连接到 RTC 闹钟事件</li>
+<li>EXTI 线 18：连接到 USB 唤醒事件</li>
+<li>EXTI 线 19：连接到以太网唤醒事件</li>
+</ol>
+<p>IO 口使用的中断线只有 16 个,但这个不是说，EXTI只能给16个GPIO提供中断功能</p>
+<p>STM32，一共7个GPIO组外设（ABCDEFG），每组16个</p>
+<p>即便这样，那么<strong>每个EXTI0-15, 还要对应7个gpio</strong> （exti0 -&gt; A0,B0….G0）,具体对应哪个gpio呢？</p>
+<blockquote>
+<p>GPIO 和中断线映射关系是在寄存器 <code>AFIO_EXTICR1 ~ AFIO_EXTICR4</code> 中配置的</p>
+</blockquote>
+<p>注意：我们配置 AFIO 相关寄存器前，还需要打开 AFIO 时钟，因为AFIO也是一个外设。</p>
+<p>总结：我们如果需要gpio输入中断，涉及的外设有：</p>
+<ol>
+<li>NVIC</li>
+<li>GPIO组</li>
+<li>EXTI</li>
+<li>AFIO</li>
+</ol>
+<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>细节很简单，就不用说了</p>
+<p>以<code>PE4</code>作为输入中断为例</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_Init();                            <span class="comment">/* 初始化HAL库 */</span></span><br><span class="line">    sys_stm32_clock_init(RCC_PLL_MUL9);    <span class="comment">/* 设置时钟, 72Mhz */</span></span><br><span class="line">    delay_init(<span class="number">72</span>);                        <span class="comment">/* 延时初始化 */</span></span><br><span class="line">    usart_init(<span class="number">115200</span>);                    <span class="comment">/* 串口初始化为115200 */</span></span><br><span class="line">    led_init();                            <span class="comment">/* 初始化LED */</span>  <span class="comment">//PB5, PE5</span></span><br><span class="line">    beep_init();                           <span class="comment">/* 初始化蜂鸣器 */</span>  <span class="comment">//PB8</span></span><br><span class="line">    extix_init();                          <span class="comment">/* 初始化外部中断输入 */</span>  <span class="comment">//PE4,PE3,PA0</span></span><br><span class="line">    LED0(<span class="number">0</span>);                               <span class="comment">/* 先点亮红灯 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;OK\r\n&quot;</span>);</span><br><span class="line">        delay_ms(<span class="number">1000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在extix_init()内部：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">extix_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    GPIO_InitTypeDef gpio_init_struct;</span><br><span class="line"></span><br><span class="line">    KEY0_GPIO_CLK_ENABLE();                                  <span class="comment">/* KEY0时钟使能 */</span></span><br><span class="line">    KEY1_GPIO_CLK_ENABLE();                                  <span class="comment">/* KEY1时钟使能 */</span></span><br><span class="line">    WKUP_GPIO_CLK_ENABLE();                                  <span class="comment">/* WKUP时钟使能 */</span></span><br><span class="line"></span><br><span class="line">    gpio_init_struct.Pin = KEY0_INT_GPIO_PIN;</span><br><span class="line">    gpio_init_struct.Mode = GPIO_MODE_IT_FALLING;            <span class="comment">/* 下升沿触发 */</span></span><br><span class="line">    gpio_init_struct.Pull = GPIO_PULLUP;</span><br><span class="line">    HAL_GPIO_Init(KEY0_INT_GPIO_PORT, &amp;gpio_init_struct);    <span class="comment">/* KEY0配置为下降沿触发中断 */</span></span><br><span class="line"></span><br><span class="line">    gpio_init_struct.Pin = KEY1_INT_GPIO_PIN;</span><br><span class="line">    gpio_init_struct.Mode = GPIO_MODE_IT_FALLING;            <span class="comment">/* 下升沿触发 */</span></span><br><span class="line">    gpio_init_struct.Pull = GPIO_PULLUP;</span><br><span class="line">    HAL_GPIO_Init(KEY1_INT_GPIO_PORT, &amp;gpio_init_struct);    <span class="comment">/* KEY1配置为下降沿触发中断 */</span></span><br><span class="line">    </span><br><span class="line">    gpio_init_struct.Pin = WKUP_INT_GPIO_PIN;</span><br><span class="line">    gpio_init_struct.Mode = GPIO_MODE_IT_RISING;             <span class="comment">/* 上升沿触发 */</span></span><br><span class="line">    gpio_init_struct.Pull = GPIO_PULLDOWN;</span><br><span class="line">    HAL_GPIO_Init(WKUP_GPIO_PORT, &amp;gpio_init_struct);        <span class="comment">/* WKUP配置为下降沿触发中断 */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    HAL_NVIC_SetPriority(KEY0_INT_IRQn, <span class="number">0</span>, <span class="number">2</span>);               <span class="comment">/* 抢占0，子优先级2 */</span></span><br><span class="line">    HAL_NVIC_EnableIRQ(KEY0_INT_IRQn);                       <span class="comment">/* 使能中断线4 */</span></span><br><span class="line"></span><br><span class="line">    HAL_NVIC_SetPriority(KEY1_INT_IRQn, <span class="number">1</span>, <span class="number">2</span>);               <span class="comment">/* 抢占1，子优先级2 */</span></span><br><span class="line">    HAL_NVIC_EnableIRQ(KEY1_INT_IRQn);                       <span class="comment">/* 使能中断线3 */</span></span><br><span class="line"></span><br><span class="line">    HAL_NVIC_SetPriority(WKUP_INT_IRQn, <span class="number">2</span>, <span class="number">2</span>);               <span class="comment">/* 抢占2，子优先级2 */</span></span><br><span class="line">    HAL_NVIC_EnableIRQ(WKUP_INT_IRQn);                       <span class="comment">/* 使能中断线0 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>HAL_GPIO_Init</code>()已经帮你配置exti和afio这两个外设了，看看HAL的驱动里面的实现</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*--------------------- EXTI Mode Configuration ------------------------*/</span></span><br><span class="line"> <span class="comment">/* Configure the External Interrupt or event for the current IO */</span></span><br><span class="line"> <span class="keyword">if</span> ((GPIO_Init-&gt;Mode &amp; EXTI_MODE) == EXTI_MODE)</span><br><span class="line"> &#123;</span><br><span class="line">   <span class="comment">/* Enable AFIO Clock */</span></span><br><span class="line">   __HAL_RCC_AFIO_CLK_ENABLE();</span><br><span class="line">   temp = AFIO-&gt;EXTICR[position &gt;&gt; <span class="number">2u</span>];</span><br><span class="line">   CLEAR_BIT(temp, (<span class="number">0x0Fu</span>) &lt;&lt; (<span class="number">4u</span> * (position &amp; <span class="number">0x03u</span>)));</span><br><span class="line">   SET_BIT(temp, (GPIO_GET_INDEX(GPIOx)) &lt;&lt; (<span class="number">4u</span> * (position &amp; <span class="number">0x03u</span>)));</span><br><span class="line">   AFIO-&gt;EXTICR[position &gt;&gt; <span class="number">2u</span>] = temp;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   <span class="comment">/* Configure the interrupt mask */</span></span><br><span class="line">   <span class="keyword">if</span> ((GPIO_Init-&gt;Mode &amp; GPIO_MODE_IT) == GPIO_MODE_IT)</span><br><span class="line">   &#123;</span><br><span class="line">     SET_BIT(EXTI-&gt;IMR, iocurrent);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">else</span></span><br><span class="line">   &#123;</span><br><span class="line">     CLEAR_BIT(EXTI-&gt;IMR, iocurrent);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* Configure the event mask */</span></span><br><span class="line">   <span class="keyword">if</span> ((GPIO_Init-&gt;Mode &amp; GPIO_MODE_EVT) == GPIO_MODE_EVT)</span><br></pre></td></tr></table></figure>
+<p>可以看到，如果你配置了GPIO的模式是用外部中断，那么会先使能AFIO外设</p>
+<p>另外也可以看到，extix_init()里面，最后，也设置NVIC的相应中断优先级+使能中断（这个就是NVIC仅仅能做的事）。</p>
+<p>最终，当触发中断后，会跳转到来执行。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DCD     EXTI4_IRQHandler           ; EXTI Line <span class="number">4</span></span><br></pre></td></tr></table></figure>
+<p>但是要注意，这个中断处理函数，对应的EXTI4，是对应很多个GPIO的触发可能的。所以，内部还需要判断中断源头。</p>
+<p>一般来说，为了方便管理，我们把中断向量表里面的中断处理函数重定向到HAL中，这样同意都是在驱动层进行统一处理和管理。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">KEY0_INT_IRQHandler</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_GPIO_EXTI_IRQHandler(KEY0_INT_GPIO_PIN);         <span class="comment">/* 调用中断处理公用函数 清除KEY0所在中断线 的中断标志位 */</span></span><br><span class="line">    __HAL_GPIO_EXTI_CLEAR_IT(KEY0_INT_GPIO_PIN);         <span class="comment">/* HAL库默认先清中断再处理回调，退出时再清一次中断，避免按键抖动误触发 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">HAL_GPIO_EXTI_IRQHandler</span><span class="params">(<span class="type">uint16_t</span> GPIO_Pin)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* EXTI line interrupt detected */</span></span><br><span class="line">  <span class="keyword">if</span> (__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != <span class="number">0x00u</span>)</span><br><span class="line">  &#123;</span><br><span class="line">    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);</span><br><span class="line">    HAL_GPIO_EXTI_Callback(GPIO_Pin);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">__weak <span class="type">void</span> <span class="title function_">HAL_GPIO_EXTI_Callback</span><span class="params">(<span class="type">uint16_t</span> GPIO_Pin)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">/* Prevent unused argument(s) compilation warning */</span></span><br><span class="line">  UNUSED(GPIO_Pin);</span><br><span class="line">  <span class="comment">/* <span class="doctag">NOTE:</span> This function Should not be modified, when the callback is needed,</span></span><br><span class="line"><span class="comment">           the HAL_GPIO_EXTI_Callback could be implemented in the user file</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，HAL里面，仅仅只是对中断标志位清除一下，或者判断一些信息。然后调用回调函数。而回调函数，是一个弱定义，所以你可以自己在业务层去编写自己的回调函数。</p>
+<p>exti.c中</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       中断服务程序中需要做的事情</span></span><br><span class="line"><span class="comment">                在HAL库中所有的外部中断服务函数都会调用此函数</span></span><br><span class="line"><span class="comment"> * @param       GPIO_Pin:中断引脚号</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">HAL_GPIO_EXTI_Callback</span><span class="params">(<span class="type">uint16_t</span> GPIO_Pin)</span></span><br><span class="line">&#123;</span><br><span class="line">    delay_ms(<span class="number">20</span>);      <span class="comment">/* 消抖 */</span></span><br><span class="line">    <span class="keyword">switch</span>(GPIO_Pin)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">case</span> KEY0_INT_GPIO_PIN:</span><br><span class="line">            <span class="keyword">if</span> (KEY0 == <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                LED0_TOGGLE();  <span class="comment">/* LED0 状态取反 */</span> </span><br><span class="line">                LED1_TOGGLE();  <span class="comment">/* LED1 状态取反 */</span> </span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> KEY1_INT_GPIO_PIN:</span><br><span class="line">            <span class="keyword">if</span> (KEY1 == <span class="number">0</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                LED0_TOGGLE();  <span class="comment">/* LED0 状态取反 */</span> </span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> WKUP_INT_GPIO_PIN:</span><br><span class="line">            <span class="keyword">if</span> (WK_UP == <span class="number">1</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                BEEP_TOGGLE();  <span class="comment">/* 蜂鸣器状态取反 */</span> </span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<hr>
+<p>旧</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>中断和事件是两个东西</p>
+<p>中断是指的，cpu的中断控制器在收到中断请求后，停止当前任务，转去处理中断事件，运行中断处理函数，根据IVT中定义的函数策略，都是WEAK定义，你可以自己覆写。</p>
+<p>事件则指的，外部的输入信号，不输入NVIC， 直接到脉冲产生模块，从而产生一个脉冲事件，这个脉冲信号会发给你想要发给的设备。</p>
+<p><img src="/../images/11.1.png" alt="alt text"></p>
+<p><img src="/../images/11.2.png" alt="alt text"></p>
+<h2 id="中断产生流程"><a href="#中断产生流程" class="headerlink" title="中断产生流程"></a>中断产生流程</h2><ol>
+<li>外设输入端gpio产生信号（比如下降沿，上升沿）</li>
+<li>EXTI起到路由的作用，<ol>
+<li>既可以产生软件中断（内部设置软件中断寄存器把或门置1），</li>
+<li>也可以产生硬件中断（判定上升沿触发，边沿检测输出1,自动把请求挂起寄存器置1,之后只要把中断屏蔽寄存器置1开中断即可让NVIC产生中断，NVIC会通知CM3内核去按照IVT执行相应的中断处理函数）</li>
+<li>产生事件（脉冲信号，直接发给其他的设备）</li>
+</ol>
+</li>
+<li>NVIC接收到中断请求，开始通知CM3产生中断</li>
+<li>CM3保存当前堆栈，然后跳转到IVT指定的中断处理函数。</li>
+<li>EXTI4_IRQHandler中断处理函数内，清除挂起位，表面CM3已经知道并且正在处理此中断，并调用对应的回调函数来处理中断。处理完之后，再次清中断，防止多次处理。</li>
+<li>CM3恢复现场</li>
+</ol>
+<h2 id="NVIC-1"><a href="#NVIC-1" class="headerlink" title="NVIC"></a>NVIC</h2><p>CM3内核内部的模块，具体定义在ARM中。<br>帮助设置所有中断的优先级组，同时设置一个中断的抢占式优先级和子优先级。</p>
+<h2 id="EXTI-1"><a href="#EXTI-1" class="headerlink" title="EXTI"></a>EXTI</h2><p>可以看成是一个输入信号的路由模块，把我们输入的输入信号，帮助NVIC判断是什么方式触发，是想要软件触发还是外部硬件触发，是想要触发中断还是触发事件。</p>
+<h2 id="实现流程思路"><a href="#实现流程思路" class="headerlink" title="实现流程思路"></a>实现流程思路</h2><p>总共设置4个部分<br>输入gpio –&gt; EXTI –&gt; NVIC –&gt; 输出GPIO</p>
+<p>NVIC部分：</p>
+<ol>
+<li>设置优先级组</li>
+<li>设置抢占式优先级和子优先级</li>
+<li>使能NVIC</li>
+<li>找到IVT对应的想要的中断处理函数入口名称</li>
+</ol>
+<p>EXTI：</p>
+<ol>
+<li>设置下降沿触发</li>
+<li>关闭软件中断（可有可无）</li>
+<li>开中断（IMR）</li>
+</ol>
+<p>GPIO输入：</p>
+<ol>
+<li>设置gpio相关</li>
+<li>与EXTI绑定</li>
+</ol>
+<p>（hal_gpio库中，已经将输入GPIO和EXTI合并，可以直接像设置gpio一样选择AFIO复用EXTI输入）</p>
+<p>GPIO输出：</p>
+<ol>
+<li>重写回调函数，gpio中断的回调函数，hal库中已经写好了weak定义。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/" rel="prev" title="stm32 时钟*">
+                  <i class="fa fa-angle-left"></i> stm32 时钟*
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/" rel="next" title="stm32 delay实现">
+                  stm32 delay实现 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 中断与事件*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

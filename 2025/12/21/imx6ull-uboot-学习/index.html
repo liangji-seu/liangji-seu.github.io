@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Uboot 学习笔记linux系统的组成部分 前面我们学习的是裸机开发，主要使用寄存器操作，实现对外设的驱动，掌握的外设的底层原理。之后就可以把重心放到linux驱动框架上。 在移植linux系统之前，需要  移植bootloader（用于启动linux内核， bootloader有很多种，常见的是uboot） 再移植linux内核 再移植根文件系统rootfs（这个里面包含了最常用的命令和文件）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull uboot 学习">
+<meta property="og:url" content="http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="Uboot 学习笔记linux系统的组成部分 前面我们学习的是裸机开发，主要使用寄存器操作，实现对外设的驱动，掌握的外设的底层原理。之后就可以把重心放到linux驱动框架上。 在移植linux系统之前，需要  移植bootloader（用于启动linux内核， bootloader有很多种，常见的是uboot） 再移植linux内核 再移植根文件系统rootfs（这个里面包含了最常用的命令和文件）">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/7.1.png">
+<meta property="og:image" content="http://example.com/images/7.2.png">
+<meta property="og:image" content="http://example.com/images/7.3.png">
+<meta property="og:image" content="http://example.com/images/7.4.png">
+<meta property="og:image" content="http://example.com/images/7.5.png">
+<meta property="og:image" content="http://example.com/images/7.6.png">
+<meta property="article:published_time" content="2025-12-21T07:08:50.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.745Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/7.1.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/","path":"2025/12/21/imx6ull-uboot-学习/","title":"imx6ull uboot 学习"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull uboot 学习 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Uboot-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">Uboot 学习笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BB%84%E6%88%90%E9%83%A8%E5%88%86"><span class="nav-number">1.1.</span> <span class="nav-text">linux系统的组成部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.2.</span> <span class="nav-text">uboot 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%BC%96%E8%AF%91"><span class="nav-number">1.3.</span> <span class="nav-text">uboot 编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%83%A7%E5%BD%95"><span class="nav-number">1.4.</span> <span class="nav-text">uboot 烧录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%BD%91%E7%BB%9C%EF%BC%88%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95%E7%94%A8%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">uboot 网络（驱动开发调试用）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ping%E5%BA%95%E5%B1%82%E7%BD%91%E7%BB%9C%E8%81%94%E9%80%9A%EF%BC%882%E5%B1%82%EF%BC%8C3%E5%B1%82%EF%BC%89"><span class="nav-number">1.5.1.</span> <span class="nav-text">ping底层网络联通（2层，3层）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dhcp"><span class="nav-number">1.5.2.</span> <span class="nav-text">dhcp</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Ubuntu%E4%B8%BB%E6%9C%BA-%E5%AE%89%E8%A3%85dhcp%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">Ubuntu主机 安装dhcp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%86%85%E5%AE%B9"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">配置dhcp服务器内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E5%AE%9Adhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E7%BD%91%E5%8D%A1"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">指定dhcp服务器使用的网卡</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8Ubuntu%E4%B8%BB%E6%9C%BAdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">启动Ubuntu主机dhcp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%97%AD%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%8C%E9%98%B2%E6%AD%A2%E9%98%BB%E6%8C%A1dhcp%E6%9C%8D%E5%8A%A1"><span class="nav-number">1.5.2.5.</span> <span class="nav-text">关闭防火墙，防止阻挡dhcp服务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nfs%E6%9C%8D%E5%8A%A1-%E5%B0%9D%E8%AF%95%E5%A4%B1%E8%B4%A5%EF%BC%8C%E4%B8%80%E7%9B%B4%E8%B6%85%E6%97%B6"><span class="nav-number">1.5.3.</span> <span class="nav-text">nfs服务(尝试失败，一直超时)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tftp%E6%9C%8D%E5%8A%A1-%E5%B0%9D%E8%AF%95%E6%88%90%E5%8A%9F"><span class="nav-number">1.5.4.</span> <span class="nav-text">tftp服务(尝试成功)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-RAM-%E6%93%8D%E4%BD%9C"><span class="nav-number">1.6.</span> <span class="nav-text">uboot RAM 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-ROM-%E6%93%8D%E4%BD%9C"><span class="nav-number">1.7.</span> <span class="nav-text">uboot ROM 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%EF%BC%88%E4%B8%8D%E5%86%8D%E6%98%AF%E7%A3%81%E7%9B%98%E5%AD%97%E8%8A%82%E6%93%8D%E4%BD%9C%E4%BA%86%EF%BC%89"><span class="nav-number">1.8.</span> <span class="nav-text">uboot 文件操作（不再是磁盘字节操作了）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fat%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.8.1.</span> <span class="nav-text">fat文件系统格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ext%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.8.2.</span> <span class="nav-text">ext文件系统格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-boot%E6%93%8D%E4%BD%9C"><span class="nav-number">1.9.</span> <span class="nav-text">uboot boot操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bootz-%E4%BB%8E%E8%BF%9C%E7%A8%8B%E6%8B%89%E5%8F%96kernel-dtb%E5%88%B0RAM-%E5%90%AF%E5%8A%A8linux%E5%86%85%E6%A0%B8"><span class="nav-number">1.9.1.</span> <span class="nav-text">bootz 从远程拉取kernel + dtb到RAM 启动linux内核</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootz-%E6%9C%AC%E5%9C%B0ROM%E5%90%AF%E5%8A%A8"><span class="nav-number">1.9.2.</span> <span class="nav-text">bootz 本地ROM启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootm"><span class="nav-number">1.9.3.</span> <span class="nav-text">bootm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#boot-%E8%87%AA%E5%8A%A8%E5%8C%96%E5%90%AF%E5%8A%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.9.4.</span> <span class="nav-text">boot 自动化启动命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-go%E5%91%BD%E4%BB%A4"><span class="nav-number">1.10.</span> <span class="nav-text">uboot go命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-run%E5%91%BD%E4%BB%A4"><span class="nav-number">1.11.</span> <span class="nav-text">uboot run命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-mtest%E5%91%BD%E4%BB%A4"><span class="nav-number">1.12.</span> <span class="nav-text">uboot mtest命令</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull uboot 学习 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull uboot 学习
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-21 15:08:50" itemprop="dateCreated datePublished" datetime="2025-12-21T15:08:50+08:00">2025-12-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="Uboot-学习笔记"><a href="#Uboot-学习笔记" class="headerlink" title="Uboot 学习笔记"></a>Uboot 学习笔记</h1><h2 id="linux系统的组成部分"><a href="#linux系统的组成部分" class="headerlink" title="linux系统的组成部分"></a>linux系统的组成部分</h2><p><img src="/../images/7.1.png" alt="alt text"></p>
+<p>前面我们学习的是裸机开发，主要使用寄存器操作，实现对外设的驱动，掌握的外设的底层原理。之后就可以把重心放到<strong>linux驱动框架</strong>上。</p>
+<p>在<strong>移植linux系统</strong>之前，需要</p>
+<ol>
+<li>移植<strong>bootloader</strong>（用于启动linux内核， bootloader有很多种，常见的是uboot）</li>
+<li>再移植<strong>linux内核</strong></li>
+<li>再移植<strong>根文件系统rootfs</strong>（这个里面包含了最常用的命令和文件）</li>
+</ol>
+<p>这三个一起构成了完整的linux系统。</p>
+<p>注：大部分移植的工作，芯片原厂（NXP）已经做好了，我们所做的移植，其实就是让他在特定的开发板上跑起来。</p>
+<h2 id="uboot-介绍"><a href="#uboot-介绍" class="headerlink" title="uboot 介绍"></a>uboot 介绍</h2><p>芯片上电以后，<strong>先运行一段bootloader程序</strong>，bootloader内部会<strong>初始化ddr等外设（RAM）（实际工作复杂的多）</strong>，然后将Linux 内核从 <strong>flash（ROM）</strong>(NAND，NOR FLASH，SD，MMC 等)拷贝到 <strong>DDR（RAM）</strong> 中，最后<strong>启动 Linux 内核</strong></p>
+<p>有很多<strong>现成的 bootloader</strong> 软件可以使用，比如 <strong>U-Boot、vivi、RedBoot</strong> 等</p>
+<p><strong>uboot</strong> 的全称是 <strong>Universal Boot Loader</strong>，是一个遵循 GPL 协议的<strong>开源软件</strong>，是一个<strong>裸机代码</strong>，可以看作是<strong>一个裸机综合例程</strong>。</p>
+<p>现在的 uboot 已经支持液晶屏、网络、USB 等高级功能。</p>
+<p>可以从uboot官网找到uboot的源码，但是这个源码一般是给芯片原厂用的，用来给自家的芯片移植uboot，他们会维护自己的uboot版本。所以我们自己用肯定只能到NXP的官网去下载<strong>定制的uboot代码</strong>， 但是这个定制uboot都是针对原厂（NXP）的评估板的，如果是我们自己的板子，<strong>还需要二次修改NXP官方的uboot</strong>，使其适配我们自己的开发板。<br><img src="/../images/7.2.png" alt="alt text"></p>
+<p>你也可以在购买了第三方开发板以后使用半导体厂商提供的 uboot，只不过<strong>有些外设驱动可能不支持</strong>，需要自己移植，这个就是我们常说的 <strong>uboot 移植</strong>。</p>
+<h2 id="uboot-编译"><a href="#uboot-编译" class="headerlink" title="uboot 编译"></a>uboot 编译</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment"># make clean</span></span><br><span class="line">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean</span><br><span class="line"></span><br><span class="line"><span class="comment"># set uboot defconfig</span></span><br><span class="line">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- mx6ull_14x14_ddr512_emmc_defconfig</span><br><span class="line"></span><br><span class="line"><span class="comment"># cross-compile, -j = cpu core numbers</span></span><br><span class="line">make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j12</span><br></pre></td></tr></table></figure>
+<p><img src="/../images/7.3.png" alt="alt text"></p>
+<p>注：uboot只是引导程序，是一个综合裸机例程，也<strong>可以引导其他系统</strong>，也可以<strong>支持其他架构</strong>，也可以<strong>拓展其他外设</strong>。</p>
+<p>所以在<strong>编译 uboot 之前</strong>，一定要<strong>根据自己的需求配置 uboot</strong>。<strong>mx6ull_14x14_ddr512_emmc_defconfig</strong>就是正点原子针对 I.MX6U-ALPHA 的 EMMC 核心板编写的<strong>配置文件</strong>。</p>
+<p>这个配置文件的目录在<code>uboot/configs</code>中，通过<code>make xxx_defconfig</code>来配置 uboot，<code>xxx_defconfig</code>就是不同板子的配置文件</p>
+<p>最终会编译出<strong>uboot.bin, uboot.imx</strong>这些<strong>用于烧录的镜像</strong>（和之前的裸机程序一样的镜像文件）</p>
+<h2 id="uboot-烧录"><a href="#uboot-烧录" class="headerlink" title="uboot 烧录"></a>uboot 烧录</h2><p>直接把编译出来的u-boot.bin当成裸机例程烧录到SD卡即可</p>
+<h2 id="uboot-网络（驱动开发调试用）"><a href="#uboot-网络（驱动开发调试用）" class="headerlink" title="uboot 网络（驱动开发调试用）"></a>uboot 网络（驱动开发调试用）</h2><h3 id="ping底层网络联通（2层，3层）"><a href="#ping底层网络联通（2层，3层）" class="headerlink" title="ping底层网络联通（2层，3层）"></a>ping底层网络联通（2层，3层）</h3><p>ping成功仅验证了开发板与主机的底层网络互通（无需 DHCP 参与，依赖静态配置或已有临时 IP）</p>
+<h3 id="dhcp"><a href="#dhcp" class="headerlink" title="dhcp"></a>dhcp</h3><p><strong>dhcp</strong>命令本质是通过 BOOTP（DHCP 的前身）&#x2F;DHCP 协议<strong>向网络请求 IP 地址</strong>、<strong>网关</strong>、<strong>启动文件地址等配置</strong>，所以<strong>需要你的网络中有一台机器运行 DHCP 服务器</strong>（Ubuntu主机，用来给设备分配ip）</p>
+<p><strong>Ubuntu 默认无 DHCP 服务</strong>：与普通 Windows 系统类似，Ubuntu 桌面版（如你的系统）默认未安装和启用 DHCP 服务器（仅包含 DHCP 客户端），开发板发送的广播请求无法被 Ubuntu 响应，因此仍会出现超时，另外<strong>Ubuntu 防火墙可能拦截 DHCP 协议的 UDP 67&#x2F;68 端口</strong>，即使后续安装了 DHCP 服务器，也可能因端口被拦截导致交互失败。</p>
+<h4 id="Ubuntu主机-安装dhcp服务器"><a href="#Ubuntu主机-安装dhcp服务器" class="headerlink" title="Ubuntu主机 安装dhcp服务器"></a>Ubuntu主机 安装dhcp服务器</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 更新软件源</span></span><br><span class="line"><span class="built_in">sudo</span> apt update</span><br><span class="line"><span class="comment"># 安装DHCP服务器</span></span><br><span class="line"><span class="built_in">sudo</span> apt install isc-dhcp-server -y</span><br></pre></td></tr></table></figure>
+
+<h4 id="配置dhcp服务器内容"><a href="#配置dhcp服务器内容" class="headerlink" title="配置dhcp服务器内容"></a>配置dhcp服务器内容</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/dhcp/dhcpd.conf</span><br><span class="line"></span><br><span class="line"><span class="comment"># 添加以下内容</span></span><br><span class="line"><span class="comment"># 全局配置</span></span><br><span class="line">default-lease-time 600;        <span class="comment"># 默认租期（秒）</span></span><br><span class="line">max-lease-time 7200;           <span class="comment"># 最大租期（秒）</span></span><br><span class="line">option subnet-mask 255.255.255.0;  <span class="comment"># 子网掩码，与开发板一致</span></span><br><span class="line">option routers 192.168.1.1;    <span class="comment"># 网关，与开发板gatewayip一致</span></span><br><span class="line">option domain-name-servers 223.5.5.5, 8.8.8.8;  <span class="comment"># DNS服务器</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 子网配置（与开发板网段匹配）</span></span><br><span class="line">subnet 192.168.1.0 netmask 255.255.255.0 &#123;</span><br><span class="line">  range 192.168.1.60 192.168.1.200;  <span class="comment"># DHCP分配IP池，避开开发板静态IP(192.168.1.50)和serverip(192.168.1.253)</span></span><br><span class="line">  option broadcast-address 192.168.1.255;  <span class="comment"># 广播地址</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># （可选）为开发板绑定固定IP（基于MAC地址，避免每次分配不同IP）</span></span><br><span class="line">host imx6ull &#123;</span><br><span class="line">  hardware ethernet b8:ae:1d:01:00:00;  <span class="comment"># 开发板ethaddr，与你U-Boot配置一致</span></span><br><span class="line">  fixed-address 192.168.1.50;           <span class="comment"># 绑定的IP，与开发板ipaddr一致</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="指定dhcp服务器使用的网卡"><a href="#指定dhcp服务器使用的网卡" class="headerlink" title="指定dhcp服务器使用的网卡"></a>指定dhcp服务器使用的网卡</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/default/isc-dhcp-server</span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改</span></span><br><span class="line">INTERFACESv4=<span class="string">&quot;eth0&quot;</span>  <span class="comment"># 若为IPv6可配置INTERFACESv6，此处无需关注</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="启动Ubuntu主机dhcp服务器"><a href="#启动Ubuntu主机dhcp服务器" class="headerlink" title="启动Ubuntu主机dhcp服务器"></a>启动Ubuntu主机dhcp服务器</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 启动DHCP服务</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl start isc-dhcp-server</span><br><span class="line"><span class="comment"># 设置开机自启</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> isc-dhcp-server</span><br><span class="line"><span class="comment"># 查看服务状态（确认是否正常运行）</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl status isc-dhcp-server</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="关闭防火墙，防止阻挡dhcp服务"><a href="#关闭防火墙，防止阻挡dhcp服务" class="headerlink" title="关闭防火墙，防止阻挡dhcp服务"></a>关闭防火墙，防止阻挡dhcp服务</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 放行UDP 67/68端口</span></span><br><span class="line"><span class="built_in">sudo</span> ufw allow 67/udp</span><br><span class="line"><span class="built_in">sudo</span> ufw allow 68/udp</span><br><span class="line"><span class="comment"># 重新加载防火墙规则</span></span><br><span class="line"><span class="built_in">sudo</span> ufw reload</span><br></pre></td></tr></table></figure>
+
+<h3 id="nfs服务-尝试失败，一直超时"><a href="#nfs服务-尝试失败，一直超时" class="headerlink" title="nfs服务(尝试失败，一直超时)"></a>nfs服务(尝试失败，一直超时)</h3><p>NFS 仅用于文件共享（后续开发板挂载根文件系统等场景），为后续dhcp下载linux内核镜像提供文件下载方法</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt-get install nfs-kernel-server rpcbind</span><br><span class="line"></span><br><span class="line"><span class="built_in">sudo</span> vi /etc/exports</span><br><span class="line"></span><br><span class="line"><span class="comment">#新增你的nfs文件共享下载目录</span></span><br><span class="line">/home/liangji/LINUX/nfs *(rw,<span class="built_in">sync</span>,no_root_squash)</span><br></pre></td></tr></table></figure>
+
+<h3 id="tftp服务-尝试成功"><a href="#tftp服务-尝试成功" class="headerlink" title="tftp服务(尝试成功)"></a>tftp服务(尝试成功)</h3><p>nfs，tftp都是传输文件的协议，uboot会在建立好和ubuntu主机的网络通信之后，就开始用文件传输（底层走的是网络tcp,udp）来下载主机上的zImage（内核镜像）。</p>
+<p>我们在uboot里面执行dhcp后，会让ubuntu主机给我们分配一个ip，然后默认开始tftp拉取主机的共享文件。但是文档里面让我自己走nfs拉取，我自己尝试了之后，发现非常难用，也无法保证主机的nfs正确建立。</p>
+<p>通过设置主机tftp服务后：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 安装TFTP服务端（Ubuntu/Debian）</span></span><br><span class="line"><span class="built_in">sudo</span> apt install tftpd-hpa tftp-hpa</span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置TFTP根目录（需与U-Boot中zImage的存放路径一致）</span></span><br><span class="line"><span class="built_in">sudo</span> vi /etc/default/tftpd-hpa</span><br><span class="line"><span class="comment"># 修改内容：</span></span><br><span class="line">TFTP_DIRECTORY=<span class="string">&quot;/home/liangji/LINUX/tftpboot&quot;</span>  <span class="comment"># 与NFS共享目录一致，确保zImage在此</span></span><br><span class="line">TFTP_ADDRESS=<span class="string">&quot;0.0.0.0:69&quot;</span></span><br><span class="line">TFTP_OPTIONS=<span class="string">&quot;--secure --create&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 重启TFTP服务</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl restart tftpd-hpa</span><br><span class="line"></span><br><span class="line"><span class="comment"># 网络防火墙设置</span></span><br><span class="line"><span class="built_in">sudo</span> ufw allow 69/udp</span><br><span class="line"><span class="built_in">sudo</span> ufw reload</span><br></pre></td></tr></table></figure>
+
+<p>ubuntu主机本地验证，发现确实可以正常拉取文件，这样至少能保证主机这边是正常的。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">tftp 127.0.0.1</span><br><span class="line">tftp&gt; get zImage</span><br><span class="line">tftp&gt; quit</span><br><span class="line"><span class="comment"># 若能获取文件，说明TFTP服务正常</span></span><br></pre></td></tr></table></figure>
+
+<p>之后uboot端尝试以下拉取，发现直接很快就拉下来了。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. TFTP加载内核到指定地址</span></span><br><span class="line">tftp 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 之后直接执行dhcp，他会自动执行tftp拉取</span></span><br></pre></td></tr></table></figure>
+
+<p>将 tftpboot 文件夹里面的 zImage 文件下载到开发板 <strong>DRAM</strong> 的 <strong>0X80800000 地址处</strong></p>
+<h2 id="uboot-RAM-操作"><a href="#uboot-RAM-操作" class="headerlink" title="uboot RAM 操作"></a>uboot RAM 操作</h2><p>裸机都是对整个设备的寻址空间进行了存储空间映射，所以0x8080 0000, 表示的是RAM的其实地址（SRAM &#x3D; DDR）<br>md.(b&#x2F;w&#x2F;l) addr(H) count(H)</p>
+<h2 id="uboot-ROM-操作"><a href="#uboot-ROM-操作" class="headerlink" title="uboot ROM 操作"></a>uboot ROM 操作</h2><p>ROM，磁盘，uboot会读取所有mmc设备（SD卡， EMMC， NAND）</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mmc info</span><br><span class="line">mmc rescan</span><br><span class="line">mmc list</span><br><span class="line">mmc dev mmc_id(0,1) (part分区号，默认0)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 读取磁盘（块block = 扇区 = 512字节）</span></span><br><span class="line">mmc <span class="built_in">read</span> ram_addr(0x80800000) start_block(H) count_block(H)</span><br><span class="line"></span><br><span class="line"><span class="comment"># RAM数据写入磁盘</span></span><br><span class="line">mmc write ram_addr(0x80800000) start_block(H) count_block(H)</span><br></pre></td></tr></table></figure>
+
+<p> 可以使用命令<code>mmc write</code>来<strong>升级 uboot</strong>，也就是<strong>在 uboot 中更新 uboot</strong>。</p>
+<ul>
+<li>注：在运行的uboot中，拉取新的uboot.imx镜像到RAM中，然后写入SD卡（我们启动的地址）（为什么要隔两个块？因为前2个block，保存的是分区表），之后重启即可。<br><img src="/../images/7.4.png" alt="alt text"><br><img src="/../images/7.5.png" alt="alt text"></li>
+</ul>
+<h2 id="uboot-文件操作（不再是磁盘字节操作了）"><a href="#uboot-文件操作（不再是磁盘字节操作了）" class="headerlink" title="uboot 文件操作（不再是磁盘字节操作了）"></a>uboot 文件操作（不再是磁盘字节操作了）</h2><p><strong>ROM</strong>中格式分布：<br>正常我们在EMMC里面安装了linux系统，那么他会有3个分区:</p>
+<ol>
+<li><strong>part 0</strong>(无格式)： uboot</li>
+<li><strong>part 1(fat)</strong>: kernel(zImage) + device tree(dtb)</li>
+<li><strong>part 2(ext)</strong>: rootfs</li>
+</ol>
+<h3 id="fat文件系统格式"><a href="#fat文件系统格式" class="headerlink" title="fat文件系统格式"></a>fat文件系统格式</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># info 查询指定 MMC 设备分区的文件系统信息</span></span><br><span class="line"><span class="comment">#fatinfo &lt;interface&gt; [&lt;dev[:part]&gt;]</span></span><br><span class="line">fatinfo mmc 1:1</span><br><span class="line"></span><br><span class="line"><span class="comment"># ls 查询 FAT 格式设备的目录和文件信息</span></span><br><span class="line"><span class="comment">#fatls &lt;interface&gt; [&lt;dev[:part]&gt;] [directory]</span></span><br><span class="line">fatls mmc 1:1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看 MMC 设备某个分区的文件系统格式</span></span><br><span class="line"><span class="comment"># fstype &lt;interface&gt; &lt;dev&gt;:&lt;part&gt;</span></span><br><span class="line">fstype mmc 1:0</span><br><span class="line">fstype mmc 1:1</span><br><span class="line">fstype mmc 1:2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将指定的文件读取到 DRAM 中</span></span><br><span class="line"><span class="comment"># fatload &lt;interface&gt; [&lt;dev[:part]&gt; [&lt;addr&gt; [&lt;filename&gt; [bytes [pos]]]]]</span></span><br><span class="line">fatload mmc 1:1 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在 uboot 中更新 linux 镜像文件和设备树。我们以更新 linux 镜像文件 zImage为例</span></span><br><span class="line"><span class="comment"># fatwrite &lt;interface&gt; &lt;dev[:part]&gt; &lt;addr&gt; &lt;filename&gt; &lt;bytes&gt;</span></span><br><span class="line"><span class="comment"># 需要修改uboot defconfig</span></span><br><span class="line">tftp 80800000 zImage</span><br><span class="line">fatwrite mmc 1:1 80800000 zImage 6788f8</span><br></pre></td></tr></table></figure>
+<h3 id="ext文件系统格式"><a href="#ext文件系统格式" class="headerlink" title="ext文件系统格式"></a>ext文件系统格式</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># EMMC 的分区 2 就是 ext4格式的，使用 ext4ls 就可以查询 EMMC 的分区 2 中的文件和目录</span></span><br><span class="line">ext4ls mmc 1:2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 剩下的后面会提到</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="uboot-boot操作"><a href="#uboot-boot操作" class="headerlink" title="uboot boot操作"></a>uboot boot操作</h2><p><strong>uboot 的本质工作是引导 Linux</strong>，所以 uboot 肯定有相关的 boot(引导)命令来启动 Linux</p>
+<p>要<strong>启动 Linux</strong>，需要<strong>先将 Linux 镜像文件拷贝到 DRAM 中</strong>，有两种拷贝方式：</p>
+<ol>
+<li>从 EMMC 或者 NAND 等<strong>ROM</strong>中将 Linux 镜像和设备树文<br>件拷贝到 DRAM</li>
+<li><strong>tftp</strong> 将 Linux 镜像文件和设备树文件下载到 DRAM 中</li>
+</ol>
+<p>不管用那种方法，<strong>只要能将 Linux 镜像和设备树文件存到 DRAM 中就行</strong>, 然后使用 <strong>bootz 命令来启动</strong>，bootz 命令用于启动 zImage 镜像文件</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">bootz [addr [initrd[:size]] [fdt]]</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>addr</strong> 是 Linux 镜像文件在 DRAM 中的位置</li>
+<li><strong>initrd</strong> 是 initrd 文件在DRAM 中的地址，如果不使用 initrd 的话使用‘-’代替即可</li>
+<li><strong>fdt</strong> 就是<strong>设备树文件</strong>在 DRAM 中的地址</li>
+</ul>
+<h3 id="bootz-从远程拉取kernel-dtb到RAM-启动linux内核"><a href="#bootz-从远程拉取kernel-dtb到RAM-启动linux内核" class="headerlink" title="bootz 从远程拉取kernel + dtb到RAM 启动linux内核"></a>bootz 从远程拉取kernel + dtb到RAM 启动linux内核</h3><p>因为我们没有根文件系统，所以内核启动后，只会到无法挂在rootfs，然后kernel panic</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 远程拉取kernel镜像</span></span><br><span class="line">ftp 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 远程拉取dtb设备树文件</span></span><br><span class="line">tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动linux系统，（没有指定rootfs， 所以只会到挂载rootfs停止）</span></span><br><span class="line">bootz 80800000 - 83000000</span><br></pre></td></tr></table></figure>
+<p><img src="/../images/7.6.png" alt="alt text"></p>
+<h3 id="bootz-本地ROM启动"><a href="#bootz-本地ROM启动" class="headerlink" title="bootz 本地ROM启动"></a>bootz 本地ROM启动</h3><p>从 <strong>EMMC 中启动 Linux 系统</strong>的话只需要使用命令 <strong>fatload</strong> 将 zImage 和imx6ull-14x14-emmc-7-1024x600-c.dtb 从<strong>EMMC 的分区 1 中拷贝到 DRAM 中</strong>，然后使用命令 bootz 启动即可</p>
+<h3 id="bootm"><a href="#bootm" class="headerlink" title="bootm"></a>bootm</h3><p>bootm 和 bootz 功能类似，但是 bootm 用于启动 uImage 镜像文件</p>
+<h3 id="boot-自动化启动命令"><a href="#boot-自动化启动命令" class="headerlink" title="boot 自动化启动命令"></a>boot 自动化启动命令</h3><p>boot 命令也是用来启动 Linux 系统的，只是 boot 会<strong>读取环境变量 bootcmd</strong> 来启动 Linux 系统, <code>bootcmd</code>这个环境变量保存着引导命令,其实就是<strong>启动的命令集合</strong></p>
+<p>相当于Makefile</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb;</span></span><br><span class="line"><span class="string">bootz 80800000 - 83000000&#x27;</span></span><br><span class="line">saveenv</span><br><span class="line">boot</span><br></pre></td></tr></table></figure>
+
+<p>前面说过 <strong>uboot 倒计时结束</strong>以后就会<strong>启动 Linux 系统</strong>，其实就是执行的 <strong>bootcmd 中的启动命令</strong></p>
+<p>默认就是远程网络启动</p>
+<p>如果要默认从EMMC中启动，修改<code>bootcmd</code></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv bootcmd <span class="string">&#x27;fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 imx6ull-14x14-</span></span><br><span class="line"><span class="string">emmc-7-1024x600-c.dtb; bootz 80800000 - 83000000&#x27;</span></span><br><span class="line">savenev</span><br><span class="line">boot</span><br></pre></td></tr></table></figure>
+
+<p>最终kernel开始启动，最终会卡在：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Kernel panic – not Syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span><br></pre></td></tr></table></figure>
+
+<p>没有找到根文件系统，这个很正常，因为没有设置 uboot 的<br>bootargs 环境变量，关于 bootargs 环境变量后面会讲解</p>
+<h2 id="uboot-go命令"><a href="#uboot-go命令" class="headerlink" title="uboot go命令"></a>uboot go命令</h2><p>用于跳转到RAM的地方来运行<br>注：我们从MMC中拷贝东西到RAM中，都是到80800000, 而裸机程序本体的链接地址是因为裸机例程的链接首地址就是 0X87800000</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">tftp 87800000 printf.bin</span><br><span class="line">go 87800000</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>复习裸机烧录的镜像的地址结构</p>
+</blockquote>
+<h2 id="uboot-run命令"><a href="#uboot-run命令" class="headerlink" title="uboot run命令"></a>uboot run命令</h2><p>run 命令用于运行环境变量中定义的命令，比如可以通过“run bootcmd”来运行 bootcmd 中的启动命令，这在后面调试linux驱动的时候，会频繁需要切换启动方式，用这个来执行环境变量脚本</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv mybootemmc <span class="string">&#x27;fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 imx6ull- 14x14-emmc-7-1024x600-c.dtb;bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line">setenv mybootnand <span class="string">&#x27;nand read 80800000 4000000 800000;nand read 83000000 6000000 100000;bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line">setenv mybootnet <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000imx6ull-14x14-emmc-7-1024x600-c.dtb;</span></span><br><span class="line"><span class="string">bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line">saveenv</span><br><span class="line"></span><br><span class="line"><span class="comment">#run mybootemmc</span></span><br><span class="line"><span class="comment">#run mybootnet</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="uboot-mtest命令"><a href="#uboot-mtest命令" class="headerlink" title="uboot mtest命令"></a>uboot mtest命令</h2><p>mtest 命令是一个简单的<strong>内存读写测试命令</strong>，可以用来测试自己开发板上的 DDR</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mtest [start [end [pattern [iterations]]]]</span><br><span class="line"></span><br><span class="line">mtest 80000000 80001000</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/" rel="prev" title="imx6ull SPI 驱动学习">
+                  <i class="fa fa-angle-left"></i> imx6ull SPI 驱动学习
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/" rel="next" title="stm32 架构与定位">
+                  stm32 架构与定位 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>imx6ull uboot 学习</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

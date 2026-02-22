@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="1. ARM 2. STM32定义 2.1 soc和cotex内核的关系 2.2 stm32的soc内部具体设计关系   3. stm32命名规则 4. soc芯片主要关心的参数 5. 外设资源 6. 本人使用板卡型号 7. STM32架构 7.1 soc架构图 7.2 各部分解释   8. 引脚定义 9. 存储器映射（memory map） 9.1 地址概念关系 9.2 进制单位    1.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="stm32 架构与定位">
+<meta property="og:url" content="http://example.com/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="1. ARM 2. STM32定义 2.1 soc和cotex内核的关系 2.2 stm32的soc内部具体设计关系   3. stm32命名规则 4. soc芯片主要关心的参数 5. 外设资源 6. 本人使用板卡型号 7. STM32架构 7.1 soc架构图 7.2 各部分解释   8. 引脚定义 9. 存储器映射（memory map） 9.1 地址概念关系 9.2 进制单位    1.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/16.1.png">
+<meta property="og:image" content="http://example.com/images/16.2.png">
+<meta property="og:image" content="http://example.com/images/16.3.png">
+<meta property="og:image" content="http://example.com/images/16.4.png">
+<meta property="og:image" content="http://example.com/images/16.5.png">
+<meta property="og:image" content="http://example.com/images/16.6.png">
+<meta property="og:image" content="http://example.com/images/16.7.png">
+<meta property="og:image" content="http://example.com/images/16.8.png">
+<meta property="og:image" content="http://example.com/images/16.9.png">
+<meta property="og:image" content="http://example.com/images/16.10.png">
+<meta property="og:image" content="http://example.com/images/16.11.png">
+<meta property="article:published_time" content="2025-12-24T15:11:20.000Z">
+<meta property="article:modified_time" content="2026-02-20T13:51:20.753Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="mcu">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/16.1.png">
+
+
+<link rel="canonical" href="http://example.com/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/","path":"2025/12/24/stm32-学习/","title":"stm32 架构与定位"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>stm32 架构与定位 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-ARM"><span class="nav-number">1.</span> <span class="nav-text">1. ARM</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-STM32%E5%AE%9A%E4%B9%89"><span class="nav-number">2.</span> <span class="nav-text">2. STM32定义</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-soc%E5%92%8Ccotex%E5%86%85%E6%A0%B8%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 soc和cotex内核的关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-stm32%E7%9A%84soc%E5%86%85%E9%83%A8%E5%85%B7%E4%BD%93%E8%AE%BE%E8%AE%A1%E5%85%B3%E7%B3%BB"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 stm32的soc内部具体设计关系</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-stm32%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99"><span class="nav-number">3.</span> <span class="nav-text">3. stm32命名规则</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-soc%E8%8A%AF%E7%89%87%E4%B8%BB%E8%A6%81%E5%85%B3%E5%BF%83%E7%9A%84%E5%8F%82%E6%95%B0"><span class="nav-number">4.</span> <span class="nav-text">4. soc芯片主要关心的参数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%A4%96%E8%AE%BE%E8%B5%84%E6%BA%90"><span class="nav-number">5.</span> <span class="nav-text">5. 外设资源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E6%9C%AC%E4%BA%BA%E4%BD%BF%E7%94%A8%E6%9D%BF%E5%8D%A1%E5%9E%8B%E5%8F%B7"><span class="nav-number">6.</span> <span class="nav-text">6. 本人使用板卡型号</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-STM32%E6%9E%B6%E6%9E%84"><span class="nav-number">7.</span> <span class="nav-text">7. STM32架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#7-1-soc%E6%9E%B6%E6%9E%84%E5%9B%BE"><span class="nav-number">7.1.</span> <span class="nav-text">7.1 soc架构图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-2-%E5%90%84%E9%83%A8%E5%88%86%E8%A7%A3%E9%87%8A"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 各部分解释</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-%E5%BC%95%E8%84%9A%E5%AE%9A%E4%B9%89"><span class="nav-number">8.</span> <span class="nav-text">8. 引脚定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-%E5%AD%98%E5%82%A8%E5%99%A8%E6%98%A0%E5%B0%84%EF%BC%88memory-map%EF%BC%89"><span class="nav-number">9.</span> <span class="nav-text">9. 存储器映射（memory map）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#9-1-%E5%9C%B0%E5%9D%80%E6%A6%82%E5%BF%B5%E5%85%B3%E7%B3%BB"><span class="nav-number">9.1.</span> <span class="nav-text">9.1 地址概念关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-2-%E8%BF%9B%E5%88%B6%E5%8D%95%E4%BD%8D"><span class="nav-number">9.2.</span> <span class="nav-text">9.2 进制单位</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">33</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="stm32 架构与定位 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          stm32 架构与定位
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2025-12-24 23:11:20" itemprop="dateCreated datePublished" datetime="2025-12-24T23:11:20+08:00">2025-12-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#1-arm">1. ARM</a></li>
+<li><a href="#2-stm32%E5%AE%9A%E4%B9%89">2. STM32定义</a><ul>
+<li><a href="#21-soc%E5%92%8Ccotex%E5%86%85%E6%A0%B8%E7%9A%84%E5%85%B3%E7%B3%BB">2.1 soc和cotex内核的关系</a></li>
+<li><a href="#22-stm32%E7%9A%84soc%E5%86%85%E9%83%A8%E5%85%B7%E4%BD%93%E8%AE%BE%E8%AE%A1%E5%85%B3%E7%B3%BB">2.2 stm32的soc内部具体设计关系</a></li>
+</ul>
+</li>
+<li><a href="#3-stm32%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99">3. stm32命名规则</a></li>
+<li><a href="#4-soc%E8%8A%AF%E7%89%87%E4%B8%BB%E8%A6%81%E5%85%B3%E5%BF%83%E7%9A%84%E5%8F%82%E6%95%B0">4. soc芯片主要关心的参数</a></li>
+<li><a href="#5-%E5%A4%96%E8%AE%BE%E8%B5%84%E6%BA%90">5. 外设资源</a></li>
+<li><a href="#6-%E6%9C%AC%E4%BA%BA%E4%BD%BF%E7%94%A8%E6%9D%BF%E5%8D%A1%E5%9E%8B%E5%8F%B7">6. 本人使用板卡型号</a></li>
+<li><a href="#7-stm32%E6%9E%B6%E6%9E%84">7. STM32架构</a><ul>
+<li><a href="#71-soc%E6%9E%B6%E6%9E%84%E5%9B%BE">7.1 soc架构图</a></li>
+<li><a href="#72-%E5%90%84%E9%83%A8%E5%88%86%E8%A7%A3%E9%87%8A">7.2 各部分解释</a></li>
+</ul>
+</li>
+<li><a href="#8-%E5%BC%95%E8%84%9A%E5%AE%9A%E4%B9%89">8. 引脚定义</a></li>
+<li><a href="#9-%E5%AD%98%E5%82%A8%E5%99%A8%E6%98%A0%E5%B0%84memory-map">9. 存储器映射（memory map）</a><ul>
+<li><a href="#91-%E5%9C%B0%E5%9D%80%E6%A6%82%E5%BF%B5%E5%85%B3%E7%B3%BB">9.1 地址概念关系</a></li>
+<li><a href="#92-%E8%BF%9B%E5%88%B6%E5%8D%95%E4%BD%8D">9.2 进制单位</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="1-ARM"><a href="#1-ARM" class="headerlink" title="1. ARM"></a>1. ARM</h1><p><img src="/../images/16.1.png" alt="alt text"></p>
+<h1 id="2-STM32定义"><a href="#2-STM32定义" class="headerlink" title="2. STM32定义"></a>2. STM32定义</h1><h2 id="2-1-soc和cotex内核的关系"><a href="#2-1-soc和cotex内核的关系" class="headerlink" title="2.1 soc和cotex内核的关系"></a>2.1 soc和cotex内核的关系</h2><p>（arm公司-&gt;芯片soc厂商：ST,TI,NXP,RK）<br><img src="/../images/16.2.png" alt="alt text"></p>
+<h2 id="2-2-stm32的soc内部具体设计关系"><a href="#2-2-stm32的soc内部具体设计关系" class="headerlink" title="2.2 stm32的soc内部具体设计关系"></a>2.2 stm32的soc内部具体设计关系</h2><p><img src="/../images/16.3.png" alt="alt text"></p>
+<h1 id="3-stm32命名规则"><a href="#3-stm32命名规则" class="headerlink" title="3. stm32命名规则"></a>3. stm32命名规则</h1><p><img src="/../images/16.4.png" alt="alt text"></p>
+<h1 id="4-soc芯片主要关心的参数"><a href="#4-soc芯片主要关心的参数" class="headerlink" title="4. soc芯片主要关心的参数"></a>4. soc芯片主要关心的参数</h1><p><img src="/../images/16.5.png" alt="alt text"><br>RAM 是 运行内存（实际的存储介质是SRAM）</p>
+<p>ROM 是 程序存储器（实际的存储介质是FLASH闪存）</p>
+<p>如果自己要画板子，则需要了解封装</p>
+<h1 id="5-外设资源"><a href="#5-外设资源" class="headerlink" title="5. 外设资源"></a>5. 外设资源</h1><p><img src="/../images/16.6.png" alt="alt text"></p>
+<h1 id="6-本人使用板卡型号"><a href="#6-本人使用板卡型号" class="headerlink" title="6. 本人使用板卡型号"></a>6. 本人使用板卡型号</h1><p>板卡型号：ATK-DNF103<br>芯片型号：STM32F103ZET6</p>
+<h1 id="7-STM32架构"><a href="#7-STM32架构" class="headerlink" title="7. STM32架构"></a>7. STM32架构</h1><h2 id="7-1-soc架构图"><a href="#7-1-soc架构图" class="headerlink" title="7.1 soc架构图"></a>7.1 soc架构图</h2><p><img src="/../images/16.7.png" alt="alt text"></p>
+<h2 id="7-2-各部分解释"><a href="#7-2-各部分解释" class="headerlink" title="7.2 各部分解释"></a>7.2 各部分解释</h2><p><strong>Flash</strong>里面存的我们的固件，程序</p>
+<p>Cotex-M3内核出来有三个总线</p>
+<ol>
+<li>Icode总线（加载程序指令）</li>
+<li>Dcode总线（加载数据）</li>
+<li>System总线</li>
+</ol>
+<p>（System总线连接其他的东西<br>比如SRAM（SRAM是存储程序运行时的变量数据）</p>
+<p>AHB系统总线（即先进高性能总线，挂在主要的，最基本的，性能较高的外设，比如复位和时钟控制这些最基本的电路</p>
+<p>SDIO, 之后通过桥接，接到APB1,APB2两个外设总线上。</p>
+<p>（APB&#x3D;先进外设总线，连接一般的外设））</p>
+<p>）</p>
+<p>AHB总线和APB总线协议，速度，数据格式的差异，所以中间需要加两个桥接来实现数据缓存和转换。</p>
+<p><strong>总线性能</strong>：AHB(72mHZ)&gt;APB2(72MHZ)&gt;APB1(36MHZ)</p>
+<p>所以APB2连接的都是较为重要的外设：USART1, SPI1, TIM1, TIM8（高级定时器），ADC,EXTI..</p>
+<p>次要的外设都分到APB1.</p>
+<p>具体只要知道是挂载到那个总线上就行了。</p>
+<p>左下角是DMA：DMA可以当作内核M3的小秘书，大量的数据搬运的活。（ADC转换数据的转运，无需CPU，用DMA来进行数据搬运。）所以DMA也连接到总线矩阵，和SYSTEM总线有一样的控制权。</p>
+<h1 id="8-引脚定义"><a href="#8-引脚定义" class="headerlink" title="8. 引脚定义"></a>8. 引脚定义</h1><p>一般看完芯片的引脚定义，基本就知道芯片怎么用的了</p>
+<h1 id="9-存储器映射（memory-map）"><a href="#9-存储器映射（memory-map）" class="headerlink" title="9. 存储器映射（memory map）"></a>9. 存储器映射（memory map）</h1><p>整个STM32， 32位，总共可以访问4GB的存储空间，我们把所有的存储器全部映射到一张表上，并给他们命名地址，就叫存储器映射。</p>
+<p>stm32的存储器地址全部可以划分为8个block的地址。<br>Block0 : FLASH<br>Block1 : SRAM<br>Block2 : 外设<br>……<br><img src="/../images/16.8.png" alt="alt text"><br><img src="/../images/16.9.png" alt="alt text"><br><img src="/../images/16.10.png" alt="alt text"></p>
+<p>这样我们就可以通过查表找到所要的区域的基地址和偏移，来找到对应的外设的寄存器来进行操作外设</p>
+<p><img src="/../images/16.11.png" alt="alt text"><br>stm32官方也已经像IMX一样，给好了寄存器的映射表，里面的结构，地址都是一层层推进的，<br>我们直接拿来使用就行了，以后就无需关注具体的地址，只需要理清楚一层层地址的推进关系就行了。</p>
+<h2 id="9-1-地址概念关系"><a href="#9-1-地址概念关系" class="headerlink" title="9.1 地址概念关系"></a>9.1 地址概念关系</h2><p>我们STM32 是32位置，他说总共可以寻址4GB的大小</p>
+<p>0x040C 55C1 表示一个该存储器的一个地址，其指代一个byte，可以把他想象成是这一个字节的存储的的门牌号编码。</p>
+<p>所以MCU总共可以寻址访问 0xffff ffff 个字节大小。</p>
+<p>一个设备寄存器一般32位，即4byte。所以要占用4个存储器的字节存储块。所以偏移地址都是逐步加4个字节，也就是+ 0x0000 0004 &#x3D; 0x04<br>所以就容易看到寄存器的地址偏移：（0x00  0x04 0x08 0x0C ….）</p>
+<h2 id="9-2-进制单位"><a href="#9-2-进制单位" class="headerlink" title="9.2 进制单位"></a>9.2 进制单位</h2><p>0xa5 一个byte &#x3D;&#x3D; 1101 0010 八位二进制数 &#x3D;&#x3D; 2^8 bit</p>
+<p>kbyte, bit, byte, mbyte, GB 都是二进制为基础的单位<br>0xffffffff是16进制的一个数字，是一个数字</p>
+<p>0xffff ffff 个字节byte块<br>&#x3D; 0xffff ffff byte(16进制)<br>&#x3D;2^(8+8+8+8) byte（10进制）<br>&#x3D;2^32 byte<br>&#x3D;2^22 kb<br>&#x3D;2^12 MB<br>&#x3D;2^2 GB</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/mcu/" rel="tag"># mcu</a>
+              <a href="/tags/stm32/" rel="tag"># stm32</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/" rel="prev" title="imx6ull uboot 学习">
+                  <i class="fa fa-angle-left"></i> imx6ull uboot 学习
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/" rel="next" title="stm32 project结构">
+                  stm32 project结构 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>stm32 架构与定位</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
