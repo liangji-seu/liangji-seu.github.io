@@ -1384,7 +1384,7 @@ imx里面，就要先了解中断的机制。
 ### Cortex-A7 中断系统简介
 跟 STM32 一样，`Cortex-A7` 也有中断向量表，**中断向量表也是在代码的最前面**。`CortexA7` 内核有 **8 个异常中断**
 
-![alt text](image.png)
+![alt text](../images/30.9.png)
 
 中断向量表里面都是中断服务函数的入口地址, `Cortex-A7` 一共有 8 个中断，而且还有一个中断向量没有使用，**实际只有 7 个中断**
 
@@ -1419,7 +1419,7 @@ imx里面，就要先了解中断的机制。
 
 > 具体外部中断如下
 > 
-> ![alt text](image-1.png)
+> ![alt text](../images/30.10.png)
 
 所以我们需要在 **IRQ 中断服务函数**中判断究竟是**左侧的哪个中断**发生了，然后再做出具体的处理
 
@@ -1522,14 +1522,14 @@ ARM 会根据 `GIC 版本`的不同研发出`不同的 IP 核`，那些半导体
 - `IRQ`：外部中断 IRQ
 > 注意，GIC是接收外部中断的，内核系统中断和CM3一样，是由单独寄存器控制的。
 
-![alt text](image-2.png)
+![alt text](../images/30.11.png)
 
 **VFIQ 和 VIRQ 是针对虚拟化的**，我们不讨论虚拟化，剩下的就是 FIQ 和 IRQ 了
 
 我们只使用 IRQ，所以相当于 GIC 最终向 ARM 内核就上报一个 IRQ信号， 那么GIC是如何向内核上报IRQ信息的呢？
 
 #### 框图
-![alt text](image-3.png)
+![alt text](../images/30.12.png)
 
 左侧部分就是**中断源**，中间部分就是 **GIC 控制器**，最右侧就是中断控制器**向处理器内核发送中断**信息。我们重点要看的肯定是中间的 `GIC` 部分，`GIC` 将众多的中断源分为分为三类:
 - **SPI**(Shared Peripheral Interrupt),**共享中断**
@@ -1556,11 +1556,11 @@ ARM 会根据 `GIC 版本`的不同研发出`不同的 IP 核`，那些半导体
 
 比如 I.MX6U 的总共使用了 128 个中断 ID，加上前面属于 PPI 和 SGI 的 32 个 ID，I.MX6U 的中断源共有 128+32=160个，这 128 个中断 ID 对应的中断在《**I.MX6ULL 参考手册**》的“3.2 **CortexA7 interrupts**”小节
 
-![alt text](image-4.png)
+![alt text](../images/30.13.png)
 
 >在SDK的芯片定义文件 MCIMX6Y2C.h 中有列出所有的中断ID
 >
->![alt text](image-5.png)
+>![alt text](../images/30.14.png)
 
 
 #### GIC 逻辑分块
@@ -1589,7 +1589,7 @@ GIC 架构分为了**两个逻辑块**：
 
 >在内核CA7的核心定义文件中，有定义GIC的寄存器描述，列举出了 GIC 控制器的所有寄存器，可以通过结构体 GIC_Type 来访问 GIC 的所有寄存器
 > 
->![alt text](image-6.png)
+>![alt text](../images/30.15.png)
 >
 > 获取到 GIC 基地址以后只需要加上结构体内部偏移，就可以访问对于的寄存器
 
@@ -1637,14 +1637,14 @@ CP15 协处理器有 16 个 32 位寄存器，c0~c15，本章来看一下 c0、c
 CP15 协处理器有 16 个 32 位寄存器，c0~c15，在使用 MRC 或者 MCR 指令访问这 16 个
 寄存器的时候，**指令中的 CRn、opc1、CRm 和 opc2 通过不同的搭配**，**其得到的寄存器含义是不同的**
 
-![alt text](image-7.png)
+![alt text](../images/30.16.png)
 
 在图 17.1.4.1 中当 MRC/MCR 指令中的 `CRn=c0，opc1=0，CRm=c0，opc2=0` 的时候就表示
 此时的 **c0 就是 MIDR 寄存器**，也就是**主 ID 寄存器**，这个也是 c0 的**基本作用**.
 
 **c0 作为 MDIR 寄存器**的时候其含义
 
-![alt text](image-8.png)
+![alt text](../images/30.17.png)
 
 - bit31:24：**厂商编号**，0X41，ARM。
 - bit23:20：**内核架构的主版本号**，ARM 内核版本一般使用 rnpn 来表示，比如 r0p1，其中 r0后面的 0 就是内核架构主版本号。
@@ -1659,7 +1659,7 @@ c1 寄存器同样通过不同的配置，其代表的含义也不同, 具体对
 当 MRC/MCR 指令中的 `CRn=c1，opc1=0，CRm=c0，opc2=0` 的时候就表示
 此时的 **c1 就是 SCTLR 寄存器**，也就是**系统控制寄存器**，这个是 c1 的基本作用。`SCTLR 寄存器`主要是**完成控制功能的**
 
-![alt text](image-9.png)
+![alt text](../images/30.18.png)
 
 > CP15协处理器，相当于内核控制寄存器了。有点类似CPSR
 
@@ -1746,15 +1746,15 @@ Cortex-A7 的中断优先级也可以分为**抢占优先级**和**子优先级*
 在使用中断的时候需要初始化 `GICC_PMR` 寄存器，此寄存器用来决定使用几级优先
 级
 
-![alt text](image-10.png)
-![alt text](image-11.png)
+![alt text](../images/30.19.png)
+![alt text](../images/30.20.png)
 
 > I.MX6U 是 Cortex-A7内核，所以支持 **32 个优先级**，因此 `GICC_PMR` 要设置为 `0b11111000`
 
 #### 抢占优先级和子优先级位数设置
 抢占优先级和子优先级各占多少位是由寄存器 `GICC_BPR` 来决定的
 
-![alt text](image-12.png)
+![alt text](../images/30.21.png)
 一般将所有的中断优先级位都配置为抢占优先级，比如 I.MX6U 的优先级位数为 5(32 个优先级)，所以可以设置 Binary point 为 2，表示 **5 个优先级位全部为抢占优先级**
 
 #### 优先级设置
