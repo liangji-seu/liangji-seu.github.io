@@ -36,21 +36,21 @@
 <meta property="og:image" content="http://example.com/images/30.6.png">
 <meta property="og:image" content="http://example.com/images/30.7.png">
 <meta property="og:image" content="http://example.com/images/30.8.png">
-<meta property="og:image" content="http://example.com/image.png">
-<meta property="og:image" content="http://example.com/image-1.png">
-<meta property="og:image" content="http://example.com/image-2.png">
-<meta property="og:image" content="http://example.com/image-3.png">
-<meta property="og:image" content="http://example.com/image-4.png">
-<meta property="og:image" content="http://example.com/image-5.png">
-<meta property="og:image" content="http://example.com/image-6.png">
-<meta property="og:image" content="http://example.com/image-7.png">
-<meta property="og:image" content="http://example.com/image-8.png">
-<meta property="og:image" content="http://example.com/image-9.png">
-<meta property="og:image" content="http://example.com/image-10.png">
-<meta property="og:image" content="http://example.com/image-11.png">
-<meta property="og:image" content="http://example.com/image-12.png">
+<meta property="og:image" content="http://example.com/images/30.9.png">
+<meta property="og:image" content="http://example.com/images/30.10.png">
+<meta property="og:image" content="http://example.com/images/30.11.png">
+<meta property="og:image" content="http://example.com/images/30.12.png">
+<meta property="og:image" content="http://example.com/images/30.13.png">
+<meta property="og:image" content="http://example.com/images/30.14.png">
+<meta property="og:image" content="http://example.com/images/30.15.png">
+<meta property="og:image" content="http://example.com/images/30.16.png">
+<meta property="og:image" content="http://example.com/images/30.17.png">
+<meta property="og:image" content="http://example.com/images/30.18.png">
+<meta property="og:image" content="http://example.com/images/30.19.png">
+<meta property="og:image" content="http://example.com/images/30.20.png">
+<meta property="og:image" content="http://example.com/images/30.21.png">
 <meta property="article:published_time" content="2026-02-17T19:10:59.000Z">
-<meta property="article:modified_time" content="2026-02-22T13:18:35.524Z">
+<meta property="article:modified_time" content="2026-02-22T13:23:59.836Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -250,7 +250,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-22 21:18:35" itemprop="dateModified" datetime="2026-02-22T21:18:35+08:00">2026-02-22</time>
+      <time title="修改时间：2026-02-22 21:23:59" itemprop="dateModified" datetime="2026-02-22T21:23:59+08:00">2026-02-22</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1066,7 +1066,7 @@
 <h4 id="4-中断服务函数"><a href="#4-中断服务函数" class="headerlink" title="4. 中断服务函数"></a>4. 中断服务函数</h4><p>这个就是具体跳转的中断处理函数了，stm32里面，会把中断处理函数重定向，指向HAL里面来进行中断的处理。</p>
 <p>imx里面，就要先了解中断的机制。</p>
 <h3 id="Cortex-A7-中断系统简介"><a href="#Cortex-A7-中断系统简介" class="headerlink" title="Cortex-A7 中断系统简介"></a>Cortex-A7 中断系统简介</h3><p>跟 STM32 一样，<code>Cortex-A7</code> 也有中断向量表，<strong>中断向量表也是在代码的最前面</strong>。<code>CortexA7</code> 内核有 <strong>8 个异常中断</strong></p>
-<p><img src="/image.png" alt="alt text"></p>
+<p><img src="/../images/30.9.png" alt="alt text"></p>
 <p>中断向量表里面都是中断服务函数的入口地址, <code>Cortex-A7</code> 一共有 8 个中断，而且还有一个中断向量没有使用，<strong>实际只有 7 个中断</strong></p>
 <p>下面简单介绍一下这7个中断：</p>
 <ul>
@@ -1110,7 +1110,7 @@
 </ul>
 <blockquote>
 <p>具体外部中断如下</p>
-<p><img src="/image-1.png" alt="alt text"></p>
+<p><img src="/../images/30.10.png" alt="alt text"></p>
 </blockquote>
 <p>所以我们需要在 <strong>IRQ 中断服务函数</strong>中判断究竟是<strong>左侧的哪个中断</strong>发生了，然后再做出具体的处理</p>
 <blockquote>
@@ -1142,10 +1142,10 @@
 </blockquote>
 </li>
 </ul>
-<p><img src="/image-2.png" alt="alt text"></p>
+<p><img src="/../images/30.11.png" alt="alt text"></p>
 <p><strong>VFIQ 和 VIRQ 是针对虚拟化的</strong>，我们不讨论虚拟化，剩下的就是 FIQ 和 IRQ 了</p>
 <p>我们只使用 IRQ，所以相当于 GIC 最终向 ARM 内核就上报一个 IRQ信号， 那么GIC是如何向内核上报IRQ信息的呢？</p>
-<h4 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h4><p><img src="/image-3.png" alt="alt text"></p>
+<h4 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h4><p><img src="/../images/30.12.png" alt="alt text"></p>
 <p>左侧部分就是<strong>中断源</strong>，中间部分就是 <strong>GIC 控制器</strong>，最右侧就是中断控制器<strong>向处理器内核发送中断</strong>信息。我们重点要看的肯定是中间的 <code>GIC</code> 部分，<code>GIC</code> 将众多的中断源分为分为三类:</p>
 <ul>
 <li><strong>SPI</strong>(Shared Peripheral Interrupt),<strong>共享中断</strong><ul>
@@ -1175,10 +1175,10 @@
 </li>
 </ul>
 <p>比如 I.MX6U 的总共使用了 128 个中断 ID，加上前面属于 PPI 和 SGI 的 32 个 ID，I.MX6U 的中断源共有 128+32&#x3D;160个，这 128 个中断 ID 对应的中断在《<strong>I.MX6ULL 参考手册</strong>》的“3.2 <strong>CortexA7 interrupts</strong>”小节</p>
-<p><img src="/image-4.png" alt="alt text"></p>
+<p><img src="/../images/30.13.png" alt="alt text"></p>
 <blockquote>
 <p>在SDK的芯片定义文件 MCIMX6Y2C.h 中有列出所有的中断ID</p>
-<p><img src="/image-5.png" alt="alt text"></p>
+<p><img src="/../images/30.14.png" alt="alt text"></p>
 </blockquote>
 <h4 id="GIC-逻辑分块"><a href="#GIC-逻辑分块" class="headerlink" title="GIC 逻辑分块"></a>GIC 逻辑分块</h4><p>GIC 架构分为了<strong>两个逻辑块</strong>：</p>
 <ul>
@@ -1214,7 +1214,7 @@
 </ul>
 <blockquote>
 <p>在内核CA7的核心定义文件中，有定义GIC的寄存器描述，列举出了 GIC 控制器的所有寄存器，可以通过结构体 GIC_Type 来访问 GIC 的所有寄存器</p>
-<p><img src="/image-6.png" alt="alt text"></p>
+<p><img src="/../images/30.15.png" alt="alt text"></p>
 <p>获取到 GIC 基地址以后只需要加上结构体内部偏移，就可以访问对于的寄存器</p>
 </blockquote>
 <p>那么，<strong>GIC 控制器</strong>的寄存器<strong>基地址</strong>在哪里呢？这个就需要用到 <code>Cortex-A</code> 的 <strong>CP15 协处<br>理器</strong>了</p>
@@ -1242,10 +1242,10 @@
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&gt;MRC p15, <span class="number">0</span>, r0, c0, c0, <span class="number">0</span></span><br></pre></td></tr></table></figure></blockquote>
 <p>CP15 协处理器有 16 个 32 位寄存器，c0~c15，本章来看一下 c0、c1、c12 和 c15 这四个寄<br>存器，因为我们本章实验要用到这四个寄存器，其他的寄存器大家参考上面的两个文档即可</p>
 <h4 id="c0-寄存器"><a href="#c0-寄存器" class="headerlink" title="c0 寄存器"></a>c0 寄存器</h4><p>CP15 协处理器有 16 个 32 位寄存器，c0~c15，在使用 MRC 或者 MCR 指令访问这 16 个<br>寄存器的时候，<strong>指令中的 CRn、opc1、CRm 和 opc2 通过不同的搭配</strong>，<strong>其得到的寄存器含义是不同的</strong></p>
-<p><img src="/image-7.png" alt="alt text"></p>
+<p><img src="/../images/30.16.png" alt="alt text"></p>
 <p>在图 17.1.4.1 中当 MRC&#x2F;MCR 指令中的 <code>CRn=c0，opc1=0，CRm=c0，opc2=0</code> 的时候就表示<br>此时的 <strong>c0 就是 MIDR 寄存器</strong>，也就是<strong>主 ID 寄存器</strong>，这个也是 c0 的<strong>基本作用</strong>.</p>
 <p><strong>c0 作为 MDIR 寄存器</strong>的时候其含义</p>
-<p><img src="/image-8.png" alt="alt text"></p>
+<p><img src="/../images/30.17.png" alt="alt text"></p>
 <ul>
 <li>bit31:24：<strong>厂商编号</strong>，0X41，ARM。</li>
 <li>bit23:20：<strong>内核架构的主版本号</strong>，ARM 内核版本一般使用 rnpn 来表示，比如 r0p1，其中 r0后面的 0 就是内核架构主版本号。</li>
@@ -1255,7 +1255,7 @@
 </ul>
 <h4 id="c1-寄存器"><a href="#c1-寄存器" class="headerlink" title="c1 寄存器"></a>c1 寄存器</h4><p>c1 寄存器同样通过不同的配置，其代表的含义也不同, 具体对应关系不多展示。</p>
 <p>当 MRC&#x2F;MCR 指令中的 <code>CRn=c1，opc1=0，CRm=c0，opc2=0</code> 的时候就表示<br>此时的 <strong>c1 就是 SCTLR 寄存器</strong>，也就是<strong>系统控制寄存器</strong>，这个是 c1 的基本作用。<code>SCTLR 寄存器</code>主要是<strong>完成控制功能的</strong></p>
-<p><img src="/image-9.png" alt="alt text"></p>
+<p><img src="/../images/30.18.png" alt="alt text"></p>
 <blockquote>
 <p>CP15协处理器，相当于内核控制寄存器了。有点类似CPSR</p>
 </blockquote>
@@ -1314,12 +1314,12 @@
 <p>Cortex-A7 的中断优先级也可以分为<strong>抢占优先级</strong>和<strong>子优先级</strong>，两者同样是可以配置的</p>
 <p><strong>GIC 控制器</strong>最多可以支持 <code>256 个优先级</code>，数字<strong>越小</strong>，优先级<strong>越高</strong>,<code>Cortex-A7</code> 选择了 <strong>32 个优先级</strong></p>
 <p>在使用中断的时候需要初始化 <code>GICC_PMR</code> 寄存器，此寄存器用来决定使用几级优先<br>级</p>
-<p><img src="/image-10.png" alt="alt text"><br><img src="/image-11.png" alt="alt text"></p>
+<p><img src="/../images/30.19.png" alt="alt text"><br><img src="/../images/30.20.png" alt="alt text"></p>
 <blockquote>
 <p>I.MX6U 是 Cortex-A7内核，所以支持 <strong>32 个优先级</strong>，因此 <code>GICC_PMR</code> 要设置为 <code>0b11111000</code></p>
 </blockquote>
 <h4 id="抢占优先级和子优先级位数设置"><a href="#抢占优先级和子优先级位数设置" class="headerlink" title="抢占优先级和子优先级位数设置"></a>抢占优先级和子优先级位数设置</h4><p>抢占优先级和子优先级各占多少位是由寄存器 <code>GICC_BPR</code> 来决定的</p>
-<p><img src="/image-12.png" alt="alt text"><br>一般将所有的中断优先级位都配置为抢占优先级，比如 I.MX6U 的优先级位数为 5(32 个优先级)，所以可以设置 Binary point 为 2，表示 <strong>5 个优先级位全部为抢占优先级</strong></p>
+<p><img src="/../images/30.21.png" alt="alt text"><br>一般将所有的中断优先级位都配置为抢占优先级，比如 I.MX6U 的优先级位数为 5(32 个优先级)，所以可以设置 Binary point 为 2，表示 <strong>5 个优先级位全部为抢占优先级</strong></p>
 <h4 id="优先级设置"><a href="#优先级设置" class="headerlink" title="优先级设置"></a>优先级设置</h4><p>前面已经设置好了 I.MX6U <code>一共有 32 个抢占优先级</code>，数字<code>越小优先级越高</code>。<strong>具体要使用某个中断的时候就可以设置其优先级为 0~31。</strong></p>
 <p>某个<code>中断 ID</code> 的<strong>中断优先级</strong>设置由寄存器<code>D_IPRIORITYR</code> 来完成，前面说了 <code>Cortex-A7</code> 使用了 <code>512 个中断 ID</code>，<strong>每个中断 ID 配有一个优先级寄存器</strong>，所以一共有 <strong>512 个 D_IPRIORITYR 寄存器</strong>。</p>
 <p>如果<strong>优先级个数为 32</strong> 的话，使用寄存器 <code>D_IPRIORITYR</code> 的 <strong>bit7:4 来设置优先级</strong>，也就是说实际的优先级要左移 3 位。</p>
