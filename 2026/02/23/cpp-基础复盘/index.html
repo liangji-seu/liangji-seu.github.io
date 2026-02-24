@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="基础语法变量变量创建方法：数据类型 变量名 &#x3D; 变量初始值;  变量的作用是方便操作内存  常量 作用：记录程序中不可修改的数据  c++定义常量的两种方式：1. #define 宏常量    #define 常量名 常量值2. const修饰变量    const 数据类型 常量名 &#x3D; 常量值    &#x2F;&#x2F;通常在变量定义前+关键字 const， 修饰该变量为常量，不可修改。  关键字 作用：关键字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cpp 基础复盘*">
+<meta property="og:url" content="http://example.com/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="基础语法变量变量创建方法：数据类型 变量名 &#x3D; 变量初始值;  变量的作用是方便操作内存  常量 作用：记录程序中不可修改的数据  c++定义常量的两种方式：1. #define 宏常量    #define 常量名 常量值2. const修饰变量    const 数据类型 常量名 &#x3D; 常量值    &#x2F;&#x2F;通常在变量定义前+关键字 const， 修饰该变量为常量，不可修改。  关键字 作用：关键字">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/image-1.png">
+<meta property="og:image" content="http://example.com/image-2.png">
+<meta property="og:image" content="http://example.com/image-3.png">
+<meta property="og:image" content="http://example.com/image-4.png">
+<meta property="og:image" content="http://example.com/image-6.png">
+<meta property="og:image" content="http://example.com/image-7.png">
+<meta property="og:image" content="http://example.com/image-8.png">
+<meta property="og:image" content="http://example.com/image-9.png">
+<meta property="og:image" content="http://example.com/image-10.png">
+<meta property="og:image" content="http://example.com/image-11.png">
+<meta property="og:image" content="http://example.com/image-12.png">
+<meta property="og:image" content="http://example.com/image-13.png">
+<meta property="og:image" content="http://example.com/image-14.png">
+<meta property="og:image" content="http://example.com/image-15.png">
+<meta property="og:image" content="http://example.com/image-16.png">
+<meta property="og:image" content="http://example.com/image-17.png">
+<meta property="og:image" content="http://example.com/image-18.png">
+<meta property="og:image" content="http://example.com/image-19.png">
+<meta property="og:image" content="http://example.com/image-20.png">
+<meta property="og:image" content="http://example.com/image-21.png">
+<meta property="og:image" content="http://example.com/image-22.png">
+<meta property="og:image" content="http://example.com/image-23.png">
+<meta property="og:image" content="http://example.com/image-24.png">
+<meta property="og:image" content="http://example.com/image-25.png">
+<meta property="og:image" content="http://example.com/image-26.png">
+<meta property="og:image" content="http://example.com/image-27.png">
+<meta property="og:image" content="http://example.com/image-28.png">
+<meta property="og:image" content="http://example.com/image-29.png">
+<meta property="og:image" content="http://example.com/image-30.png">
+<meta property="og:image" content="http://example.com/image-31.png">
+<meta property="og:image" content="http://example.com/image-32.png">
+<meta property="og:image" content="http://example.com/image-33.png">
+<meta property="og:image" content="http://example.com/image-35.png">
+<meta property="og:image" content="http://example.com/image-36.png">
+<meta property="og:image" content="http://example.com/image-37.png">
+<meta property="og:image" content="http://example.com/image-38.png">
+<meta property="og:image" content="http://example.com/image-39.png">
+<meta property="og:image" content="http://example.com/image-40.png">
+<meta property="og:image" content="http://example.com/image-41.png">
+<meta property="og:image" content="http://example.com/image-42.png">
+<meta property="og:image" content="http://example.com/image-43.png">
+<meta property="og:image" content="http://example.com/image-45.png">
+<meta property="og:image" content="http://example.com/image-46.png">
+<meta property="og:image" content="http://example.com/image-44.png">
+<meta property="article:published_time" content="2026-02-23T02:58:06.000Z">
+<meta property="article:modified_time" content="2026-02-23T13:01:53.384Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="cpp">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/image-1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/","path":"2026/02/23/cpp-基础复盘/","title":"cpp 基础复盘*"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>cpp 基础复盘* | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">基础语法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%98%E9%87%8F"><span class="nav-number">1.1.</span> <span class="nav-text">变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F"><span class="nav-number">1.2.</span> <span class="nav-text">常量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">1.3.</span> <span class="nav-text">关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%87%E8%AF%86%E7%AC%A6%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99"><span class="nav-number">1.4.</span> <span class="nav-text">标识符命名规则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.5.</span> <span class="nav-text">数据类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B4%E5%BD%A2%EF%BC%88short-int-long-long-long%EF%BC%89"><span class="nav-number">1.5.1.</span> <span class="nav-text">整形（short, int, long, long long）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sizeof-%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">1.5.2.</span> <span class="nav-text">sizeof 关键字</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E5%9E%8B%EF%BC%88%E6%B5%AE%E7%82%B9%E5%9E%8B%EF%BC%89"><span class="nav-number">1.5.3.</span> <span class="nav-text">实型（浮点型）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E5%9E%8B"><span class="nav-number">1.5.4.</span> <span class="nav-text">字符型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AC%E4%B9%89%E5%AD%97%E7%AC%A6"><span class="nav-number">1.5.5.</span> <span class="nav-text">转义字符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%9E%8B"><span class="nav-number">1.5.6.</span> <span class="nav-text">字符串型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%83%E5%B0%94%E7%B1%BB%E5%9E%8Bbool"><span class="nav-number">1.5.7.</span> <span class="nav-text">布尔类型bool</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%9A%84%E8%BE%93%E5%85%A5"><span class="nav-number">1.5.8.</span> <span class="nav-text">数据的输入</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">1.6.</span> <span class="nav-text">运算符</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%97%E6%95%B0%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">1.6.1.</span> <span class="nav-text">算数运算符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B5%8B%E5%80%BC%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">1.6.2.</span> <span class="nav-text">赋值运算符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E8%BE%83%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">1.6.3.</span> <span class="nav-text">比较运算符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">1.6.4.</span> <span class="nav-text">逻辑运算符</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A8%8B%E5%BA%8F%E6%B5%81%E7%A8%8B%E7%BB%93%E6%9E%84"><span class="nav-number">1.7.</span> <span class="nav-text">程序流程结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E7%BB%84"><span class="nav-number">1.8.</span> <span class="nav-text">数组</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%BB%B4%E6%95%B0%E7%BB%84"><span class="nav-number">1.8.1.</span> <span class="nav-text">一维数组</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E6%96%B9%E5%BC%8F"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">定义方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E5%90%8D"><span class="nav-number">1.8.1.2.</span> <span class="nav-text">数组名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F"><span class="nav-number">1.8.1.3.</span> <span class="nav-text">冒泡排序</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84"><span class="nav-number">1.8.2.</span> <span class="nav-text">二维数组</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E6%96%B9%E5%BC%8F-1"><span class="nav-number">1.8.2.1.</span> <span class="nav-text">定义方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E5%90%8D-1"><span class="nav-number">1.8.2.2.</span> <span class="nav-text">数组名</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0"><span class="nav-number">1.9.</span> <span class="nav-text">函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.9.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E7%94%A8"><span class="nav-number">1.9.2.</span> <span class="nav-text">调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%80%BC%E4%BC%A0%E9%80%92"><span class="nav-number">1.9.3.</span> <span class="nav-text">值传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%B8%B8%E8%A7%81%E6%A0%B7%E5%BC%8F"><span class="nav-number">1.9.4.</span> <span class="nav-text">函数常见样式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%A3%B0%E6%98%8E"><span class="nav-number">1.9.5.</span> <span class="nav-text">函数声明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%86%E6%96%87%E4%BB%B6%E7%BC%96%E5%86%99"><span class="nav-number">1.9.6.</span> <span class="nav-text">函数的分文件编写</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E9%92%88"><span class="nav-number">1.10.</span> <span class="nav-text">指针</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E5%8F%98%E9%87%8F%E7%9A%84%E5%AE%9A%E4%B9%89%E5%92%8C%E4%BD%BF%E7%94%A8"><span class="nav-number">1.10.1.</span> <span class="nav-text">指针变量的定义和使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E6%89%80%E5%8D%A0%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4"><span class="nav-number">1.10.2.</span> <span class="nav-text">指针所占内存空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A9%BA%E6%8C%87%E9%92%88%EF%BC%8C%E9%87%8E%E6%8C%87%E9%92%88"><span class="nav-number">1.10.3.</span> <span class="nav-text">空指针，野指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#const%E4%BF%AE%E9%A5%B0%E6%8C%87%E9%92%88"><span class="nav-number">1.10.4.</span> <span class="nav-text">const修饰指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E5%92%8C%E6%95%B0%E7%BB%84"><span class="nav-number">1.10.5.</span> <span class="nav-text">指针和数组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E5%92%8C%E5%87%BD%E6%95%B0"><span class="nav-number">1.10.6.</span> <span class="nav-text">指针和函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%EF%BC%8C%E6%95%B0%E7%BB%84%EF%BC%8C%E5%87%BD%E6%95%B0"><span class="nav-number">1.10.7.</span> <span class="nav-text">指针，数组，函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">1.11.</span> <span class="nav-text">结构体</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E5%92%8C%E4%BD%BF%E7%94%A8"><span class="nav-number">1.11.1.</span> <span class="nav-text">定义和使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E6%95%B0%E7%BB%84"><span class="nav-number">1.11.2.</span> <span class="nav-text">结构体数组</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E6%8C%87%E9%92%88"><span class="nav-number">1.11.3.</span> <span class="nav-text">结构体指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%B5%8C%E5%A5%97%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">1.11.4.</span> <span class="nav-text">结构体嵌套结构体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%A4%A7%E5%B0%8F"><span class="nav-number">1.11.5.</span> <span class="nav-text">结构体大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%81%9A%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0"><span class="nav-number">1.11.6.</span> <span class="nav-text">结构体做函数参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E4%B8%ADconst%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.11.7.</span> <span class="nav-text">结构体中const使用场景</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">程序的内存模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%984%E5%8C%BA"><span class="nav-number">2.1.</span> <span class="nav-text">内存4区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%8C%BA"><span class="nav-number">2.1.1.</span> <span class="nav-text">代码区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E5%8C%BA"><span class="nav-number">2.1.2.</span> <span class="nav-text">全局区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%88%E5%8C%BA"><span class="nav-number">2.1.3.</span> <span class="nav-text">栈区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A0%86%E5%8C%BA"><span class="nav-number">2.1.4.</span> <span class="nav-text">堆区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">2.1.5.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.</span> <span class="nav-text">面向对象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8B%EF%BC%8CSTL"><span class="nav-number">4.</span> <span class="nav-text">泛型编程，STL</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="cpp 基础复盘* | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          cpp 基础复盘*
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-02-23 10:58:06 / 修改时间：21:01:53" itemprop="dateCreated datePublished" datetime="2026-02-23T10:58:06+08:00">2026-02-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/CPP/" itemprop="url" rel="index"><span itemprop="name">CPP</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="基础语法"><a href="#基础语法" class="headerlink" title="基础语法"></a>基础语法</h1><h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">变量创建方法：</span><br><span class="line"></span><br><span class="line">数据类型 变量名 = 变量初始值;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>变量的作用是方便操作内存</p>
+</blockquote>
+<h2 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h2><blockquote>
+<p>作用：记录程序中不可修改的数据</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">c++定义常量的两种方式：</span><br><span class="line"><span class="number">1.</span> <span class="meta">#<span class="keyword">define</span> 宏常量</span></span><br><span class="line">    <span class="meta">#<span class="keyword">define</span> 常量名 常量值</span></span><br><span class="line"><span class="number">2.</span> <span class="type">const</span>修饰变量</span><br><span class="line">    <span class="type">const</span> 数据类型 常量名 = 常量值</span><br><span class="line">    <span class="comment">//通常在变量定义前+关键字 const， 修饰该变量为常量，不可修改。</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="关键字"><a href="#关键字" class="headerlink" title="关键字"></a>关键字</h2><blockquote>
+<p>作用：关键字是C++中预先保留的单词（标识符）</p>
+<p>在定义变量名，常量名的时候，就不要用这些名字了</p>
+</blockquote>
+<p><img src="/image-1.png" alt="alt text"></p>
+<h2 id="标识符命名规则"><a href="#标识符命名规则" class="headerlink" title="标识符命名规则"></a>标识符命名规则</h2><blockquote>
+<p>作用：c++规定，给标识符（变量，常量）命名时，有一套自己的规则（命名规则）<br><img src="/image-2.png" alt="alt text"></p>
+</blockquote>
+<h2 id="数据类型"><a href="#数据类型" class="headerlink" title="数据类型"></a>数据类型</h2><blockquote>
+<p> 数据类型存在意义： 给变量分配合适的内存空间</p>
+</blockquote>
+<h3 id="整形（short-int-long-long-long）"><a href="#整形（short-int-long-long-long）" class="headerlink" title="整形（short, int, long, long long）"></a>整形（short, int, long, long long）</h3><p><img src="/image-3.png" alt="alt text"></p>
+<h3 id="sizeof-关键字"><a href="#sizeof-关键字" class="headerlink" title="sizeof 关键字"></a>sizeof 关键字</h3><p><img src="/image-4.png" alt="alt text"></p>
+<h3 id="实型（浮点型）"><a href="#实型（浮点型）" class="headerlink" title="实型（浮点型）"></a>实型（浮点型）</h3><p><img src="/image-6.png" alt="alt text"></p>
+<blockquote>
+<p>整数部分，和小数部分，都算有效数字，比如</p>
+<p>3.14，是3位有效数字</p>
+<p>double比float更加精准一些</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">float</span> f1 = <span class="number">3.14f</span>;   <span class="comment">//一般在float的值后面加一个f，表示float，如果不加，编译器会认为3.14是double类型</span></span><br><span class="line"><span class="type">double</span> f2 = <span class="number">3.1415926</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注意，无论你赋值的小数有多少位，cout输出最多就只有6位有效数字</span></span><br><span class="line"><span class="comment">// 如果要多点有效数字，需要额外配置。</span></span><br></pre></td></tr></table></figure>
+<p>另外小数还有科学计数法的表示方法：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">float</span> f2 = <span class="number">3e2</span>;</span><br><span class="line"><span class="type">float</span> f3 = <span class="number">3e-2</span>;</span><br><span class="line"><span class="comment">// 表示3*10^多少次方</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="字符型"><a href="#字符型" class="headerlink" title="字符型"></a>字符型</h3><p><img src="/image-7.png" alt="alt text"></p>
+<blockquote>
+<p>字符型变量 对应 ASCII 编码：</p>
+<p>a - 97<br>A - 67</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">&gt;<span class="built_in">cout</span> &lt;&lt; (<span class="type">int</span>)ch &lt;&lt; <span class="built_in">endl</span>;</span><br></pre></td></tr></table></figure></blockquote>
+<h3 id="转义字符"><a href="#转义字符" class="headerlink" title="转义字符"></a>转义字符</h3><p><img src="/image-8.png" alt="alt text"><br><img src="/image-9.png" alt="alt text"></p>
+<h3 id="字符串型"><a href="#字符串型" class="headerlink" title="字符串型"></a>字符串型</h3><blockquote>
+<p>作用: 用于表示一串字符</p>
+</blockquote>
+<p><strong>两种风格</strong></p>
+<ol>
+<li>C风格字符串： <code>char 变量名[] = &quot;xxxxx&quot;</code></li>
+<li>C++风格字符串：  <code>string 变量名 = &quot;xxxxxx&quot;</code><ol>
+<li>需要<code>#include&lt;string&gt;</code></li>
+</ol>
+</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> str1[] = <span class="string">&quot;123456789&quot;</span>;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意：str1的占内存字节数为里面的字符数+1，因为还有一个\0，所以<code>sizeof(str1) = 10</code></p>
+</blockquote>
+<h3 id="布尔类型bool"><a href="#布尔类型bool" class="headerlink" title="布尔类型bool"></a>布尔类型bool</h3><p><img src="/image-10.png" alt="alt text"></p>
+<h3 id="数据的输入"><a href="#数据的输入" class="headerlink" title="数据的输入"></a>数据的输入</h3><p><img src="/image-11.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">0</span>;</span><br><span class="line"><span class="type">int</span> b = <span class="number">0</span>;</span><br><span class="line"><span class="built_in">cin</span> &gt;&gt; a&gt;&gt;b;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; a &lt;&lt;<span class="built_in">endl</span>&lt;&lt;b&lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">   <span class="comment">//回车执行一次cin输入</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h2><p><img src="/image-12.png" alt="alt text"></p>
+<h3 id="算数运算符"><a href="#算数运算符" class="headerlink" title="算数运算符"></a>算数运算符</h3><p><img src="/image-13.png" alt="alt text"></p>
+<h3 id="赋值运算符"><a href="#赋值运算符" class="headerlink" title="赋值运算符"></a>赋值运算符</h3><p><img src="/image-14.png" alt="alt text"></p>
+<h3 id="比较运算符"><a href="#比较运算符" class="headerlink" title="比较运算符"></a>比较运算符</h3><p><img src="/image-15.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">9</span>;</span><br><span class="line"><span class="type">int</span> b = <span class="number">9</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; (a == b) &lt;&lt; <span class="built_in">endl</span>;   <span class="comment">//输出1， 表示条件真，满足</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="逻辑运算符"><a href="#逻辑运算符" class="headerlink" title="逻辑运算符"></a>逻辑运算符</h3><p><img src="/image-16.png" alt="alt text"></p>
+<h2 id="程序流程结构"><a href="#程序流程结构" class="headerlink" title="程序流程结构"></a>程序流程结构</h2><ul>
+<li><p>顺序结构</p>
+</li>
+<li><p>选择结构</p>
+<ul>
+<li><code>if</code></li>
+<li><code>switch(变量){case 1: xxx;break;}</code></li>
+</ul>
+</li>
+<li><p>循环结构</p>
+<ul>
+<li><code>while(循环条件){}</code></li>
+<li><code>do{循环语句} while(循环条件);</code></li>
+<li>for</li>
+</ul>
+</li>
+<li><p>跳转语句</p>
+<ul>
+<li>break</li>
+<li>continue</li>
+<li>goto</li>
+</ul>
+</li>
+</ul>
+<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><p><img src="/image-17.png" alt="alt text"></p>
+<h3 id="一维数组"><a href="#一维数组" class="headerlink" title="一维数组"></a>一维数组</h3><h4 id="定义方式"><a href="#定义方式" class="headerlink" title="定义方式"></a>定义方式</h4><p><img src="/image-18.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> str[<span class="number">4</span>] = &#123; <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>,<span class="string">&#x27;\0&#x27;</span>&#125;;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(str) &lt;&lt; <span class="built_in">endl</span>;        <span class="comment">// 输出4</span></span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; str &lt;&lt; <span class="built_in">endl</span>;                <span class="comment">//输出abc</span></span><br><span class="line">   <span class="comment">//如果就定义str[3] = &#123;&#x27;a&#x27;, &#x27;b&#x27;, &#x27;c&#x27;&#125; sizeof输出还是3，但是cout&lt;&lt;str就是有乱码。</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> str[<span class="number">4</span>] = &#123; <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span>,<span class="string">&#x27;\0&#x27;</span>&#125;;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(str) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; str &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">char</span> str2[] = &#123; <span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;c&#x27;</span> &#125;;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(str2) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; str2 &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">char</span> str3[] = <span class="string">&quot;abc&quot;</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(str3) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; str3 &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> arr[] = &#123; <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span> &#125;;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(arr) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(arr) / <span class="keyword">sizeof</span>(arr[<span class="number">0</span>]) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; arr &lt;&lt; <span class="built_in">endl</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">4</span></span><br><span class="line">abc</span><br><span class="line"><span class="number">3</span></span><br><span class="line">abc烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫</span><br><span class="line"><span class="number">4</span></span><br><span class="line">abc</span><br><span class="line"><span class="number">12</span></span><br><span class="line"><span class="number">3</span></span><br><span class="line"><span class="number">0000006B</span>F9CFF798</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意，string是一个类，它不是单纯的字符数组，里面估计是有动态分配的，然后用指针，所以sizeof无论如何都是40</p>
+</blockquote>
+<h4 id="数组名"><a href="#数组名" class="headerlink" title="数组名"></a>数组名</h4><p><img src="/image-19.png" alt="alt text"></p>
+<h4 id="冒泡排序"><a href="#冒泡排序" class="headerlink" title="冒泡排序"></a>冒泡排序</h4><h3 id="二维数组"><a href="#二维数组" class="headerlink" title="二维数组"></a>二维数组</h3><h4 id="定义方式-1"><a href="#定义方式-1" class="headerlink" title="定义方式"></a>定义方式</h4><blockquote>
+<p>二维数组，就是在一维数组上，多加一个维度。<br><img src="/image-20.png" alt="alt text"></p>
+</blockquote>
+<h4 id="数组名-1"><a href="#数组名-1" class="headerlink" title="数组名"></a>数组名</h4><p><img src="/image-21.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span> str[][<span class="number">4</span>] = &#123; &#123;<span class="string">&#x27;1&#x27;</span>, <span class="string">&#x27;2&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;\0&#x27;</span>&#125;,</span><br><span class="line">				&#123;<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;c&#x27;</span>, <span class="string">&#x27;b&#x27;</span>, <span class="string">&#x27;\0&#x27;</span>&#125;&#125;;</span><br><span class="line"></span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="keyword">sizeof</span>(str) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; (<span class="type">int</span>)(str[<span class="number">0</span>]) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; (<span class="type">int</span>)(str[<span class="number">1</span>]) &lt;&lt; <span class="built_in">endl</span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="number">8</span></span><br><span class="line"><span class="number">1200618424</span></span><br><span class="line"><span class="number">1200618428</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h2><p><img src="/image-22.png" alt="alt text"></p>
+<h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>函数的定义，分为5个步骤：</p>
+<ul>
+<li>返回值类型</li>
+<li>函数名</li>
+<li>参数表列</li>
+<li>函数体语句</li>
+<li>return 表达式</li>
+</ul>
+<h3 id="调用"><a href="#调用" class="headerlink" title="调用"></a>调用</h3><p><img src="/image-23.png" alt="alt text"></p>
+<h3 id="值传递"><a href="#值传递" class="headerlink" title="值传递"></a>值传递</h3><p><img src="/image-24.png" alt="alt text"></p>
+<h3 id="函数常见样式"><a href="#函数常见样式" class="headerlink" title="函数常见样式"></a>函数常见样式</h3><p><img src="/image-25.png" alt="alt text"></p>
+<blockquote>
+<p>这里的返回，是指的返回值，不是LR的返回</p>
+</blockquote>
+<h3 id="函数声明"><a href="#函数声明" class="headerlink" title="函数声明"></a>函数声明</h3><p><img src="/image-26.png" alt="alt text"><br><img src="/image-27.png" alt="alt text"></p>
+<h3 id="函数的分文件编写"><a href="#函数的分文件编写" class="headerlink" title="函数的分文件编写"></a>函数的分文件编写</h3><p><img src="/image-28.png" alt="alt text"></p>
+<h2 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h2><p><img src="/image-29.png" alt="alt text"><br>说白了，就是内存地址。</p>
+<h3 id="指针变量的定义和使用"><a href="#指针变量的定义和使用" class="headerlink" title="指针变量的定义和使用"></a>指针变量的定义和使用</h3><p><img src="/image-30.png" alt="alt text"></p>
+<h3 id="指针所占内存空间"><a href="#指针所占内存空间" class="headerlink" title="指针所占内存空间"></a>指针所占内存空间</h3><p>地址多少个字节，指针就是多少个字节</p>
+<ul>
+<li>32位系统，指针就是4个字节</li>
+<li>64位系统，指针就是8个字节</li>
+</ul>
+<h3 id="空指针，野指针"><a href="#空指针，野指针" class="headerlink" title="空指针，野指针"></a>空指针，野指针</h3><p><img src="/image-31.png" alt="alt text"><br><code>int *p = NULL;</code></p>
+<ul>
+<li>但是这个是不能进行*访问的，因为0-255之间的内存地址，是系统占用的，无法访问<br><img src="/image-32.png" alt="alt text"></li>
+</ul>
+<blockquote>
+<p> <strong>总结</strong>：空指针，野指针，都不是我们申请的空间，因此不要访问。</p>
+</blockquote>
+<h3 id="const修饰指针"><a href="#const修饰指针" class="headerlink" title="const修饰指针"></a>const修饰指针</h3><p><img src="/image-33.png" alt="alt text"></p>
+<p><strong>1. const修饰指针：常量指针</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">int</span> * p = &amp;a;     <span class="comment">//常量指针，指针指向的地址，可以修改，但是指向的值不可以修改</span></span><br><span class="line"><span class="comment">//即p可以重定向，但是被指定的a不可以修改。</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="type">int</span> b = <span class="number">20</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span>* p;</span><br><span class="line">p = &amp;a;</span><br><span class="line">p = &amp;b;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; *p &lt;&lt; <span class="built_in">endl</span>;     <span class="comment">//指针重定向ok</span></span><br><span class="line"></span><br><span class="line">b = <span class="number">30</span>;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; *p &lt;&lt; <span class="built_in">endl</span>;     <span class="comment">//目标内存变量修改ok</span></span><br><span class="line"></span><br><span class="line">*p = <span class="number">40</span>;                <span class="comment">//无法通过指针取值来修改内存。说明要把const int结合起来看</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2. const修饰常量：指针常量</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> * <span class="type">const</span> p = &amp;a;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> a = <span class="number">10</span>;</span><br><span class="line"><span class="type">int</span> b = <span class="number">20</span>;</span><br><span class="line"><span class="comment">//int* const p;         //p是指针，也是常量，说明指向的地址不变，所以必须赋初值</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span>* <span class="type">const</span> p = &amp;a;      </span><br><span class="line">*p = <span class="number">20</span>;                <span class="comment">//内存内容可修改</span></span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; *p &lt;&lt; <span class="built_in">endl</span>; </span><br><span class="line"></span><br><span class="line"><span class="comment">//p = &amp;b;               //无法重定向</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>3. const既修饰指针，也修饰常量</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">int</span> * <span class="type">const</span> p = &amp;a;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>既不可以重定向，也不可以通过指针改值</p>
+</blockquote>
+<h3 id="指针和数组"><a href="#指针和数组" class="headerlink" title="指针和数组"></a>指针和数组</h3><blockquote>
+<p>指针和数组的配合使用</p>
+<p><img src="/image-35.png" alt="alt text"></p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> arr[] = &#123; <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>,<span class="number">10</span> &#125;;</span><br><span class="line"><span class="type">int</span>* p = arr;</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++) &#123;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; *p &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	p++;        <span class="comment">//p++, 自增的是指针指向的单个数据类型的字节数，int指针，就后移4字节。char指针，就后移1字节。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="指针和函数"><a href="#指针和函数" class="headerlink" title="指针和函数"></a>指针和函数</h3><blockquote>
+<p>这里主要讲的是指针作为参数传参</p>
+<p><img src="/image-36.png" alt="alt text"></p>
+</blockquote>
+<h3 id="指针，数组，函数"><a href="#指针，数组，函数" class="headerlink" title="指针，数组，函数"></a>指针，数组，函数</h3><p>这里就是上面两个的综合使用了。</p>
+<h2 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h2><p>结构体属于自定义的数据类型，允许用户存储不同的数据类型</p>
+<h3 id="定义和使用"><a href="#定义和使用" class="headerlink" title="定义和使用"></a>定义和使用</h3><p><img src="/image-37.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span></span><br><span class="line">	<span class="built_in">string</span> name;</span><br><span class="line">	<span class="type">int</span> age;</span><br><span class="line">	<span class="type">int</span> score;</span><br><span class="line">&#125; s3;	<span class="comment">//第三种创建结构体变量</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">//第一种创建结构体变量</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">student</span> <span class="title">s1</span>;</span></span><br><span class="line">	s1.age = <span class="number">12</span>;</span><br><span class="line">	s1.name = <span class="string">&quot;test&quot;</span>;</span><br><span class="line">	s1.score = <span class="number">30</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;s1 = &quot;</span> &lt;&lt; s1.name &lt;&lt; s1.age &lt;&lt; s1.score &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//第二种创建结构体变量</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">student</span> <span class="title">s2</span> =</span> &#123; <span class="string">&quot;liangji&quot;</span>, <span class="number">12</span>, <span class="number">13</span> &#125;;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;s2 = &quot;</span> &lt;&lt; s2.name &lt;&lt; s2.age &lt;&lt; s2.score &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="结构体数组"><a href="#结构体数组" class="headerlink" title="结构体数组"></a>结构体数组</h3><p><img src="/image-38.png" alt="alt text"></p>
+<h3 id="结构体指针"><a href="#结构体指针" class="headerlink" title="结构体指针"></a>结构体指针</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span>&#123;</span></span><br><span class="line">    <span class="comment">//...</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> * <span class="title">p</span> =</span> &amp;s1;</span><br></pre></td></tr></table></figure>
+<h3 id="结构体嵌套结构体"><a href="#结构体嵌套结构体" class="headerlink" title="结构体嵌套结构体"></a>结构体嵌套结构体</h3><p><img src="/image-39.png" alt="alt text"></p>
+<h3 id="结构体大小"><a href="#结构体大小" class="headerlink" title="结构体大小"></a>结构体大小</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span>&#125;;      <span class="comment">//空结构体，占1字节</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span>        <span class="comment">//占1字节</span></span><br><span class="line">	<span class="type">char</span> name;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span>        <span class="comment">//占2字节</span></span><br><span class="line">	<span class="type">char</span> name;</span><br><span class="line">	<span class="type">char</span> name2;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span>        <span class="comment">//占4字节</span></span><br><span class="line">	<span class="type">int</span> a;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">student</span> &#123;</span>        <span class="comment">//占8字节，因为4字节对齐。</span></span><br><span class="line">	<span class="type">char</span> b;</span><br><span class="line">	<span class="type">int</span> a;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="结构体做函数参数"><a href="#结构体做函数参数" class="headerlink" title="结构体做函数参数"></a>结构体做函数参数</h3><p><img src="/image-40.png" alt="alt text"><br>比较简单，没什么好说的</p>
+<h3 id="结构体中const使用场景"><a href="#结构体中const使用场景" class="headerlink" title="结构体中const使用场景"></a>结构体中const使用场景</h3><p><img src="/image-41.png" alt="alt text"></p>
+<p>用常量指针，你无法通过函数传入的指针，来修改内存。好处是可以防止误操作</p>
+<h1 id="程序的内存模型"><a href="#程序的内存模型" class="headerlink" title="程序的内存模型"></a>程序的内存模型</h1><p><img src="/image-42.png" alt="alt text"></p>
+<h2 id="内存4区"><a href="#内存4区" class="headerlink" title="内存4区"></a>内存4区</h2><p>和链接脚本里面的.text, .rodata, .data, .bss有什么关系？为什么有全局区？</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">C++ 内存分区	    对应链接脚本段	            存放内容	                        生命周期</span><br><span class="line">代码区	            .text	            函数体的二进制代码	                程序运行期间</span><br><span class="line">全局区	        .data、.bss、.rodata	全局变量、静态变量、字符串常量等	    程序启动到结束</span><br><span class="line">栈区	            栈段（Stack）	    函数参数、局部变量	                函数调用期间</span><br><span class="line">堆区	            堆段（Heap）	        动态分配的内存（new/<span class="built_in">malloc</span>）        	手动分配 / 释放</span><br></pre></td></tr></table></figure>
+
+<p><img src="/image-43.png" alt="alt text"><br><img src="/image-45.png" alt="alt text"><br><img src="/image-46.png" alt="alt text"></p>
+<h3 id="代码区"><a href="#代码区" class="headerlink" title="代码区"></a>代码区</h3><p><strong>.text</strong></p>
+<h3 id="全局区"><a href="#全局区" class="headerlink" title="全局区"></a>全局区</h3><p><strong>.rodata</strong><br><strong>.data</strong><br><strong>.bss</strong></p>
+<blockquote>
+<p>全局变量，静态变量，</p>
+<ul>
+<li>常量：<ul>
+<li>字符串常量：全局区</li>
+<li>const修饰全局变量：全局区</li>
+<li>const修饰局部变量：<strong>栈区</strong></li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<h3 id="栈区"><a href="#栈区" class="headerlink" title="栈区"></a>栈区</h3><p><strong>stack中</strong></p>
+<blockquote>
+<p>局部变量，形参</p>
+</blockquote>
+<h3 id="堆区"><a href="#堆区" class="headerlink" title="堆区"></a>堆区</h3><p><strong>heap</strong></p>
+<blockquote>
+<p>程序员自己申请，c++中，利用new</p>
+</blockquote>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a><strong>总结</strong></h3><p><img src="/image-44.png" alt="alt text"></p>
+<h1 id="面向对象"><a href="#面向对象" class="headerlink" title="面向对象"></a>面向对象</h1><h1 id="泛型编程，STL"><a href="#泛型编程，STL" class="headerlink" title="泛型编程，STL"></a>泛型编程，STL</h1>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/cpp/" rel="tag"># cpp</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/" rel="prev" title="stm32-esp32s3-imx 存储架构讨论">
+                  <i class="fa fa-angle-left"></i> stm32-esp32s3-imx 存储架构讨论
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item current">
+              <span>cpp 基础复盘*</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
