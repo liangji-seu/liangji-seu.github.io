@@ -4,6 +4,39 @@ date: 2025-12-21 15:08:50
 categories: [学习笔记, 嵌入式, LINUX] 
 tags: [嵌入式, linux, 驱动]
 ---
+
+- [Uboot 学习笔记](#uboot-学习笔记)
+  - [linux系统的组成部分](#linux系统的组成部分)
+  - [uboot 介绍](#uboot-介绍)
+  - [uboot 编译](#uboot-编译)
+  - [uboot 烧录](#uboot-烧录)
+  - [uboot 网络（驱动开发调试用）](#uboot-网络驱动开发调试用)
+    - [ping底层网络联通（2层，3层）](#ping底层网络联通2层3层)
+    - [dhcp](#dhcp)
+      - [Ubuntu主机 安装dhcp服务器](#ubuntu主机-安装dhcp服务器)
+      - [配置dhcp服务器内容](#配置dhcp服务器内容)
+      - [指定dhcp服务器使用的网卡](#指定dhcp服务器使用的网卡)
+      - [启动Ubuntu主机dhcp服务器](#启动ubuntu主机dhcp服务器)
+      - [关闭防火墙，防止阻挡dhcp服务](#关闭防火墙防止阻挡dhcp服务)
+    - [nfs服务(尝试失败，一直超时)](#nfs服务尝试失败一直超时)
+    - [tftp服务(尝试成功)](#tftp服务尝试成功)
+  - [uboot RAM 操作](#uboot-ram-操作)
+  - [uboot ROM 操作](#uboot-rom-操作)
+  - [uboot 文件操作（不再是磁盘字节操作了）](#uboot-文件操作不再是磁盘字节操作了)
+    - [fat文件系统格式](#fat文件系统格式)
+    - [ext文件系统格式](#ext文件系统格式)
+    - [**mmc0,1分区内容**](#mmc01分区内容)
+    - [**分区 0 里面到底是什么**？](#分区-0-里面到底是什么)
+  - [uboot boot操作](#uboot-boot操作)
+    - [bootz 从远程拉取kernel + dtb到RAM 启动linux内核](#bootz-从远程拉取kernel--dtb到ram-启动linux内核)
+    - [bootz 本地ROM启动](#bootz-本地rom启动)
+    - [bootm](#bootm)
+    - [boot 自动化启动命令](#boot-自动化启动命令)
+  - [uboot go命令](#uboot-go命令)
+  - [uboot run命令](#uboot-run命令)
+  - [uboot mtest命令](#uboot-mtest命令)
+
+
 # Uboot 学习笔记
 ## linux系统的组成部分
 ![alt text](../images/7.1.png)
@@ -210,6 +243,16 @@ mmc write ram_addr(0x80800000) start_block(H) count_block(H)
 ![alt text](../images/7.4.png)
 ![alt text](../images/7.5.png)
 
+
+
+
+
+
+
+
+
+
+
 ## uboot 文件操作（不再是磁盘字节操作了）
 **ROM**中格式分布：
 正常我们在EMMC里面安装了linux系统，那么他会有3个分区:
@@ -249,6 +292,141 @@ ext4ls mmc 1:2
 
 # 剩下的后面会提到
 ```
+
+
+
+### **mmc0,1分区内容**
+通过fstype, fatls, fatinfo, 可以查看出emmc(mmc 1), sd(mmc 0)里面的每个分区都是干什么的。
+
+可以看到
+
+**sd(mmc 0)**
+- `part0`: 无文件系统
+- `part1`: fat 
+  - zImage, dtb
+- `part2`: fat
+  - 空
+
+**emmc(mmc 1)**
+- `part0`: 无文件系统
+- `part1`: fat
+  - zImage, dtb
+- `part2`: ext
+  - rootfs
+
+>(emmc)(mmc 1:2)rootfs，根文件系统里面的内容是这样：
+```c
+=> ext4ls mmc 1:2
+<DIR>       4096 .
+<DIR>       4096 ..
+<DIR>      16384 lost+found
+<DIR>       4096 sbin
+<DIR>       4096 dev
+<DIR>       4096 boot
+<DIR>       4096 etc
+<DIR>       4096 lib
+<DIR>       4096 usr
+<DIR>       4096 proc
+<SYM>          8 tmp
+<DIR>       4096 var
+<DIR>       4096 opt
+<DIR>       4096 home
+<DIR>       4096 run
+<DIR>       4096 bin
+<DIR>       4096 media
+<DIR>       4096 mnt
+<DIR>       4096 .cache
+<DIR>       4096 sys
+<DIR>       4096 .config
+<DIR>       4096 .local
+```
+(emmc)(mmc 1:1) 的linux内核镜像+设备树文件
+```c
+=> fatls mmc 1:1
+  6785480   zimage
+    39459   imx6ull-14x14-emmc-4.3-480x272-c.dtb
+    39459   imx6ull-14x14-emmc-4.3-800x480-c.dtb
+    39459   imx6ull-14x14-emmc-7-800x480-c.dtb
+    39459   imx6ull-14x14-emmc-7-1024x600-c.dtb
+    39459   imx6ull-14x14-emmc-10.1-1280x800-c.dtb
+    40295   imx6ull-14x14-emmc-hdmi.dtb
+    40203   imx6ull-14x14-emmc-vga.dtb
+```
+
+>这样就可以通过uboot，来从远程下载zimage, dtb,rootfs来更新emmc，来实现在线升级。
+
+
+### **分区 0 里面到底是什么**？
+```c
+=> mmc dev 0
+switch to partitions #0, OK
+mmc0 is current device
+=> mmc part
+
+
+
+Partition Map for MMC device 0  --   Partition Type: DOS
+
+Part    Start Sector    Num Sectors     UUID            Type
+  1     20480           262144          f4ce62e9-01     0c
+  2     282624          1683456         f4ce62e9-02     0e
+=>
+
+```
+严格来说，你执行 `mmc part` 看到的 `Part 1` 和 `Part 2` 是受 **MBR（主引导记录）** 管理的`有格式分区`。
+
+而你所谓的“分区 0”（即扇区 0 到扇区 20479 之间的区域），在 i.MX 架构中存放的是**最核心的启动镜像**：
+
+- **Sector 0 (扇区 0)**： 存放 MBR 分区表。(**前两个块，1k字节**)
+
+- **Sector 2 (偏移 1KB 处)**： 存放 `u-boot.imx`。
+
+>i.MX6ULL 的 **bootROM** 固化了启动逻辑，它在加电后会**固定去 MMC 设备**（SD卡或 EMMC）的 1KB 偏移处 寻找启动头（IVT/DCD 等）。
+
+剩余空闲空间： 用于存放环境变量（如果你配置 U-Boot 存放在 MMC 中）或者空闲。
+
+
+```c
+属性,         分区 1 (FAT),         分区 2 (FAT/EXT)
+起始扇区,       20480,                282624
+起始位置 (MB),  20480×512=10 MB,      282624×512=138 MB
+总扇区数,       262144,                     1683456
+容量计算,       262144×512=128 MB,    1683456×512≈822 MB
+```
+所以SD卡为例，我们1G的SD卡，分区0=10MB，分区1=128MB，分区2=822MB
+
+（u-boot.imx = 363KB， zImage = 6MB）
+
+所以绰绰有余
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## uboot boot操作
 **uboot 的本质工作是引导 Linux**，所以 uboot 肯定有相关的 boot(引导)命令来启动 Linux
