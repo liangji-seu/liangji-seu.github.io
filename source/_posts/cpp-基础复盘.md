@@ -31,23 +31,23 @@ c++定义常量的两种方式：
 >
 > 在定义变量名，常量名的时候，就不要用这些名字了
 
-![alt text](image-1.png)
+![alt text](../images/32.1.png)
 
 
 ## 标识符命名规则
 > 作用：c++规定，给标识符（变量，常量）命名时，有一套自己的规则（命名规则）
-> ![alt text](image-2.png)
+> ![alt text](../images/32.2.png)
 
 
 ## 数据类型
 >  数据类型存在意义： 给变量分配合适的内存空间
 ### 整形（short, int, long, long long）
-![alt text](image-3.png)
+![alt text](../images/32.3.png)
 
 ### sizeof 关键字
-![alt text](image-4.png)
+![alt text](../images/32.4.png)
 ### 实型（浮点型）
-![alt text](image-6.png)
+![alt text](../images/32.5.png)
 > 整数部分，和小数部分，都算有效数字，比如
 >
 > 3.14，是3位有效数字
@@ -73,7 +73,7 @@ float f3 = 3e-2;
 
 
 ### 字符型
-![alt text](image-7.png)
+![alt text](../images/32.6.png)
 
 > 字符型变量 对应 ASCII 编码：
 >
@@ -86,8 +86,8 @@ float f3 = 3e-2;
 
 ### 转义字符
 
-![alt text](image-8.png)
-![alt text](image-9.png)
+![alt text](../images/32.7.png)
+![alt text](../images/32.8.png)
 
 
 
@@ -122,11 +122,11 @@ char str1[] = "123456789";
 
 
 ### 布尔类型bool
-![alt text](image-10.png)
+![alt text](../images/32.9.png)
 
 
 ### 数据的输入
-![alt text](image-11.png)
+![alt text](../images/32.10.png)
 ```c
 	int a = 0;
 	int b = 0;
@@ -139,13 +139,13 @@ char str1[] = "123456789";
 
 
 ## 运算符
-![alt text](image-12.png)
+![alt text](../images/32.11.png)
 ### 算数运算符
-![alt text](image-13.png)
+![alt text](../images/32.12.png)
 ### 赋值运算符
-![alt text](image-14.png)
+![alt text](../images/32.13.png)
 ### 比较运算符
-![alt text](image-15.png)
+![alt text](../images/32.14.png)
 ```c
 	int a = 9;
 	int b = 9;
@@ -153,7 +153,7 @@ char str1[] = "123456789";
 ```
 
 ### 逻辑运算符
-![alt text](image-16.png)
+![alt text](../images/32.15.png)
 
 
 
@@ -175,10 +175,10 @@ char str1[] = "123456789";
 
 
 ## 数组
-![alt text](image-17.png)
+![alt text](../images/32.16.png)
 ### 一维数组
 #### 定义方式
-![alt text](image-18.png)
+![alt text](../images/32.17.png)
 ```c
 	char str[4] = { 'a', 'b', 'c','\0'};
 	cout << sizeof(str) << endl;        // 输出4
@@ -221,15 +221,15 @@ abc
 
 
 #### 数组名
-![alt text](image-19.png)
+![alt text](../images/32.18.png)
 #### 冒泡排序
 ### 二维数组
 #### 定义方式
 > 二维数组，就是在一维数组上，多加一个维度。
-![alt text](image-20.png)
+![alt text](../images/32.19.png)
 
 #### 数组名
-![alt text](image-21.png)
+![alt text](../images/32.20.png)
 ```c
 	char str[][4] = { {'1', '2', 'c', '\0'},
 					{'a', 'c', 'b', '\0'}};
@@ -245,7 +245,7 @@ abc
 ```
 
 ## 函数
-![alt text](image-22.png)
+![alt text](../images/32.21.png)
 
 ### 定义
 函数的定义，分为5个步骤：
@@ -255,43 +255,43 @@ abc
 - 函数体语句
 - return 表达式
 ### 调用
-![alt text](image-23.png)
+![alt text](../images/32.22.png)
 ### 值传递
-![alt text](image-24.png)
+![alt text](../images/32.23.png)
 
 
 
 
 
 ### 函数常见样式
-![alt text](image-25.png)
+![alt text](../images/32.24.png)
 > 这里的返回，是指的返回值，不是LR的返回
 ### 函数声明
-![alt text](image-26.png)
-![alt text](image-27.png)
+![alt text](../images/32.25.png)
+![alt text](../images/32.26.png)
 ### 函数的分文件编写
-![alt text](image-28.png)
+![alt text](../images/32.27.png)
 
 ## 指针
-![alt text](image-29.png)
+![alt text](../images/32.28.png)
 说白了，就是内存地址。
 ### 指针变量的定义和使用
-![alt text](image-30.png)
+![alt text](../images/32.29.png)
 ### 指针所占内存空间
 地址多少个字节，指针就是多少个字节
 - 32位系统，指针就是4个字节
 - 64位系统，指针就是8个字节
 ### 空指针，野指针
-![alt text](image-31.png)
+![alt text](../images/32.30.png)
 `int *p = NULL;`
 - 但是这个是不能进行*访问的，因为0-255之间的内存地址，是系统占用的，无法访问
-![alt text](image-32.png)
+![alt text](../images/32.31.png)
 
 >  **总结**：空指针，野指针，都不是我们申请的空间，因此不要访问。
 
 
 ### const修饰指针
-![alt text](image-33.png)
+![alt text](../images/32.32.png)
 
 **1. const修饰指针：常量指针**
 ```c
@@ -341,7 +341,7 @@ const int * const p = &a;
 ### 指针和数组
 > 指针和数组的配合使用
 > 
->![alt text](image-35.png)
+>![alt text](../images/32.33.png)
 
 
 ```c
@@ -356,7 +356,7 @@ const int * const p = &a;
 ### 指针和函数
 > 这里主要讲的是指针作为参数传参
 >
->![alt text](image-36.png)
+>![alt text](../images/32.34.png)
 ### 指针，数组，函数
 这里就是上面两个的综合使用了。
 
@@ -368,7 +368,7 @@ const int * const p = &a;
 结构体属于自定义的数据类型，允许用户存储不同的数据类型
 
 ### 定义和使用
-![alt text](image-37.png)
+![alt text](../images/32.35.png)
 
 ```c
 struct student {
@@ -395,7 +395,7 @@ int main()
 }
 ```
 ### 结构体数组
-![alt text](image-38.png)
+![alt text](../images/32.36.png)
 
 
 
@@ -412,7 +412,7 @@ struct student{
 struct student * p = &s1;
 ```
 ### 结构体嵌套结构体
-![alt text](image-39.png)
+![alt text](../images/32.37.png)
 
 ### 结构体大小
 ```c
@@ -437,15 +437,15 @@ struct student {        //占8字节，因为4字节对齐。
 };
 ```
 ### 结构体做函数参数
-![alt text](image-40.png)
+![alt text](../images/32.38.png)
 比较简单，没什么好说的
 ### 结构体中const使用场景
-![alt text](image-41.png)
+![alt text](../images/32.39.png)
 
 用常量指针，你无法通过函数传入的指针，来修改内存。好处是可以防止误操作
 
 # 程序的内存模型
-![alt text](image-42.png)
+![alt text](../images/32.40.png)
 ## 内存4区
 和链接脚本里面的.text, .rodata, .data, .bss有什么关系？为什么有全局区？
 ```c
@@ -456,9 +456,9 @@ C++ 内存分区	    对应链接脚本段	            存放内容	            
 堆区	            堆段（Heap）	        动态分配的内存（new/malloc）        	手动分配 / 释放
 ```
 
-![alt text](image-43.png)
-![alt text](image-45.png)
-![alt text](image-46.png)
+![alt text](../images/32.41.png)
+![alt text](../images/32.42.png)
+![alt text](../images/32.43.png)
 ### 代码区
 **.text**
 
@@ -478,9 +478,249 @@ C++ 内存分区	    对应链接脚本段	            存放内容	            
 > 局部变量，形参
 ### 堆区
 **heap**
-> 程序员自己申请，c++中，利用new
+> 程序员自己申请，c++中，利用new，返回的是指针
+
+![alt text](../images/32.44.png)
+
+> p指针还是在栈中，因为是局部变量，但是里面的地址，指向的是堆区的int(10);
+
 
 ### **总结**
-![alt text](image-44.png)
+![alt text](../images/32.45.png)
+
+
+### new运算符
+![alt text](../images/32.46.png)
+
+> 这里主要学习new的语法，以及在堆区开辟一个数组。
+
+```c
+//1. 在堆区创建整形数据
+// new 返回是该数据类型的指针
+int * p = new int(10);
+
+// 如果想释放堆区的数据，利用关键字delete
+delete p;
+
+
+
+//2. 在堆区里面，开辟一个数组
+int * arr = new int[10];	//10代表数组有10个元素
+// arr就是栈中这个数组的数组名。
+
+//释放堆区数组
+delete[] arr;
+```
+
+## 引用
+### 基本使用
+![alt text](../images/32.47.png)
+
+```c
+int a = 10;	//栈中4字节内存。
+
+//现在想要换一个名称b，来操作这块内存。
+//引用的本质：给变量（内存名称）起别名
+
+int & b = a;
+
+```
+
+
+
+### 注意事项
+![alt text](../images/32.48.png)
+
+> 一上来就要告诉这个别名是谁的别名
+> 一旦引用初始化后，就不可以改成别的变量的别名
+### 引用做函数参数
+![alt text](../images/32.49.png)
+
+> 就是当指针来用，可以省掉指针的繁琐操作。
+### 引用做函数返回值
+![alt text](../images/32.50.png)
+
+```c
+int& func()
+{
+	int a = 10;
+	return a;
+}
+
+int main()
+{
+	int& b = func();
+	cout << b << endl;
+	cout << b << endl;
+
+	return 0;
+}
+```
+> 返回的是局部变量的引用，所以，最终输出，只会有第一次是正确的，因为编译器会做保留，但是这个和版本有关，新版本里面，会一直做保留。
+>
+> 所以尽量不要让函数返回局部变量的引用。因为这块内存会被释放
+>
+> 正确的写法是下面这样。
+
+```c
+int& func()
+{
+	static int a = 10;	//全局区，不在栈中了，
+	return a;
+}
+
+int main()
+{
+	int& b = func();
+	cout << b << endl;
+	cout << b << endl;
+
+	return 0;
+}
+```
+
+还有一种用法，是把`返回值为引用的函数`，作为左值，这样也能修改对应内存, 相当于省掉一个中间别名变量。
+```c
+int& func()
+{
+	static int a = 10;	//全局区，不在栈中了，
+	return a;
+}
+
+int main()
+{
+	int& b = func();
+	cout << b << endl;
+	cout << b << endl;
+
+	func() = 1000;
+	cout << b << endl;
+
+
+	return 0;
+}
+```
+
+### 引用的本质
+![alt text](../images/32.51.png)
+### 常量引用
+![alt text](../images/32.52.png)
+> 用来修饰函数的形参，防止误操作，就像常量指针一样，防止你修改
+
+```c
+	//int & b = 10;//错误，因为引用必须是一块合法的内存空间
+
+	const int & b = 10;	//和前面的指针一样，要把const连起来看，const int， 所以对于b来说，这块内存是一个const int，但是实际是因为编译器做了优化，编译器操作： int temp = 10; const int & b = temp; 只是你看不到temp，对于b来说，temp这块内存是const，无法修改，但是还是栈区的。
+
+
+	cout << b << endl;
+```
+
+```c
+	void func(const int & temp)
+	{
+		//不允许修改temp别名指定的内存
+	}
+
+	int a = 10;
+	func(a);
+```
+
+
+## 函数的提高
+### 函数默认参数
+![alt text](../images/32.53.png)
+> 实验看下来，必须是靠左的优先判定缺省。
+```c
+void func(int a,int b = 20, int c = 30)
+{
+	cout << a + b + c << endl;
+}
+
+int main()
+{
+	func(2,2);
+
+
+	return 0;
+}
+```
+
+
+> **注意事项1**：如果某个位置已经有了默认参数，那么从这个位置往后，从左到右，都必须有默认值
+>
+> **注意事项2**：如果函数声明有默认参数，函数实现就不能有默认参数了。 声明和实现，只能有一个有默认参数
+
+
+### 函数占位参数
+
+
+![alt text](../images/32.54.png)
+
+> 说白了，就是保留一个形参传参，但是函数里面还没有使用，就叫占位。
+### 函数重载
+#### 概述
+
+![alt text](../images/32.55.png)
+- 同作用域（你放在main外面，都是全局作用域）
+- 同名函数
+- 函数参数列表不同。（不包含返回值作为条件。）
+#### 注意事项
+![alt text](../images/32.56.png)
+**1. 引用作为函数重载条件**
+```c
+
+void func(int & a)
+{
+	cout << "func1()" << endl;
+}
+
+void func(const int& a)
+{
+	cout << "func2()" << endl;
+}
+
+int main()
+{
+
+	int a = 10;
+	func(a);//实际上两个都可以走，默认走简单的那一个
+
+	func(10);//只能走const int & b 那一个
+	return 0;
+}
+```
+> 1. const修饰引用，也会发生函数参数列表不同，发生重载。
+> 2. 传参调用哪一个：
+> func(10), 如果是第一个函数，那么会发生：int & a = 10, 语法不通过
+> 对于第二个函数，const int & a =10， 则可以通过，所以func(10)只会走const int & a的函数。
+>
+> 而对于func(a)，两个都可以，编译器默认走简单的。
+
+
+**2. 函数重载碰到默认参数**
+```c
+void func(int a) {
+	cout << "func1 " << a << endl;
+}
+
+void func(int a = 10)
+{
+	cout << "func2 " << a << endl;
+}
+
+int main()
+{
+	int a = 11;
+	func(a);	//当函数重载，碰到默认参数，出现二义性，需要避免这种情况出现
+
+	return 0;
+}
+```
+
+
+
+
+
 # 面向对象
 # 泛型编程，STL
