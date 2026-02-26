@@ -44,6 +44,24 @@ tags: [嵌入式, linux, 驱动]
           - [do\_bootm\_states](#do_bootm_states)
           - [bootm\_os\_get\_boot\_func](#bootm_os_get_boot_func)
           - [do\_bootm\_linux](#do_bootm_linux)
+- [移植uboot](#移植uboot)
+  - [烧录evk板卡的uboot](#烧录evk板卡的uboot)
+  - [检查mmc设备](#检查mmc设备)
+  - [LCD屏幕](#lcd屏幕)
+  - [网络](#网络)
+  - [添加我们自己的板卡](#添加我们自己的板卡)
+    - [添加开发板默认配置文件](#添加开发板默认配置文件)
+    - [添加开发板对应的头文件](#添加开发板对应的头文件)
+    - [添加开发板对应的板级文件夹](#添加开发板对应的板级文件夹)
+    - [图形界面配置（必须，不source找不到.h）](#图形界面配置必须不source找不到h)
+  - [修改LCD驱动](#修改lcd驱动)
+  - [网络驱动修改](#网络驱动修改)
+- [bootcmd和bootargs环境变量](#bootcmd和bootargs环境变量)
+  - [bootcmd](#bootcmd)
+  - [bootargs](#bootargs)
+    - [本地emmc启动测试](#本地emmc启动测试)
+    - [网络下载启动](#网络下载启动)
+- [总结](#总结)
 
 # uboot
 这章来分析一下uboot这个bootloader程序，包括他的代码结构，编译流程，启动流程
@@ -797,5 +815,314 @@ typedef struct image_info {
 
 
 > **以上就是uboot从编译，到启动，重定向，（你用tftp把zImage, dtb准备到ddr指定位置），bootz启动linux内核的完成流程**。
+
+
+
+
+
+# 移植uboot
+假设我们是正点原子的二次开发厂家，我们来基于NXP芯片原厂的evk板卡的uboot，来添加自己的板卡。
+
+**uboot 移植的一般流程：**
+1. 在 uboot 中找到参考的开发平台，一般是**原厂的开发板**。
+2. **参考原厂开发板**移植 uboot 到我们所使用的开发板上。
+
+**正点原子的 I.MX6ULL 开发板**参考的是 **NXP 官方的 I.MX6ULL EVK 开发板**做的硬件，
+
+因此我们在移植 uboot 的时候就可以**以 NXP 官方的 I.MX6ULL EVK 开发板为蓝本**
+
+## 烧录evk板卡的uboot
+因为uboot总共就3块地方可以改变：
+- arch架构
+- board板卡
+- configs配置
+
+我们用芯片原厂evk的板卡，board里面肯定已经有了对应的板卡的驱动，我们就直接
+- make distclean
+- make xxx_defconfig
+- make V=1 -j16
+
+**编译出原厂 evk板卡的uboot**，直接烧录进我们的板卡，**看看有哪些不适配**
+## 检查mmc设备
+因为我们就两个mmc设备，mmc 0 是sd卡，mmc 1是emmc。
+```c
+mmc dev 0/1
+mmc info
+```
+
+## LCD屏幕
+如果 uboot 中的 LCD 驱动正确的话，启动 uboot 以后 LCD 上应该会显示出 NXP 的 logo
+
+而我的实际上打印：
+```c
+unsupported panel ATK-LCD-7-1024x600
+```
+说明不支持这个LCD，**NXP 官方 I.MX6ULL 开发板**的屏幕就是 `4.3 寸 480x272` 分辨率
+的，所以 uboot 默认 **LCD 驱动**是 `4.3 寸 480x272` 分辨率的
+
+这里我们先不修改
+
+## 网络
+```c
+mmc0 is current device
+Net:   Board Net Initialization Failed
+No ethernet found.
+Normal Boot
+```
+说明网络驱动也有问题
+![alt text](../images/33.22.png)
+
+这是因为正点原子开发板的**网络芯片复位引脚**和 NXP 官方开发板不一样，因此需要修改驱动
+
+## 添加我们自己的板卡
+
+为了学习，我们不要在evk的板卡上修改，而是添加我们自己的板卡
+主要添加的部分有3块：
+- configs/xxx_defconfig   
+- include/configs/xxx.h   (可以看作是使能各项功能的文件，CONFIG_xxx, 定义了很多环境变量)
+- board/freescale/xxx/    (板卡相关，执行的具体驱动内容，外设的具体表现)
+
+### 添加开发板默认配置文件
+configs/mx6ull_alientek_emmc_defconfig
+- 修改`CONFIG_SYS_EXTRA_OPTIONS`="指定board/freescale/xxx/imximage.cfg,..."
+- 新增`CONFIG_TARGET_MX6ULL_ALIENTEK_EMMC=y`
+
+### 添加开发板对应的头文件
+`include/configs/mx6ull_alientek_emmc.h`
+
+- 修改条件宏 `__MX6ULL_ALIENTEK_EMMC_CONFIG_H`
+
+该文件指定了很多配置，基本都是CONFIG_开头，**主要功能就是配置，裁剪uboot**
+
+**如果需要某个功能，就在里面添加对应的CONFIG_xxx宏即可**
+
+详细已经打开的功能如下：
+- DRAM大小 512MB
+- CONFIG_DISPLAY_CPUINFO， uboot启动可以输出cpu信息
+- CONFIG_SYS_MALLOC_LEN, malloc内存池大小，16MB
+- CONFIG_MXC_UART_BASE, 串口基地址， UART1_BASE
+- CONFIG_SYS_FSL_ESDHC_ADDR = USDHC2基地址。 emmc的接口
+- I2C的相关宏定义，控制使能哪个i2c,速度
+- CONFIG_SYS_LOAD_ADDR, linux kernel 在ddr的加载地址 = 80800000
+- CONFIG_SYS_HZ, 系统时钟频率，1000hz
+- CONFIG_STACKSIZE, 128KB 
+- CONFIG_SYS_SDRAM_BASE, DRAM的起始地址
+- CONFIG_SYS_INIT_RAM_ADDR， 内部RAM的起始地址  0x00900000
+- CONFIG_SYS_INIT_RAM_SIZE, 内部RAM的大小， 128KB
+- ...
+- CONFIG_SYS_MMC_ENV_DEV 1, 指定USDHC2， 也就是EMMC
+- CONFIG_SYS_MMC_ENV_PART 0, 分区0
+- CONFIG_MMCROOT /dev/mmcblk1p2, 设置进入linux系统的根文件系统所在分区，
+  - 这个就是emmc的3个分区，分区0是uboot, 分区1是linux镜像和dtb，分区2是rootfs
+- ....
+
+> 所以，可以看到，真正配置uboot的是`include/configs/xxx.h`文件, 相当于设计方案，配置参数，真正的实现在`board/freescale/xxx/xxx.c`里面
+
+### 添加开发板对应的板级文件夹
+`board/freescale/mx6ull_alientek_emmc/`, 里面主要有这几个文件
+```c
+imximage.cfg
+imximage_lpddr2.cfg
+Kconfig
+MAINTAINERS
+Makefile
+mx6ull_alientek_emmc.c
+plugin.S
+README
+```
+**1. Makefile**
+```c
+obj-y := mx6ull_alientek_emmc.o     //编译目标指定位xxx.c
+```
+
+**2. imximage.cfg**
+这个看名字，像是.imx镜像文件的配置, 实际也只是**照抄改个名字**
+```c
+PLUGIN board/freescale/mx6ull_alientek_emmc /plugin.bin 0x00907000
+```
+
+**3. Kconfig**
+```c
+if TARGET_MX6ULL_ALIENTEK_EMMC    //指定条件编译目标
+
+config SYS_BOARD
+default "mx6ull_alientek_emmc"    //板卡默认值
+ 
+config SYS_VENDOR
+default "freescale"
+
+config SYS_SOC
+default "mx6"                     //新增了SOC的名称参数
+
+config SYS_CONFIG_NAME
+default "mx6ull_alientek_emmc"    //新增SYS_CONFIG_NAME配置名
+
+endif
+```
+
+**4.MAINTAINERS**
+![alt text](../images/33.23.png)
+> 看这里似乎也只是指定自己的.h， .c文件进行关联
+
+### 图形界面配置（必须，不source找不到.h）
+```c
+config TARGET_MX6ULL_ALIENTEK_EMMC
+  bool "Support mx6ull_alientek_emmc"
+  select MX6ULL
+  select DM
+  select DM_THERMAL
+
+source "board/freescale/mx6ull_alientek_emmc/Kconfig"
+```
+
+## 修改LCD驱动
+因为我们在.h中已经勾选了LCD，但是在正点原子的开发板上LCD驱动加载失败，
+```c
+一般修改 LCD 驱动重点注意以下几点：
+①、LCD 所使用的 GPIO，查看 uboot 中 LCD 的 IO 配置是否正确。
+②、LCD 背光引脚 GPIO 的配置。
+③、LCD 配置参数是否正确。
+```
+> 前两个引脚配置都是正确的。就是屏幕参数配置有问题。
+
+我们.c文件里面，**配置屏幕**，依赖
+- `display_info_t`,定义在`arch/arm/include/asm/imx-common/video.h` 中
+- `fb_videomode`
+
+所以，我们需要根据前面裸机使用LCD外设的时候得到的LCD参数，计算出这里.c里面驱动所需的参数。并填写就行了。
+
+同时，**panel要改成一致（.c点屏幕的具体裸机， .h指定点哪个屏幕）**
+
+> 上电后仍然黑屏，原因是一开始加载了emmc中的环境变量，导致panel默认的值被修改，所以需要setenv修改panel
+
+## 网络驱动修改
+IMX6ULL采用的内部MAC+外部phy芯片的方案
+
+但是正点原子和NXP的evk开发板的区别在于，我们的板子**更换了phy芯片**，**那么网络驱动怎么办**？
+
+这里就涉及到，**更换了PHY芯片以后，如何调整网络驱动**。
+
+![alt text](../images/33.24.png)
+![alt text](../images/33.25.png)
+![alt text](../images/33.26.png)
+
+**所以不同点：**
+1. 复位引脚不同
+2. PHY芯片不同（器件地址，访问逻辑）
+
+**所以修改操作**：
+1. .h 指定好phy芯片的id
+2. .h 切换phy芯片驱动为realtek，因为phy芯片换了
+3. .c 修改reset引脚定义
+4. .c 删除旧phy芯片驱动相关代码
+5. .c 删除74LV595拓展IO驱动相关代码
+6. .c 把reset引脚添加到fec1,fec2的设备引脚定义中
+7. .c 在fec1, fec2的网络IO配置数组中初始化复位引脚，依据数据手册硬件延时
+
+至此就完成了引脚的修改，驱动的替换，phy芯片的指定，
+
+烧录测试正常
+
+
+# bootcmd和bootargs环境变量
+
+uboot里面的两个重要的环境变量 bootcmd, bootargs
+
+在`include/configs/xxx.h`的`CONFIG_EXTRA_ENV_SETTINGS`中保存
+## bootcmd
+这个就是倒计时完成后的自动启动命令。
+
+他的默认值在`CONFIG_BOOTCOMMAND`中定义，根据条件编译来进行覆盖
+![alt text](../images/33.27.png)
+
+- findfdt, 是查找dtb文件
+  - 里面具体根据board name, 这些来找到对应的dtb
+  - 如果 board_name 为 EVK 并且 board_rev=9x9 的话 fdt_file
+就为 imx6ull-9x9-evk.dtb
+- mmc dev 切换设备到mmc1， emmc
+- mmc rescan， 看看有没有设备，没有就netboot，网络下载启动。
+- loadbootscript
+  - fatload mmc 1:1 0x80800000 boot.scr  (我们没有src这个文件)
+- loadbootimage
+  - fatload mmc 1:1 0x80800000 zImage (emmc启动)
+  - run mmcboot
+    - loadfdt, 查找dtb文件
+      - fatload mmc 1:1 0x83000000 imx6ull-14x14-evk.dtb
+    - bootz 0x80800000 - 0x83000000
+
+ **至此，linux内核启动**
+ ![alt text](../images/33.28.png)
+
+ NXP的uboot写的这么复杂，原因是为了兼容多个板子
+## bootargs
+默认值是`CONFIG_BOOTARGS`， bootargs环境变量，保存着uboot传递给LINUX内核的参数。
+
+`bootargs`是由`mmcargs`设置的，
+```c
+mmcargs=setenv bootargs console=${console},${baudrate} root=${mmcroot}
+
+//展开后：
+mmcargs=setenv bootargs console= ttymxc0, 115200 root= /dev/mmcblk1p2 rootwait rw
+```
+可以看出mmcargs就是设置bootargs的值。这些参数linux内核会用到。
+- **console**
+  - 终端，通过这个设备来和linux交互。
+  - 这里设置 `console` 为 `ttymxc0`，因为 linux启动以后 I.MX6ULL 的串口 1 在 linux 下的设备文件就是`/dev/ttymxc0`
+- **root**
+  - 设置**根文件系统的位置**，指明根文件系统存放在emmc的分区2.
+  - rootwait 表示等待mmc设备初始化完成以后再挂载，不然会出错
+  - rw表示根文件系统可读写。
+- **rootfstype**
+  - 一般和root一起使用，指定根文件系统类型。
+  - 如果根文件系统时ext，这个选项就无所谓，如果是其他的类型，就需要指定。
+
+### 本地emmc启动测试
+通过设置好这两个环境变量，就可以启动linux系统了
+```c
+setenv bootargs 'console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw'
+setenv bootcmd 'mmc dev 1; fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 
+imx6ull-alientek-emmc.dtb; bootz 80800000 - 83000000;'
+```
+> emmc 分区1里面，zImage，还有适配正点原子的dtb已经存放好了，分区2里面是rootfs.
+>
+> `include/configs/xxx.h`中已经指定好了rootfs所在的位置为`mmcblk1p2`
+
+最后执行`run bootcmd`, 就可以进入我们的linux系统了
+![alt text](../images/33.29.png)
+
+### 网络下载启动
+从网络启动 linux 系统的唯一目的就是为了调试！
+```c
+setenv bootargs 'console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw'
+setenv bootcmd 'tftp 80800000 zImage; tftp 83000000 imx6ull-alientek-emmc.dtb; bootz 
+80800000 - 83000000'
+saveenv
+```
+
+
+
+# 总结
+**uboot 移植到此结束**，简单总结一下 uboot 移植的过程：
+- 不管是购买的开发板还是自己做的开发板，**基本都是参考半导体厂商的 dmeo 板**，而
+半导体厂商会在他们自己的开发板上移植好 uboot、linux kernel 和 rootfs 等，最终制作**好 BSP
+包提供给用户**。
+  - **我们可以在官方提供的 BSP 包的基础上添加我们的板子，也就是俗称的移植。**
+- 我们购买的开发板或者自己做的板子一般都不会原封不动的照抄半导体厂商的 demo
+板，都会根据实际的情况来做修改
+  - **既然有修改就必然涉及到 uboot 下驱动的移植。**
+- 一般 uboot 中需要解决**串口**、NAND、**EMMC** 或 SD 卡、**网络**和 **LCD 驱动**，因为 **uboot的主要目的就是启动 Linux 内核**，所以**不需要考虑太多的外设驱动**。
+- 在 uboot 中添加自己的板子信息，根据自己板子的实际情况来修改 uboot 中的驱动。
+
+
+
+
+
+
+
+
+
+
+
+
 
 
