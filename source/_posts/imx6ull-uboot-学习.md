@@ -32,9 +32,13 @@ tags: [嵌入式, linux, 驱动]
     - [bootz 本地ROM启动](#bootz-本地rom启动)
     - [bootm](#bootm)
     - [boot 自动化启动命令](#boot-自动化启动命令)
-  - [uboot go命令](#uboot-go命令)
-  - [uboot run命令](#uboot-run命令)
-  - [uboot mtest命令](#uboot-mtest命令)
+      - [**远程拉取启动**](#远程拉取启动)
+      - [**从EMMC中启动**](#从emmc中启动)
+  - [其他命令](#其他命令)
+    - [reset](#reset)
+    - [go](#go)
+  - [run](#run)
+  - [mtest](#mtest)
 
 
 # Uboot 学习笔记
@@ -68,6 +72,7 @@ tags: [嵌入式, linux, 驱动]
 你也可以在购买了第三方开发板以后使用半导体厂商提供的 uboot，只不过**有些外设驱动可能不支持**，需要自己移植，这个就是我们常说的 **uboot 移植**。
 
 ## uboot 编译
+> 我的imx的开发板是**512G ddr**, **8G emmc**, **1G sd**卡
 ``` bash
 #!/bin/bash
 # make clean
@@ -221,19 +226,28 @@ tftp 80800000 zImage
 
 ## uboot RAM 操作
 裸机都是对整个设备的寻址空间进行了存储空间映射，所以0x8080 0000, 表示的是RAM的其实地址（SRAM = DDR）
+```c
 md.(b/w/l) addr(H) count(H)
+
+md.l 80800000 10   //从80800000开始，按l(4字节)为单位，打印0x10个单位
+
+ffffffff ffffffff ffffffff ffffffff
+ffffffff ffffffff ffffffff ffffffff
+ffffffff ffffffff ffffffff ffffffff
+ffffffff ffffffff ffffffff ffffffff
+```
 ## uboot ROM 操作
 ROM，磁盘，uboot会读取所有mmc设备（SD卡， EMMC， NAND）
-``` bash
+``` c
 mmc info
 mmc rescan
-mmc list
-mmc dev mmc_id(0,1) (part分区号，默认0)
+mmc list  //查看有哪些mmc设备
+mmc dev mmc_id(0,1) //(part分区号，默认0)（分区内容见下面分区分析）
 
-# 读取磁盘（块block = 扇区 = 512字节）
+// 读取磁盘（块block = 扇区 = 512字节）
 mmc read ram_addr(0x80800000) start_block(H) count_block(H)
 
-# RAM数据写入磁盘
+// RAM数据写入磁盘
 mmc write ram_addr(0x80800000) start_block(H) count_block(H)
 ```
 
@@ -256,7 +270,7 @@ mmc write ram_addr(0x80800000) start_block(H) count_block(H)
 ## uboot 文件操作（不再是磁盘字节操作了）
 **ROM**中格式分布：
 正常我们在EMMC里面安装了linux系统，那么他会有3个分区:
-1. **part 0**(无格式)： uboot
+1. **part 0**(无格式)： uboot (前面会留出2个块存放分区表，**不要随便擦除**)
 2. **part 1(fat)**: kernel(zImage) + device tree(dtb)
 3. **part 2(ext)**: rootfs
 ### fat文件系统格式
@@ -296,7 +310,7 @@ ext4ls mmc 1:2
 
 
 ### **mmc0,1分区内容**
-通过fstype, fatls, fatinfo, 可以查看出emmc(mmc 1), sd(mmc 0)里面的每个分区都是干什么的。
+通过`fstype`, `fatl`s, `fatinfo`, 可以查看出`emmc(mmc 1)`, `sd(mmc 0)`里面的每个分区都是干什么的。
 
 可以看到
 
@@ -399,6 +413,34 @@ Part    Start Sector    Num Sectors     UUID            Type
 
 所以绰绰有余
 
+关于环境变量的保存，当你saveenv保存环境变量，你会看到保存到MMC0， sd卡中
+```c
+=> printenv bootcmd
+bootcmd=run findfdt;mmc dev ${mmcdev};mmc dev ${mmcdev}; if mmc rescan; then if                                          run loadbootscript; then run bootscript; else if run loadimage; then run mmcbo                                         ot; else run netboot; fi; fi; else run netboot; fi
+=> setenv bootcmd 'tftp 80800000 zImage;tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb;bootz 80800000 - 83000000'
+
+
+=> saveenv
+Saving Environment to MMC...
+Writing to MMC(0)... done
+
+```
+
+实际环境变量：
+
+对于正点原子的 i.MX6ULL 开发板，默认配置通常如下：
+- **U-Boot 程序**： 存储在偏移 $1$ KB ($2$ 扇区) 处。
+- **环境变量 (Env)**： 存储在偏移 $768$ KB (即 $0xC0000$ 字节) 处。
+```c
+物理地址偏移,             内容,                     说明
+0 字节,                   MBR 分区表,             存放分区信息
+1024 字节 (1 KB),         u-boot.imx,             启动镜像
+...,                      空闲,                     ...
+786432 字节 (768 KB),     Environment,          这就是你 saveenv 存放 bootcmd 的地方
+...,                      空闲,                     ...
+10485760 字节 (10 MB),    Partition 1 (FAT),      存放 zImage 和 dtb 的地方
+```
+
 
 
 
@@ -455,6 +497,7 @@ ftp 80800000 zImage
 tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb
 
 # 启动linux系统，（没有指定rootfs， 所以只会到挂载rootfs停止）
+# bootz会从这两个地址开始自动寻找zImage 和 dtb
 bootz 80800000 - 83000000
 ```
 ![alt text](../images/7.6.png)
@@ -470,7 +513,7 @@ bootm 和 bootz 功能类似，但是 bootm 用于启动 uImage 镜像文件
 ### boot 自动化启动命令
 boot 命令也是用来启动 Linux 系统的，只是 boot 会**读取环境变量 bootcmd** 来启动 Linux 系统, `bootcmd`这个环境变量保存着引导命令,其实就是**启动的命令集合**
 
-相当于Makefile
+#### **远程拉取启动**
 ``` bash
 setenv bootcmd 'tftp 80800000 zImage; tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb;
 bootz 80800000 - 83000000'
@@ -482,7 +525,8 @@ boot
 
 默认就是远程网络启动
 
-如果要默认从EMMC中启动，修改`bootcmd`
+#### **从EMMC中启动**
+修改`bootcmd`
 ``` bash
 setenv bootcmd 'fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 imx6ull-14x14-
 emmc-7-1024x600-c.dtb; bootz 80800000 - 83000000'
@@ -492,24 +536,39 @@ boot
 
 最终kernel开始启动，最终会卡在：
 ``` bash
-Kernel panic – not Syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+[    3.784511] b310            4096 mmcblk1boot0  (driver?)
+[    3.789845] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+[    3.798121] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+[   73.813077] random: nonblocking pool is initialized
+
 ```
 
-没有找到根文件系统，这个很正常，因为没有设置 uboot 的
+
+**没有找到根文件系统**，这个很正常，因为没有设置 uboot 的
 bootargs 环境变量，关于 bootargs 环境变量后面会讲解
 
 
-## uboot go命令
-用于跳转到RAM的地方来运行
-注：我们从MMC中拷贝东西到RAM中，都是到80800000, 而裸机程序本体的链接地址是因为裸机例程的链接首地址就是 0X87800000
+
+
+
+## 其他命令
+### reset
+```c
+reset //复位重启
+```
+### go
+用于跳转到`RAM`的地方`来运行`
+注：我们从`MMC`中拷贝东西到RAM中，都是到80800000, 而裸机程序本体的链接地址是因为裸机例程的链接首地址就是 0X87800000
 ``` bash
 tftp 87800000 printf.bin
 go 87800000
 ```
 > 复习裸机烧录的镜像的地址结构
 
-## uboot run命令
-run 命令用于运行环境变量中定义的命令，比如可以通过“run bootcmd”来运行 bootcmd 中的启动命令，这在后面调试linux驱动的时候，会频繁需要切换启动方式，用这个来执行环境变量脚本
+## run
+**run 命令用于运行环境变量中定义的命令**，
+
+比如可以通过“run bootcmd”来运行 bootcmd 中的启动命令，这在后面调试linux驱动的时候，会频繁需要切换启动方式，用这个来执行环境变量脚本
 
 ``` bash
 setenv mybootemmc 'fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 imx6ull- 14x14-emmc-7-1024x600-c.dtb;bootz 80800000 - 83000000'
@@ -525,7 +584,7 @@ saveenv
 #run mybootnet
 ```
 
-## uboot mtest命令
+## mtest
 mtest 命令是一个简单的**内存读写测试命令**，可以用来测试自己开发板上的 DDR
 ``` bash
 mtest [start [end [pattern [iterations]]]]
