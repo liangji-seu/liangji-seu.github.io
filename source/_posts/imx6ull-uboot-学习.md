@@ -1,5 +1,5 @@
 ---
-title: imx6ull uboot 学习
+title: imx6ull uboot 使用*
 date: 2025-12-21 15:08:50
 categories: [学习笔记, 嵌入式, LINUX] 
 tags: [嵌入式, linux, 驱动]

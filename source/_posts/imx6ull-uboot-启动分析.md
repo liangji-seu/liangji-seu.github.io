@@ -1,5 +1,5 @@
 ---
-title: imx6ull uboot 启动分析
+title: imx6ull uboot 启动分析*
 date: 2026-02-26 10:17:47
 categories: [学习笔记, 嵌入式, LINUX] 
 tags: [嵌入式, linux, 驱动]
