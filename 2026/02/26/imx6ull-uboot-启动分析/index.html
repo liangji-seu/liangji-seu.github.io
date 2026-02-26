@@ -49,8 +49,16 @@
 <meta property="og:image" content="http://example.com/images/33.19.png">
 <meta property="og:image" content="http://example.com/images/33.20.png">
 <meta property="og:image" content="http://example.com/images/33.21.png">
+<meta property="og:image" content="http://example.com/images/33.22.png">
+<meta property="og:image" content="http://example.com/images/33.23.png">
+<meta property="og:image" content="http://example.com/images/33.24.png">
+<meta property="og:image" content="http://example.com/images/33.25.png">
+<meta property="og:image" content="http://example.com/images/33.26.png">
+<meta property="og:image" content="http://example.com/images/33.27.png">
+<meta property="og:image" content="http://example.com/images/33.28.png">
+<meta property="og:image" content="http://example.com/images/33.29.png">
 <meta property="article:published_time" content="2026-02-26T02:17:47.000Z">
-<meta property="article:modified_time" content="2026-02-26T10:18:50.533Z">
+<meta property="article:modified_time" content="2026-02-26T13:29:18.758Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -150,7 +158,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#uboot"><span class="nav-number">1.</span> <span class="nav-text">uboot</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Makefile%E7%BC%96%E8%AF%91%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">Makefile编译分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">1.1.1.</span> <span class="nav-text">文件目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#arch"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">arch&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#board"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">board&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#configs"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">configs&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#u-boot-xxx-cmd%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">.u-boot.xxx_cmd文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Makefile%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">Makefile文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#u-boot-xxx%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.6.</span> <span class="nav-text">u-boot.xxx文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#config%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.7.</span> <span class="nav-text">.config文件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Makefile%E5%88%86%E6%9E%90"><span class="nav-number">1.1.2.</span> <span class="nav-text">Makefile分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E5%8F%B7"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">版本号</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MAKEFLAGS-%E5%8F%98%E9%87%8F"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">MAKEFLAGS 变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E8%BE%93%E5%87%BA"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">命令输出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%99%E9%BB%98%E8%BE%93%E5%87%BA"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">静默输出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%BC%96%E8%AF%91%E7%BB%93%E6%9E%9C%E8%BE%93%E5%87%BA%E7%9B%AE%E5%BD%95"><span class="nav-number">1.1.2.5.</span> <span class="nav-text">设置编译结果输出目录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%A3%80%E6%9F%A5"><span class="nav-number">1.1.2.6.</span> <span class="nav-text">代码检查</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E7%BC%96%E8%AF%91"><span class="nav-number">1.1.2.7.</span> <span class="nav-text">模块编译</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E4%B8%BB%E6%9C%BA%E6%9E%B6%E6%9E%84-%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.1.2.8.</span> <span class="nav-text">获取主机架构&#x2F;系统</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%9B%AE%E6%A0%87%E6%9E%B6%E6%9E%84%EF%BC%8C%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%EF%BC%8C%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.2.9.</span> <span class="nav-text">设置目标架构，交叉编译工具，配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E7%94%A8scripts-Kbuild-include"><span class="nav-number">1.1.2.10.</span> <span class="nav-text">调用scripts&#x2F;Kbuild.include</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E5%8F%98%E9%87%8F%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.1.2.11.</span> <span class="nav-text">交叉编译工具变量设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E5%85%B6%E4%BB%96%E5%8F%98%E9%87%8F-%E4%BE%9D%E8%B5%96config-mk"><span class="nav-number">1.1.2.12.</span> <span class="nav-text">导出其他变量(依赖config.mk)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#make-xxx-defconfig%E8%BF%87%E7%A8%8B"><span class="nav-number">1.1.2.13.</span> <span class="nav-text">make xxx_defconfig过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#make%E8%BF%87%E7%A8%8B"><span class="nav-number">1.1.2.14.</span> <span class="nav-text">make过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90"><span class="nav-number">1.2.</span> <span class="nav-text">uboot启动分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#u-boot-lds-%E5%88%86%E6%9E%90"><span class="nav-number">1.2.1.</span> <span class="nav-text">u-boot.lds 分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#uboot%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.2.2.</span> <span class="nav-text">uboot启动流程详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#uboot%E9%87%8D%E5%AE%9A%E5%90%91%E7%9A%84%E5%86%85%E9%83%A8%E7%BB%86%E8%8A%82"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">uboot重定向的内部细节</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#board-init-f"><span class="nav-number">1.2.2.1.1.</span> <span class="nav-text">board_init_f</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#relocate-code"><span class="nav-number">1.2.2.1.2.</span> <span class="nav-text">relocate_code</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#relocate-vectors"><span class="nav-number">1.2.2.1.3.</span> <span class="nav-text">relocate_vectors</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#board-init-r"><span class="nav-number">1.2.2.1.4.</span> <span class="nav-text">board_init_r</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bootz%E5%90%AF%E5%8A%A8linux%E5%86%85%E6%A0%B8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">bootz启动linux内核过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#images%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="nav-number">1.2.2.2.1.</span> <span class="nav-text">images全局变量</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#do-bootz"><span class="nav-number">1.2.2.2.2.</span> <span class="nav-text">do_bootz</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#bootz-start"><span class="nav-number">1.2.2.2.3.</span> <span class="nav-text">bootz_start</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#do-bootm-states"><span class="nav-number">1.2.2.2.3.1.</span> <span class="nav-text">do_bootm_states</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#bootm-os-get-boot-func"><span class="nav-number">1.2.2.2.3.2.</span> <span class="nav-text">bootm_os_get_boot_func</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#do-bootm-linux"><span class="nav-number">1.2.2.2.3.3.</span> <span class="nav-text">do_bootm_linux</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#uboot"><span class="nav-number">1.</span> <span class="nav-text">uboot</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Makefile%E7%BC%96%E8%AF%91%E5%88%86%E6%9E%90"><span class="nav-number">1.1.</span> <span class="nav-text">Makefile编译分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="nav-number">1.1.1.</span> <span class="nav-text">文件目录结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#arch"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">arch&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#board"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">board&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#configs"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">configs&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#u-boot-xxx-cmd%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">.u-boot.xxx_cmd文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Makefile%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.5.</span> <span class="nav-text">Makefile文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#u-boot-xxx%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.6.</span> <span class="nav-text">u-boot.xxx文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#config%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.1.7.</span> <span class="nav-text">.config文件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Makefile%E5%88%86%E6%9E%90"><span class="nav-number">1.1.2.</span> <span class="nav-text">Makefile分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%88%E6%9C%AC%E5%8F%B7"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">版本号</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MAKEFLAGS-%E5%8F%98%E9%87%8F"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">MAKEFLAGS 变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E8%BE%93%E5%87%BA"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">命令输出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%99%E9%BB%98%E8%BE%93%E5%87%BA"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">静默输出</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%BC%96%E8%AF%91%E7%BB%93%E6%9E%9C%E8%BE%93%E5%87%BA%E7%9B%AE%E5%BD%95"><span class="nav-number">1.1.2.5.</span> <span class="nav-text">设置编译结果输出目录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%A3%80%E6%9F%A5"><span class="nav-number">1.1.2.6.</span> <span class="nav-text">代码检查</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E7%BC%96%E8%AF%91"><span class="nav-number">1.1.2.7.</span> <span class="nav-text">模块编译</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E4%B8%BB%E6%9C%BA%E6%9E%B6%E6%9E%84-%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.1.2.8.</span> <span class="nav-text">获取主机架构&#x2F;系统</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%9B%AE%E6%A0%87%E6%9E%B6%E6%9E%84%EF%BC%8C%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%EF%BC%8C%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.2.9.</span> <span class="nav-text">设置目标架构，交叉编译工具，配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E7%94%A8scripts-Kbuild-include"><span class="nav-number">1.1.2.10.</span> <span class="nav-text">调用scripts&#x2F;Kbuild.include</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E5%B7%A5%E5%85%B7%E5%8F%98%E9%87%8F%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.1.2.11.</span> <span class="nav-text">交叉编译工具变量设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E5%87%BA%E5%85%B6%E4%BB%96%E5%8F%98%E9%87%8F-%E4%BE%9D%E8%B5%96config-mk"><span class="nav-number">1.1.2.12.</span> <span class="nav-text">导出其他变量(依赖config.mk)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#make-xxx-defconfig%E8%BF%87%E7%A8%8B"><span class="nav-number">1.1.2.13.</span> <span class="nav-text">make xxx_defconfig过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#make%E8%BF%87%E7%A8%8B"><span class="nav-number">1.1.2.14.</span> <span class="nav-text">make过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90"><span class="nav-number">1.2.</span> <span class="nav-text">uboot启动分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#u-boot-lds-%E5%88%86%E6%9E%90"><span class="nav-number">1.2.1.</span> <span class="nav-text">u-boot.lds 分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#uboot%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.2.2.</span> <span class="nav-text">uboot启动流程详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#uboot%E9%87%8D%E5%AE%9A%E5%90%91%E7%9A%84%E5%86%85%E9%83%A8%E7%BB%86%E8%8A%82"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">uboot重定向的内部细节</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#board-init-f"><span class="nav-number">1.2.2.1.1.</span> <span class="nav-text">board_init_f</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#relocate-code"><span class="nav-number">1.2.2.1.2.</span> <span class="nav-text">relocate_code</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#relocate-vectors"><span class="nav-number">1.2.2.1.3.</span> <span class="nav-text">relocate_vectors</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#board-init-r"><span class="nav-number">1.2.2.1.4.</span> <span class="nav-text">board_init_r</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#bootz%E5%90%AF%E5%8A%A8linux%E5%86%85%E6%A0%B8%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">bootz启动linux内核过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#images%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="nav-number">1.2.2.2.1.</span> <span class="nav-text">images全局变量</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#do-bootz"><span class="nav-number">1.2.2.2.2.</span> <span class="nav-text">do_bootz</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#bootz-start"><span class="nav-number">1.2.2.2.3.</span> <span class="nav-text">bootz_start</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#do-bootm-states"><span class="nav-number">1.2.2.2.3.1.</span> <span class="nav-text">do_bootm_states</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#bootm-os-get-boot-func"><span class="nav-number">1.2.2.2.3.2.</span> <span class="nav-text">bootm_os_get_boot_func</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#do-bootm-linux"><span class="nav-number">1.2.2.2.3.3.</span> <span class="nav-text">do_bootm_linux</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8Duboot"><span class="nav-number">2.</span> <span class="nav-text">移植uboot</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%83%A7%E5%BD%95evk%E6%9D%BF%E5%8D%A1%E7%9A%84uboot"><span class="nav-number">2.1.</span> <span class="nav-text">烧录evk板卡的uboot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5mmc%E8%AE%BE%E5%A4%87"><span class="nav-number">2.2.</span> <span class="nav-text">检查mmc设备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LCD%E5%B1%8F%E5%B9%95"><span class="nav-number">2.3.</span> <span class="nav-text">LCD屏幕</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C"><span class="nav-number">2.4.</span> <span class="nav-text">网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E6%88%91%E4%BB%AC%E8%87%AA%E5%B7%B1%E7%9A%84%E6%9D%BF%E5%8D%A1"><span class="nav-number">2.5.</span> <span class="nav-text">添加我们自己的板卡</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%BC%80%E5%8F%91%E6%9D%BF%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">2.5.1.</span> <span class="nav-text">添加开发板默认配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%BC%80%E5%8F%91%E6%9D%BF%E5%AF%B9%E5%BA%94%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">2.5.2.</span> <span class="nav-text">添加开发板对应的头文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%BC%80%E5%8F%91%E6%9D%BF%E5%AF%B9%E5%BA%94%E7%9A%84%E6%9D%BF%E7%BA%A7%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">2.5.3.</span> <span class="nav-text">添加开发板对应的板级文件夹</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E9%85%8D%E7%BD%AE%EF%BC%88%E5%BF%85%E9%A1%BB%EF%BC%8C%E4%B8%8Dsource%E6%89%BE%E4%B8%8D%E5%88%B0-h%EF%BC%89"><span class="nav-number">2.5.4.</span> <span class="nav-text">图形界面配置（必须，不source找不到.h）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9LCD%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.6.</span> <span class="nav-text">修改LCD驱动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E9%A9%B1%E5%8A%A8%E4%BF%AE%E6%94%B9"><span class="nav-number">2.7.</span> <span class="nav-text">网络驱动修改</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#bootcmd%E5%92%8Cbootargs%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">3.</span> <span class="nav-text">bootcmd和bootargs环境变量</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#bootcmd"><span class="nav-number">3.1.</span> <span class="nav-text">bootcmd</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bootargs"><span class="nav-number">3.2.</span> <span class="nav-text">bootargs</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0emmc%E5%90%AF%E5%8A%A8%E6%B5%8B%E8%AF%95"><span class="nav-number">3.2.1.</span> <span class="nav-text">本地emmc启动测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E4%B8%8B%E8%BD%BD%E5%90%AF%E5%8A%A8"><span class="nav-number">3.2.2.</span> <span class="nav-text">网络下载启动</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -244,7 +252,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2026-02-26 10:17:47 / 修改时间：18:18:50" itemprop="dateCreated datePublished" datetime="2026-02-26T10:17:47+08:00">2026-02-26</time>
+      <time title="创建时间：2026-02-26 10:17:47 / 修改时间：21:29:18" itemprop="dateCreated datePublished" datetime="2026-02-26T10:17:47+08:00">2026-02-26</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -332,6 +340,32 @@
 </li>
 </ul>
 </li>
+<li><a href="#%E7%A7%BB%E6%A4%8Duboot">移植uboot</a><ul>
+<li><a href="#%E7%83%A7%E5%BD%95evk%E6%9D%BF%E5%8D%A1%E7%9A%84uboot">烧录evk板卡的uboot</a></li>
+<li><a href="#%E6%A3%80%E6%9F%A5mmc%E8%AE%BE%E5%A4%87">检查mmc设备</a></li>
+<li><a href="#lcd%E5%B1%8F%E5%B9%95">LCD屏幕</a></li>
+<li><a href="#%E7%BD%91%E7%BB%9C">网络</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E6%88%91%E4%BB%AC%E8%87%AA%E5%B7%B1%E7%9A%84%E6%9D%BF%E5%8D%A1">添加我们自己的板卡</a><ul>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E5%BC%80%E5%8F%91%E6%9D%BF%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">添加开发板默认配置文件</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E5%BC%80%E5%8F%91%E6%9D%BF%E5%AF%B9%E5%BA%94%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6">添加开发板对应的头文件</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E5%BC%80%E5%8F%91%E6%9D%BF%E5%AF%B9%E5%BA%94%E7%9A%84%E6%9D%BF%E7%BA%A7%E6%96%87%E4%BB%B6%E5%A4%B9">添加开发板对应的板级文件夹</a></li>
+<li><a href="#%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E9%85%8D%E7%BD%AE%E5%BF%85%E9%A1%BB%E4%B8%8Dsource%E6%89%BE%E4%B8%8D%E5%88%B0h">图形界面配置（必须，不source找不到.h）</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BF%AE%E6%94%B9lcd%E9%A9%B1%E5%8A%A8">修改LCD驱动</a></li>
+<li><a href="#%E7%BD%91%E7%BB%9C%E9%A9%B1%E5%8A%A8%E4%BF%AE%E6%94%B9">网络驱动修改</a></li>
+</ul>
+</li>
+<li><a href="#bootcmd%E5%92%8Cbootargs%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F">bootcmd和bootargs环境变量</a><ul>
+<li><a href="#bootcmd">bootcmd</a></li>
+<li><a href="#bootargs">bootargs</a><ul>
+<li><a href="#%E6%9C%AC%E5%9C%B0emmc%E5%90%AF%E5%8A%A8%E6%B5%8B%E8%AF%95">本地emmc启动测试</a></li>
+<li><a href="#%E7%BD%91%E7%BB%9C%E4%B8%8B%E8%BD%BD%E5%90%AF%E5%8A%A8">网络下载启动</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E6%80%BB%E7%BB%93">总结</a></li>
 </ul>
 <h1 id="uboot"><a href="#uboot" class="headerlink" title="uboot"></a>uboot</h1><p>这章来分析一下uboot这个bootloader程序，包括他的代码结构，编译流程，启动流程</p>
 <h2 id="Makefile编译分析"><a href="#Makefile编译分析" class="headerlink" title="Makefile编译分析"></a>Makefile编译分析</h2><h3 id="文件目录结构"><a href="#文件目录结构" class="headerlink" title="文件目录结构"></a>文件目录结构</h3><blockquote>
@@ -952,6 +986,212 @@
 <blockquote>
 <p><strong>以上就是uboot从编译，到启动，重定向，（你用tftp把zImage, dtb准备到ddr指定位置），bootz启动linux内核的完成流程</strong>。</p>
 </blockquote>
+<h1 id="移植uboot"><a href="#移植uboot" class="headerlink" title="移植uboot"></a>移植uboot</h1><p>假设我们是正点原子的二次开发厂家，我们来基于NXP芯片原厂的evk板卡的uboot，来添加自己的板卡。</p>
+<p><strong>uboot 移植的一般流程：</strong></p>
+<ol>
+<li>在 uboot 中找到参考的开发平台，一般是<strong>原厂的开发板</strong>。</li>
+<li><strong>参考原厂开发板</strong>移植 uboot 到我们所使用的开发板上。</li>
+</ol>
+<p><strong>正点原子的 I.MX6ULL 开发板</strong>参考的是 <strong>NXP 官方的 I.MX6ULL EVK 开发板</strong>做的硬件，</p>
+<p>因此我们在移植 uboot 的时候就可以<strong>以 NXP 官方的 I.MX6ULL EVK 开发板为蓝本</strong></p>
+<h2 id="烧录evk板卡的uboot"><a href="#烧录evk板卡的uboot" class="headerlink" title="烧录evk板卡的uboot"></a>烧录evk板卡的uboot</h2><p>因为uboot总共就3块地方可以改变：</p>
+<ul>
+<li>arch架构</li>
+<li>board板卡</li>
+<li>configs配置</li>
+</ul>
+<p>我们用芯片原厂evk的板卡，board里面肯定已经有了对应的板卡的驱动，我们就直接</p>
+<ul>
+<li>make distclean</li>
+<li>make xxx_defconfig</li>
+<li>make V&#x3D;1 -j16</li>
+</ul>
+<p><strong>编译出原厂 evk板卡的uboot</strong>，直接烧录进我们的板卡，<strong>看看有哪些不适配</strong></p>
+<h2 id="检查mmc设备"><a href="#检查mmc设备" class="headerlink" title="检查mmc设备"></a>检查mmc设备</h2><p>因为我们就两个mmc设备，mmc 0 是sd卡，mmc 1是emmc。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mmc dev <span class="number">0</span>/<span class="number">1</span></span><br><span class="line">mmc info</span><br></pre></td></tr></table></figure>
+
+<h2 id="LCD屏幕"><a href="#LCD屏幕" class="headerlink" title="LCD屏幕"></a>LCD屏幕</h2><p>如果 uboot 中的 LCD 驱动正确的话，启动 uboot 以后 LCD 上应该会显示出 NXP 的 logo</p>
+<p>而我的实际上打印：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">unsupported panel ATK-LCD<span class="number">-7</span><span class="number">-1024</span>x600</span><br></pre></td></tr></table></figure>
+<p>说明不支持这个LCD，<strong>NXP 官方 I.MX6ULL 开发板</strong>的屏幕就是 <code>4.3 寸 480x272</code> 分辨率<br>的，所以 uboot 默认 <strong>LCD 驱动</strong>是 <code>4.3 寸 480x272</code> 分辨率的</p>
+<p>这里我们先不修改</p>
+<h2 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mmc0 is current device</span><br><span class="line">Net:   Board Net Initialization Failed</span><br><span class="line">No ethernet found.</span><br><span class="line">Normal Boot</span><br></pre></td></tr></table></figure>
+<p>说明网络驱动也有问题<br><img src="/../images/33.22.png" alt="alt text"></p>
+<p>这是因为正点原子开发板的<strong>网络芯片复位引脚</strong>和 NXP 官方开发板不一样，因此需要修改驱动</p>
+<h2 id="添加我们自己的板卡"><a href="#添加我们自己的板卡" class="headerlink" title="添加我们自己的板卡"></a>添加我们自己的板卡</h2><p>为了学习，我们不要在evk的板卡上修改，而是添加我们自己的板卡<br>主要添加的部分有3块：</p>
+<ul>
+<li>configs&#x2F;xxx_defconfig   </li>
+<li>include&#x2F;configs&#x2F;xxx.h   (可以看作是使能各项功能的文件，CONFIG_xxx, 定义了很多环境变量)</li>
+<li>board&#x2F;freescale&#x2F;xxx&#x2F;    (板卡相关，执行的具体驱动内容，外设的具体表现)</li>
+</ul>
+<h3 id="添加开发板默认配置文件"><a href="#添加开发板默认配置文件" class="headerlink" title="添加开发板默认配置文件"></a>添加开发板默认配置文件</h3><p>configs&#x2F;mx6ull_alientek_emmc_defconfig</p>
+<ul>
+<li>修改<code>CONFIG_SYS_EXTRA_OPTIONS</code>&#x3D;”指定board&#x2F;freescale&#x2F;xxx&#x2F;imximage.cfg,…”</li>
+<li>新增<code>CONFIG_TARGET_MX6ULL_ALIENTEK_EMMC=y</code></li>
+</ul>
+<h3 id="添加开发板对应的头文件"><a href="#添加开发板对应的头文件" class="headerlink" title="添加开发板对应的头文件"></a>添加开发板对应的头文件</h3><p><code>include/configs/mx6ull_alientek_emmc.h</code></p>
+<ul>
+<li>修改条件宏 <code>__MX6ULL_ALIENTEK_EMMC_CONFIG_H</code></li>
+</ul>
+<p>该文件指定了很多配置，基本都是CONFIG_开头，<strong>主要功能就是配置，裁剪uboot</strong></p>
+<p><strong>如果需要某个功能，就在里面添加对应的CONFIG_xxx宏即可</strong></p>
+<p>详细已经打开的功能如下：</p>
+<ul>
+<li>DRAM大小 512MB</li>
+<li>CONFIG_DISPLAY_CPUINFO， uboot启动可以输出cpu信息</li>
+<li>CONFIG_SYS_MALLOC_LEN, malloc内存池大小，16MB</li>
+<li>CONFIG_MXC_UART_BASE, 串口基地址， UART1_BASE</li>
+<li>CONFIG_SYS_FSL_ESDHC_ADDR &#x3D; USDHC2基地址。 emmc的接口</li>
+<li>I2C的相关宏定义，控制使能哪个i2c,速度</li>
+<li>CONFIG_SYS_LOAD_ADDR, linux kernel 在ddr的加载地址 &#x3D; 80800000</li>
+<li>CONFIG_SYS_HZ, 系统时钟频率，1000hz</li>
+<li>CONFIG_STACKSIZE, 128KB </li>
+<li>CONFIG_SYS_SDRAM_BASE, DRAM的起始地址</li>
+<li>CONFIG_SYS_INIT_RAM_ADDR， 内部RAM的起始地址  0x00900000</li>
+<li>CONFIG_SYS_INIT_RAM_SIZE, 内部RAM的大小， 128KB</li>
+<li>…</li>
+<li>CONFIG_SYS_MMC_ENV_DEV 1, 指定USDHC2， 也就是EMMC</li>
+<li>CONFIG_SYS_MMC_ENV_PART 0, 分区0</li>
+<li>CONFIG_MMCROOT &#x2F;dev&#x2F;mmcblk1p2, 设置进入linux系统的根文件系统所在分区，<ul>
+<li>这个就是emmc的3个分区，分区0是uboot, 分区1是linux镜像和dtb，分区2是rootfs</li>
+</ul>
+</li>
+<li>….</li>
+</ul>
+<blockquote>
+<p>所以，可以看到，真正配置uboot的是<code>include/configs/xxx.h</code>文件, 相当于设计方案，配置参数，真正的实现在<code>board/freescale/xxx/xxx.c</code>里面</p>
+</blockquote>
+<h3 id="添加开发板对应的板级文件夹"><a href="#添加开发板对应的板级文件夹" class="headerlink" title="添加开发板对应的板级文件夹"></a>添加开发板对应的板级文件夹</h3><p><code>board/freescale/mx6ull_alientek_emmc/</code>, 里面主要有这几个文件</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">imximage.cfg</span><br><span class="line">imximage_lpddr2.cfg</span><br><span class="line">Kconfig</span><br><span class="line">MAINTAINERS</span><br><span class="line">Makefile</span><br><span class="line">mx6ull_alientek_emmc.c</span><br><span class="line">plugin.S</span><br><span class="line">README</span><br></pre></td></tr></table></figure>
+<p><strong>1. Makefile</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">obj-y := mx6ull_alientek_emmc.o     <span class="comment">//编译目标指定位xxx.c</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>2. imximage.cfg</strong><br>这个看名字，像是.imx镜像文件的配置, 实际也只是<strong>照抄改个名字</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">PLUGIN board/freescale/mx6ull_alientek_emmc /plugin.bin <span class="number">0x00907000</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>3. Kconfig</strong></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> TARGET_MX6ULL_ALIENTEK_EMMC    <span class="comment">//指定条件编译目标</span></span><br><span class="line"></span><br><span class="line">config SYS_BOARD</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;mx6ull_alientek_emmc&quot;</span>    <span class="comment">//板卡默认值</span></span><br><span class="line"> </span><br><span class="line">config SYS_VENDOR</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;freescale&quot;</span></span><br><span class="line"></span><br><span class="line">config SYS_SOC</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;mx6&quot;</span>                     <span class="comment">//新增了SOC的名称参数</span></span><br><span class="line"></span><br><span class="line">config SYS_CONFIG_NAME</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;mx6ull_alientek_emmc&quot;</span>    <span class="comment">//新增SYS_CONFIG_NAME配置名</span></span><br><span class="line"></span><br><span class="line">endif</span><br></pre></td></tr></table></figure>
+
+<p><strong>4.MAINTAINERS</strong><br><img src="/../images/33.23.png" alt="alt text"></p>
+<blockquote>
+<p>看这里似乎也只是指定自己的.h， .c文件进行关联</p>
+</blockquote>
+<h3 id="图形界面配置（必须，不source找不到-h）"><a href="#图形界面配置（必须，不source找不到-h）" class="headerlink" title="图形界面配置（必须，不source找不到.h）"></a>图形界面配置（必须，不source找不到.h）</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">config TARGET_MX6ULL_ALIENTEK_EMMC</span><br><span class="line">  <span class="type">bool</span> <span class="string">&quot;Support mx6ull_alientek_emmc&quot;</span></span><br><span class="line">  select MX6ULL</span><br><span class="line">  select DM</span><br><span class="line">  select DM_THERMAL</span><br><span class="line"></span><br><span class="line">source <span class="string">&quot;board/freescale/mx6ull_alientek_emmc/Kconfig&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="修改LCD驱动"><a href="#修改LCD驱动" class="headerlink" title="修改LCD驱动"></a>修改LCD驱动</h2><p>因为我们在.h中已经勾选了LCD，但是在正点原子的开发板上LCD驱动加载失败，</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">一般修改 LCD 驱动重点注意以下几点：</span><br><span class="line">①、LCD 所使用的 GPIO，查看 uboot 中 LCD 的 IO 配置是否正确。</span><br><span class="line">②、LCD 背光引脚 GPIO 的配置。</span><br><span class="line">③、LCD 配置参数是否正确。</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>前两个引脚配置都是正确的。就是屏幕参数配置有问题。</p>
+</blockquote>
+<p>我们.c文件里面，<strong>配置屏幕</strong>，依赖</p>
+<ul>
+<li><code>display_info_t</code>,定义在<code>arch/arm/include/asm/imx-common/video.h</code> 中</li>
+<li><code>fb_videomode</code></li>
+</ul>
+<p>所以，我们需要根据前面裸机使用LCD外设的时候得到的LCD参数，计算出这里.c里面驱动所需的参数。并填写就行了。</p>
+<p>同时，<strong>panel要改成一致（.c点屏幕的具体裸机， .h指定点哪个屏幕）</strong></p>
+<blockquote>
+<p>上电后仍然黑屏，原因是一开始加载了emmc中的环境变量，导致panel默认的值被修改，所以需要setenv修改panel</p>
+</blockquote>
+<h2 id="网络驱动修改"><a href="#网络驱动修改" class="headerlink" title="网络驱动修改"></a>网络驱动修改</h2><p>IMX6ULL采用的内部MAC+外部phy芯片的方案</p>
+<p>但是正点原子和NXP的evk开发板的区别在于，我们的板子<strong>更换了phy芯片</strong>，<strong>那么网络驱动怎么办</strong>？</p>
+<p>这里就涉及到，<strong>更换了PHY芯片以后，如何调整网络驱动</strong>。</p>
+<p><img src="/../images/33.24.png" alt="alt text"><br><img src="/../images/33.25.png" alt="alt text"><br><img src="/../images/33.26.png" alt="alt text"></p>
+<p><strong>所以不同点：</strong></p>
+<ol>
+<li>复位引脚不同</li>
+<li>PHY芯片不同（器件地址，访问逻辑）</li>
+</ol>
+<p><strong>所以修改操作</strong>：</p>
+<ol>
+<li>.h 指定好phy芯片的id</li>
+<li>.h 切换phy芯片驱动为realtek，因为phy芯片换了</li>
+<li>.c 修改reset引脚定义</li>
+<li>.c 删除旧phy芯片驱动相关代码</li>
+<li>.c 删除74LV595拓展IO驱动相关代码</li>
+<li>.c 把reset引脚添加到fec1,fec2的设备引脚定义中</li>
+<li>.c 在fec1, fec2的网络IO配置数组中初始化复位引脚，依据数据手册硬件延时</li>
+</ol>
+<p>至此就完成了引脚的修改，驱动的替换，phy芯片的指定，</p>
+<p>烧录测试正常</p>
+<h1 id="bootcmd和bootargs环境变量"><a href="#bootcmd和bootargs环境变量" class="headerlink" title="bootcmd和bootargs环境变量"></a>bootcmd和bootargs环境变量</h1><p>uboot里面的两个重要的环境变量 bootcmd, bootargs</p>
+<p>在<code>include/configs/xxx.h</code>的<code>CONFIG_EXTRA_ENV_SETTINGS</code>中保存</p>
+<h2 id="bootcmd"><a href="#bootcmd" class="headerlink" title="bootcmd"></a>bootcmd</h2><p>这个就是倒计时完成后的自动启动命令。</p>
+<p>他的默认值在<code>CONFIG_BOOTCOMMAND</code>中定义，根据条件编译来进行覆盖<br><img src="/../images/33.27.png" alt="alt text"></p>
+<ul>
+<li>findfdt, 是查找dtb文件<ul>
+<li>里面具体根据board name, 这些来找到对应的dtb</li>
+<li>如果 board_name 为 EVK 并且 board_rev&#x3D;9x9 的话 fdt_file<br>就为 imx6ull-9x9-evk.dtb</li>
+</ul>
+</li>
+<li>mmc dev 切换设备到mmc1， emmc</li>
+<li>mmc rescan， 看看有没有设备，没有就netboot，网络下载启动。</li>
+<li>loadbootscript<ul>
+<li>fatload mmc 1:1 0x80800000 boot.scr  (我们没有src这个文件)</li>
+</ul>
+</li>
+<li>loadbootimage<ul>
+<li>fatload mmc 1:1 0x80800000 zImage (emmc启动)</li>
+<li>run mmcboot<ul>
+<li>loadfdt, 查找dtb文件<ul>
+<li>fatload mmc 1:1 0x83000000 imx6ull-14x14-evk.dtb</li>
+</ul>
+</li>
+<li>bootz 0x80800000 - 0x83000000</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p> <strong>至此，linux内核启动</strong><br> <img src="/../images/33.28.png" alt="alt text"></p>
+<p> NXP的uboot写的这么复杂，原因是为了兼容多个板子</p>
+<h2 id="bootargs"><a href="#bootargs" class="headerlink" title="bootargs"></a>bootargs</h2><p>默认值是<code>CONFIG_BOOTARGS</code>， bootargs环境变量，保存着uboot传递给LINUX内核的参数。</p>
+<p><code>bootargs</code>是由<code>mmcargs</code>设置的，</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mmcargs=setenv bootargs console=$&#123;console&#125;,$&#123;baudrate&#125; root=$&#123;mmcroot&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//展开后：</span></span><br><span class="line">mmcargs=setenv bootargs console= ttymxc0, <span class="number">115200</span> root= /dev/mmcblk1p2 rootwait rw</span><br></pre></td></tr></table></figure>
+<p>可以看出mmcargs就是设置bootargs的值。这些参数linux内核会用到。</p>
+<ul>
+<li><strong>console</strong><ul>
+<li>终端，通过这个设备来和linux交互。</li>
+<li>这里设置 <code>console</code> 为 <code>ttymxc0</code>，因为 linux启动以后 I.MX6ULL 的串口 1 在 linux 下的设备文件就是<code>/dev/ttymxc0</code></li>
+</ul>
+</li>
+<li><strong>root</strong><ul>
+<li>设置<strong>根文件系统的位置</strong>，指明根文件系统存放在emmc的分区2.</li>
+<li>rootwait 表示等待mmc设备初始化完成以后再挂载，不然会出错</li>
+<li>rw表示根文件系统可读写。</li>
+</ul>
+</li>
+<li><strong>rootfstype</strong><ul>
+<li>一般和root一起使用，指定根文件系统类型。</li>
+<li>如果根文件系统时ext，这个选项就无所谓，如果是其他的类型，就需要指定。</li>
+</ul>
+</li>
+</ul>
+<h3 id="本地emmc启动测试"><a href="#本地emmc启动测试" class="headerlink" title="本地emmc启动测试"></a>本地emmc启动测试</h3><p>通过设置好这两个环境变量，就可以启动linux系统了</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">setenv bootargs <span class="string">&#x27;console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw&#x27;</span></span><br><span class="line">setenv bootcmd <span class="string">&#x27;mmc dev 1; fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 </span></span><br><span class="line"><span class="string">imx6ull-alientek-emmc.dtb; bootz 80800000 - 83000000;&#x27;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>emmc 分区1里面，zImage，还有适配正点原子的dtb已经存放好了，分区2里面是rootfs.</p>
+<p><code>include/configs/xxx.h</code>中已经指定好了rootfs所在的位置为<code>mmcblk1p2</code></p>
+</blockquote>
+<p>最后执行<code>run bootcmd</code>, 就可以进入我们的linux系统了<br><img src="/../images/33.29.png" alt="alt text"></p>
+<h3 id="网络下载启动"><a href="#网络下载启动" class="headerlink" title="网络下载启动"></a>网络下载启动</h3><p>从网络启动 linux 系统的唯一目的就是为了调试！</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">setenv bootargs <span class="string">&#x27;console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw&#x27;</span></span><br><span class="line">setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000 imx6ull-alientek-emmc.dtb; bootz </span></span><br><span class="line"><span class="string">80800000 - 83000000&#x27;</span></span><br><span class="line">saveenv</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><strong>uboot 移植到此结束</strong>，简单总结一下 uboot 移植的过程：</p>
+<ul>
+<li>不管是购买的开发板还是自己做的开发板，<strong>基本都是参考半导体厂商的 dmeo 板</strong>，而<br>半导体厂商会在他们自己的开发板上移植好 uboot、linux kernel 和 rootfs 等，最终制作<strong>好 BSP<br>包提供给用户</strong>。<ul>
+<li><strong>我们可以在官方提供的 BSP 包的基础上添加我们的板子，也就是俗称的移植。</strong></li>
+</ul>
+</li>
+<li>我们购买的开发板或者自己做的板子一般都不会原封不动的照抄半导体厂商的 demo<br>板，都会根据实际的情况来做修改<ul>
+<li><strong>既然有修改就必然涉及到 uboot 下驱动的移植。</strong></li>
+</ul>
+</li>
+<li>一般 uboot 中需要解决<strong>串口</strong>、NAND、<strong>EMMC</strong> 或 SD 卡、<strong>网络</strong>和 <strong>LCD 驱动</strong>，因为 <strong>uboot的主要目的就是启动 Linux 内核</strong>，所以<strong>不需要考虑太多的外设驱动</strong>。</li>
+<li>在 uboot 中添加自己的板子信息，根据自己板子的实际情况来修改 uboot 中的驱动。</li>
+</ul>
 
     </div>
 
