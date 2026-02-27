@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2026-02-27T08:42:09.700Z</updated>
+  <updated>2026-02-27T09:41:46.810Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,40 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>imx6ull rootfs</title>
+    <link href="http://example.com/2026/02/27/imx6ull-rootfs/"/>
+    <id>http://example.com/2026/02/27/imx6ull-rootfs/</id>
+    <published>2026-02-27T08:44:18.000Z</published>
+    <updated>2026-02-27T09:41:46.810Z</updated>
+    
+    <content type="html"><![CDATA[<ul><li><a href="#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%84%E6%88%90">根文件系统组成</a><ul><li><a href="#%E4%BB%8B%E7%BB%8D">介绍</a></li><li><a href="#vfs%E8%99%9A%E6%8B%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F">VFS虚拟文件系统</a></li><li><a href="#%E6%8C%82%E8%BD%BD%E7%9A%84%E5%90%AB%E4%B9%89">挂载的含义</a></li><li><a href="#%E6%8C%82%E8%BD%BD%E6%97%B6%E5%86%85%E5%AD%98%E7%9A%84%E5%86%85%E5%AE%B9">挂载时，内存的内容</a></li></ul></li><li><a href="#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA">根文件系统构建</a><ul><li><a href="#%E5%85%88%E5%AE%89%E8%A3%85nfs">先安装nfs</a></li></ul></li></ul><h1 id="根文件系统组成"><a href="#根文件系统组成" class="headerlink" title="根文件系统组成"></a>根文件系统组成</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p><strong>根文件系统并不是 FATFS，EXT4 这样的文件系统代码</strong></p><p><code>EXT4</code> 这样的文件系统代码属于 <strong>Linux 内核的一部分</strong></p><p>Linux 中的<strong>根文件系统</strong>更像是一个<strong>文件夹</strong>或者叫做<strong>目录</strong>(在我看来就是一个文件夹，只<br>不过是特殊的文件夹)</p><p>在这个<strong>目录</strong>里面会有很多的<strong>子目录</strong>。根目录下和子目录中会有很多的文<br>件，<strong>这些文件是 Linux 运行所必须的</strong>，比如<code>库、常用的软件和命令、设备文件、配置文件</code>等等。</p><p>以后我们<strong>说到文件系统</strong>，如果不特别指明，<strong>统一表示根文件系统</strong></p><hr><ul><li>我们嵌入式 Linux 并没有将内核代码镜像保存在根文件系统中，而是保存到了其他地方, 比如emmc的专用分区</li><li><strong>根文件系统</strong>是 Linux 内核启动以后<strong>挂载(mount)的第一个文件系统</strong>，然后从根文件系统中<strong>读取初始化脚本</strong>，比如 rcS，inittab 等</li><li><strong>根文件系统和 Linux 内核是分开的</strong>，单独的 Linux 内核是没法正常工作的，必须要搭配根文件系统</li><li>如果不提供根文件系统，Linux 内核在启动的时候就会提示**内核崩溃(Kernel panic)**的提示</li></ul><p>我们cd &#x2F;， 这个&#x2F;就是根的意思，根目录下有很多目录和文件，都是ubuntu需要的。<br><img src="/image.png" alt="alt text"><br>其中有很多子目录和文件，是我们嵌入式linux用不到的，下面主要讲一下<strong>常用的子目录</strong>:</p><ul><li><code>/bin</code>&#x2F;<ul><li>存放系统需要的<strong>可执行文件</strong>，ls,mv这些命令，<strong>所有用户都可以使用</strong></li></ul></li><li><code>/dev</code>&#x2F;<ul><li>是<code>device</code>缩写，所有文件和<strong>设备有关</strong></li><li>此目录下的文件都是<strong>设备文件</strong>。</li></ul></li><li><code>/etc</code>&#x2F;<ul><li>存放<strong>配置文件</strong>，x86的ubuntu的etc非常多，但是嵌入式的linux比较简洁</li></ul></li><li><code>/lib</code>&#x2F;<ul><li>library的简称，库，存放linux所必须的<strong>库文件</strong>。是共享库，命令，用户编写的应用程序所要使用的这些库文件</li></ul></li><li><code>/mnt</code>&#x2F;<ul><li><strong>临时挂载目录</strong>，一般是空目录</li><li>可以在这个目录下创建空的子目录，&#x2F;mnt&#x2F;sd, &#x2F;mnt&#x2F;usb&#x2F;， 这样可以把SD卡，U盘挂载到这些子目录里面</li></ul></li><li><code>/proc</code>&#x2F;<ul><li>一般是空的，当linux系统启动后，会把这个目录作为<strong>proc文件系统的挂载点</strong>。</li><li>proc是一个<strong>虚拟文件系统</strong>，没有实际的存储设备，proc里面的文件都是临时存在的。一般用来存储系统运行信息文件</li></ul></li><li><code>/usr</code>&#x2F;<ul><li>usr不是user的缩写，是unix software resource的缩写，是unix操作系统的<strong>软件资源目录</strong>。</li><li>一般是安装的系统软件</li></ul></li><li><code>/var</code>&#x2F;<ul><li>存放一些<strong>可以改变的数据</strong></li></ul></li><li><code>/sbin</code>&#x2F;<ul><li>存放一些<strong>可执行文件</strong>，只有<strong>管理员</strong>才能使用</li></ul></li><li><code>/sys</code>&#x2F;<ul><li>系统启动后，以此目录作为<strong>sysfs文件系统的挂载点</strong>。</li><li>sysfs是类似proc文件系统的<strong>特殊文件系统</strong>，sysfs也是基于ram的文件系统。也没有实际的存储设备。</li><li>此目录，是系统设备管理的重要目录，通过一定的组织结构，向用户提供详细的内核数据结构信息</li></ul></li><li><code>/opt</code>&#x2F;<ul><li>可选的文件，软件<strong>存放区</strong>，由<strong>用户</strong>选择将哪些文件或软件放到此目录</li></ul></li></ul><h2 id="VFS虚拟文件系统"><a href="#VFS虚拟文件系统" class="headerlink" title="VFS虚拟文件系统"></a>VFS虚拟文件系统</h2><blockquote><p>这就是 Linux 的 <strong>VFS (Virtual File System，虚拟文件系统)</strong> 的功劳，是<strong>linux的一个组件功能</strong>。它在你的命令和底层存储之间加了一层抽象。</p><ul><li><p>你输入 write() 命令。</p></li><li><p>VFS 查看你操作的文件路径。</p><ul><li>如果路径在 &#x2F;，它就把任务交给 ext4 驱动（写进 Flash）。</li><li>如果路径在 &#x2F;sys，它就把任务交给 内核驱动（修改内存里的寄存器值）。</li></ul></li></ul></blockquote><h2 id="挂载的含义"><a href="#挂载的含义" class="headerlink" title="挂载的含义"></a>挂载的含义</h2><p>挂载的本质是“建立映射关系”。</p><p>在 Linux 看来，磁盘分区（比如 eMMC 的第 2 个分区）只是一个块设备文件（如 &#x2F;dev&#x2F;mmcblk0p2），它是一串冰冷的二进制数据。</p><p>而<strong>挂载动作</strong>，就是<strong>告诉内核的 VFS 组件</strong>：</p><ul><li>“请把 &#x2F;dev&#x2F;mmcblk0p2 这个设备里的数据，按照 ext4 的规则<strong>解析出来</strong>，并映射到 &#x2F;（根目录） 这个文件夹上。”</li></ul><p>一旦挂载成功，当你访问 &#x2F; 目录时，VFS 就知道该调用 ext4 驱动去这个设备里读写数据了。</p><h2 id="挂载时，内存的内容"><a href="#挂载时，内存的内容" class="headerlink" title="挂载时，内存的内容"></a>挂载时，内存的内容</h2><p><strong>VFS 是运行在 DDR 里的代码</strong>。</p><p>当一个文件系统被挂载时，内核确实会在 DDR 中<strong>开辟几块关键的数据结构（账本）</strong>：</p><ul><li><strong>Superblock (超级块对象)</strong>：<ul><li>记录这个文件系统的<strong>整体信息</strong>（比如：总大小、已用空间、它是 ext4 还是 FAT32）。</li></ul></li><li><strong>Inode (索引节点)</strong>：<ul><li>记录每一个<strong>文件的元数据</strong>（大小、权限、在 Flash 的哪个位置）。</li></ul></li><li><strong>Dentry (目录项缓存)</strong>：<ul><li>这是最关键的。 它记录了文件名和 Inode 的对应关系。</li><li>比如它记录了 bin 文件夹对应的 Inode 编号是 123。</li></ul></li></ul><h1 id="根文件系统构建"><a href="#根文件系统构建" class="headerlink" title="根文件系统构建"></a>根文件系统构建</h1><h2 id="先安装nfs"><a href="#先安装nfs" class="headerlink" title="先安装nfs"></a>先安装nfs</h2><p>网络文件系统，我们实际的rootfs是需要读写磁盘的，nfs应该就是把VFS下面换成网络去读取远程。</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%84%E6%88%90&quot;&gt;根文件系统组成&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;#%E4%BB%8B%E7%BB%8D&quot;&gt;介绍&lt;/a&gt;</summary>
+      
+    
+    
+    
+    <category term="学习笔记" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    <category term="嵌入式" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="LINUX" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/"/>
+    
+    
+    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
+    
+    <category term="linux" scheme="http://example.com/tags/linux/"/>
+    
+    <category term="驱动" scheme="http://example.com/tags/%E9%A9%B1%E5%8A%A8/"/>
+    
+  </entry>
   
   <entry>
     <title>imx6ull linux内核</title>
@@ -618,38 +652,6 @@
       
       
     <summary type="html">&lt;h1 id=&quot;stm32中断和事件&quot;&gt;&lt;a href=&quot;#stm32中断和事件&quot; class=&quot;headerlink&quot; title=&quot;stm32中断和事件&quot;&gt;&lt;/a&gt;stm32中断和事件&lt;/h1&gt;&lt;h2 id=&quot;stm32的中断资源&quot;&gt;&lt;a href=&quot;#stm32的中断资源&quot;</summary>
-      
-    
-    
-    
-    <category term="学习笔记" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
-    
-    <category term="嵌入式" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
-    
-    <category term="MCU" scheme="http://example.com/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/"/>
-    
-    
-    <category term="嵌入式" scheme="http://example.com/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/"/>
-    
-    <category term="mcu" scheme="http://example.com/tags/mcu/"/>
-    
-    <category term="stm32" scheme="http://example.com/tags/stm32/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>stm32 时钟*</title>
-    <link href="http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/"/>
-    <id>http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/</id>
-    <published>2025-12-24T15:14:45.000Z</published>
-    <updated>2026-02-15T08:35:14.004Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="stm32-时钟系统"><a href="#stm32-时钟系统" class="headerlink" title="stm32 时钟系统"></a>stm32 时钟系统</h1><p>首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。</p><p>stm32主频可到<code>72Mhz</code>，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要<code>几十 kHZ</code> 的时钟即可</p><p>同一个电路，<code>时钟越快功耗越大</code>，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般<br>都是采取<code>多时钟源</code>的方法来解决这些问题</p><p>所以必须得搞清楚：<code>时钟源有哪些</code>，<code>时钟树的线路匹配</code>（时钟信号的传递）</p><p>外设非常的多，为了<code>保持低功耗工作</code>，STM32 的主控<code>默认不开启这些外设功能</code>。这个<code>功能开关</code>在 STM32主控中也就是<code>各个外设的时钟</code>。</p><blockquote><p>所以<code>时钟</code>就是<code>外设的开关</code></p></blockquote><h2 id="4个时钟源"><a href="#4个时钟源" class="headerlink" title="4个时钟源"></a>4个时钟源</h2><p>STM32F1，<code>输入时钟源</code>（Input Clock）主要包括 <code>HSI</code>(内部高速)，<code>HSE</code>（外部高速），<code>LSI</code>（内部低速），<code>LSE</code>（外部低速）</p><p><code>外部时钟源</code>就是从<code>外部</code>通过<strong>接晶振</strong>的方式获取时钟源，其中 HSE 和 LSE 是外部时钟源</p><p><code>内部时钟源</code>，芯片<strong>上电即可产生</strong>，不需要借助外部电路</p><p>下面详细说一下这4个时钟源：</p><ol><li><p>HSE（外部高速）</p><ol><li>外接<code>石英</code>、陶瓷瓷谐振器，频率为 4MHz~16MHz。本开发板使用的是 <code>8MHz</code></li></ol></li><li><p>LSE (外部低速)</p><ol><li>外接 <code>32.768kHz</code> 石英晶体，主要作用于 RTC 的时钟源<blockquote><p>可见，外部时钟，全部都是石英</p></blockquote></li></ol></li><li><p>HSI（内部高速）</p><ol><li><code>内部 RC </code>振荡器产生，频率为 <code>8MHz</code></li></ol></li><li><p>LSI(内部低速)</p><ol><li><code>内部 RC</code> 振荡器产生，频率为 <code>40kHz</code>，可作为<code>独立看门狗</code>的时钟源</li></ol></li></ol><blockquote><p>芯片<strong>上电</strong>时默认由<strong>内部的 HSI 时钟启动</strong> (8Mhz)，如果用户进行了硬件和软件的配置，芯片才会根据<code>用户配置</code>调试尝试<code>切换到对应的外部时钟源</code></p></blockquote><h2 id="锁相环pll"><a href="#锁相环pll" class="headerlink" title="锁相环pll"></a>锁相环pll</h2><p>作用：<strong>输入时钟净化</strong>和<strong>倍频</strong></p><p><img src="/../images/23.2.png" alt="alt text"></p><p>所以，要实现 <code>72MHz</code> 的<code>主频率</code> <code>SYSCLK</code>，因为默认高速时钟是8Mhz, 所以pll倍频系数要为9</p><h2 id="系统时钟-sysclk"><a href="#系统时钟-sysclk" class="headerlink" title="系统时钟 sysclk"></a>系统时钟 sysclk</h2><p>以上，介绍了时钟源，倍频pll，接下来就得到了我们的<strong>系统时钟sysclk</strong></p><p><strong>系统时钟 SYSCLK 为整个芯片提供了时序信号</strong></p><p><img src="/../images/23.3.png" alt="alt text"></p><p>系统时钟为以下提供时钟信号：</p><ol><li>外设总线时钟</li><li>内核时钟</li><li>等等，均由sysclk分频得到。</li></ol><h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>该实验，就是让stm32工作在系统时钟sysclk &#x3D; 72Mhz下。</p><p>之前讲到，内核上电后开始执行reset_handler, 里面有两个环节:</p><ol><li>SystemInit<ol><li>配置外部sram（没用到）</li><li>重定向ivt到内部ram（没用到）</li></ol></li><li>main</li></ol><p>所以我们主要看main干了些什么</p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint8_t</span> key;</span><br><span class="line"></span><br><span class="line">    HAL_Init();                             <span class="comment">/* 初始化HAL库 */</span></span><br><span class="line">    sys_stm32_clock_init(RCC_PLL_MUL9);     <span class="comment">/* 设置时钟, 72Mhz */</span></span><br><span class="line">    delay_init(<span class="number">72</span>);                         <span class="comment">/* 延时初始化 */</span></span><br><span class="line">    <span class="comment">//......</span></span><br></pre></td></tr></table></figure><p>可以看到就直接在CM3用内部8M时钟的情况下，就直接跳转到main执行了。</p><p>所以我们是在main里面重新设置时钟，配置主频为72Mhz的。</p><p>先看一下<code>sys_stm32_clock_init</code>这个函数</p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief       系统时钟初始化函数</span></span><br><span class="line"><span class="comment"> * @param       plln: PLL倍频系数(PLL倍频), 取值范围: 2~16</span></span><br><span class="line"><span class="comment">                中断向量表位置在启动时已经在SystemInit()中初始化</span></span><br><span class="line"><span class="comment"> * @retval      无</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sys_stm32_clock_init</span><span class="params">(<span class="type">uint32_t</span> plln)</span></span><br><span class="line">&#123;</span><br><span class="line">    HAL_StatusTypeDef ret = HAL_ERROR;</span><br><span class="line">    RCC_OscInitTypeDef rcc_osc_init = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    RCC_ClkInitTypeDef rcc_clk_init = &#123;<span class="number">0</span>&#125;;</span><br><span class="line"></span><br><span class="line">    rcc_osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;       <span class="comment">/* 选择要配置HSE */</span></span><br><span class="line">    rcc_osc_init.HSEState = RCC_HSE_ON;                         <span class="comment">/* 打开HSE */</span></span><br><span class="line">    rcc_osc_init.HSEPredivValue = RCC_HSE_PREDIV_DIV1;          <span class="comment">/* HSE预分频系数 */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLState = RCC_PLL_ON;                     <span class="comment">/* 打开PLL */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLSource = RCC_PLLSOURCE_HSE;             <span class="comment">/* PLL时钟源选择HSE */</span></span><br><span class="line">    rcc_osc_init.PLL.PLLMUL = plln;                             <span class="comment">/* PLL倍频系数 */</span></span><br><span class="line">    ret = HAL_RCC_OscConfig(&amp;rcc_osc_init);                     <span class="comment">/* 初始化 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != HAL_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>);                                              <span class="comment">/* 时钟初始化失败，之后的程序将可能无法正常执行，可以在这里加入自己的处理 */</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 选中PLL作为系统时钟源并且配置HCLK,PCLK1和PCLK2*/</span></span><br><span class="line">    rcc_clk_init.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);</span><br><span class="line">    rcc_clk_init.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;        <span class="comment">/* 设置系统时钟来自PLL */</span></span><br><span class="line">    rcc_clk_init.AHBCLKDivider = RCC_SYSCLK_DIV1;               <span class="comment">/* AHB分频系数为1 */</span></span><br><span class="line">    rcc_clk_init.APB1CLKDivider = RCC_HCLK_DIV2;                <span class="comment">/* APB1分频系数为2 */</span></span><br><span class="line">    rcc_clk_init.APB2CLKDivider = RCC_HCLK_DIV1;                <span class="comment">/* APB2分频系数为1 */</span></span><br><span class="line">    ret = HAL_RCC_ClockConfig(&amp;rcc_clk_init, FLASH_LATENCY_2);  <span class="comment">/* 同时设置FLASH延时周期为2WS，也就是3个CPU周期。 */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != HAL_OK)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>);                                              <span class="comment">/* 时钟初始化失败，之后的程序将可能无法正常执行，可以在这里加入自己的处理 */</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><p>干了两件事：</p><ol><li>配置 <code>PLL = 9倍频</code> 相关参数确定系统时钟<code>SYSCLK = 72Mhz</code></li><li>配置了 <code>AHB</code>、<code>APB1</code> 和 <code>APB2</code> 的分频系数，也就是确定了 HCLK，PCLK1和 PCLK2 的时钟值</li></ol><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">SYSCLK(系统时钟) =<span class="number">72</span>MHz</span><br><span class="line">PLL 主时钟 =<span class="number">72</span>MHz</span><br><span class="line">AHB 总线时钟（HCLK=SYSCLK/<span class="number">1</span>） =<span class="number">72</span>MHz</span><br><span class="line">APB1 总线时钟（PCLK1=HCLK/<span class="number">2</span>） =<span class="number">36</span>MHz</span><br><span class="line">APB2 总线时钟（PCLK2=HCLK/<span class="number">1</span>） =<span class="number">72</span>MHz</span><br></pre></td></tr></table></figure><p>如果要打开某个外设：</p><p>上一节我们讲解了时钟系统配置步骤。在<code>配置好时钟系统之后</code>，如果我们要<code>使用某些外设</code>，例如 GPIO，ADC 等，我们还要<code>使能这些外设时钟</code>。</p><p>这里大家必须注意，如果在使用外设之前没有使能外设时钟，这个外设是不可能正常运行的。</p><blockquote><p>STM32 的外设时钟使能是在 <code>RCC 相关寄存器中配置</code>的</p></blockquote><p><strong>HAL 库中</strong>，外设时钟使能操作都是在 RCC 相关固件库文件头文件<code>STM32F1xx_hal_rcc.h</code> 定义的. 每个<strong>外设的时钟使能</strong>，都通过<strong>宏</strong>来实现</p><p><img src="/../images/23.4.png" alt="alt text"></p><blockquote><p>我们只需要在我们的用户程序中<strong>调用宏定义标识符</strong>就可以实现 GPIOA 时钟使能。</p><p>禁止外设时钟使用方法和使能外设时钟非常类似</p></blockquote>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;h1 id=&quot;stm32-时钟系统&quot;&gt;&lt;a href=&quot;#stm32-时钟系统&quot; class=&quot;headerlink&quot; title=&quot;stm32 时钟系统&quot;&gt;&lt;/a&gt;stm32 时钟系统&lt;/h1&gt;&lt;p&gt;首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，</summary>
       
     
     
