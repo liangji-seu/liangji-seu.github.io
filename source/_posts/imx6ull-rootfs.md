@@ -11,6 +11,14 @@ tags: [嵌入式, linux, 驱动]
   - [挂载时，内存的内容](#挂载时内存的内容)
 - [根文件系统构建](#根文件系统构建)
   - [先安装nfs](#先安装nfs)
+  - [busybox构建一个rootfs](#busybox构建一个rootfs)
+  - [添加常用的动态链接库](#添加常用的动态链接库)
+  - [bootarg设置使用nfs](#bootarg设置使用nfs)
+  - [创建其他文件夹](#创建其他文件夹)
+  - [创建启动文件](#创建启动文件)
+    - [/etc/init.d/rcS](#etcinitdrcs)
+    - [/etc/fstab](#etcfstab)
+    - [/etc/inittab](#etcinittab)
 
 # 根文件系统组成
 ## 介绍
@@ -117,3 +125,52 @@ Linux 中的**根文件系统**更像是一个**文件夹**或者叫做**目录*
 ## 先安装nfs
 网络文件系统，我们实际的rootfs是需要读写磁盘的，nfs应该就是把VFS下面换成网络去读取远程。
 
+## busybox构建一个rootfs
+```c
+make
+make install CONFIG_PREFIX=/home/liangji/linux/nfs/rootfs
+```
+## 添加常用的动态链接库
+- rootfs/lib添加库文件
+  - `/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux/gnueabihf/libc/lib`
+    - cp *so* *.a ~/linux/nfs/rootfs/lib/ -d
+    - 拷贝ld-linux-armhf.so.3的实体
+  - `/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux/gnueabihf/lib`
+    - cp *so* *.a ~/linux/nfs/rootfs/lib/ -d
+- rootfs/usr/lib添加库文件
+  - `/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/lib`
+    - cp *so* *.a /home/liangji/linux/nfs/rootfs/usr/lib/ -d
+  
+  ![alt text](../images/35.1.png)
+## bootarg设置使用nfs
+1. qemu自测rootfs
+2. nfs自己挂载到主机/mnt测试nfs服务
+3. `set bootargs 'console=ttymxc0,115200 root=/dev/nfs nfsroot=192.168.1.253:/home/liangji/linux/nfs/rootfs,v3,tcp rw ip=192.168.1.251:192.168.1.253:192.168.1.1:255.255.255.0::eth0:off'`
+   1. 一定要指定NFS V3，不然握手会失败
+## 创建其他文件夹
+- dev
+- proc
+- mnt
+- sys
+- tmp
+- root
+- etc
+## 创建启动文件
+### /etc/init.d/rcS
+1. PATH追加可执行文件的可能存在的目录
+2. LD_LIBRARY_PATH 追加 库文件所在目录
+3. 导出这些变量
+4. mount -a挂载所有的文件系统，由/etc/fstab指定
+5. 创建/dev/pts
+6. 把devpts挂载到/dev/pts上
+7. 指定mdev管理热插拔设备，这样linux内核可以在/dev目录下自动创建设备节点。
+> rcS很复杂，更复杂的会借助buildroot来创建。
+
+记得给权限
+### /etc/fstab
+![alt text](../images/35.2.png)
+> 指定挂载3个文件系统
+### /etc/inittab
+init程序会读取这个文件
+![alt text](../images/35.3.png)
+![alt text](../images/35.4.png)
