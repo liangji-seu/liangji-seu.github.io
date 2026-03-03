@@ -4,6 +4,39 @@
   
     
     <entry>
+      <title>imx6ull pinctrl和gpio子系统</title>
+      <link href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/"/>
+      <url>/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/</url>
+      
+        <content type="html"><![CDATA[<ul><li><a href="#linux%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%88%86%E5%B1%82%E5%92%8C%E5%88%86%E7%A6%BB%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%E5%89%8D%E7%9E%BB">linux驱动的分层和分离设计理念前瞻</a></li><li><a href="#pinctrl%E5%AD%90%E7%B3%BB%E7%BB%9F">pinctrl子系统</a><ul><li><a href="#%E7%AE%80%E4%BB%8B">简介</a></li><li><a href="#imx6ull%E7%9A%84pinctrl%E5%AD%90%E7%B3%BB%E7%BB%9F%E9%A9%B1%E5%8A%A8">imx6ull的pinctrl子系统驱动</a><ul><li><a href="#pin%E9%85%8D%E7%BD%AE%E4%BF%A1%E6%81%AF%E8%AF%A6%E8%A7%A3">PIN配置信息详解</a></li><li><a href="#pin%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E8%AE%B2%E8%A7%A3">pin驱动程序讲解</a></li></ul></li><li><a href="#%E8%AE%BE%E5%A4%87%E6%A0%91%E6%B7%BB%E5%8A%A0pinctrl%E8%8A%82%E7%82%B9%E6%A8%A1%E6%9D%BF">设备树添加pinctrl节点模板</a></li></ul></li><li><a href="#%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%88%86%E5%B1%82%E4%B8%8E%E5%88%86%E7%A6%BB%E5%9B%BE%E7%A4%BA"><strong>驱动的分层与分离图示</strong></a><ul><li><a href="#%E5%85%B3%E4%BA%8E%E8%AE%BE%E5%A4%87%E6%A0%91%E4%B8%AD%E8%AE%BE%E5%A4%87%E8%8A%82%E7%82%B9%E7%BB%93%E6%9E%84%E5%B1%82%E6%AC%A1%E6%A2%B3%E7%90%86">关于设备树中设备节点结构层次梳理</a><ul><li><a href="#%E6%AD%A3%E5%B8%B8%E7%89%87%E5%86%85%E8%AE%BE%E5%A4%87%E7%9A%84%E9%A9%B1%E5%8A%A8%E7%88%B6%E5%AD%90%E5%B1%82%E7%BA%A7">正常片内设备的驱动，父子层级</a></li><li><a href="#gpio%E7%89%87%E5%86%85%E8%AE%BE%E5%A4%87%E7%9A%84%E7%89%B9%E6%AE%8A%E6%80%A7%E6%97%A0%E5%B1%82%E7%BA%A7"><strong>gpio片内设备的特殊性，无层级</strong></a></li></ul></li></ul></li><li><a href="#gpio%E5%AD%90%E7%B3%BB%E7%BB%9F">gpio子系统</a></li></ul><h1 id="linux驱动的分层和分离设计理念前瞻"><a href="#linux驱动的分层和分离设计理念前瞻" class="headerlink" title="linux驱动的分层和分离设计理念前瞻"></a>linux驱动的分层和分离设计理念前瞻</h1><p>前面我们写的dts的led驱动，本质上只是一个简单的基于裸机的驱动模块，并没有真正使用到linux的驱动系统。</p><p>像gpio这种最基本的驱动，linux内核不是采用这种原始的裸机驱动开发的方式，而是提供了pinctrl和gpio子系统用于gpio驱动。</p><p><strong>Linux 驱动</strong>讲究驱动<strong>分离</strong>与<strong>分层</strong>，<code>pinctrl</code> 和 <code>gpio</code> 子系统就是驱动分离与分层思想下的产物</p><p><strong>驱动分离与分层</strong>其实就是按照<strong>面向对象编程的设计思想</strong>而设计的设备驱动框架，关于驱动的分离与分层我们后面会讲</p><p>前面我们编写的驱动，包括裸机的gpio驱动，stm32的驱动，有这么几个步骤：</p><ul><li><strong>CCM使能外设时钟</strong></li><li><strong>设置PIN（IOMUXC）</strong><ul><li><blockquote><p>linux内核<strong>针对PIN的配置</strong>，推出了<code>pinctrl</code><strong>子系统</strong></p></blockquote></li><li>设置复用功能</li><li>设置PIN的上下拉等属性</li></ul></li><li><strong>设置GPIO</strong><ul><li><blockquote><p>linux内核<strong>针对GPIO的配置</strong>，推出了<code>gpio</code><strong>子系统</strong></p></blockquote></li><li>GDIR方向</li><li>DR数据</li></ul></li></ul><h1 id="pinctrl子系统"><a href="#pinctrl子系统" class="headerlink" title="pinctrl子系统"></a>pinctrl子系统</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>大多数 SOC 的 <strong>pin 都是支持复用的</strong>，比如 I.MX6ULL 的 GPIO1_IO03 既可以</p><ul><li>作为普通的GPIO 使用，</li><li>也可以作为 I2C1 的 SDA 等等。</li></ul><p>此外我们还需要<strong>配置 pin 的电气特性</strong>，比如</p><ul><li>上&#x2F;下拉、速度、驱动能力等等。</li></ul><hr><p><strong>传统的配置 pin 的方式</strong>就是<strong>直接操作相应的寄存器</strong>，但是这种配置方式比较繁琐、而且容易出问题(比如 pin 功能冲突)。</p><p><strong>pinctrl 子系统</strong>就是为了解决这个问题而引入的，pinctrl 子系统<strong>主要工作内容</strong>如下：</p><ul><li>获取设备树中 pin 信息。</li><li>根据获取到的 pin 信息来设置 pin 的<strong>复用功能</strong></li><li>根据获取到的 pin 信息来设置 pin 的<strong>电气特性</strong>，比如上&#x2F;下拉、速度、驱动能力等</li></ul><blockquote><p>对于我们使用者来讲，<strong>只需要在设备树里面设置好某个 pin 的相关属性即可</strong>，其他的初始化工作均由 pinctrl 子系统来完成，pinctrl 子系统源码目录为 <code>drivers/pinctrl</code></p></blockquote><h2 id="imx6ull的pinctrl子系统驱动"><a href="#imx6ull的pinctrl子系统驱动" class="headerlink" title="imx6ull的pinctrl子系统驱动"></a>imx6ull的pinctrl子系统驱动</h2><blockquote><p>我这里有一个猜测：</p><p>linux内核驱动的分层，分离的思想，是不是就是说，pin引脚设置，就一起一口气设置了，之后gpio的初始化，也一口气设置了。对比裸机的外设驱动，是以设备为单位，设置完一个设备，在设置另一个设备，这样如果两个设备的引脚冲突，不容易发现。pinctrl子系统，作为内核驱动的一部分，一口气设置所有的pin。</p></blockquote><h3 id="PIN配置信息详解"><a href="#PIN配置信息详解" class="headerlink" title="PIN配置信息详解"></a>PIN配置信息详解</h3><p>要使用pinctrl子系统，我们要在设备树里面设置PIN的配置信息。</p><blockquote><p>pinctrl子系统要根据你提供的信息来配置PIN。</p></blockquote><p>根据设备树的定义，<code>.dtsi</code>中，肯定会有soc内部的io复用控制器的外设节点</p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">iomuxc: iomuxc@<span class="number">020e0000</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure><p>在<code>.dts</code>中，则可以看到，根据每块板卡的不同，<strong>追加了很多pin配置</strong><br><img src="/../images/40.1.png" alt="alt text"></p><blockquote><p>不同的外设，使用不同的pin配置（复用，电气参数）。</p><p>将<strong>某个外设</strong>所使用的<strong>所有PIN</strong>都组织在<strong>一个子节点</strong>里面</p></blockquote><p>如果我们需要在<strong>iomuxc中添加我们自定义外设的PIN配置</strong>，就需要<strong>创建我们自己的外设的子节点</strong>。然后把这个自定义外设的<strong>所有PIN配置信息，都放到这个子节点中</strong>。</p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">iomuxc: iomuxc@<span class="number">020e0000</span> &#123;</span><br><span class="line">    compatible = <span class="string">&quot;fsl,imx6ul-iomuxc&quot;</span>;</span><br><span class="line">    reg = &lt;<span class="number">0x020e0000</span> <span class="number">0x4000</span>&gt;;</span><br><span class="line">    pinctrl-names = <span class="string">&quot;default&quot;</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure><p>在.dtsi中，可以看到，iomuxc这个外设指定的驱动程序是<code>fsl,imx6ul-iomuxc</code>, 实际对应的是<code>drivers/pinctrl/freescale/pinctrl-imx6ul.c</code>这个驱动程序</p><blockquote><p>所以我们之前写的ko都是驱动模块，<strong>linux的内置的驱动都在drivers&#x2F;下</strong>，所以我们的<strong>pinctrl子系统</strong>，其实就是<strong>针对iomuxc这个外设的驱动程序</strong>。</p></blockquote><hr><p>下面解析一下每个子节点的<strong>PIN配置信息的含义</strong></p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">pinctrl_hog_1: hoggrp<span class="number">-1</span> &#123;</span><br><span class="line">    fsl,pins = &lt;</span><br><span class="line">        MX6UL_PAD_UART1_RTS_B__GPIO1_IO19 <span class="number">0x17059</span></span><br><span class="line">        MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT <span class="number">0x17059</span></span><br><span class="line">        MX6UL_PAD_GPIO1_IO09__GPIO1_IO09 <span class="number">0x17059</span></span><br><span class="line">        MX6UL_PAD_GPIO1_IO00__ANATOP_OTG1_ID <span class="number">0x13058</span></span><br><span class="line">    &gt;;</span><br></pre></td></tr></table></figure><p>可以看到里面的一则PIN配置为</p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">MX6UL_PAD_UART1_RTS_B__GPIO1_IO19 <span class="number">0x17059</span></span><br></pre></td></tr></table></figure><p>有两部分组成：</p><ul><li><strong>复用信息</strong><ul><li><code>MX6UL_PAD_UART1_RTS_B__GPIO1_IO19</code>, <ul><li>在<code>imx6ul-pinfunc.h</code>中宏定义为<code>0x0090</code> <code>0x031C</code> <code>0x0000</code> <code>0x5</code> <code>0x0</code></li></ul></li><li><strong>实际含义为</strong>：&lt;<code>mux_reg</code> <code>conf_reg</code> <code>input_reg</code> <code>mux_mode</code> <code>input_val</code>&gt;<ul><li><code>mux_reg</code>, iomuxc的复用寄存器的偏移地址</li><li><code>conf_reg</code>, iomuxc的电气参数寄存器的偏移地址</li><li><code>input_reg</code>, iomuxc的input_reg寄存器，有些外设pin没有这个</li><li><code>mux_mode</code>, mux_reg的值</li><li><code>input_val</code>, input_reg的值</li></ul></li></ul></li><li><strong>电气参数</strong><ul><li><code>0x17059</code><ul><li><strong>就是<code>conf_reg</code>的值</strong></li></ul></li></ul></li></ul><blockquote><p>这样就可以通过一行，来配置好这个外设的一个PIN的想要的配置了</p></blockquote><h3 id="pin驱动程序讲解"><a href="#pin驱动程序讲解" class="headerlink" title="pin驱动程序讲解"></a>pin驱动程序讲解</h3><p>这里主要就是讲解<strong>pinctrl子系统的实现原理</strong></p><p>iomuxc的compatible指定驱动程序<code>fsl,imx6ul-iomuxc</code>, 定义在<code>drivers/pinctrl/freescale/pinctrl-imx6ul.c</code>,就是我们的<strong>pinctrl子系统</strong>（<strong>iomuxc驱动</strong>）</p><p>但是我们这里的pinctrl是<code>platform_driver</code>是<strong>平台设备驱动</strong>, 后面会讲这种驱动模式<br><img src="/../images/40.2.png" alt="alt text"></p><p>当<strong>设备和驱动匹配成功以后</strong>, <code>platform_driver</code> 的 <code>probe 成员变量</code>所代表的函数就会执行, ，可以认为 <strong><code>imx6ul_pinctrl_probe</code> 函数</strong>就是 I.MX6ULL 这个 SOC 的 PIN 配置<strong>入口函数</strong></p><p><img src="/../images/40.3.png" alt="alt text"></p><p>具体pinctrl细节，这里先不分析<br><img src="/../images/40.4.png" alt="alt text"></p><p>这里主要注意的是，<strong>pinctrl是linux的一个子系统</strong>，但是<strong>芯片原厂需要根据自家的芯片</strong>，来告诉linux内核，如何操作这些pin，就是<strong>注册操作结构体</strong>，这估计就是SDK要干的事情。</p><p><img src="/../images/40.5.jpg" alt="alt text"></p><p>可以看到，drivers&#x2F;pinctrl&#x2F;子系统下，除了pinctrl的通用代码 ，还有各个芯片原厂，比如：</p><ul><li>freescale</li><li>intel</li><li>samsung</li><li>…..</li></ul><p><strong>为linux内核准备的自家soc的pin操作方法。</strong></p><p>进入freescale后发现针对各种自家的SOC，有<code>pinctrl-xxx.c</code></p><h2 id="设备树添加pinctrl节点模板"><a href="#设备树添加pinctrl节点模板" class="headerlink" title="设备树添加pinctrl节点模板"></a>设备树添加pinctrl节点模板</h2><h1 id="驱动的分层与分离图示"><a href="#驱动的分层与分离图示" class="headerlink" title="驱动的分层与分离图示"></a><strong>驱动的分层与分离图示</strong></h1><p><strong>一句话</strong>：这就是<strong>驱动开发的分离与分层</strong></p><p><img src="/../images/40.6.png" alt="alt text"></p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">[ 硬件: i.MX6ULL GPIO1_IO03 ]</span><br><span class="line">                   ^</span><br><span class="line">                   | (物理操作)</span><br><span class="line">       ---------------------------</span><br><span class="line">       |  芯片原厂提供的底层驱动     | &lt;--- (NXP 工程师已经写好了)</span><br><span class="line">       ---------------------------</span><br><span class="line">                   ^</span><br><span class="line">                   | (内核内部回调)</span><br><span class="line"> [ Linux GPIO 子系统 (框架层) ]</span><br><span class="line">                   ^</span><br><span class="line">                   | (调用标准 API: gpio_set_value)</span><br><span class="line">       ---------------------------</span><br><span class="line">       |    你的驱动程序 (LED.c)    | &lt;--- (你只需要写这一层)</span><br><span class="line">       ---------------------------</span><br><span class="line">                   ^</span><br><span class="line">                   | (open/write)</span><br><span class="line">       [ 用户程序 (main.c) ]</span><br></pre></td></tr></table></figure><p><img src="/../images/40.7.png" alt="alt text"></p><h2 id="关于设备树中设备节点结构层次梳理"><a href="#关于设备树中设备节点结构层次梳理" class="headerlink" title="关于设备树中设备节点结构层次梳理"></a>关于设备树中设备节点结构层次梳理</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">/ (根节点: 代表整块 i.MX6ULL 开发板)</span><br><span class="line">┃</span><br><span class="line">┗━ soc (节点: 代表芯片内部资源)</span><br><span class="line">    ┃</span><br><span class="line">    ┣━ uart1: serial@<span class="number">02020000</span> (UART控制器)</span><br><span class="line">    ┃   ┗━ bluetooth-module (子节点: 接在串口<span class="number">1</span>上的蓝牙模块)</span><br><span class="line">    ┃</span><br><span class="line">    ┣━ i2c1: i2c@<span class="number">021</span>a0000 (I2C1控制器)</span><br><span class="line">    ┃   ┣━ mpu6050@<span class="number">68</span> (子节点: 地址为<span class="number">0x68</span>的陀螺仪)</span><br><span class="line">    ┃   ┗━ eeprom@<span class="number">50</span> (子节点: 地址为<span class="number">0x50</span>的存储器)</span><br><span class="line">    ┃</span><br><span class="line">    ┗━ usdhc1: mmc@<span class="number">02190000</span> (SD卡控制器)</span><br><span class="line">        ┗━ sdcard@<span class="number">0</span> (子节点: 插在卡槽<span class="number">1</span>里的SD卡)</span><br></pre></td></tr></table></figure><h3 id="正常片内设备的驱动，父子层级"><a href="#正常片内设备的驱动，父子层级" class="headerlink" title="正常片内设备的驱动，父子层级"></a>正常片内设备的驱动，父子层级</h3><p>正常片内设备，比如i2c，要严格遵循<strong>父子层级关系</strong>。</p><h3 id="gpio片内设备的特殊性，无层级"><a href="#gpio片内设备的特殊性，无层级" class="headerlink" title="gpio片内设备的特殊性，无层级"></a><strong>gpio片内设备的特殊性，无层级</strong></h3><p><img src="/../images/40.8.png" alt="alt text"></p><blockquote><p>因为gpio在几乎所有的外设中都有使用，所以一般不使用父子层级，而是内嵌在别的设备节点里面，相当于是最底层，最普遍的外设资源，因为使用非常普遍，所以几乎可以看出是属性。相当于全设备使能</p></blockquote><h1 id="gpio子系统"><a href="#gpio子系统" class="headerlink" title="gpio子系统"></a>gpio子系统</h1><p>先会用，内部实现后面再补充</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> LINUX </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> linux </tag>
+            
+            <tag> 驱动 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>imx6ull 设备树-led驱动</title>
       <link href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/"/>
       <url>/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/</url>
@@ -1268,9 +1301,9 @@
             
             <tag> 嵌入式 </tag>
             
-            <tag> Android10 </tag>
-            
             <tag> linux </tag>
+            
+            <tag> Android10 </tag>
             
         </tags>
       
@@ -1297,11 +1330,11 @@
       
         <tags>
             
-            <tag> 嵌入式 </tag>
-            
             <tag> rk3399 </tag>
             
             <tag> android10 </tag>
+            
+            <tag> 嵌入式 </tag>
             
         </tags>
       
@@ -1330,9 +1363,9 @@
             
             <tag> 嵌入式 </tag>
             
-            <tag> Android10 </tag>
-            
             <tag> linux </tag>
+            
+            <tag> Android10 </tag>
             
         </tags>
       
@@ -1361,9 +1394,9 @@
             
             <tag> 嵌入式 </tag>
             
-            <tag> Android10 </tag>
-            
             <tag> linux </tag>
+            
+            <tag> Android10 </tag>
             
         </tags>
       
