@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="方案前面我们在模块里面，像裸机那样宏定义了外设寄存器的基地址。但是由于我们linux内核开启了mmu，所以内核空间依然是有独立的虚拟地址的。所以需要  ioremap iounmap  来进行物理地址-内核空间虚拟地址的映射 后来学习了设备树dts之后，可以把这些和具体板卡SOC相关的物理地址的参数，全部写到dts里面。 使用设备树来向 Linux 内核传递相关的寄存器物理地址 使用内核提供的OF">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull 设备树-led驱动">
+<meta property="og:url" content="http://example.com/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="方案前面我们在模块里面，像裸机那样宏定义了外设寄存器的基地址。但是由于我们linux内核开启了mmu，所以内核空间依然是有独立的虚拟地址的。所以需要  ioremap iounmap  来进行物理地址-内核空间虚拟地址的映射 后来学习了设备树dts之后，可以把这些和具体板卡SOC相关的物理地址的参数，全部写到dts里面。 使用设备树来向 Linux 内核传递相关的寄存器物理地址 使用内核提供的OF">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-03-03T04:09:38.000Z">
+<meta property="article:modified_time" content="2026-03-03T06:34:22.291Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/","path":"2026/03/03/imx6ull-设备树-led驱动/","title":"imx6ull 设备树-led驱动"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull 设备树-led驱动 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull 设备树-led驱动 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull 设备树-led驱动
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-03-03 12:09:38 / 修改时间：14:34:22" itemprop="dateCreated datePublished" datetime="2026-03-03T12:09:38+08:00">2026-03-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h1><p>前面我们在模块里面，像裸机那样宏定义了外设寄存器的基地址。但是由于我们linux内核开启了mmu，所以内核空间依然是有独立的虚拟地址的。所以需要</p>
+<ul>
+<li>ioremap</li>
+<li>iounmap</li>
+</ul>
+<p>来进行<strong>物理地址-内核空间虚拟地址的映射</strong></p>
+<p>后来学习了设备树dts之后，可以把这些和具体板卡SOC相关的物理地址的参数，全部写到dts里面。</p>
+<p><strong>使用设备树来向 Linux 内核传递相关的寄存器物理地址</strong></p>
+<p>使用内核提供的<strong>OF函数</strong>从<strong>设备树</strong>中获取所需的属性值，然后使用获取到的属性值来初始化相关的 IO</p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>这个还是比较简单的，我自己也手写了一遍led dts的驱动</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//通用</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//module</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//err, gpio_macro</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//register_cdev</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/cdev.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//mknod</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/device.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//dts OF</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of_address.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//ioremap</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/mach/map.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/uaccess.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/io.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DEV_CNT 1</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DEV_NAME <span class="string">&quot;mydtsled&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DEV_CLASS <span class="string">&quot;mydtsled_class&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DEV_DEVICE <span class="string">&quot;mydtsled_device&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 映射后的寄存器虚拟地址指针 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *IMX6U_CCM_CCGR1;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *SW_MUX_GPIO1_IO03;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *SW_PAD_GPIO1_IO03;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *GPIO1_DR;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem *GPIO1_GDIR;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//desc a led</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">led</span> &#123;</span></span><br><span class="line">		<span class="comment">//alloc devid</span></span><br><span class="line">		<span class="type">dev_t</span> devid;</span><br><span class="line">		<span class="type">int</span> major;</span><br><span class="line">		<span class="type">int</span> minor;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//register cdev</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> _<span class="title">cdev</span>;</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">//mknod class and device</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="keyword">class</span> * _<span class="title">class</span>;</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">device</span> * _<span class="title">device</span>;</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">//dts node</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">device_node</span> * _<span class="title">dtb_node</span>;</span></span><br><span class="line">&#125; mydtsled;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">led_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	printk(<span class="string">&quot;led is open!\r\n&quot;</span>);</span><br><span class="line">	filp-&gt;private_data = &amp;mydtsled;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">led_read</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *offt)</span></span><br><span class="line">&#123;</span><br><span class="line">	printk(<span class="string">&quot;mytest read!\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LEDOFF 					0			<span class="comment">/* 关灯 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LEDON 					1			<span class="comment">/* 开灯 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">led_switch</span><span class="params">(u8 sta)</span></span><br><span class="line">&#123;</span><br><span class="line">	u32 val = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">if</span>(sta == LEDON) &#123;</span><br><span class="line">		val = readl(GPIO1_DR);</span><br><span class="line">		val &amp;= ~(<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	</span><br><span class="line">		writel(val, GPIO1_DR);</span><br><span class="line">	&#125;<span class="keyword">else</span> <span class="keyword">if</span>(sta == LEDOFF) &#123;</span><br><span class="line">		val = readl(GPIO1_DR);</span><br><span class="line">		val|= (<span class="number">1</span> &lt;&lt; <span class="number">3</span>);	</span><br><span class="line">		writel(val, GPIO1_DR);</span><br><span class="line">	&#125;	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">led_write</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">const</span> <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *offt)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> retvalue = <span class="number">0</span>;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> databuf[<span class="number">1</span>];</span><br><span class="line"></span><br><span class="line">	printk(<span class="string">&quot;mydtsled write! : filp-&gt;private_data-&gt;major = %d\r\n&quot;</span>, </span><br><span class="line">				(*(<span class="keyword">struct</span> led *)(filp-&gt;private_data)).major);</span><br><span class="line">	retvalue = copy_from_user(databuf, buf, cnt);</span><br><span class="line">	<span class="keyword">if</span>(retvalue &lt; <span class="number">0</span>)&#123;</span><br><span class="line">		printk(<span class="string">&quot;kernel get user write failed\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> -EFAULT;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		printk(<span class="string">&quot;kernel get user char = %s\n&quot;</span>, buf);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>(databuf[<span class="number">0</span>] == LEDON)&#123;</span><br><span class="line">		led_switch(LEDON);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span>(databuf[<span class="number">0</span>] == LEDOFF) &#123;</span><br><span class="line">		led_switch(LEDOFF);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">led_release</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	printk(<span class="string">&quot;chrdevbase release！\r\n&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">led_fops</span> =</span> &#123;</span><br><span class="line">	.owner = THIS_MODULE,	</span><br><span class="line">	.open = led_open,</span><br><span class="line">	.read = led_read,</span><br><span class="line">	.write = led_write,</span><br><span class="line">	.release = led_release,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">dtsled_init</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">property</span>* <span class="title">prop</span>;</span></span><br><span class="line">		<span class="type">int</span> ret;</span><br><span class="line">		<span class="type">const</span> <span class="type">char</span> * str;	<span class="comment">//常量指针，能重定向，无法改值</span></span><br><span class="line">		u32 regdata[<span class="number">14</span>];</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		printk(<span class="string">&quot;my dts led driver start init\n&quot;</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		<span class="comment">//dts of</span></span><br><span class="line">		mydtsled._dtb_node = of_find_node_by_path(<span class="string">&quot;/led@0&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span>(mydtsled._dtb_node == <span class="literal">NULL</span>)&#123;</span><br><span class="line">			printk(<span class="string">&quot;not find dtb node\n&quot;</span>);</span><br><span class="line">			<span class="keyword">return</span> -EINVAL;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			printk(<span class="string">&quot;find node\n&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//get prop from dtb node</span></span><br><span class="line">		prop = of_find_property(mydtsled._dtb_node , <span class="string">&quot;compatible&quot;</span>, <span class="literal">NULL</span>);</span><br><span class="line">		<span class="keyword">if</span>(prop == <span class="literal">NULL</span>)&#123;</span><br><span class="line">			printk(<span class="string">&quot;not find dtb compatible\n&quot;</span>);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			printk(<span class="string">&quot;compatible = %s\n&quot;</span>, (<span class="type">char</span>*)(prop-&gt;value));</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//get status</span></span><br><span class="line">		ret = of_property_read_string(mydtsled._dtb_node , <span class="string">&quot;status&quot;</span>, &amp;str);</span><br><span class="line">		<span class="keyword">if</span>(ret &lt; <span class="number">0</span>)&#123;</span><br><span class="line">			printk(<span class="string">&quot;status read failed\n&quot;</span>);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			printk(<span class="string">&quot;status = %s\n&quot;</span>, str);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//get reg</span></span><br><span class="line">		ret = of_property_read_u32_array(mydtsled._dtb_node, <span class="string">&quot;reg&quot;</span>, regdata, <span class="number">10</span>);</span><br><span class="line">		<span class="keyword">if</span>(ret &lt; <span class="number">0</span>)&#123;</span><br><span class="line">				printk(<span class="string">&quot;reg read failed\n&quot;</span>);</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			u8 i = <span class="number">0</span>;</span><br><span class="line">			printk(<span class="string">&quot;read reg = \n&quot;</span>);</span><br><span class="line">			<span class="keyword">for</span>(i = <span class="number">0</span>; i&lt;<span class="number">10</span>; i++)</span><br><span class="line">				printk(<span class="string">&quot;%x &quot;</span>, regdata[i]);</span><br><span class="line">			printk(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		<span class="comment">//init led</span></span><br><span class="line">		IMX6U_CCM_CCGR1 = of_iomap(mydtsled._dtb_node, <span class="number">0</span>);</span><br><span class="line">		SW_MUX_GPIO1_IO03 = of_iomap(mydtsled._dtb_node, <span class="number">1</span>);</span><br><span class="line">		SW_PAD_GPIO1_IO03 = of_iomap(mydtsled._dtb_node, <span class="number">2</span>);</span><br><span class="line">		GPIO1_DR = of_iomap(mydtsled._dtb_node, <span class="number">3</span>);</span><br><span class="line">		GPIO1_GDIR = of_iomap(mydtsled._dtb_node, <span class="number">4</span>);</span><br><span class="line">		</span><br><span class="line">		<span class="comment">//ccm enable clock of gpio1</span></span><br><span class="line">		u32 val = <span class="number">0</span>;</span><br><span class="line">		val = readl(IMX6U_CCM_CCGR1);</span><br><span class="line">		val &amp;= ~(<span class="number">3</span>&lt;&lt;<span class="number">26</span>);</span><br><span class="line">		val |= (<span class="number">3</span>&lt;&lt;<span class="number">26</span>);</span><br><span class="line">		writel(val, IMX6U_CCM_CCGR1);</span><br><span class="line"></span><br><span class="line">		<span class="comment">//iomux iopad</span></span><br><span class="line">		<span class="comment">//为什么这里不用使能时钟？</span></span><br><span class="line">		writel(<span class="number">5</span>, SW_MUX_GPIO1_IO03);	<span class="comment">//IOMUX</span></span><br><span class="line">		writel(<span class="number">0x10B0</span>, SW_PAD_GPIO1_IO03);	<span class="comment">//IOPAD</span></span><br><span class="line"></span><br><span class="line">		<span class="comment">//gpio cr: output</span></span><br><span class="line">		val = readl(GPIO1_GDIR);</span><br><span class="line">		val &amp;= ~(<span class="number">1</span>&lt;&lt;<span class="number">3</span>);</span><br><span class="line">		val |= (<span class="number">1</span>&lt;&lt;<span class="number">3</span>);</span><br><span class="line">		writel(val, GPIO1_GDIR);</span><br><span class="line"></span><br><span class="line">		<span class="comment">//gpio dr</span></span><br><span class="line">		val = readl(GPIO1_DR);</span><br><span class="line">		val |= (<span class="number">1</span>&lt;&lt;<span class="number">3</span>);</span><br><span class="line">		writel(val, GPIO1_DR);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		<span class="comment">//alloc devid</span></span><br><span class="line">		alloc_chrdev_region(&amp;(mydtsled.devid), <span class="number">0</span>, DEV_CNT, DEV_NAME);</span><br><span class="line">		mydtsled.major = MAJOR(mydtsled.devid);</span><br><span class="line">		mydtsled.minor = MINOR(mydtsled.devid);</span><br><span class="line">		printk(<span class="string">&quot;mydtsled alloc devid over, major = %d, minor = %d\n&quot;</span>, </span><br><span class="line">						mydtsled.major, mydtsled.minor);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		<span class="comment">//register cdev</span></span><br><span class="line">		mydtsled._cdev.owner = THIS_MODULE;</span><br><span class="line">		cdev_init(&amp;(mydtsled._cdev), &amp;led_fops);</span><br><span class="line">		cdev_add(&amp;(mydtsled._cdev), mydtsled.devid, DEV_CNT);</span><br><span class="line"></span><br><span class="line">		<span class="comment">//mknod</span></span><br><span class="line">		mydtsled._class = class_create(THIS_MODULE, DEV_CLASS);</span><br><span class="line">		mydtsled._device = device_create(mydtsled._class, <span class="literal">NULL</span>, mydtsled.devid, <span class="literal">NULL</span>, DEV_DEVICE);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">		printk(<span class="string">&quot;my dts led driver init over\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">dtsled_exit</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">		printk(<span class="string">&quot;my dts led driver start exit\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">		</span><br><span class="line">    	<span class="comment">//注销devid</span></span><br><span class="line">	    unregister_chrdev_region(mydtsled.devid, DEV_CNT);</span><br><span class="line">	</span><br><span class="line">		<span class="comment">//注销字符设备</span></span><br><span class="line">		cdev_del(&amp;(mydtsled._cdev));</span><br><span class="line"></span><br><span class="line">		<span class="comment">//取消设备节点</span></span><br><span class="line">		device_destroy(mydtsled._class, mydtsled.devid);</span><br><span class="line">		class_destroy(mydtsled._class);</span><br><span class="line"></span><br><span class="line">		printk(<span class="string">&quot;my dts led driver exit over\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(dtsled_init);</span><br><span class="line">module_exit(dtsled_exit);</span><br><span class="line"></span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;liangji&quot;</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/" rel="prev" title="imx6ull 设备树">
+                  <i class="fa fa-angle-left"></i> imx6ull 设备树
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item current">
+              <span>imx6ull 设备树-led驱动</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
