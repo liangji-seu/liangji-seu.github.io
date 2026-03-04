@@ -18,6 +18,16 @@ tags: [嵌入式, linux, 驱动]
     - [正常片内设备的驱动，父子层级](#正常片内设备的驱动父子层级)
     - [**gpio片内设备的特殊性，无层级**](#gpio片内设备的特殊性无层级)
 - [gpio子系统](#gpio子系统)
+  - [I.MX6ULL 的 gpio 子系统驱动](#imx6ull-的-gpio-子系统驱动)
+    - [设备树中的 gpio 信息表示](#设备树中的-gpio-信息表示)
+    - [gpio驱动程序](#gpio驱动程序)
+  - [**.probe中的具体内容分析（待完善）**](#probe中的具体内容分析待完善)
+    - [gpio子系统api函数](#gpio子系统api函数)
+    - [设备树添加gpio节点模板](#设备树添加gpio节点模板)
+      - [pinctrl-x, pinctrl-name的含义](#pinctrl-x-pinctrl-name的含义)
+      - [GPIO\_ACTIVE\_LOW/HIGH的含义](#gpio_active_lowhigh的含义)
+    - [gpio子系统里面如何获取节点gpio信息，OF函数](#gpio子系统里面如何获取节点gpio信息of函数)
+- [利用dts + pinctrl子系统 + gpio子系统， 重写led驱动](#利用dts--pinctrl子系统--gpio子系统-重写led驱动)
 
 
 # linux驱动的分层和分离设计理念前瞻
@@ -218,3 +228,352 @@ iomuxc的compatible指定驱动程序`fsl,imx6ul-iomuxc`, 定义在`drivers/pinc
 
 # gpio子系统
 先会用，内部实现后面再补充
+
+**gpio 子系统**的主要目的就是**方便驱动开发者使用 gpio**，驱动开发者在**设备树中添加 gpio 相关信息**，然后就可以在驱动程序中使用 gpio 子系统提供的 API函数来操作 GPIO，
+
+Linux 内核向驱动开发者屏**蔽掉了 GPIO 的设置过程**，极大的方便了驱动开发者使用 GPIO
+
+## I.MX6ULL 的 gpio 子系统驱动
+### 设备树中的 gpio 信息表示
+以usdhc节点为例：
+![alt text](../images/40.9.png)
+
+- pinctrl-x
+  - 表示使用dts设置pinctrl的**该组PINs的配置**
+  - 这里面指定的pinctrl-0， pinctrl-1指的是usdhc设备的所有节点的**不同配置模式**
+- cd-gpios = <&gpio1 19 GPIO_ACTIVE_LOW>;
+  - 指定usdhc1的cd引脚是gpio1_19, 低电平有效。
+  - ![alt text](../images/40.10.png)
+  - 根据dts指定，我们就可以在编写sd卡驱动的时候，使用cd引脚的gpio了
+
+> 因为usdhc1外设节点里面指定了gpio1，**gpio1本质上也是我们soc的片内外设资源**，肯定也是有设备节点的。所以
+![alt text](../images/40.11.png)
+可以看到， gpio1设备节点里面，指定了他们使用的gpio驱动程序，也就是我们的gpio子系统。
+
+其中有一些不常见的属性：
+- `gpio-controller;`
+  - 表示gpio1节点，是一个GPIO控制器
+- `#gpio-cells = <2>;`
+  - 表面指定gpio的键值对由两部分组成：
+    - GPIO编号（&gpio1 3 表示GPIO1_IO03）
+    - GPIO极性（0 = GPIO_ACTIVE_HIGH 高电平有效）
+
+### gpio驱动程序
+前面我们发现gpio1节点里面指定了**驱动程序**为`fsl,imx6ul-gpio`,所以下一步肯定是要去找到我们的gpio驱动。肯定是去drivers/下才能找到linux内置驱动。
+
+实际就是`drivers/gpio/gpio-mxc.c`,**内置驱动**里面才有`of_device_id`.
+
+> drivers/gpio/下有很多芯片的gpio驱动文件，gpiolib-xxx是gpio驱动的核心文件。
+>
+> 这些驱动几乎都是platform_driver{.driver, .probe, .id_table}
+>
+> 当dts中设备节点匹配上内置驱动后，probe就会执行。
+---
+**.probe中的具体内容分析（待完善）**
+---
+
+### gpio子系统api函数
+对于驱动开发人员，设置好设备树以后就可以使用 gpio 子系统提供的 API 函数来操作指定的 GPIO
+
+![alt text](../images/40.12.png)
+![alt text](../images/40.13.png)
+
+
+### 设备树添加gpio节点模板
+前面我们总结过，gpio下连接的设备，一般不遵循严格的父子关系。而是直接放到设备节点里面，当属性用。
+
+```c
+//根节点下，我们自己的一个设备叫test_gpio，里面指定我们要用的gpio
+	test_gpio {
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_test>;
+		gpio = <&gpio1 0 GPIO_ACTIVE_LOW>;
+	};
+
+
+
+//pinctrl子系统的设置，本是上就是iomuxc外设的子节点。你要的任何一组pin脚的属性设置，都被视为iomuxc设备节点的子节点。
+&iomuxc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_hog_1>;
+	imx6ul-evk {
+		/* 我们自己添加的一个iomuxc节点的子结点（pinctrl子系统）*/
+		pinctrl_test: testgrp {
+			fsl,pins = <
+				MX6UL_PAD_GPIO1_IO07__CCM_STOP 0x1b088	
+			>;
+		};
+    }
+}
+```
+#### pinctrl-x, pinctrl-name的含义
+![alt text](../images/40.14.png)
+#### GPIO_ACTIVE_LOW/HIGH的含义
+![alt text](../images/40.15.png)
+### gpio子系统里面如何获取节点gpio信息，OF函数
+- of_gpio_named_count
+  - 统计**任意命名属性**的gpio个数，获取设备树某个属性里面定义了几个GPIO的信息（空的也算一个）
+  - ![alt text](../images/40.16.png)
+- ---
+- of_gpio_count
+  - 还是统计，统计的是**gpios这个属性的gpio的个数**
+  - ![alt text](../images/40.17.png)
+- ---
+- of_get_named_gpio
+  - 获取GPIO编号，将设备树中类似<&gpio5 7 GPIO_ACTIVE_LOW>的属性信息**转换为对应的 GPIO 编号**
+  - ![alt text](../images/40.18.png)
+  - ![alt text](../images/40.19.png)
+
+# 利用dts + pinctrl子系统 + gpio子系统， 重写led驱动
+1. 配置dts, 
+   1. 指定pinctrl配置
+   2. 创建led设备节点，指定gpio
+2. **检查pin是否被其他外设使用**
+3. led.ko驱动模块编写
+
+`.dts`
+```c
+//根节点
+	gpioled: mygpioled@0 {
+		compatible = "my-gpio-led";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpioled>;		/*制定gpioled这个外设的PIN属性*/
+		led-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
+	};
+
+
+//iomuxc
+		pinctrl_gpioled: pinctrl_gpioled {
+			fsl,pins = <
+				MX6UL_PAD_GPIO1_IO03__GPIO1_IO03	0x10B0		/*LED0*/
+			>;
+		};
+	
+```
+
+`gpioled.c`
+```c
+//通用
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/delay.h>
+#include <linux/ide.h>
+
+//module
+#include <linux/init.h>
+#include <linux/module.h>
+
+//err, gpio_macro
+#include <linux/errno.h>
+#include <linux/gpio.h>
+
+//register_cdev
+#include <linux/cdev.h>
+
+//mknod
+#include <linux/device.h>
+
+//dts OF
+#include <linux/of.h>
+#include <linux/of_address.h>
+#include <linux/of_gpio.h>
+
+//ioremap
+#include <asm/mach/map.h>
+#include <asm/uaccess.h>
+#include <asm/io.h>
+
+
+#define DEV_CNT 1
+#define DEV_NAME "mygpioled"
+#define DEV_CLASS "mygpioled_class"
+#define DEV_DEVICE "mygpioled_device"
+
+/* 映射后的寄存器虚拟地址指针 */
+static void __iomem *IMX6U_CCM_CCGR1;
+static void __iomem *SW_MUX_GPIO1_IO03;
+static void __iomem *SW_PAD_GPIO1_IO03;
+static void __iomem *GPIO1_DR;
+static void __iomem *GPIO1_GDIR;
+
+
+//desc a led
+struct led {
+		//alloc devid
+		dev_t devid;
+		int major;
+		int minor;
+
+		//register cdev
+		struct cdev _cdev;
+
+		//mknod class and device
+		struct class * _class;
+		struct device * _device;
+
+		//dts node
+		struct device_node * _dtb_node;
+
+		//gpioID
+		int led_gpio;
+} mygpioled;
+
+
+
+static int led_open(struct inode *inode, struct file *filp)
+{
+	printk("led is open!\r\n");
+	filp->private_data = &mygpioled;
+	return 0;
+}
+
+static ssize_t led_read(struct file *filp, char __user *buf, size_t cnt, loff_t *offt)
+{
+	printk("mytest read!\r\n");
+	return 0;
+}
+
+#define LEDOFF 					0			/* 关灯 */
+#define LEDON 					1			/* 开灯 */
+
+/*
+static void led_switch(u8 sta)
+{
+	u32 val = 0;
+	if(sta == LEDON) {
+		val = readl(GPIO1_DR);
+		val &= ~(1 << 3);	
+		writel(val, GPIO1_DR);
+	}else if(sta == LEDOFF) {
+		val = readl(GPIO1_DR);
+		val|= (1 << 3);	
+		writel(val, GPIO1_DR);
+	}	
+}
+*/
+
+static ssize_t led_write(struct file *filp, const char __user *buf, size_t cnt, loff_t *offt)
+{
+	int retvalue = 0;
+	unsigned char databuf[1];
+	struct led *_dev = filp->private_data;
+
+	printk("mygpioled write! : filp->private_data->major = %d\r\n", 
+				(*(struct led *)(filp->private_data)).major);
+	retvalue = copy_from_user(databuf, buf, cnt);
+	if(retvalue < 0){
+		printk("kernel get user write failed\n");
+		return -EFAULT;
+	} else {
+		printk("kernel get user char = %s\n", buf);
+	}
+
+	if(databuf[0] == LEDON){
+		gpio_set_value(_dev->led_gpio, 0);
+	} else if(databuf[0] == LEDOFF) {
+		gpio_set_value(_dev->led_gpio, 1);
+	}
+
+	return 0;
+}
+
+static int led_release(struct inode *inode, struct file *filp)
+{
+	printk("chrdevbase release！\r\n");
+	return 0;
+}
+
+
+ static struct file_operations led_fops = {
+	.owner = THIS_MODULE,	
+	.open = led_open,
+	.read = led_read,
+	.write = led_write,
+	.release = led_release,
+};
+
+
+static int __init gpioled_init(void){
+		int ret = 0;
+
+		//set gpio
+		//	get dtb node : gpioled
+		mygpioled._dtb_node = of_find_node_by_path("/mygpioled@0");
+		if(mygpioled._dtb_node == NULL){
+			printk("gpioled node cannot find\n");
+			return -EINVAL;
+		} else {
+			printk("gpioled node has found\n");
+		}
+
+		//	getprop
+		mygpioled.led_gpio = of_get_named_gpio(mygpioled._dtb_node, "led-gpio", 0);
+		if(mygpioled.led_gpio < 0){
+			printk("cannot get led-gpio\n");
+			return -EINVAL;
+		} else {
+			printk("led-gpio ID = %d\n", mygpioled.led_gpio);
+		}
+
+		ret = gpio_request(mygpioled.led_gpio, "led-gpio-tag");
+		if(ret < 0){
+			printk("Error: gpio %d, is already in use, cannot be requested\n", mygpioled.led_gpio);
+			return ret;
+		}
+
+		// configurate GPIO
+		ret = gpio_direction_output(mygpioled.led_gpio, 1);
+		if(ret < 0){
+			printk("cannot set gpio\n");
+		}
+
+		//alloc devid
+		alloc_chrdev_region(&(mygpioled.devid), 0, DEV_CNT, DEV_NAME);
+		mygpioled.major = MAJOR(mygpioled.devid);
+		mygpioled.minor = MINOR(mygpioled.devid);
+		printk("mygpioled alloc devid over, major = %d, minor = %d\n", 
+						mygpioled.major, mygpioled.minor);
+
+
+		//register cdev
+		mygpioled._cdev.owner = THIS_MODULE;
+		cdev_init(&(mygpioled._cdev), &led_fops);
+		cdev_add(&(mygpioled._cdev), mygpioled.devid, DEV_CNT);
+
+		//mknod
+		mygpioled._class = class_create(THIS_MODULE, DEV_CLASS);
+		mygpioled._device = device_create(mygpioled._class, NULL, mygpioled.devid, NULL, DEV_DEVICE);
+
+
+		printk("my dts led driver init over\n");
+		return 0;
+}
+
+static void __exit gpioled_exit(void){
+		printk("my dts led driver start exit\n");
+
+		gpio_free(mygpioled.led_gpio);
+		
+    	//注销devid
+	    unregister_chrdev_region(mygpioled.devid, DEV_CNT);
+	
+		//注销字符设备
+		cdev_del(&(mygpioled._cdev));
+
+		//取消设备节点
+		device_destroy(mygpioled._class, mygpioled.devid);
+		class_destroy(mygpioled._class);
+
+		printk("my dts led driver exit over\n");
+}
+
+module_init(gpioled_init);
+module_exit(gpioled_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("liangji");
+
+```
