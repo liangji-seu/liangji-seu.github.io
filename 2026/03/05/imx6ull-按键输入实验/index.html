@@ -21,34 +21,29 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="gpio把gpio,当成是一个外设，重新再学习一遍 stm32f1 gpio资源STM32F103ZET6 芯片是 144 脚的芯片， 具有 GPIOA、GPIOB、GPIOC、GPIOD、GPIOE、GPIOF 和 GPIOG 七组 GPIO 口，共有 112 个 IO 口可供我们编程使用 IO 功能模式GPIO 有八种工作模式，分别是： 上下拉（输入） 输入浮空 拉&#x2F;下拉电阻为断开状">
+    <meta name="description" content="welcome to my blog">
 <meta property="og:type" content="article">
-<meta property="og:title" content="stm32 gpio*">
-<meta property="og:url" content="http://example.com/2026/02/12/stm32-gpio/index.html">
+<meta property="og:title" content="imx6ull 按键输入实验">
+<meta property="og:url" content="http://example.com/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="gpio把gpio,当成是一个外设，重新再学习一遍 stm32f1 gpio资源STM32F103ZET6 芯片是 144 脚的芯片， 具有 GPIOA、GPIOB、GPIOC、GPIOD、GPIOE、GPIOF 和 GPIOG 七组 GPIO 口，共有 112 个 IO 口可供我们编程使用 IO 功能模式GPIO 有八种工作模式，分别是： 上下拉（输入） 输入浮空 拉&#x2F;下拉电阻为断开状">
+<meta property="og:description" content="welcome to my blog">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/26.1.png">
-<meta property="og:image" content="http://example.com/images/26.2.png">
-<meta property="og:image" content="http://example.com/images/26.3.png">
-<meta property="og:image" content="http://example.com/images/26.4.png">
-<meta property="article:published_time" content="2026-02-12T12:47:57.000Z">
-<meta property="article:modified_time" content="2026-02-15T08:35:14.003Z">
+<meta property="article:published_time" content="2026-03-05T07:30:00.000Z">
+<meta property="article:modified_time" content="2026-03-05T07:30:33.003Z">
 <meta property="article:author" content="liangji">
-<meta property="article:tag" content="mcu">
-<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/26.1.png">
 
 
-<link rel="canonical" href="http://example.com/2026/02/12/stm32-gpio/">
+<link rel="canonical" href="http://example.com/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/12/stm32-gpio/","path":"2026/02/12/stm32-gpio/","title":"stm32 gpio*"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/","path":"2026/03/05/imx6ull-按键输入实验/","title":"imx6ull 按键输入实验"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>stm32 gpio* | ji的博客</title>
+<title>imx6ull 按键输入实验 | ji的博客</title>
   
 
 
@@ -127,7 +122,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+    <div class="sidebar-inner sidebar-overview-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -140,7 +135,6 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#gpio"><span class="nav-number">1.</span> <span class="nav-text">gpio</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#stm32f1-gpio%E8%B5%84%E6%BA%90"><span class="nav-number">1.1.</span> <span class="nav-text">stm32f1 gpio资源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO-%E5%8A%9F%E8%83%BD%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">IO 功能模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E4%B8%8B%E6%8B%89%EF%BC%88%E8%BE%93%E5%85%A5%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">上下拉（输入）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A8%E6%8C%BD%E5%BC%80%E6%BC%8F%EF%BC%88%E8%BE%93%E5%87%BA%E3%80%81%E5%A4%8D%E7%94%A8%EF%BC%89"><span class="nav-number">1.2.2.</span> <span class="nav-text">推挽开漏（输出、复用）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.</span> <span class="nav-text">寄存器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CR"><span class="nav-number">1.3.1.</span> <span class="nav-text">CR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DR"><span class="nav-number">1.3.2.</span> <span class="nav-text">DR</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.4.</span> <span class="nav-text">实验</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -204,7 +198,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/12/stm32-gpio/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -217,12 +211,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="stm32 gpio* | ji的博客">
+      <meta itemprop="name" content="imx6ull 按键输入实验 | ji的博客">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          stm32 gpio*
+          imx6ull 按键输入实验
         </h1>
 
         <div class="post-meta-container">
@@ -232,15 +226,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2026-02-12 20:47:57" itemprop="dateCreated datePublished" datetime="2026-02-12T20:47:57+08:00">2026-02-12</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-15 16:35:14" itemprop="dateModified" datetime="2026-02-15T16:35:14+08:00">2026-02-15</time>
+      <time title="创建时间：2026-03-05 15:30:00 / 修改时间：15:30:33" itemprop="dateCreated datePublished" datetime="2026-03-05T15:30:00+08:00">2026-03-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -256,7 +244,7 @@
         </span>
           ，
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/MCU/" itemprop="url" rel="index"><span itemprop="name">MCU</span></a>
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
         </span>
     </span>
 
@@ -269,122 +257,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="gpio"><a href="#gpio" class="headerlink" title="gpio"></a>gpio</h1><p>把gpio,当成是一个外设，重新再学习一遍</p>
-<h2 id="stm32f1-gpio资源"><a href="#stm32f1-gpio资源" class="headerlink" title="stm32f1 gpio资源"></a>stm32f1 gpio资源</h2><p>STM32F103ZET6 芯片是 144 脚的芯片，</p>
-<p>具有 GPIOA、GPIOB、GPIOC、GPIOD、GPIOE、GPIOF 和 GPIOG <strong>七组 GPIO 口</strong>，共有 112 个 IO 口可供我们编程使用</p>
-<h2 id="IO-功能模式"><a href="#IO-功能模式" class="headerlink" title="IO 功能模式"></a>IO 功能模式</h2><p>GPIO 有八种工作模式，分别是：</p>
-<h3 id="上下拉（输入）"><a href="#上下拉（输入）" class="headerlink" title="上下拉（输入）"></a>上下拉（输入）</h3><ol>
-<li><strong>输入浮空</strong><ul>
-<li>拉&#x2F;下拉电阻为断开状态</li>
-<li>用于按键检测等场景</li>
-</ul>
-</li>
-<li><strong>输入上拉</strong></li>
-<li><strong>输入下拉</strong></li>
-<li><strong>模拟输入</strong><ul>
-<li>用于 ADC、DAC、MCO这类操作<code>模拟信号</code>的外设</li>
-</ul>
-</li>
-</ol>
-<p><img src="/../images/26.1.png" alt="alt text"></p>
-<blockquote>
-<p><strong>为什么要上下拉</strong>？（防止“漂移”）</p>
-<p>简单来说，上下拉电阻的作用就是<strong>给引脚一个确定的默认状态</strong>，防止电路在悬空时受到电磁干扰</p>
-</blockquote>
-<h3 id="推挽开漏（输出、复用）"><a href="#推挽开漏（输出、复用）" class="headerlink" title="推挽开漏（输出、复用）"></a>推挽开漏（输出、复用）</h3><ol start="5">
-<li><p><strong>开漏输出</strong></p>
-<ul>
-<li>它只能输出低电平 Vss 或者高阻态，常用于 IIC 通讯（IIC_SDA）或其它需要进行电平转换的场景</li>
-</ul>
-</li>
-<li><p><strong>推挽输出</strong></p>
-<ul>
-<li>会输出低电平 VSS 或者高电平VDD,驱动能力较强</li>
-</ul>
-</li>
-<li><p><strong>开漏式复用功能</strong></p>
-<ul>
-<li>。当选择复用功能时，引脚的状态是<code>由对应的外设控制</code>，而不是输出数据寄存器</li>
-</ul>
-</li>
-<li><p><strong>推挽式复用功能</strong></p>
-</li>
-</ol>
-<blockquote>
-<p>[!IMPORTANT]<br><strong>1. 必须用【推挽输出】 (Push-Pull)</strong></p>
-</blockquote>
-<p>当你需要引脚作为 <strong>“动力源”</strong> 或者 <strong>“高速信号源”</strong> 时。</p>
-<ul>
-<li><strong>驱动能力需求</strong>：如果你要直接驱动 LED、蜂鸣器、光耦，或者给某个模块供电。推挽输出在输出“1”时能提供稳定的电流，输出“0”时能强力吸收电流。</li>
-<li><strong>高速通讯</strong>：比如 <strong>SPI 协议</strong>或 <strong>UART 串口</strong>。推挽输出的电平切换速度极快，边缘非常陡峭，能支持几十 MHz 的频率。</li>
-<li><strong>简单驱动</strong>：控制继电器模块、驱动各种 LCD&#x2F;OLED 屏幕。</li>
-</ul>
-<hr>
-<blockquote>
-<p>[!IMPORTANT]<br><strong>2. 必须用【开漏输出】 (Open-Drain)</strong></p>
-</blockquote>
-<p>当你需要 <strong>“兼容性”</strong>、<strong>“安全性”</strong> 或者符合 <strong>“总线标准”</strong> 时。</p>
-<p>A. <code>I2C 总线</code>（必须开漏）</p>
-<p>I2C 协议规定了多个设备挂在同一根线上。如果用推挽，一旦两个芯片一个发高一个发低，就会<strong>直接短路烧毁</strong>。开漏模式下，大家只负责“拉低”或“松手”，即使同时动作也不会坏。</p>
-<p>B. <code>电平转换（3.3V 控 5V）</code></p>
-<p>STM32 内部最高只能出 3.3V。如果你要把信号给一个 5V 的老芯片（它可能规定 3.5V 以上才算高电平），推挽就没戏了。</p>
-<ul>
-<li><strong>做法</strong>：选开漏，外部接一个电阻拉到 5V。这样引脚“松手”时，电压就是 5V，完美解决。</li>
-</ul>
-<p>C. <code>“线与”逻辑</code>（报警&#x2F;中断线）</p>
-<p>比如你有 5 个传感器，任何一个报警都要让单片机知道。</p>
-<ul>
-<li>你可以把它们的开漏输出全部连在一起。</li>
-<li>只要有一个传感器报警（拉低），整条线就变低。这种简单的并联在推挽模式下是绝对禁止的。</li>
-</ul>
-<hr>
-<blockquote>
-<p>[!IMPORTANT]<br>当你面对一个 GPIO 输出配置时，按顺序问自己这三个问题：</p>
-</blockquote>
-<ol>
-<li><strong>这是一根通讯总线吗？</strong></li>
-</ol>
-<ul>
-<li>是 I2C 吗？  <strong>开漏</strong>。</li>
-<li>是 SPI&#x2F;UART 吗？  <strong>推挽</strong>。</li>
-</ul>
-<ol start="2">
-<li><strong>这根线上会连着多个输出设备吗？</strong></li>
-</ol>
-<ul>
-<li>是（比如共享中断信号线）  <strong>开漏</strong>。</li>
-<li>否（一对一连接）  往下看。</li>
-</ul>
-<ol start="3">
-<li><strong>对方的电压和 STM32 一样吗？</strong></li>
-</ol>
-<ul>
-<li>一样 (3.3V)  <strong>推挽</strong>。</li>
-<li>对方更高 (5V)  <strong>开漏 + 外部上拉到 5V</strong>。</li>
-</ul>
-<h2 id="寄存器"><a href="#寄存器" class="headerlink" title="寄存器"></a>寄存器</h2><p>在理解了IO的工作模式后，就知道要怎么用了，之后就是通过配置寄存器，来达成我们想要的工作模式。</p>
-<p>所有的寄存器，简单来说，可以归结为：</p>
-<ol>
-<li>CR（控制寄存器）</li>
-<li>DR（数据寄存器）</li>
-<li>SR（状态寄存器）</li>
-</ol>
-<h3 id="CR"><a href="#CR" class="headerlink" title="CR"></a>CR</h3><ul>
-<li>这 2 个配置寄存器就是用来配置 GPIO 的相<code>关工作模式</code>和<code>工作速度</code></li>
-</ul>
-<p><img src="/../images/26.2.png" alt="alt text"></p>
-<h3 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h3><ul>
-<li>这里就是输出的数据寄存器了，这里有两个，都可以进行写，具体会有区分，这些都属于具体的设备细节了，无需在意。</li>
-</ul>
-<p><img src="/../images/26.3.png" alt="alt text"></p>
-<p><img src="/../images/26.4.png" alt="alt text"></p>
-<h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p>点灯实验，没什么好说的，比较简单，这里要注意一个通用的意识：</p>
-<p><strong>初始化外设</strong>的步骤：</p>
-<ol>
-<li>使能设备（使能时钟）</li>
-<li>配置外设寄存器（有定义外设基地址）</li>
-</ol>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* @brief 初始化 LED 相关 IO 口, 并使能时钟</span></span><br><span class="line"><span class="comment">* @param 无</span></span><br><span class="line"><span class="comment">* @retval 无</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">led_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    LED0_GPIO_CLK_ENABLE(); <span class="comment">/* LED0 时钟使能 */</span></span><br><span class="line">    LED1_GPIO_CLK_ENABLE(); <span class="comment">/* LED1 时钟使能 */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    GPIO_InitTypeDef gpio_init_struct;</span><br><span class="line">    gpio_init_struct.Pin = LED0_GPIO_PIN; <span class="comment">/* LED0 引脚 */</span></span><br><span class="line">    gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP; <span class="comment">/* 推挽输出 */</span></span><br><span class="line">    gpio_init_struct.Pull = GPIO_PULLUP; <span class="comment">/* 上拉 */</span></span><br><span class="line">    gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH; <span class="comment">/* 高速 */</span></span><br><span class="line">    HAL_GPIO_Init(LED0_GPIO_PORT, &amp;gpio_init_struct); <span class="comment">/* 初始化 LED0 引脚 */</span></span><br><span class="line">    gpio_init_struct.Pin = LED1_GPIO_PIN; <span class="comment">/* LED1 引脚 */</span></span><br><span class="line">    HAL_GPIO_Init(LED1_GPIO_PORT, &amp;gpio_init_struct); <span class="comment">/* 初始化 LED1 引脚 */</span></span><br><span class="line">    LED0(<span class="number">1</span>); <span class="comment">/* 关闭 LED0 */</span></span><br><span class="line">    LED1(<span class="number">1</span>); <span class="comment">/* 关闭 LED1 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    <div class="post-body" itemprop="articleBody">
     </div>
 
     
@@ -394,22 +267,19 @@
     <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
-              <a href="/tags/mcu/" rel="tag"># mcu</a>
-              <a href="/tags/stm32/" rel="tag"># stm32</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/" rel="prev" title="stm32 sys层实现*">
-                  <i class="fa fa-angle-left"></i> stm32 sys层实现*
+                <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/" rel="prev" title="imx6ull 并发与竞争">
+                  <i class="fa fa-angle-left"></i> imx6ull 并发与竞争
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/02/13/stm32-dma/" rel="next" title="stm32 dma">
-                  stm32 dma <i class="fa fa-angle-right"></i>
-                </a>
             </div>
           </div>
 
@@ -421,9 +291,10 @@
         <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
       </h3>
       <ol class="category-nav-list">
-            <li class="category-nav-item">
-              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            <li class="category-nav-item current">
+              <span>imx6ull 按键输入实验</span>
             </li>
+          
             <li class="category-nav-item">
               <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争</a>
             </li>
@@ -472,10 +343,9 @@
             <li class="category-nav-item">
               <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
             </li>
-            <li class="category-nav-item current">
-              <span>stm32 gpio*</span>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
             </li>
-          
             <li class="category-nav-item">
               <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
             </li>
