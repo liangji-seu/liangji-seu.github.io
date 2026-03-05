@@ -50,30 +50,36 @@ for $inject_style in hexo-config('injects.style')
 
 
 /* ==========================================================
-   Next Theme 自定义样式：VS Code 风格 + 紧凑排版 (最终版)
+   Next Theme 自定义样式：VS Code 风格 + 精准阶梯缩进 + 按钮
    ========================================================== */
 
 // ----------------------------------------------------------
-// 1. 标题勋章序号体系 (1.1.1.1...)
+// 1. 标题勋章序号体系 & 阶梯缩进 (仅在文章 .posts-expand 内生效)
 // ----------------------------------------------------------
 article { counter-reset: h1-count; }
 
-.post-body h1, .post-body h2, .post-body h3, .post-body h4, .post-body h5, .post-body h6, .post-body h7 {
+.posts-expand .post-body h1, .posts-expand .post-body h2, .posts-expand .post-body h3, 
+.posts-expand .post-body h4, .posts-expand .post-body h5, .posts-expand .post-body h6, .posts-expand .post-body h7 {
     color: #000000 !important;
     font-weight: 700 !important;
     border-bottom: 1px solid #eaecef !important;
     padding-bottom: 0.3em !important;
-    
-    /* 关键修改：减少标题上方的空白 (从 1.5em -> 1.0em) */
     margin-top: 1.0em !important; 
     margin-bottom: 0.8em !important;
-    
     display: flex;
     align-items: center;
 }
 
-.post-body h1::before, .post-body h2::before, .post-body h3::before, 
-.post-body h4::before, .post-body h5::before, .post-body h6::before, .post-body h7::before {
+// 阶梯缩进核心代码：每级标题按 8px 递增，且仅影响文章详情页
+.posts-expand .post-body h1 { margin-left: 0px !important; counter-reset: h2-count; }
+.posts-expand .post-body h2 { margin-left: 8px !important; counter-reset: h3-count; }
+.posts-expand .post-body h3 { margin-left: 16px !important; counter-reset: h4-count; }
+.posts-expand .post-body h4 { margin-left: 24px !important; counter-reset: h5-count; }
+.posts-expand .post-body h5 { margin-left: 32px !important; counter-reset: h6-count; }
+.posts-expand .post-body h6 { margin-left: 40px !important; counter-reset: h7-count; }
+
+.posts-expand .post-body h1::before, .posts-expand .post-body h2::before, .posts-expand .post-body h3::before, 
+.posts-expand .post-body h4::before, .posts-expand .post-body h5::before, .posts-expand .post-body h6::before, .posts-expand .post-body h7::before {
     background-color: #007acc !important;
     color: #ffffff !important;
     padding: 1px 8px !important;
@@ -85,39 +91,27 @@ article { counter-reset: h1-count; }
 }
 
 // 递归计数逻辑
-.post-body h1 { counter-reset: h2-count; }
-.post-body h1::before { counter-increment: h1-count; content: counter(h1-count); }
-.post-body h2 { counter-reset: h3-count; }
-.post-body h2::before { counter-increment: h2-count; content: counter(h1-count) "." counter(h2-count); }
-.post-body h3 { counter-reset: h4-count; }
-.post-body h3::before { counter-increment: h3-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count); }
-.post-body h4 { counter-reset: h5-count; }
-.post-body h4::before { counter-increment: h4-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count); }
-.post-body h5 { counter-reset: h6-count; }
-.post-body h5::before { counter-increment: h5-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count); }
-.post-body h6 { counter-reset: h7-count; }
-.post-body h6::before { counter-increment: h6-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count) "." counter(h6-count); }
-.post-body h7::before { counter-increment: h7-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count) "." counter(h6-count) "." counter(h7-count); }
+.posts-expand .post-body h1::before { counter-increment: h1-count; content: counter(h1-count); }
+.posts-expand .post-body h2::before { counter-increment: h2-count; content: counter(h1-count) "." counter(h2-count); }
+.posts-expand .post-body h3::before { counter-increment: h3-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count); }
+.posts-expand .post-body h4::before { counter-increment: h4-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count); }
+.posts-expand .post-body h5::before { counter-increment: h5-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count); }
+.posts-expand .post-body h6::before { counter-increment: h6-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count) "." counter(h6-count); }
+.posts-expand .post-body h7::before { counter-increment: h7-count; content: counter(h1-count) "." counter(h2-count) "." counter(h3-count) "." counter(h4-count) "." counter(h5-count) "." counter(h6-count) "." counter(h7-count); }
 
 
 // ----------------------------------------------------------
-// 2. 正文紧凑化 & 缩进 (Global Compact & Indent)
+// 2. 正文紧凑化 & 缩进 (同样限定在 .posts-expand 以保护分类页)
 // ----------------------------------------------------------
-.post-body p, .post-body ul, .post-body ol, .post-body dl, .post-body table, .post-body img, .post-body .tabs {
-    margin-left: 24px !important; /* 保持左缩进 */
-    
-    /* 关键修改：大幅减少段落间距 (默认是 20px，现在改为 8px) */
-    margin-bottom: 8px !important; 
+.posts-expand .post-body p, .posts-expand .post-body ul, .posts-expand .post-body ol, 
+.posts-expand .post-body dl, .posts-expand .post-body table, .posts-expand .post-body img, .posts-expand .post-body .tabs {
+    margin-left: 24px !important; 
+    margin-bottom: 8px !important;
     margin-top: 0 !important;
 }
 
-/* 列表内部的间距也压缩 */
-.post-body li { 
-    margin-bottom: 4px !important; 
-}
-.post-body li p {
-    margin-bottom: 4px !important; /* 列表里的段落更紧凑 */
-}
+.posts-expand .post-body li { margin-bottom: 4px !important; }
+.posts-expand .post-body li p { margin-bottom: 4px !important; }
 
 
 // ----------------------------------------------------------
@@ -127,27 +121,15 @@ article { counter-reset: h1-count; }
     background: #f3f8ff !important;
     border-left: 5px solid #007acc !important;
     border-radius: 6px !important;
-    
-    /* 细微边框 */
     border-right: 1px solid rgba(0, 122, 204, 0.1) !important;
     border-bottom: 1px solid rgba(0, 122, 204, 0.1) !important;
     border-top: 1px solid rgba(0, 122, 204, 0.1) !important;
-    
     padding: 3px 16px !important;
-    
-    /* 关键修改：左缩进改为 48px (比正文的 24px 多一倍)，形成明显缩进层级 */
     margin: 12px 0 12px 48px !important;
-    
     color: #444 !important;
     overflow: hidden !important;
 }
-
-.post-body blockquote p { 
-    margin: 0 !important; 
-    line-height: 1.5 !important; 
-}
-
-
+.post-body blockquote p { margin: 0 !important; line-height: 1.5 !important; }
 
 
 // ----------------------------------------------------------
@@ -157,31 +139,25 @@ article { counter-reset: h1-count; }
     background: #f6f8fa !important;
     border: 1px solid #d1d5da !important;
     border-radius: 8px !important;
-    
-    /* 关键修改：减少代码块上下的留白 (20px -> 12px) */
     margin: 12px 0 12px 24px !important;
     width: auto !important;
-    
     padding: 0 !important;
     overflow: hidden !important;
     box-shadow: none !important;
 }
-
 .highlight .gutter { display: none !important; }
-
 .highlight table, .highlight tr, .highlight td {
     margin: 0 !important; padding: 0 !important;
     border: none !important; width: 100% !important;
     background: transparent !important;
 }
-
 .highlight .code, .highlight pre {
     color: #24292e !important;
     background: transparent !important;
-    padding: 10px 16px !important; /* 稍微再紧凑一点点 */
+    padding: 10px 16px !important;
     font-family: "Consolas", "Menlo", monospace !important;
     font-size: 14px !important;
-    line-height: 1.4 !important; /* 代码行间距也稍微收一点 */
+    line-height: 1.4 !important;
 }
 
 // ----------------------------------------------------------
@@ -208,66 +184,63 @@ article { counter-reset: h1-count; }
     border-radius: 4px !important;
     font-family: "Consolas", monospace !important;
 }
-
 .post-body strong { color: #000000 !important; font-weight: 700 !important; }
-
-
 
 
 // ----------------------------------------------------------
 // 7. 目录与列表的超紧凑优化 (针对嵌套结构)
 // ----------------------------------------------------------
-/* 列表整体：上下间距 */
-.post-body ul, .post-body ol {
+.posts-expand .post-body ul, .posts-expand .post-body ol {
     margin-top: 0 !important;
     margin-bottom: 8px !important;
-    padding-left: 40px !important; /* 列表整体缩进，与正文区分 */
+    padding-left: 40px !important; 
 }
 
-/* 核心修复：嵌套列表（子目录）强制去除上下间距 */
-/* 只有这样，"框图"和"第一部分"之间才不会有巨大的空隙 */
-.post-body ul ul, .post-body ol ol, .post-body ul ol, .post-body ol ul {
+.posts-expand .post-body ul ul, .posts-expand .post-body ol ol {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
 
-/* 列表项 (每一行) */
-.post-body li {
-    margin-bottom: 2px !important; /* 每一项之间只留极小的缝隙 (2px) */
-    line-height: 1.35 !important;  /* 压低行高，目录更紧实 */
-    font-size: 0.95em !important;  /* 字体稍微缩小 5%，显精致 */
-}
-
-/* 针对列表里的段落（防止 p 标签撑大） */
-.post-body li p {
-    margin-bottom: 0 !important;
-    margin-top: 0 !important;
+.posts-expand .post-body li {
+    margin-bottom: 2px !important;
     line-height: 1.35 !important;
+    font-size: 0.95em !important;
 }
 
-/* 目录链接美化：去掉下划线，使用 VS Code 蓝 */
-.post-body li a {
+.posts-expand .post-body li a {
     border-bottom: none !important;
     color: #007acc !important; 
     text-decoration: none !important;
 }
-.post-body li a:hover {
+.posts-expand .post-body li a:hover {
     text-decoration: underline !important;
     color: #005f9e !important;
 }
 
 
+// ----------------------------------------------------------
+// 8. 全局选中文字样式
+// ----------------------------------------------------------
+::selection { background: #add6ff !important; color: inherit !important; }
+::-moz-selection { background: #add6ff !important; color: inherit !important; }
+
 
 // ----------------------------------------------------------
-// 8. 全局选中文字样式 (Selection) -> VS Code 浅蓝
+// 9. 左侧菜单“分类”按钮化：方便快速返回
 // ----------------------------------------------------------
-::selection {
-    background: #add6ff !important; /* 经典的淡蓝色高亮 */
-    color: inherit !important;      /* 文字颜色保持不变，不要强制变白 */
+.menu-item-categories a {
+    background: #007acc !important;
+    color: white !important;
+    border-radius: 4px !important;
+    padding: 5px 15px !important;
+    margin-top: 10px !important;
+    transition: all 0.2s ease !important;
+    text-align: center !important;
 }
 
-/* 针对 Firefox 浏览器的兼容写法 */
-::-moz-selection {
-    background: #add6ff !important;
-    color: inherit !important;
+.menu-item-categories a:hover {
+    background: #005f9e !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
 }
+
+.menu-item-categories a i { color: white !important; }
