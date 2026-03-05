@@ -42,7 +42,7 @@
 <meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-12-0305172932.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-13-0305172932.png">
 <meta property="article:published_time" content="2026-03-05T08:18:08.000Z">
-<meta property="article:modified_time" content="2026-03-05T09:29:32.629Z">
+<meta property="article:modified_time" content="2026-03-05T09:53:00.837Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -243,7 +243,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2026-03-05 16:18:08 / 修改时间：17:29:32" itemprop="dateCreated datePublished" datetime="2026-03-05T16:18:08+08:00">2026-03-05</time>
+      <time title="创建时间：2026-03-05 16:18:08 / 修改时间：17:53:00" itemprop="dateCreated datePublished" datetime="2026-03-05T16:18:08+08:00">2026-03-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -430,6 +430,9 @@
 <h2 id="内核短延时函数"><a href="#内核短延时函数" class="headerlink" title="内核短延时函数"></a>内核短延时函数</h2><p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-13-0305172932.png" alt="alt text"></p>
 <h2 id="led闪烁"><a href="#led闪烁" class="headerlink" title="led闪烁"></a>led闪烁</h2><p>这个就很简单了，不说了。</p>
 <p>这边还是教你内核里面的接口，具体原厂的驱动工程师，应该是要知道linux内核是如何通过读取systick中断来设置我们的系统节拍的。这边相当于驱动里面的应用开发了。</p>
+<blockquote>
+<p><strong>这里发现正点原子的例程有问题</strong>，他们居然喜欢把结构体的led的初始化（获取界限信息啊，gpio_request这些）放到open里面，这些难道不是insmod模块加载成功后就要初始化好的吗？总之，改正之后，把led_init放到模块的入口函数里面，就可以了。不然根本打不开设备。</p>
+</blockquote>
 
     </div>
 
