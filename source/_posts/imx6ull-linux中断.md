@@ -639,7 +639,8 @@ static int __init xxxx_init(void)
     void my_drv_exit(void) {
         destroy_workqueue(my_drv_wq);
     }
-    ```
+  - ```
+  - ---
   - ![alt text](../images/imx6ull-linux中断-30-0306210532.png)
 - **怎么 “知道” 自己的 worker 是谁？**
   - 方式1：看进程名
