@@ -57,6 +57,11 @@
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-27-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-28-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-29-0306210532.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-30-0306210532.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-31-0306210532.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-32-0306210532.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-33-0306210532.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-34-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-35-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-36-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-37-0306210532.png">
@@ -64,7 +69,7 @@
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-39-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-40-0306210532.png">
 <meta property="article:published_time" content="2026-03-05T13:54:28.000Z">
-<meta property="article:modified_time" content="2026-03-06T13:06:09.113Z">
+<meta property="article:modified_time" content="2026-03-06T13:13:33.314Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -171,7 +176,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E6%96%AD"><span class="nav-number">1.</span> <span class="nav-text">内核中断</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A3%B8%E6%9C%BA%E7%9A%84%E4%B8%AD%E6%96%AD"><span class="nav-number">1.1.</span> <span class="nav-text">裸机的中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E5%86%85%E6%A0%B8%E4%B8%AD%E6%96%AD"><span class="nav-number">1.2.</span> <span class="nav-text">linux内核中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%ADAPI"><span class="nav-number">1.3.</span> <span class="nav-text">中断API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%8F%B7"><span class="nav-number">1.3.1.</span> <span class="nav-text">中断号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request-irq"><span class="nav-number">1.3.2.</span> <span class="nav-text">request_irq</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#free-irq"><span class="nav-number">1.3.3.</span> <span class="nav-text">free_irq</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.4.</span> <span class="nav-text">中断处理函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E4%BD%BF%E8%83%BD-%E7%A6%81%E6%AD%A2%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.5.</span> <span class="nav-text">中断使能&#x2F;禁止函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8A%E5%8D%8A%E9%83%A8-%E4%B8%8B%E5%8D%8A%E9%83%A8"><span class="nav-number">1.4.</span> <span class="nav-text">上半部 下半部</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E5%8D%8A%E9%83%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">1.4.1.</span> <span class="nav-text">下半部的实现机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BD%AF%E4%B8%AD%E6%96%AD"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">软中断</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tasklet"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">tasklet</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.5.</span> <span class="nav-text"></span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#tasklet%E6%B5%81%E7%A8%8B%E5%9B%BE%E8%A7%A3"><span class="nav-number">1.5.1.</span> <span class="nav-text">tasklet流程图解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97"><span class="nav-number">1.5.2.</span> <span class="nav-text">工作队列</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5%E6%A2%B3%E7%90%86"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">概念梳理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97%E6%B5%81%E7%A8%8B%E5%9B%BE%E8%A7%A3"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">工作队列流程图解</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#api"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">api</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">使用注意</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E4%B8%AD%E6%96%AD%E5%B1%9E%E6%80%A7"><span class="nav-number">1.6.</span> <span class="nav-text">节点中断属性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.7.</span> <span class="nav-text">实验</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E6%96%AD"><span class="nav-number">1.</span> <span class="nav-text">内核中断</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A3%B8%E6%9C%BA%E7%9A%84%E4%B8%AD%E6%96%AD"><span class="nav-number">1.1.</span> <span class="nav-text">裸机的中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E5%86%85%E6%A0%B8%E4%B8%AD%E6%96%AD"><span class="nav-number">1.2.</span> <span class="nav-text">linux内核中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%ADAPI"><span class="nav-number">1.3.</span> <span class="nav-text">中断API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%8F%B7"><span class="nav-number">1.3.1.</span> <span class="nav-text">中断号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request-irq"><span class="nav-number">1.3.2.</span> <span class="nav-text">request_irq</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#free-irq"><span class="nav-number">1.3.3.</span> <span class="nav-text">free_irq</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.4.</span> <span class="nav-text">中断处理函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E4%BD%BF%E8%83%BD-%E7%A6%81%E6%AD%A2%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.5.</span> <span class="nav-text">中断使能&#x2F;禁止函数</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8A%E5%8D%8A%E9%83%A8-%E4%B8%8B%E5%8D%8A%E9%83%A8"><span class="nav-number">1.4.</span> <span class="nav-text">上半部 下半部</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8B%E5%8D%8A%E9%83%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">1.4.1.</span> <span class="nav-text">下半部的实现机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BD%AF%E4%B8%AD%E6%96%AD"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">软中断</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tasklet"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">tasklet</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link"><span class="nav-number">1.5.</span> <span class="nav-text"></span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#tasklet%E6%B5%81%E7%A8%8B%E5%9B%BE%E8%A7%A3"><span class="nav-number">1.5.1.</span> <span class="nav-text">tasklet流程图解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97"><span class="nav-number">1.5.2.</span> <span class="nav-text">工作队列</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5%E6%A2%B3%E7%90%86"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">概念梳理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97%E6%B5%81%E7%A8%8B%E5%9B%BE%E8%A7%A3"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">工作队列流程图解</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#api"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">api</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">使用注意</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dts%E4%B8%AD%E6%96%AD%E6%8B%93%E7%A0%B4%E5%85%B3%E7%B3%BB%E6%A2%B3%E7%90%86"><span class="nav-number">1.6.</span> <span class="nav-text">dts中断拓破关系梳理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E4%B8%AD%E6%96%AD%E5%B1%9E%E6%80%A7"><span class="nav-number">1.7.</span> <span class="nav-text">节点中断属性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%AA%8C"><span class="nav-number">1.8.</span> <span class="nav-text">实验</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -186,7 +191,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">48</span>
+          <span class="site-state-item-count">49</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -271,7 +276,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-03-06 21:06:09" itemprop="dateModified" datetime="2026-03-06T21:06:09+08:00">2026-03-06</time>
+      <time title="修改时间：2026-03-06 21:13:33" itemprop="dateModified" datetime="2026-03-06T21:13:33+08:00">2026-03-06</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -763,12 +768,63 @@ int my_drv_init(void) {
 void my_drv_exit(void) {
     destroy_workqueue(my_drv_wq);
 }
-<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="bullet">  -</span> ![<span class="string">alt text</span>](<span class="link">../images/imx6ull-linux中断-30-0306210532.png</span>)</span><br><span class="line"><span class="bullet">-</span> <span class="strong">**怎么 “知道” 自己的 worker 是谁？**</span></span><br><span class="line"><span class="bullet">  -</span> 方式1：看进程名</span><br><span class="line"><span class="bullet">    -</span> 内核线程就是一个特殊进程，<span class="code">`ps -ef | grep kworker`</span></span><br><span class="line"><span class="bullet">    -</span> ![<span class="string">alt text</span>](<span class="link">../images/imx6ull-linux中断-31-0306210532.png</span>)</span><br><span class="line"><span class="bullet">  -</span> 方式2：用调试接口</span><br><span class="line"><span class="bullet">    -</span> 查看 <span class="code">`/sys/kernel/debug/workqueue/workqueues`</span> 文件，能看到<span class="strong">**队列**</span>和<span class="strong">**其线程池**</span>的对应关系：</span><br><span class="line"><span class="bullet">    -</span> ![<span class="string">alt text</span>](<span class="link">../images/imx6ull-linux中断-32-0306210532.png</span>)</span><br><span class="line"><span class="bullet">-</span> <span class="strong">**怎么控制创建多少 worker？**</span></span><br><span class="line"><span class="bullet">  -</span> 通过 <span class="code">`alloc_workqueue()`</span> 的参数来精细控制<span class="strong">**线程数量**</span>和行为</span><br><span class="line"><span class="bullet">  -</span> ![<span class="string">alt text</span>](<span class="link">../images/imx6ull-linux中断-33-0306210532.png</span>)</span><br><span class="line"><span class="bullet">  -</span> ![<span class="string">alt text</span>](<span class="link">../images/imx6ull-linux中断-34-0306210532.png</span>)</span><br><span class="line"></span><br><span class="line"><span class="section">## dts中断拓破关系梳理</span></span><br><span class="line"><span class="bullet">-</span> /</span><br><span class="line"><span class="bullet">  -</span> <span class="strong">**`cpus`**</span></span><br><span class="line"><span class="bullet">  -</span> <span class="strong">**`soc`**</span></span><br><span class="line"><span class="bullet">    -</span> <span class="strong">**中断父控制器**</span> = <span class="strong">**gpc**</span></span><br><span class="line"><span class="bullet">    -</span> uart</span><br><span class="line"><span class="bullet">    -</span> gpiox</span><br><span class="line"><span class="bullet">      -</span> <span class="strong">**中断控制器**</span></span><br><span class="line"><span class="bullet">    -</span> gpc</span><br><span class="line"><span class="bullet">      -</span> <span class="strong">**中断控制器**</span>， <span class="strong">**中断父控制器**</span> = intc</span><br><span class="line"><span class="bullet">  -</span> <span class="strong">**`clocks`**</span></span><br><span class="line"><span class="bullet">  -</span> <span class="strong">**`intc`**</span>: </span><br><span class="line"><span class="bullet">    -</span> <span class="strong">**GIC设备节点**</span>， <span class="strong">**中断控制器**</span></span><br><span class="line"></span><br><span class="line">所以整个<span class="strong">**中断信号的级联**</span>如下所示</span><br><span class="line"><span class="code">```c</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">       |       ARM Cortex-A7 CPU Core          |</span></span><br><span class="line"><span class="code">       |    (最终执行你的中断处理函数 Handler)      |</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">                           ^</span></span><br><span class="line"><span class="code">                           | (信号最终到达)</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">       |        GIC (intc) 顶级控制器           |  &lt;-- 你的 dts 根节点下</span></span><br><span class="line"><span class="code">       |     (管理所有 SoC 级别的中断源)           |</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">                           ^</span></span><br><span class="line"><span class="code">                           | interrupt-parent = &lt;&amp;intc&gt;</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">       |        GPC (电源与唤醒控制器)           |  &lt;-- soc 节点下的中转站</span></span><br><span class="line"><span class="code">       |  (负责低功耗唤醒，信号在这里做一次“安检”)    |</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">                           ^</span></span><br><span class="line"><span class="code">                           | interrupt-parent = &lt;&amp;gpc&gt;</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">       |       GPIO5 控制器 (子控制器)          |  &lt;-- 声明了 interrupt-controller</span></span><br><span class="line"><span class="code">       |  (把一组 32 个引脚的中断“汇总”给上级)     |</span></span><br><span class="line"><span class="code">       +---------------------------------------+</span></span><br><span class="line"><span class="code">             /      |      |      \</span></span><br><span class="line"><span class="code">      引脚 0   引脚 1   ...   引脚 31  (硬件通道)</span></span><br><span class="line"><span class="code">        ^</span></span><br><span class="line"><span class="code">        | interrupts = &lt;0 8&gt;</span></span><br><span class="line"><span class="code">  +-----------+</span></span><br><span class="line"><span class="code">  | fxls8471  |  &lt;-- 你的外设 (传感器)</span></span><br><span class="line"><span class="code">  | (信号源头) |</span></span><br><span class="line"><span class="code">  +-----------+</span></span><br></pre></td></tr></table></figure>
+</code></pre>
+</li>
+<li><pre><code>
 </code></pre>
 </li>
 </ul>
+<hr>
+<ul>
+<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-30-0306210532.png" alt="alt text"></li>
+</ul>
+</li>
+<li><strong>怎么 “知道” 自己的 worker 是谁？</strong><ul>
+<li>方式1：看进程名<ul>
+<li>内核线程就是一个特殊进程，<code>ps -ef | grep kworker</code></li>
+<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-31-0306210532.png" alt="alt text"></li>
+</ul>
+</li>
+<li>方式2：用调试接口<ul>
+<li>查看 <code>/sys/kernel/debug/workqueue/workqueues</code> 文件，能看到<strong>队列</strong>和<strong>其线程池</strong>的对应关系：</li>
+<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-32-0306210532.png" alt="alt text"></li>
+</ul>
 </li>
 </ul>
+</li>
+<li><strong>怎么控制创建多少 worker？</strong><ul>
+<li>通过 <code>alloc_workqueue()</code> 的参数来精细控制<strong>线程数量</strong>和行为</li>
+<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-33-0306210532.png" alt="alt text"></li>
+<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-34-0306210532.png" alt="alt text"></li>
+</ul>
+</li>
+</ul>
+<h2 id="dts中断拓破关系梳理"><a href="#dts中断拓破关系梳理" class="headerlink" title="dts中断拓破关系梳理"></a>dts中断拓破关系梳理</h2><ul>
+<li>&#x2F;<ul>
+<li><strong><code>cpus</code></strong></li>
+<li><strong><code>soc</code></strong><ul>
+<li><strong>中断父控制器</strong> &#x3D; <strong>gpc</strong></li>
+<li>uart</li>
+<li>gpiox<ul>
+<li><strong>中断控制器</strong></li>
+</ul>
+</li>
+<li>gpc<ul>
+<li><strong>中断控制器</strong>， <strong>中断父控制器</strong> &#x3D; intc</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong><code>clocks</code></strong></li>
+<li><strong><code>intc</code></strong>: <ul>
+<li><strong>GIC设备节点</strong>， <strong>中断控制器</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>所以整个<strong>中断信号的级联</strong>如下所示</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">     +---------------------------------------+</span><br><span class="line">     |       ARM Cortex-A7 CPU Core          |</span><br><span class="line">     |    (最终执行你的中断处理函数 Handler)      |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">                         ^</span><br><span class="line">                         | (信号最终到达)</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">     |        GIC (intc) 顶级控制器           |  &lt;-- 你的 dts 根节点下</span><br><span class="line">     |     (管理所有 SoC 级别的中断源)           |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">                         ^</span><br><span class="line">                         | interrupt-parent = &lt;&amp;intc&gt;</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">     |        GPC (电源与唤醒控制器)           |  &lt;-- soc 节点下的中转站</span><br><span class="line">     |  (负责低功耗唤醒，信号在这里做一次“安检”)    |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">                         ^</span><br><span class="line">                         | interrupt-parent = &lt;&amp;gpc&gt;</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">     |       GPIO5 控制器 (子控制器)          |  &lt;-- 声明了 interrupt-controller</span><br><span class="line">     |  (把一组 <span class="number">32</span> 个引脚的中断“汇总”给上级)     |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">           /      |      |      \</span><br><span class="line">    引脚 <span class="number">0</span>   引脚 <span class="number">1</span>   ...   引脚 <span class="number">31</span>  (硬件通道)</span><br><span class="line">      ^</span><br><span class="line">      | interrupts = &lt;<span class="number">0</span> <span class="number">8</span>&gt;</span><br><span class="line">+-----------+</span><br><span class="line">| fxls8471  |  &lt;-- 你的外设 (传感器)</span><br><span class="line">| (信号源头) |</span><br><span class="line">+-----------+</span><br></pre></td></tr></table></figure>
 <hr>
 <blockquote>
 <p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-35-0306210532.png" alt="alt text"></p>
@@ -856,6 +912,9 @@ void my_drv_exit(void) {
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/" rel="next" title="imx6ull linux 阻塞与非阻塞">
+                  imx6ull linux 阻塞与非阻塞 <i class="fa fa-angle-right"></i>
+                </a>
             </div>
           </div>
 
@@ -867,6 +926,9 @@ void my_drv_exit(void) {
         <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
       </h3>
       <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞</a>
+            </li>
             <li class="category-nav-item current">
               <span>imx6ull linux中断</span>
             </li>
