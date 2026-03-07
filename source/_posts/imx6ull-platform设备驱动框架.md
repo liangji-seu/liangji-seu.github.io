@@ -28,7 +28,7 @@ tags: [嵌入式, linux, 驱动]
 # linux驱动的三大设计思想
 分隔，分离，分层
 
-![alt text](<Untitled Diagram.drawio.png>)
+![alt text](../images/imx6ull-platform-1.png)
 ## 分隔
 > 这个主要说的是**主机驱动**和**设备驱动**的分开。
 
