@@ -1,8 +1,8 @@
 ---
-title: imx6ull linux 阻塞与非阻塞
+title: imx6ull linux 阻塞与非阻塞*
 date: 2026-03-06 21:08:17
 categories: [学习笔记, 嵌入式, LINUX] 
-tags: [嵌入式, linux, 驱动]
+tags: [嵌入式, linux, 驱动, 阻塞, 等待队列, 非阻塞, select, poll, epoll]
 ---
 - [后期总结](#后期总结)
 - [linux 阻塞与非阻塞](#linux-阻塞与非阻塞)

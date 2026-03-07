@@ -1,8 +1,8 @@
 ---
-title: imx6ull-异步通知
+title: imx6ull-异步通知*
 date: 2026-03-07 15:44:50
 categories: [学习笔记, 嵌入式, LINUX] 
-tags: [嵌入式, linux, 驱动]
+tags: [嵌入式, linux, 驱动,信号]
 ---
 - [异步通知](#异步通知)
   - [介绍](#介绍)

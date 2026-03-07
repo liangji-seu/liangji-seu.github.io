@@ -1,8 +1,8 @@
 ---
-title: imx6ull linux中断
+title: imx6ull linux中断*
 date: 2026-03-05 21:54:28
 categories: [学习笔记, 嵌入式, LINUX] 
-tags: [嵌入式, linux, 驱动]
+tags: [嵌入式, linux, 驱动, 中断子系统, 中断下半部, 软中断, tasklet, 工作队列, dts中断节点依赖关系]
 ---
 
 - [内核中断](#内核中断)

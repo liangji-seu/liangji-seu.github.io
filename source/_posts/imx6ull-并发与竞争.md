@@ -1,8 +1,8 @@
 ---
-title: imx6ull 并发与竞争
+title: imx6ull 并发与竞争*
 date: 2026-03-04 18:55:00
 categories: [学习笔记, 嵌入式, LINUX] 
-tags: [嵌入式, linux, 驱动]
+tags: [嵌入式, linux, 驱动,并发,竞争,原子操作,锁,自旋锁,信号量,互斥锁]
 ---
 
 - [并发与竞争现象](#并发与竞争现象)
