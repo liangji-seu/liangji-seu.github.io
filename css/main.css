@@ -1415,7 +1415,7 @@ pre code {
   vertical-align: middle;
 }
 .links-of-author a::before {
-  background: #4df532;
+  background: #bfff28;
   display: inline-block;
   margin-right: 3px;
   transform: translateY(-2px);
@@ -2759,27 +2759,27 @@ article {
   align-items: center;
 }
 .posts-expand .post-body h1 {
-  margin-left: 0px !important;
+  margin-left: -32px !important;
   counter-reset: h2-count;
 }
 .posts-expand .post-body h2 {
-  margin-left: 8px !important;
+  margin-left: -24px !important;
   counter-reset: h3-count;
 }
 .posts-expand .post-body h3 {
-  margin-left: 16px !important;
+  margin-left: -16px !important;
   counter-reset: h4-count;
 }
 .posts-expand .post-body h4 {
-  margin-left: 24px !important;
+  margin-left: -8px !important;
   counter-reset: h5-count;
 }
 .posts-expand .post-body h5 {
-  margin-left: 32px !important;
+  margin-left: 0px !important;
   counter-reset: h6-count;
 }
 .posts-expand .post-body h6 {
-  margin-left: 40px !important;
+  margin-left: 8px !important;
   counter-reset: h7-count;
 }
 .posts-expand .post-body h1::before,
@@ -2843,6 +2843,15 @@ article {
 .posts-expand .post-body li p {
   margin-bottom: 4px !important;
 }
+.posts-expand .post-body li img {
+  margin-left: 0 !important;
+}
+.post-body blockquote img {
+  margin-left: 0 !important;
+}
+.posts-expand .post-body li blockquote {
+  margin-left: 0 !important;
+}
 .post-body blockquote {
   background: #f3f8ff !important;
   border-left: 5px solid #007acc !important;
@@ -2850,8 +2859,8 @@ article {
   border-right: 1px solid rgba(0,122,204,0.1) !important;
   border-bottom: 1px solid rgba(0,122,204,0.1) !important;
   border-top: 1px solid rgba(0,122,204,0.1) !important;
-  padding: 3px 16px !important;
-  margin: 12px 0 12px 48px !important;
+  padding: 0px 10px !important;
+  margin: 1px 0 1px 24px !important;
   color: #444 !important;
   overflow: hidden !important;
 }
@@ -2971,6 +2980,14 @@ article {
 ::-moz-selection {
   background: #add6ff !important;
   color: inherit !important;
+}
+.post-body hr {
+  background-image: none !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  border-top: 1px solid #d1d5da !important;
+  height: 0 !important;
+  margin: 24px 0 !important;
 }
 .menu-item-categories a {
   background: #007acc !important;
