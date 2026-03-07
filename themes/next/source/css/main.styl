@@ -71,12 +71,12 @@ article { counter-reset: h1-count; }
 }
 
 // 阶梯缩进核心代码：每级标题按 8px 递增，且仅影响文章详情页
-.posts-expand .post-body h1 { margin-left: -16px !important; counter-reset: h2-count; }
-.posts-expand .post-body h2 { margin-left: -8px !important; counter-reset: h3-count; }
-.posts-expand .post-body h3 { margin-left: 0px !important; counter-reset: h4-count; }
-.posts-expand .post-body h4 { margin-left: 8px !important; counter-reset: h5-count; }
-.posts-expand .post-body h5 { margin-left: 16px !important; counter-reset: h6-count; }
-.posts-expand .post-body h6 { margin-left: 24px !important; counter-reset: h7-count; }
+.posts-expand .post-body h1 { margin-left: -32px !important; counter-reset: h2-count; }
+.posts-expand .post-body h2 { margin-left: -24px !important; counter-reset: h3-count; }
+.posts-expand .post-body h3 { margin-left: -16px !important; counter-reset: h4-count; }
+.posts-expand .post-body h4 { margin-left: -8px !important; counter-reset: h5-count; }
+.posts-expand .post-body h5 { margin-left: 0px !important; counter-reset: h6-count; }
+.posts-expand .post-body h6 { margin-left: 8px !important; counter-reset: h7-count; }
 
 .posts-expand .post-body h1::before, .posts-expand .post-body h2::before, .posts-expand .post-body h3::before, 
 .posts-expand .post-body h4::before, .posts-expand .post-body h5::before, .posts-expand .post-body h6::before, .posts-expand .post-body h7::before {
@@ -127,8 +127,8 @@ article { counter-reset: h1-count; }
     border-right: 1px solid rgba(0, 122, 204, 0.1) !important;
     border-bottom: 1px solid rgba(0, 122, 204, 0.1) !important;
     border-top: 1px solid rgba(0, 122, 204, 0.1) !important;
-    padding: 1px 10px !important;
-    margin: 4px 0 4px 24px !important;
+    padding: 0px 10px !important;
+    margin: 1px 0 1px 24px !important;
     color: #444 !important;
     overflow: hidden !important;
 }
