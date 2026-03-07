@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="基础语法变量变量创建方法：数据类型 变量名 &#x3D; 变量初始值;  变量的作用是方便操作内存  常量 作用：记录程序中不可修改的数据  c++定义常量的两种方式：1. #define 宏常量    #define 常量名 常量值2. const修饰变量    const 数据类型 常量名 &#x3D; 常量值    &#x2F;&#x2F;通常在变量定义前+关键字 const， 修饰该变量为常量，不可修改。  关键字 作用：关键字">
+    <meta name="description" content="基础语法 变量 常量 关键字 标识符命名规则 数据类型 整形（short, int, long, long long） sizeof 关键字 实型（浮点型） 字符型 转义字符 字符串型 布尔类型bool 数据的输入   运算符 算数运算符 赋值运算符 比较运算符 逻辑运算符   程序流程结构 数组 一维数组 定义方式 数组名 冒泡排序   二维数组 定义方式 数组名     函数 定义 调用 值">
 <meta property="og:type" content="article">
 <meta property="og:title" content="cpp 基础复盘*">
 <meta property="og:url" content="http://example.com/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="基础语法变量变量创建方法：数据类型 变量名 &#x3D; 变量初始值;  变量的作用是方便操作内存  常量 作用：记录程序中不可修改的数据  c++定义常量的两种方式：1. #define 宏常量    #define 常量名 常量值2. const修饰变量    const 数据类型 常量名 &#x3D; 常量值    &#x2F;&#x2F;通常在变量定义前+关键字 const， 修饰该变量为常量，不可修改。  关键字 作用：关键字">
+<meta property="og:description" content="基础语法 变量 常量 关键字 标识符命名规则 数据类型 整形（short, int, long, long long） sizeof 关键字 实型（浮点型） 字符型 转义字符 字符串型 布尔类型bool 数据的输入   运算符 算数运算符 赋值运算符 比较运算符 逻辑运算符   程序流程结构 数组 一维数组 定义方式 数组名 冒泡排序   二维数组 定义方式 数组名     函数 定义 调用 值">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/32.1.png">
 <meta property="og:image" content="http://example.com/images/32.2.png">
@@ -85,7 +85,7 @@
 <meta property="og:image" content="http://example.com/images/32.55.png">
 <meta property="og:image" content="http://example.com/images/32.56.png">
 <meta property="article:published_time" content="2026-02-23T02:58:06.000Z">
-<meta property="article:modified_time" content="2026-02-25T09:24:17.556Z">
+<meta property="article:modified_time" content="2026-03-07T13:15:59.791Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="cpp">
 <meta property="article:tag" content="嵌入式">
@@ -206,7 +206,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-count">49</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -217,7 +217,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-count">31</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -291,7 +291,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-25 17:24:17" itemprop="dateModified" datetime="2026-02-25T17:24:17+08:00">2026-02-25</time>
+      <time title="修改时间：2026-03-07 21:15:59" itemprop="dateModified" datetime="2026-03-07T21:15:59+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -320,7 +320,111 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="基础语法"><a href="#基础语法" class="headerlink" title="基础语法"></a>基础语法</h1><h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">变量创建方法：</span><br><span class="line"></span><br><span class="line">数据类型 变量名 = 变量初始值;</span><br></pre></td></tr></table></figure>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95">基础语法</a><ul>
+<li><a href="#%E5%8F%98%E9%87%8F">变量</a></li>
+<li><a href="#%E5%B8%B8%E9%87%8F">常量</a></li>
+<li><a href="#%E5%85%B3%E9%94%AE%E5%AD%97">关键字</a></li>
+<li><a href="#%E6%A0%87%E8%AF%86%E7%AC%A6%E5%91%BD%E5%90%8D%E8%A7%84%E5%88%99">标识符命名规则</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B">数据类型</a><ul>
+<li><a href="#%E6%95%B4%E5%BD%A2short-int-long-long-long">整形（short, int, long, long long）</a></li>
+<li><a href="#sizeof-%E5%85%B3%E9%94%AE%E5%AD%97">sizeof 关键字</a></li>
+<li><a href="#%E5%AE%9E%E5%9E%8B%E6%B5%AE%E7%82%B9%E5%9E%8B">实型（浮点型）</a></li>
+<li><a href="#%E5%AD%97%E7%AC%A6%E5%9E%8B">字符型</a></li>
+<li><a href="#%E8%BD%AC%E4%B9%89%E5%AD%97%E7%AC%A6">转义字符</a></li>
+<li><a href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%9E%8B">字符串型</a></li>
+<li><a href="#%E5%B8%83%E5%B0%94%E7%B1%BB%E5%9E%8Bbool">布尔类型bool</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E7%9A%84%E8%BE%93%E5%85%A5">数据的输入</a></li>
+</ul>
+</li>
+<li><a href="#%E8%BF%90%E7%AE%97%E7%AC%A6">运算符</a><ul>
+<li><a href="#%E7%AE%97%E6%95%B0%E8%BF%90%E7%AE%97%E7%AC%A6">算数运算符</a></li>
+<li><a href="#%E8%B5%8B%E5%80%BC%E8%BF%90%E7%AE%97%E7%AC%A6">赋值运算符</a></li>
+<li><a href="#%E6%AF%94%E8%BE%83%E8%BF%90%E7%AE%97%E7%AC%A6">比较运算符</a></li>
+<li><a href="#%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97%E7%AC%A6">逻辑运算符</a></li>
+</ul>
+</li>
+<li><a href="#%E7%A8%8B%E5%BA%8F%E6%B5%81%E7%A8%8B%E7%BB%93%E6%9E%84">程序流程结构</a></li>
+<li><a href="#%E6%95%B0%E7%BB%84">数组</a><ul>
+<li><a href="#%E4%B8%80%E7%BB%B4%E6%95%B0%E7%BB%84">一维数组</a><ul>
+<li><a href="#%E5%AE%9A%E4%B9%89%E6%96%B9%E5%BC%8F">定义方式</a></li>
+<li><a href="#%E6%95%B0%E7%BB%84%E5%90%8D">数组名</a></li>
+<li><a href="#%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F">冒泡排序</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C%E7%BB%B4%E6%95%B0%E7%BB%84">二维数组</a><ul>
+<li><a href="#%E5%AE%9A%E4%B9%89%E6%96%B9%E5%BC%8F-1">定义方式</a></li>
+<li><a href="#%E6%95%B0%E7%BB%84%E5%90%8D-1">数组名</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%87%BD%E6%95%B0">函数</a><ul>
+<li><a href="#%E5%AE%9A%E4%B9%89">定义</a></li>
+<li><a href="#%E8%B0%83%E7%94%A8">调用</a></li>
+<li><a href="#%E5%80%BC%E4%BC%A0%E9%80%92">值传递</a></li>
+<li><a href="#%E5%87%BD%E6%95%B0%E5%B8%B8%E8%A7%81%E6%A0%B7%E5%BC%8F">函数常见样式</a></li>
+<li><a href="#%E5%87%BD%E6%95%B0%E5%A3%B0%E6%98%8E">函数声明</a></li>
+<li><a href="#%E5%87%BD%E6%95%B0%E7%9A%84%E5%88%86%E6%96%87%E4%BB%B6%E7%BC%96%E5%86%99">函数的分文件编写</a></li>
+</ul>
+</li>
+<li><a href="#%E6%8C%87%E9%92%88">指针</a><ul>
+<li><a href="#%E6%8C%87%E9%92%88%E5%8F%98%E9%87%8F%E7%9A%84%E5%AE%9A%E4%B9%89%E5%92%8C%E4%BD%BF%E7%94%A8">指针变量的定义和使用</a></li>
+<li><a href="#%E6%8C%87%E9%92%88%E6%89%80%E5%8D%A0%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4">指针所占内存空间</a></li>
+<li><a href="#%E7%A9%BA%E6%8C%87%E9%92%88%E9%87%8E%E6%8C%87%E9%92%88">空指针，野指针</a></li>
+<li><a href="#const%E4%BF%AE%E9%A5%B0%E6%8C%87%E9%92%88">const修饰指针</a></li>
+<li><a href="#%E6%8C%87%E9%92%88%E5%92%8C%E6%95%B0%E7%BB%84">指针和数组</a></li>
+<li><a href="#%E6%8C%87%E9%92%88%E5%92%8C%E5%87%BD%E6%95%B0">指针和函数</a></li>
+<li><a href="#%E6%8C%87%E9%92%88%E6%95%B0%E7%BB%84%E5%87%BD%E6%95%B0">指针，数组，函数</a></li>
+</ul>
+</li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93">结构体</a><ul>
+<li><a href="#%E5%AE%9A%E4%B9%89%E5%92%8C%E4%BD%BF%E7%94%A8">定义和使用</a></li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E6%95%B0%E7%BB%84">结构体数组</a></li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E6%8C%87%E9%92%88">结构体指针</a></li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%B5%8C%E5%A5%97%E7%BB%93%E6%9E%84%E4%BD%93">结构体嵌套结构体</a></li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%A4%A7%E5%B0%8F">结构体大小</a></li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E5%81%9A%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0">结构体做函数参数</a></li>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E4%B8%ADconst%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF">结构体中const使用场景</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B">程序的内存模型</a><ul>
+<li><a href="#%E5%86%85%E5%AD%984%E5%8C%BA">内存4区</a><ul>
+<li><a href="#%E4%BB%A3%E7%A0%81%E5%8C%BA">代码区</a></li>
+<li><a href="#%E5%85%A8%E5%B1%80%E5%8C%BA">全局区</a></li>
+<li><a href="#%E6%A0%88%E5%8C%BA">栈区</a></li>
+<li><a href="#%E5%A0%86%E5%8C%BA">堆区</a></li>
+<li><a href="#%E6%80%BB%E7%BB%93"><strong>总结</strong></a></li>
+<li><a href="#new%E8%BF%90%E7%AE%97%E7%AC%A6">new运算符</a></li>
+</ul>
+</li>
+<li><a href="#%E5%BC%95%E7%94%A8">引用</a><ul>
+<li><a href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8">基本使用</a></li>
+<li><a href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9">注意事项</a></li>
+<li><a href="#%E5%BC%95%E7%94%A8%E5%81%9A%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0">引用做函数参数</a></li>
+<li><a href="#%E5%BC%95%E7%94%A8%E5%81%9A%E5%87%BD%E6%95%B0%E8%BF%94%E5%9B%9E%E5%80%BC">引用做函数返回值</a></li>
+<li><a href="#%E5%BC%95%E7%94%A8%E7%9A%84%E6%9C%AC%E8%B4%A8">引用的本质</a></li>
+<li><a href="#%E5%B8%B8%E9%87%8F%E5%BC%95%E7%94%A8">常量引用</a></li>
+</ul>
+</li>
+<li><a href="#%E5%87%BD%E6%95%B0%E7%9A%84%E6%8F%90%E9%AB%98">函数的提高</a><ul>
+<li><a href="#%E5%87%BD%E6%95%B0%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0">函数默认参数</a></li>
+<li><a href="#%E5%87%BD%E6%95%B0%E5%8D%A0%E4%BD%8D%E5%8F%82%E6%95%B0">函数占位参数</a></li>
+<li><a href="#%E5%87%BD%E6%95%B0%E9%87%8D%E8%BD%BD">函数重载</a><ul>
+<li><a href="#%E6%A6%82%E8%BF%B0">概述</a></li>
+<li><a href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-1">注意事项</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1">面向对象</a></li>
+<li><a href="#%E6%B3%9B%E5%9E%8B%E7%BC%96%E7%A8%8Bstl">泛型编程，STL</a></li>
+</ul>
+<h1 id="基础语法"><a href="#基础语法" class="headerlink" title="基础语法"></a>基础语法</h1><h2 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">变量创建方法：</span><br><span class="line"></span><br><span class="line">数据类型 变量名 = 变量初始值;</span><br></pre></td></tr></table></figure>
 <blockquote>
 <p>变量的作用是方便操作内存</p>
 </blockquote>

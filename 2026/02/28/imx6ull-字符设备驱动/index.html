@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="驱动开发终于进入第四章了。 开始学习linux中的三大类驱动：  字符设备驱动 最多 gpio，i2c,spi,sound   块设备驱动 更复杂，多数原厂写好直接用 即存储器设备驱动，emmc,nand,sd卡，u盘。以存储块为基础   网络设备驱动 有线&#x2F;无线     一个设备可以属于多种设备驱动类型 USB WIFI， 使用USB接口，属于字符设备，又能上网，所以属于网络设备驱动。">
+    <meta name="description" content="驱动开发 字符设备驱动开发 字符设备驱动 介绍 定义   应用 调用 驱动程序 逻辑 字符设备驱动开发步骤 驱动模块的 加载&#x2F;卸载 .ko加载命令：insmod &#x2F; modprobe .ko卸载命令：rmmod &#x2F; modprobe   字符设备的注册与注销 画图说明   实现设备的具体操作函数 添加LICENSE和作者信息   linux设备号 设备号组成 设备号">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull 字符设备驱动">
 <meta property="og:url" content="http://example.com/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="驱动开发终于进入第四章了。 开始学习linux中的三大类驱动：  字符设备驱动 最多 gpio，i2c,spi,sound   块设备驱动 更复杂，多数原厂写好直接用 即存储器设备驱动，emmc,nand,sd卡，u盘。以存储块为基础   网络设备驱动 有线&#x2F;无线     一个设备可以属于多种设备驱动类型 USB WIFI， 使用USB接口，属于字符设备，又能上网，所以属于网络设备驱动。">
+<meta property="og:description" content="驱动开发 字符设备驱动开发 字符设备驱动 介绍 定义   应用 调用 驱动程序 逻辑 字符设备驱动开发步骤 驱动模块的 加载&#x2F;卸载 .ko加载命令：insmod &#x2F; modprobe .ko卸载命令：rmmod &#x2F; modprobe   字符设备的注册与注销 画图说明   实现设备的具体操作函数 添加LICENSE和作者信息   linux设备号 设备号组成 设备号">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/36.1.png">
 <meta property="og:image" content="http://example.com/images/36.1.png">
@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/images/36.7.png">
 <meta property="og:image" content="http://example.com/images/36.8.png">
 <meta property="article:published_time" content="2026-02-28T03:13:32.000Z">
-<meta property="article:modified_time" content="2026-02-28T10:05:32.986Z">
+<meta property="article:modified_time" content="2026-03-07T13:16:26.025Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -159,7 +159,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">51</span>
+          <span class="site-state-item-count">49</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -170,7 +170,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">33</span>
+        <span class="site-state-item-count">31</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -236,9 +236,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-02-28 11:13:32 / 修改时间：18:05:32" itemprop="dateCreated datePublished" datetime="2026-02-28T11:13:32+08:00">2026-02-28</time>
+      <time title="创建时间：2026-02-28 11:13:32" itemprop="dateCreated datePublished" datetime="2026-02-28T11:13:32+08:00">2026-02-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-03-07 21:16:26" itemprop="dateModified" datetime="2026-03-07T21:16:26+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -267,7 +273,48 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="驱动开发"><a href="#驱动开发" class="headerlink" title="驱动开发"></a>驱动开发</h1><p>终于进入第四章了。</p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">驱动开发</a></li>
+<li><a href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">字符设备驱动开发</a><ul>
+<li><a href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8-%E4%BB%8B%E7%BB%8D">字符设备驱动 介绍</a><ul>
+<li><a href="#%E5%AE%9A%E4%B9%89">定义</a></li>
+</ul>
+</li>
+<li><a href="#%E5%BA%94%E7%94%A8-%E8%B0%83%E7%94%A8-%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F-%E9%80%BB%E8%BE%91">应用 <strong>调用</strong> 驱动程序 <strong>逻辑</strong></a></li>
+<li><a href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E6%AD%A5%E9%AA%A4">字符设备驱动开发步骤</a><ul>
+<li><a href="#%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9D%97%E7%9A%84-%E5%8A%A0%E8%BD%BD%E5%8D%B8%E8%BD%BD">驱动<strong>模块</strong>的 加载&#x2F;卸载</a><ul>
+<li><a href="#ko%E5%8A%A0%E8%BD%BD%E5%91%BD%E4%BB%A4insmod--modprobe">.ko加载命令：insmod &#x2F; <strong>modprobe</strong></a></li>
+<li><a href="#ko%E5%8D%B8%E8%BD%BD%E5%91%BD%E4%BB%A4rmmod--modprobe">.ko卸载命令：rmmod &#x2F; <strong>modprobe</strong></a></li>
+</ul>
+</li>
+<li><a href="#%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E7%9A%84%E6%B3%A8%E5%86%8C%E4%B8%8E%E6%B3%A8%E9%94%80">字符设备的注册与注销</a><ul>
+<li><a href="#%E7%94%BB%E5%9B%BE%E8%AF%B4%E6%98%8E">画图说明</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E7%8E%B0%E8%AE%BE%E5%A4%87%E7%9A%84%E5%85%B7%E4%BD%93%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0">实现设备的具体操作函数</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0license%E5%92%8C%E4%BD%9C%E8%80%85%E4%BF%A1%E6%81%AF">添加LICENSE和作者信息</a></li>
+</ul>
+</li>
+<li><a href="#linux%E8%AE%BE%E5%A4%87%E5%8F%B7">linux设备号</a><ul>
+<li><a href="#%E8%AE%BE%E5%A4%87%E5%8F%B7%E7%BB%84%E6%88%90">设备号组成</a></li>
+<li><a href="#%E8%AE%BE%E5%A4%87%E5%8F%B7%E5%88%86%E9%85%8D">设备号分配</a></li>
+</ul>
+</li>
+<li><a href="#chrdevbase-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E5%AE%9E%E9%AA%8C">chrdevbase 字符设备驱动开发实验</a><ul>
+<li><a href="#printk%E5%87%BD%E6%95%B0%E5%88%86%E6%9E%90">printk函数分析</a></li>
+<li><a href="#%E9%A9%B1%E5%8A%A8%E6%96%B9%E6%B3%95%E7%9A%84%E5%8F%82%E6%95%B0%E5%88%86%E6%9E%90">驱动方法的参数分析</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95">测试</a><ul>
+<li><a href="#%E5%8A%A0%E8%BD%BDko%E6%A8%A1%E5%9D%97">加载ko模块</a></li>
+<li><a href="#%E5%88%9B%E5%BB%BA%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6">创建设备文件</a></li>
+<li><a href="#%E6%89%A7%E8%A1%8C%E6%B5%8B%E8%AF%95%E5%8D%B3%E5%8F%AF">执行测试即可</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="驱动开发"><a href="#驱动开发" class="headerlink" title="驱动开发"></a>驱动开发</h1><p>终于进入第四章了。</p>
 <p>开始学习linux中的三大类驱动：</p>
 <ul>
 <li><strong>字符设备驱动</strong><ul>
