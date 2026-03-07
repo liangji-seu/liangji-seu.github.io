@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="linux 阻塞与非阻塞 linux实现阻塞&#x2F;非阻塞IO的几个机制 等待队列 wait queue（阻塞） 等待队列 API 梳理 demo   轮询 用户态的轮询api select select底层实现机制   poll 使用   各种情况对比 为什么select和poll效率低下 epoll 使用       Linux 驱动下的 poll 操作函数 驱动poll函数核心定位 驱">
+    <meta name="description" content="后期总结 linux 阻塞与非阻塞 linux实现阻塞&#x2F;非阻塞IO的几个机制 等待队列 wait queue（阻塞的底层实现机制） 等待队列 API 梳理 demo 两种阻塞api写法     轮询（系统调用阻塞，等待唤醒 &#x3D;&#x3D; 监听） 用户态的轮询api select select底层实现机制   poll 使用   各种情况对比 为什么select和poll效率">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull linux 阻塞与非阻塞">
 <meta property="og:url" content="http://example.com/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="linux 阻塞与非阻塞 linux实现阻塞&#x2F;非阻塞IO的几个机制 等待队列 wait queue（阻塞） 等待队列 API 梳理 demo   轮询 用户态的轮询api select select底层实现机制   poll 使用   各种情况对比 为什么select和poll效率低下 epoll 使用       Linux 驱动下的 poll 操作函数 驱动poll函数核心定位 驱">
+<meta property="og:description" content="后期总结 linux 阻塞与非阻塞 linux实现阻塞&#x2F;非阻塞IO的几个机制 等待队列 wait queue（阻塞的底层实现机制） 等待队列 API 梳理 demo 两种阻塞api写法     轮询（系统调用阻塞，等待唤醒 &#x3D;&#x3D; 监听） 用户态的轮询api select select底层实现机制   poll 使用   各种情况对比 为什么select和poll效率">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-01-0306230232.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-02-0306230232.png">
@@ -35,6 +35,7 @@
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-05-0306230232.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-06-0306230232.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-07-0306230232.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-01-0307151304.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-08-0306230232.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-09-0306230232.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-10-0306230232.png">
@@ -61,7 +62,7 @@
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-19-0307113353.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-20-0307113353.png">
 <meta property="article:published_time" content="2026-03-06T13:08:17.000Z">
-<meta property="article:modified_time" content="2026-03-07T03:33:53.976Z">
+<meta property="article:modified_time" content="2026-03-07T07:13:04.127Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -168,7 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E"><span class="nav-number">1.</span> <span class="nav-text">linux 阻塞与非阻塞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#linux%E5%AE%9E%E7%8E%B0%E9%98%BB%E5%A1%9E-%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E7%9A%84%E5%87%A0%E4%B8%AA%E6%9C%BA%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">linux实现阻塞&#x2F;非阻塞IO的几个机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-wait-queue%EF%BC%88%E9%98%BB%E5%A1%9E%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">等待队列 wait queue（阻塞）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-API-%E6%A2%B3%E7%90%86"><span class="nav-number">2.1.1.</span> <span class="nav-text">等待队列 API 梳理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#demo"><span class="nav-number">2.1.2.</span> <span class="nav-text">demo</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AE%E8%AF%A2"><span class="nav-number">2.2.</span> <span class="nav-text">轮询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%80%81%E7%9A%84%E8%BD%AE%E8%AF%A2api"><span class="nav-number">2.2.1.</span> <span class="nav-text">用户态的轮询api</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#select"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">select</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#select%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">2.2.1.1.1.</span> <span class="nav-text">select底层实现机制</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#poll"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">poll</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">2.2.1.2.1.</span> <span class="nav-text">使用</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%84%E7%A7%8D%E6%83%85%E5%86%B5%E5%AF%B9%E6%AF%94"><span class="nav-number">2.2.1.3.</span> <span class="nav-text">各种情况对比</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88select%E5%92%8Cpoll%E6%95%88%E7%8E%87%E4%BD%8E%E4%B8%8B"><span class="nav-number">2.2.1.4.</span> <span class="nav-text">为什么select和poll效率低下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#epoll"><span class="nav-number">2.2.1.5.</span> <span class="nav-text">epoll</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-1"><span class="nav-number">2.2.1.5.1.</span> <span class="nav-text">使用</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-%E9%A9%B1%E5%8A%A8%E4%B8%8B%E7%9A%84-poll-%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">Linux 驱动下的 poll 操作函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A9%B1%E5%8A%A8poll%E5%87%BD%E6%95%B0%E6%A0%B8%E5%BF%83%E5%AE%9A%E4%BD%8D"><span class="nav-number">2.3.1.</span> <span class="nav-text">驱动poll函数核心定位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A9%B1%E5%8A%A8poll%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B"><span class="nav-number">2.3.2.</span> <span class="nav-text">驱动poll函数原型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0-poll-wait"><span class="nav-number">2.3.3.</span> <span class="nav-text">关键辅助函数 poll_wait</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.3.4.</span> <span class="nav-text">模板</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#read%E9%87%8C%E9%9D%A2wait-event-%E5%92%8C-select-poll%E4%B8%AD%E7%9A%84poll-wait-%E5%AF%B9%E6%AF%94"><span class="nav-number">2.3.5.</span> <span class="nav-text">read里面wait_event 和 select&#x2F;poll中的poll_wait 对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97-vs-%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97"><span class="nav-number">2.4.</span> <span class="nav-text">工作队列 vs 等待队列</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8E%E6%9C%9F%E6%80%BB%E7%BB%93"><span class="nav-number">1.</span> <span class="nav-text">后期总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E"><span class="nav-number">2.</span> <span class="nav-text">linux 阻塞与非阻塞</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#linux%E5%AE%9E%E7%8E%B0%E9%98%BB%E5%A1%9E-%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E7%9A%84%E5%87%A0%E4%B8%AA%E6%9C%BA%E5%88%B6"><span class="nav-number">3.</span> <span class="nav-text">linux实现阻塞&#x2F;非阻塞IO的几个机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-wait-queue%EF%BC%88%E9%98%BB%E5%A1%9E%E7%9A%84%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">等待队列 wait queue（阻塞的底层实现机制）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-API-%E6%A2%B3%E7%90%86"><span class="nav-number">3.1.1.</span> <span class="nav-text">等待队列 API 梳理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#demo"><span class="nav-number">3.1.2.</span> <span class="nav-text">demo</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A4%E7%A7%8D%E9%98%BB%E5%A1%9Eapi%E5%86%99%E6%B3%95"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">两种阻塞api写法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BD%AE%E8%AF%A2%EF%BC%88%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E9%98%BB%E5%A1%9E%EF%BC%8C%E7%AD%89%E5%BE%85%E5%94%A4%E9%86%92-%E7%9B%91%E5%90%AC%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">轮询（系统调用阻塞，等待唤醒 &#x3D;&#x3D; 监听）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%80%81%E7%9A%84%E8%BD%AE%E8%AF%A2api"><span class="nav-number">3.2.1.</span> <span class="nav-text">用户态的轮询api</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#select"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">select</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#select%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">3.2.1.1.1.</span> <span class="nav-text">select底层实现机制</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#poll"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">poll</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">3.2.1.2.1.</span> <span class="nav-text">使用</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%84%E7%A7%8D%E6%83%85%E5%86%B5%E5%AF%B9%E6%AF%94"><span class="nav-number">3.2.1.3.</span> <span class="nav-text">各种情况对比</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88select%E5%92%8Cpoll%E6%95%88%E7%8E%87%E4%BD%8E%E4%B8%8B"><span class="nav-number">3.2.1.4.</span> <span class="nav-text">为什么select和poll效率低下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#epoll"><span class="nav-number">3.2.1.5.</span> <span class="nav-text">epoll</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-1"><span class="nav-number">3.2.1.5.1.</span> <span class="nav-text">使用</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-%E9%A9%B1%E5%8A%A8%E4%B8%8B%E7%9A%84-poll-%E6%93%8D%E4%BD%9C%E5%87%BD%E6%95%B0"><span class="nav-number">3.3.</span> <span class="nav-text">Linux 驱动下的 poll 操作函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A9%B1%E5%8A%A8poll%E5%87%BD%E6%95%B0%E6%A0%B8%E5%BF%83%E5%AE%9A%E4%BD%8D"><span class="nav-number">3.3.1.</span> <span class="nav-text">驱动poll函数核心定位</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A9%B1%E5%8A%A8poll%E5%87%BD%E6%95%B0%E5%8E%9F%E5%9E%8B"><span class="nav-number">3.3.2.</span> <span class="nav-text">驱动poll函数原型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E8%BE%85%E5%8A%A9%E5%87%BD%E6%95%B0-poll-wait"><span class="nav-number">3.3.3.</span> <span class="nav-text">关键辅助函数 poll_wait</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF"><span class="nav-number">3.3.4.</span> <span class="nav-text">模板</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#read%E9%87%8C%E9%9D%A2wait-event-%E5%92%8C-select-poll%E4%B8%AD%E7%9A%84poll-wait-%E5%AF%B9%E6%AF%94"><span class="nav-number">3.3.5.</span> <span class="nav-text">read里面wait_event 和 select&#x2F;poll中的poll_wait 对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97-vs-%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97"><span class="nav-number">3.4.</span> <span class="nav-text">工作队列 vs 等待队列</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -268,7 +269,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-03-07 11:33:53" itemprop="dateModified" datetime="2026-03-07T11:33:53+08:00">2026-03-07</time>
+      <time title="修改时间：2026-03-07 15:13:04" itemprop="dateModified" datetime="2026-03-07T15:13:04+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -298,14 +299,18 @@
     
     
     <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#%E5%90%8E%E6%9C%9F%E6%80%BB%E7%BB%93">后期总结</a></li>
 <li><a href="#linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E">linux 阻塞与非阻塞</a></li>
 <li><a href="#linux%E5%AE%9E%E7%8E%B0%E9%98%BB%E5%A1%9E%E9%9D%9E%E9%98%BB%E5%A1%9Eio%E7%9A%84%E5%87%A0%E4%B8%AA%E6%9C%BA%E5%88%B6">linux实现<strong>阻塞&#x2F;非阻塞IO</strong>的几个机制</a><ul>
-<li><a href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-wait-queue%E9%98%BB%E5%A1%9E">等待队列 wait queue（<strong>阻塞</strong>）</a><ul>
+<li><a href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-wait-queue%E9%98%BB%E5%A1%9E%E7%9A%84%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6">等待队列 wait queue（<strong>阻塞的底层实现机制</strong>）</a><ul>
 <li><a href="#%E7%AD%89%E5%BE%85%E9%98%9F%E5%88%97-api-%E6%A2%B3%E7%90%86">等待队列 API 梳理</a></li>
-<li><a href="#demo">demo</a></li>
+<li><a href="#demo">demo</a><ul>
+<li><a href="#%E4%B8%A4%E7%A7%8D%E9%98%BB%E5%A1%9Eapi%E5%86%99%E6%B3%95">两种阻塞api写法</a></li>
 </ul>
 </li>
-<li><a href="#%E8%BD%AE%E8%AF%A2">轮询</a><ul>
+</ul>
+</li>
+<li><a href="#%E8%BD%AE%E8%AF%A2%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E9%98%BB%E5%A1%9E%E7%AD%89%E5%BE%85%E5%94%A4%E9%86%92--%E7%9B%91%E5%90%AC">轮询（系统调用阻塞，等待唤醒 &#x3D;&#x3D; <strong>监听</strong>）</a><ul>
 <li><a href="#%E7%94%A8%E6%88%B7%E6%80%81%E7%9A%84%E8%BD%AE%E8%AF%A2api">用户态的轮询api</a><ul>
 <li><a href="#select">select</a><ul>
 <li><a href="#select%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6">select底层实现机制</a></li>
@@ -337,6 +342,28 @@
 </ul>
 </li>
 </ul>
+<h1 id="后期总结"><a href="#后期总结" class="headerlink" title="后期总结"></a>后期总结</h1><p><strong>我们在IO的时候，阻塞是一件好事，可以节省CPU资源</strong></p>
+<p>linux<strong>实现阻塞</strong>的底层机制，就是<strong>依赖等待队列</strong>。</p>
+<p>主要有以下<strong>三种情况</strong></p>
+<ul>
+<li>（<strong><code>open指明了read以阻塞方式读</code></strong>）<ul>
+<li>直接在驱动read里面挂入等待队列，就是我们read里面的阻塞</li>
+<li><strong>单路阻塞</strong></li>
+</ul>
+</li>
+<li>（<strong><code>open指明了read以非阻塞方式读</code></strong>）<ul>
+<li>驱动read里面就要支持<strong>即时返回</strong></li>
+<li>若 <strong><code>应用层就想要即时返回</code></strong> ，根本不想要阻塞，不考虑性能，<strong>完全非阻塞</strong><ul>
+<li>while循环，主动轮询，<strong>占用CPU</strong></li>
+</ul>
+</li>
+<li><strong><code>若应用层还想要阻塞来优化</code></strong>：<ul>
+<li>在select, poll的系统调用里面挂入等待队列，<strong>read为非阻塞</strong>，<strong>阻塞在系统调用中</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 <h1 id="linux-阻塞与非阻塞"><a href="#linux-阻塞与非阻塞" class="headerlink" title="linux 阻塞与非阻塞"></a>linux 阻塞与非阻塞</h1><p>这里的IO指的是<strong>用户态程序</strong>通过系统调用和<strong>内核态的驱动程序</strong>之间的<strong>输入输出</strong>。</p>
 <ul>
 <li>阻塞IO：<ul>
@@ -362,7 +389,7 @@
 </blockquote>
 </li>
 </ul>
-<h1 id="linux实现阻塞-非阻塞IO的几个机制"><a href="#linux实现阻塞-非阻塞IO的几个机制" class="headerlink" title="linux实现阻塞&#x2F;非阻塞IO的几个机制"></a>linux实现<strong>阻塞&#x2F;非阻塞IO</strong>的几个机制</h1><h2 id="等待队列-wait-queue（阻塞）"><a href="#等待队列-wait-queue（阻塞）" class="headerlink" title="等待队列 wait queue（阻塞）"></a>等待队列 wait queue（<strong>阻塞</strong>）</h2><p>阻塞访问的最大好处就是省资源，因为进程进入阻塞状态，让出了cpu。</p>
+<h1 id="linux实现阻塞-非阻塞IO的几个机制"><a href="#linux实现阻塞-非阻塞IO的几个机制" class="headerlink" title="linux实现阻塞&#x2F;非阻塞IO的几个机制"></a>linux实现<strong>阻塞&#x2F;非阻塞IO</strong>的几个机制</h1><h2 id="等待队列-wait-queue（阻塞的底层实现机制）"><a href="#等待队列-wait-queue（阻塞的底层实现机制）" class="headerlink" title="等待队列 wait queue（阻塞的底层实现机制）"></a>等待队列 wait queue（<strong>阻塞的底层实现机制</strong>）</h2><p>阻塞访问的最大好处就是省资源，因为进程进入阻塞状态，让出了cpu。</p>
 <p>但是当设备文件可以操作的时候，必须要唤醒进程（一般在中断函数中完成唤醒工作）</p>
 <p>所以，linux内核提供了<strong>等待队列机制</strong>，来实现<strong>阻塞进程的唤醒工作</strong>，主要工作就两个：</p>
 <ul>
@@ -381,6 +408,7 @@
 </li>
 <li><strong>C. 入队与阻塞 (Wait Events) —— 最常用</strong><ul>
 <li><img src="/../images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-07-0306230232.png" alt="alt text"></li>
+<li><img src="/../images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-01-0307151304.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong>D. 唤醒 (Wake Up)</strong><ul>
@@ -394,11 +422,14 @@
 <p><strong>2. 在 init 函数中初始化</strong></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">timer_init</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">    <span class="comment">/* ... 之前的初始化 ... */</span></span><br><span class="line">    init_waitqueue_head(&amp;timerdev.r_wait); <span class="comment">/* 初始化等待队列头 */</span></span><br><span class="line">    <span class="type">atomic_set</span>(&amp;timerdev.releasekey, <span class="number">0</span>);   <span class="comment">/* 初始设为无按键按下 */</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+
+
 <p><strong>3. 在 read 函数中实现阻塞</strong></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">timer_read</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *offt)</span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timer_dev</span> *<span class="title">dev</span> =</span> (<span class="keyword">struct</span> timer_dev *)filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 1. 使用自动化宏进入休眠 </span></span><br><span class="line"><span class="comment">     * 条件为假 (0) 时休眠，条件为真 (1) 时苏醒并执行后续逻辑</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (wait_event_interruptible(dev-&gt;r_wait, <span class="type">atomic_read</span>(&amp;dev-&gt;releasekey))) &#123;</span><br><span class="line">        <span class="keyword">return</span> -ERESTARTSYS; <span class="comment">/* 如果是被信号唤醒的，返回错误告知系统重启调用 */</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 2. 醒来后说明有数据了，执行 copy_to_user ... */</span></span><br><span class="line">    <span class="type">atomic_set</span>(&amp;dev-&gt;releasekey, <span class="number">0</span>); <span class="comment">/* 处理完后记得清除状态 */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
+<h4 id="两种阻塞api写法"><a href="#两种阻塞api写法" class="headerlink" title="两种阻塞api写法"></a>两种阻塞api写法</h4><p>注：wait_event本质上是宏，下面两段等待阻塞的方法是一样的：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">DECLARE_WAITQUEUE(wait, current);</span><br><span class="line"><span class="keyword">if</span> (<span class="type">atomic_read</span>(&amp;dev-&gt;releasekey) == <span class="number">0</span>) &#123;</span><br><span class="line">    add_wait_queue(&amp;dev-&gt;r_wait, &amp;wait);</span><br><span class="line">    __set_current_state(TASK_INTERRUPTIBLE);</span><br><span class="line">    schedule();</span><br><span class="line">    <span class="keyword">if</span> (signal_pending(current)) &#123;</span><br><span class="line">        ret = -ERESTARTSYS;</span><br><span class="line">        <span class="keyword">goto</span> wait_error;</span><br><span class="line">    &#125;</span><br><span class="line">    __set_current_state(TASK_RUNNING);</span><br><span class="line">    remove_wait_queue(&amp;dev-&gt;r_wait, &amp;wait);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>等同于</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ret = wait_event_interruptible(dev-&gt;r_wait,</span><br><span class="line">                               <span class="type">atomic_read</span>(&amp;dev-&gt;releasekey));</span><br></pre></td></tr></table></figure>
 
 
 
@@ -411,7 +442,7 @@
 <li>信号处理：<code>wait_event_interruptible</code> 返回非 0 值表示是被信号（信号量、Ctrl+C等）<strong>意外叫醒的</strong>，驱动应该及时返回并处理这个异常</li>
 </ul>
 </blockquote>
-<h2 id="轮询"><a href="#轮询" class="headerlink" title="轮询"></a>轮询</h2><p>如果<strong>用户进程</strong>以<strong>非阻塞方式</strong>访问设备，设备<strong>驱动</strong>程序就要<strong>提供非阻塞的处理方式</strong></p>
+<h2 id="轮询（系统调用阻塞，等待唤醒-监听）"><a href="#轮询（系统调用阻塞，等待唤醒-监听）" class="headerlink" title="轮询（系统调用阻塞，等待唤醒 &#x3D;&#x3D; 监听）"></a>轮询（系统调用阻塞，等待唤醒 &#x3D;&#x3D; <strong>监听</strong>）</h2><p>如果<strong>用户进程</strong>以<strong>非阻塞方式</strong>访问设备，设备<strong>驱动</strong>程序就要<strong>提供非阻塞的处理方式</strong></p>
 <p>前面我们说<strong>非阻塞</strong>，就是直接返回嘛，那么就是<strong>轮询</strong>了</p>
 <p><code>poll</code>, <code>epoll</code>, <code>select</code>可以用于<strong>处理轮询</strong></p>
 <p><strong>应用程序</strong>通过 <code>select、epoll 或 poll</code> 函数来<strong>查询设备是否可以操作</strong>，如果<strong>可以操作</strong>的话<strong>就从设备读取或者向设备写入数据</strong></p>
@@ -532,6 +563,27 @@
 <p>poll 返回后，<strong>你遍历这个数组</strong>，检查每个元素的 revents 字段，就能知道哪个 fd 发生了什么事件。</p>
 </blockquote>
 <h4 id="各种情况对比"><a href="#各种情况对比" class="headerlink" title="各种情况对比"></a>各种情况对比</h4><p>目前，我们学习了等待队列，轮询的select，以及他的升级版本poll。</p>
+<p><strong>这里要说明一点，阻塞是一件好事情</strong>，因为可以休眠等待，不占用cpu。我们的目的就是用上阻塞来在IO的时候节约资源。</p>
+<p><strong>而阻塞本质上全部依赖等待队列的机制</strong></p>
+<ul>
+<li>1.我们在open时以阻塞打开，那么在读取的时候，就直接在read里面wait_event实现阻塞就行了<ul>
+<li>注意，这个的弊端是<strong>单路阻塞</strong>，进程因为要读就阻塞住了，也不能写。</li>
+</ul>
+</li>
+<li>我们在open时以非阻塞方式打开，那么在读取的时候：<ul>
+<li>2.如果应用层不需要阻塞<ul>
+<li>直接read，驱动read即时返回即可。</li>
+</ul>
+</li>
+<li>3.如果应用层仍然需要阻塞：<ul>
+<li>就需要依赖poll&#x2F;select，额外加入一层中间件，用于<strong>阻塞</strong>，<strong>监听</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>下面具体来分析一下这三种情况</strong></p>
 <p>当我们在读设备数据的时候，使用open 以阻塞&#x2F;非阻塞方式打开，然后read。一般有3中使用情况：</p>
 <ul>
 <li>仅 <code>read</code> 指定 <code>O_NONBLOCK</code>（<strong>纯非阻塞读，while 空转</strong>）<ul>
@@ -642,7 +694,9 @@
 <p><strong><code>.poll</code> 里面有两个<code>poll_wait</code></strong>, 整个<code>.poll</code><strong>仅仅只是把进程加入到相应的队列里面</strong>，然后再判断一下当前是否有数据，并返回，就是<strong>返回到poll系列系统调用</strong>中，根据返回值来判断要不要真的进入阻塞休眠，如果返回发现有数据，那我们就不进入休眠</p>
 <p><img src="/../images/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E-16-0307113353.png" alt="alt text"></p>
 </blockquote>
-<h3 id="read里面wait-event-和-select-poll中的poll-wait-对比"><a href="#read里面wait-event-和-select-poll中的poll-wait-对比" class="headerlink" title="read里面wait_event 和 select&#x2F;poll中的poll_wait 对比"></a>read里面wait_event 和 select&#x2F;poll中的poll_wait 对比</h3><p>可以看到，</p>
+<h3 id="read里面wait-event-和-select-poll中的poll-wait-对比"><a href="#read里面wait-event-和-select-poll中的poll-wait-对比" class="headerlink" title="read里面wait_event 和 select&#x2F;poll中的poll_wait 对比"></a>read里面wait_event 和 select&#x2F;poll中的poll_wait 对比</h3><blockquote>
+<p>如果我在应用层open的时候指定，阻塞方式read，那么就要在read里面wait_event实现阻塞。<br>如果我在应用层open的时候指定，非阻塞方式read, 那么我就要在read里面即时返回，但是实际上我们的应用层还是还是想要数据，又不可能直接用while来主动轮询，所以只能用select, poll，来外置一个等待队列机制。<br>可以看到，</p>
+</blockquote>
 <ul>
 <li><p>驱动的read里面的wait_event是真的利用等待队列机制库，来让自己的进程进入休眠了。 </p>
 </li>
