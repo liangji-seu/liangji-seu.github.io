@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="stm32中断和事件stm32的中断资源NVIC 即嵌套向量中断控制器， 是内核的器件，M3 内核都是支持 256 个中断,总共包括：  16 个系统中断 240 个外部中断  但实际上，ZET6 的系统中断只用了 10 个，外部中断有 60 个   中断向量表在 STM32F103xx.h 文件中被定义  NVICNVIC 相关的寄存器定义了可以在 core_cm3.h 文件中找到 typede">
+    <meta name="description" content="stm32中断和事件 stm32的中断资源 NVIC EXTI 框图 产生中断 产生脉冲事件 EXTI支持输入   实验 定义 中断产生流程 NVIC EXTI 实现流程思路    stm32中断和事件stm32的中断资源NVIC 即嵌套向量中断控制器， 是内核的器件，M3 内核都是支持 256 个中断,总共包括：  16 个系统中断 240 个外部中断  但实际上，ZET6 的系统中断只用了">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32 中断与事件*">
 <meta property="og:url" content="http://example.com/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="stm32中断和事件stm32的中断资源NVIC 即嵌套向量中断控制器， 是内核的器件，M3 内核都是支持 256 个中断,总共包括：  16 个系统中断 240 个外部中断  但实际上，ZET6 的系统中断只用了 10 个，外部中断有 60 个   中断向量表在 STM32F103xx.h 文件中被定义  NVICNVIC 相关的寄存器定义了可以在 core_cm3.h 文件中找到 typede">
+<meta property="og:description" content="stm32中断和事件 stm32的中断资源 NVIC EXTI 框图 产生中断 产生脉冲事件 EXTI支持输入   实验 定义 中断产生流程 NVIC EXTI 实现流程思路    stm32中断和事件stm32的中断资源NVIC 即嵌套向量中断控制器， 是内核的器件，M3 内核都是支持 256 个中断,总共包括：  16 个系统中断 240 个外部中断  但实际上，ZET6 的系统中断只用了">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/11.3.png">
 <meta property="og:image" content="http://example.com/images/11.5.png">
@@ -34,7 +34,7 @@
 <meta property="og:image" content="http://example.com/images/11.1.png">
 <meta property="og:image" content="http://example.com/images/11.2.png">
 <meta property="article:published_time" content="2025-12-24T15:14:54.000Z">
-<meta property="article:modified_time" content="2026-02-15T08:35:14.004Z">
+<meta property="article:modified_time" content="2026-03-07T13:18:30.337Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="mcu">
 <meta property="article:tag" content="stm32">
@@ -241,7 +241,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-15 16:35:14" itemprop="dateModified" datetime="2026-02-15T16:35:14+08:00">2026-02-15</time>
+      <time title="修改时间：2026-03-07 21:18:30" itemprop="dateModified" datetime="2026-03-07T21:18:30+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -270,7 +270,27 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="stm32中断和事件"><a href="#stm32中断和事件" class="headerlink" title="stm32中断和事件"></a>stm32中断和事件</h1><h2 id="stm32的中断资源"><a href="#stm32的中断资源" class="headerlink" title="stm32的中断资源"></a>stm32的中断资源</h2><p>NVIC 即嵌套向量中断控制器， 是内核的器件，<code>M3 内核</code>都是支持 <code>256 个中断</code>,总共包括：</p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#stm32%E4%B8%AD%E6%96%AD%E5%92%8C%E4%BA%8B%E4%BB%B6">stm32中断和事件</a><ul>
+<li><a href="#stm32%E7%9A%84%E4%B8%AD%E6%96%AD%E8%B5%84%E6%BA%90">stm32的中断资源</a></li>
+<li><a href="#nvic">NVIC</a></li>
+<li><a href="#exti">EXTI</a><ul>
+<li><a href="#%E6%A1%86%E5%9B%BE">框图</a></li>
+<li><a href="#%E4%BA%A7%E7%94%9F%E4%B8%AD%E6%96%AD">产生中断</a></li>
+<li><a href="#%E4%BA%A7%E7%94%9F%E8%84%89%E5%86%B2%E4%BA%8B%E4%BB%B6">产生脉冲事件</a></li>
+<li><a href="#exti%E6%94%AF%E6%8C%81%E8%BE%93%E5%85%A5">EXTI支持输入</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E9%AA%8C">实验</a></li>
+<li><a href="#%E5%AE%9A%E4%B9%89">定义</a></li>
+<li><a href="#%E4%B8%AD%E6%96%AD%E4%BA%A7%E7%94%9F%E6%B5%81%E7%A8%8B">中断产生流程</a></li>
+<li><a href="#nvic-1">NVIC</a></li>
+<li><a href="#exti-1">EXTI</a></li>
+<li><a href="#%E5%AE%9E%E7%8E%B0%E6%B5%81%E7%A8%8B%E6%80%9D%E8%B7%AF">实现流程思路</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="stm32中断和事件"><a href="#stm32中断和事件" class="headerlink" title="stm32中断和事件"></a>stm32中断和事件</h1><h2 id="stm32的中断资源"><a href="#stm32的中断资源" class="headerlink" title="stm32的中断资源"></a>stm32的中断资源</h2><p>NVIC 即嵌套向量中断控制器， 是内核的器件，<code>M3 内核</code>都是支持 <code>256 个中断</code>,总共包括：</p>
 <ul>
 <li><strong>16 个系统中断</strong></li>
 <li><strong>240 个外部中断</strong></li>

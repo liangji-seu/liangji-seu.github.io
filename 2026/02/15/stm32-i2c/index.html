@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备, 有两根线：SDA(数据线)，SCL(时钟线) IIC 总线有如下特点：  总线由数据线 SDA 和时钟线 SCL 构成的串行总线 数据线用来传输数据，时钟线用来同步数据收发。   总线上每一个器件都有一个唯一的地址识别， 所以我们只需要知道器件的地址，根据时序就可以实现微控制器与器件之间的通信。   数">
+    <meta name="description" content="stm32 i2c I2C 介绍 I2C 总线协议 1. 起始信号 2. 停止信号 3. 应答信号 4. 数据有效性 5. 数据传输 6. 空闲状态 读写通信过程 写操作 读操作   外设数据传输协议 24C02 24C02 单字节流写时序 24C02 页 写时序 24C02 读时序     实验    stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32 i2c">
 <meta property="og:url" content="http://example.com/2026/02/15/stm32-i2c/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备, 有两根线：SDA(数据线)，SCL(时钟线) IIC 总线有如下特点：  总线由数据线 SDA 和时钟线 SCL 构成的串行总线 数据线用来传输数据，时钟线用来同步数据收发。   总线上每一个器件都有一个唯一的地址识别， 所以我们只需要知道器件的地址，根据时序就可以实现微控制器与器件之间的通信。   数">
+<meta property="og:description" content="stm32 i2c I2C 介绍 I2C 总线协议 1. 起始信号 2. 停止信号 3. 应答信号 4. 数据有效性 5. 数据传输 6. 空闲状态 读写通信过程 写操作 读操作   外设数据传输协议 24C02 24C02 单字节流写时序 24C02 页 写时序 24C02 读时序     实验    stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/29.1.png">
 <meta property="og:image" content="http://example.com/images/29.2.png">
@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/images/29.7.png">
 <meta property="og:image" content="http://example.com/images/29.8.png">
 <meta property="article:published_time" content="2026-02-15T08:58:16.000Z">
-<meta property="article:modified_time" content="2026-02-15T12:57:41.874Z">
+<meta property="article:modified_time" content="2026-03-07T13:18:21.408Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="mcu">
 <meta property="article:tag" content="stm32">
@@ -236,9 +236,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-02-15 16:58:16 / 修改时间：20:57:41" itemprop="dateCreated datePublished" datetime="2026-02-15T16:58:16+08:00">2026-02-15</time>
+      <time title="创建时间：2026-02-15 16:58:16" itemprop="dateCreated datePublished" datetime="2026-02-15T16:58:16+08:00">2026-02-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-03-07 21:18:21" itemprop="dateModified" datetime="2026-03-07T21:18:21+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -267,7 +273,35 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="stm32-i2c"><a href="#stm32-i2c" class="headerlink" title="stm32 i2c"></a>stm32 i2c</h1><h2 id="I2C-介绍"><a href="#I2C-介绍" class="headerlink" title="I2C 介绍"></a>I2C 介绍</h2><p>I2C 是 <code>两线</code>式<code>串行</code> <code>总线</code>, 用于连接微控制器以及其<strong>外围设备</strong>, 有两根线：<code>SDA(数据线)</code>，<code>SCL(时钟线)</code></p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#stm32-i2c">stm32 i2c</a><ul>
+<li><a href="#i2c-%E4%BB%8B%E7%BB%8D">I2C 介绍</a></li>
+<li><a href="#i2c-%E6%80%BB%E7%BA%BF%E5%8D%8F%E8%AE%AE">I2C 总线协议</a><ul>
+<li><a href="#1-%E8%B5%B7%E5%A7%8B%E4%BF%A1%E5%8F%B7">1. 起始信号</a></li>
+<li><a href="#2-%E5%81%9C%E6%AD%A2%E4%BF%A1%E5%8F%B7">2. 停止信号</a></li>
+<li><a href="#3-%E5%BA%94%E7%AD%94%E4%BF%A1%E5%8F%B7">3. 应答信号</a></li>
+<li><a href="#4-%E6%95%B0%E6%8D%AE%E6%9C%89%E6%95%88%E6%80%A7">4. 数据有效性</a></li>
+<li><a href="#5-%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93">5. 数据传输</a></li>
+<li><a href="#6-%E7%A9%BA%E9%97%B2%E7%8A%B6%E6%80%81">6. 空闲状态</a></li>
+<li><a href="#%E8%AF%BB%E5%86%99%E9%80%9A%E4%BF%A1%E8%BF%87%E7%A8%8B">读写通信过程</a></li>
+<li><a href="#%E5%86%99%E6%93%8D%E4%BD%9C">写操作</a></li>
+<li><a href="#%E8%AF%BB%E6%93%8D%E4%BD%9C">读操作</a></li>
+</ul>
+</li>
+<li><a href="#%E5%A4%96%E8%AE%BE%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E5%8D%8F%E8%AE%AE">外设数据传输协议</a><ul>
+<li><a href="#24c02">24C02</a><ul>
+<li><a href="#24c02-%E5%8D%95%E5%AD%97%E8%8A%82%E6%B5%81%E5%86%99%E6%97%B6%E5%BA%8F">24C02 单字节流写时序</a></li>
+<li><a href="#24c02-%E9%A1%B5-%E5%86%99%E6%97%B6%E5%BA%8F">24C02 页 写时序</a></li>
+<li><a href="#24c02-%E8%AF%BB%E6%97%B6%E5%BA%8F">24C02 读时序</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E9%AA%8C">实验</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="stm32-i2c"><a href="#stm32-i2c" class="headerlink" title="stm32 i2c"></a>stm32 i2c</h1><h2 id="I2C-介绍"><a href="#I2C-介绍" class="headerlink" title="I2C 介绍"></a>I2C 介绍</h2><p>I2C 是 <code>两线</code>式<code>串行</code> <code>总线</code>, 用于连接微控制器以及其<strong>外围设备</strong>, 有两根线：<code>SDA(数据线)</code>，<code>SCL(时钟线)</code></p>
 <p>IIC 总线有如下特点：</p>
 <ul>
 <li>总线由<code>数据线 SDA</code> 和<code>时钟线 SCL</code> 构成的串行总线<ul>

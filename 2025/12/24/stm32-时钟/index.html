@@ -21,18 +21,18 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="stm32 时钟系统首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。 stm32主频可到72Mhz，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要几十 kHZ 的时钟即可 同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般都是采取多时钟源的方法来解决这些问题 所以必须得搞清楚：时钟源">
+    <meta name="description" content="stm32 时钟系统 4个时钟源 锁相环pll 系统时钟 sysclk 实验    stm32 时钟系统首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。 stm32主频可到72Mhz，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要几十 kHZ 的时钟即可 同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32 时钟*">
 <meta property="og:url" content="http://example.com/2025/12/24/stm32-%E6%97%B6%E9%92%9F/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="stm32 时钟系统首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。 stm32主频可到72Mhz，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要几十 kHZ 的时钟即可 同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般都是采取多时钟源的方法来解决这些问题 所以必须得搞清楚：时钟源">
+<meta property="og:description" content="stm32 时钟系统 4个时钟源 锁相环pll 系统时钟 sysclk 实验    stm32 时钟系统首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。 stm32主频可到72Mhz，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要几十 kHZ 的时钟即可 同一个电路，时钟越快功耗越大，同时抗电磁干扰能力也会越弱，所以对于">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/23.2.png">
 <meta property="og:image" content="http://example.com/images/23.3.png">
 <meta property="og:image" content="http://example.com/images/23.4.png">
 <meta property="article:published_time" content="2025-12-24T15:14:45.000Z">
-<meta property="article:modified_time" content="2026-02-15T08:35:14.004Z">
+<meta property="article:modified_time" content="2026-03-07T13:18:37.182Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="mcu">
 <meta property="article:tag" content="stm32">
@@ -239,7 +239,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-15 16:35:14" itemprop="dateModified" datetime="2026-02-15T16:35:14+08:00">2026-02-15</time>
+      <time title="修改时间：2026-03-07 21:18:37" itemprop="dateModified" datetime="2026-03-07T21:18:37+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -268,7 +268,16 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="stm32-时钟系统"><a href="#stm32-时钟系统" class="headerlink" title="stm32 时钟系统"></a>stm32 时钟系统</h1><p>首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。</p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#stm32-%E6%97%B6%E9%92%9F%E7%B3%BB%E7%BB%9F">stm32 时钟系统</a><ul>
+<li><a href="#4%E4%B8%AA%E6%97%B6%E9%92%9F%E6%BA%90">4个时钟源</a></li>
+<li><a href="#%E9%94%81%E7%9B%B8%E7%8E%AFpll">锁相环pll</a></li>
+<li><a href="#%E7%B3%BB%E7%BB%9F%E6%97%B6%E9%92%9F-sysclk">系统时钟 sysclk</a></li>
+<li><a href="#%E5%AE%9E%E9%AA%8C">实验</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="stm32-时钟系统"><a href="#stm32-时钟系统" class="headerlink" title="stm32 时钟系统"></a>stm32 时钟系统</h1><p>首先肯定得有时钟系统，stm32f103的时钟系统比较复杂，不像简单的51，就一个系统时钟解决一切。</p>
 <p>stm32主频可到<code>72Mhz</code>，但是不是所有的外设都需要这么高的时钟。有些如看门狗以及 RTC 只需要<code>几十 kHZ</code> 的时钟即可</p>
 <p>同一个电路，<code>时钟越快功耗越大</code>，同时抗电磁干扰能力也会越弱，所以对于较为复杂的 MCU 一般<br>都是采取<code>多时钟源</code>的方法来解决这些问题</p>
 <p>所以必须得搞清楚：<code>时钟源有哪些</code>，<code>时钟树的线路匹配</code>（时钟信号的传递）</p>

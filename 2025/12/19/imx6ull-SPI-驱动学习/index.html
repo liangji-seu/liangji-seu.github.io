@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="IMX6ULL SPI 驱动学习SPI 定义（I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了） SPI 速度比I2C 更快， SPI和I2C一样，也是串行通信，全称：Serial Perripheral Interface， 串行外围设备接口，是一种同步 串行接口技术 SPI是高速、全双工的同步通信总线，SPI时钟">
+    <meta name="description" content="IMX6ULL SPI 驱动学习 SPI 定义 SPI 协议 SPI 工作模式 SPI的工作时序   IMX6ULL SPI 资源 SPI 重要寄存器 CR DR SR     SPI 外设： ICM-20608    IMX6ULL SPI 驱动学习SPI 定义（I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了）">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull SPI 驱动学习">
 <meta property="og:url" content="http://example.com/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="IMX6ULL SPI 驱动学习SPI 定义（I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了） SPI 速度比I2C 更快， SPI和I2C一样，也是串行通信，全称：Serial Perripheral Interface， 串行外围设备接口，是一种同步 串行接口技术 SPI是高速、全双工的同步通信总线，SPI时钟">
+<meta property="og:description" content="IMX6ULL SPI 驱动学习 SPI 定义 SPI 协议 SPI 工作模式 SPI的工作时序   IMX6ULL SPI 资源 SPI 重要寄存器 CR DR SR     SPI 外设： ICM-20608    IMX6ULL SPI 驱动学习SPI 定义（I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了）">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/6.1.png">
 <meta property="og:image" content="http://example.com/images/6.2.png">
@@ -43,7 +43,7 @@
 <meta property="og:image" content="http://example.com/images/6.13.png">
 <meta property="og:image" content="http://example.com/images/6.14.png">
 <meta property="article:published_time" content="2025-12-19T07:51:32.000Z">
-<meta property="article:modified_time" content="2026-01-21T09:24:54.447Z">
+<meta property="article:modified_time" content="2026-03-07T13:18:43.573Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -250,7 +250,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-01-21 17:24:54" itemprop="dateModified" datetime="2026-01-21T17:24:54+08:00">2026-01-21</time>
+      <time title="修改时间：2026-03-07 21:18:43" itemprop="dateModified" datetime="2026-03-07T21:18:43+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -279,7 +279,28 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="IMX6ULL-SPI-驱动学习"><a href="#IMX6ULL-SPI-驱动学习" class="headerlink" title="IMX6ULL SPI 驱动学习"></a>IMX6ULL SPI 驱动学习</h1><h2 id="SPI-定义"><a href="#SPI-定义" class="headerlink" title="SPI 定义"></a>SPI 定义</h2><p>（I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了）</p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#imx6ull-spi-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0">IMX6ULL SPI 驱动学习</a><ul>
+<li><a href="#spi-%E5%AE%9A%E4%B9%89">SPI 定义</a><ul>
+<li><a href="#spi-%E5%8D%8F%E8%AE%AE">SPI 协议</a></li>
+<li><a href="#spi-%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F">SPI 工作模式</a></li>
+<li><a href="#spi%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%97%B6%E5%BA%8F">SPI的工作时序</a></li>
+</ul>
+</li>
+<li><a href="#imx6ull-spi-%E8%B5%84%E6%BA%90">IMX6ULL SPI 资源</a><ul>
+<li><a href="#spi-%E9%87%8D%E8%A6%81%E5%AF%84%E5%AD%98%E5%99%A8">SPI 重要寄存器</a><ul>
+<li><a href="#cr">CR</a></li>
+<li><a href="#dr">DR</a></li>
+<li><a href="#sr">SR</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#spi-%E5%A4%96%E8%AE%BE-icm-20608">SPI 外设： ICM-20608</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="IMX6ULL-SPI-驱动学习"><a href="#IMX6ULL-SPI-驱动学习" class="headerlink" title="IMX6ULL SPI 驱动学习"></a>IMX6ULL SPI 驱动学习</h1><h2 id="SPI-定义"><a href="#SPI-定义" class="headerlink" title="SPI 定义"></a>SPI 定义</h2><p>（I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了）</p>
 <p>SPI 速度比I2C 更快， SPI和I2C一样，也是串行通信，全称：Serial Perripheral Interface， 串行外围设备接口，是一种<strong>同步</strong> <strong>串行</strong>接口技术</p>
 <p>SPI是<strong>高速</strong>、<strong>全双工</strong>的<strong>同步</strong>通信总线，<br>SPI<strong>时钟频率</strong>比I2C<strong>高很多</strong>，最高可以工作在<strong>上百 MHz</strong></p>
 <h3 id="SPI-协议"><a href="#SPI-协议" class="headerlink" title="SPI 协议"></a>SPI 协议</h3><p>SPI 以<strong>主从</strong>方式工作， 通常一主多从。<br>SPI 一般 需要<strong>4 根线</strong>，但是也可以使用三根线(单向传输)</p>
