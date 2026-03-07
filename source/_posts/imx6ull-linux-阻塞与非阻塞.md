@@ -4,12 +4,14 @@ date: 2026-03-06 21:08:17
 categories: [学习笔记, 嵌入式, LINUX] 
 tags: [嵌入式, linux, 驱动]
 ---
+- [后期总结](#后期总结)
 - [linux 阻塞与非阻塞](#linux-阻塞与非阻塞)
 - [linux实现**阻塞/非阻塞IO**的几个机制](#linux实现阻塞非阻塞io的几个机制)
-  - [等待队列 wait queue（**阻塞**）](#等待队列-wait-queue阻塞)
+  - [等待队列 wait queue（**阻塞的底层实现机制**）](#等待队列-wait-queue阻塞的底层实现机制)
     - [等待队列 API 梳理](#等待队列-api-梳理)
     - [demo](#demo)
-  - [轮询](#轮询)
+      - [两种阻塞api写法](#两种阻塞api写法)
+  - [轮询（系统调用阻塞，等待唤醒 == **监听**）](#轮询系统调用阻塞等待唤醒--监听)
     - [用户态的轮询api](#用户态的轮询api)
       - [select](#select)
         - [select底层实现机制](#select底层实现机制)
@@ -26,7 +28,22 @@ tags: [嵌入式, linux, 驱动]
     - [模板](#模板)
     - [read里面wait\_event 和 select/poll中的poll\_wait 对比](#read里面wait_event-和-selectpoll中的poll_wait-对比)
   - [工作队列 vs 等待队列](#工作队列-vs-等待队列)
+# 后期总结
+**我们在IO的时候，阻塞是一件好事，可以节省CPU资源**
 
+linux**实现阻塞**的底层机制，就是**依赖等待队列**。
+
+主要有以下**三种情况**
+
+- （**`open指明了read以阻塞方式读`**）
+  - 直接在驱动read里面挂入等待队列，就是我们read里面的阻塞
+  - **单路阻塞**
+- （**`open指明了read以非阻塞方式读`**）
+  - 驱动read里面就要支持**即时返回**
+  - 若 **`应用层就想要即时返回`** ，根本不想要阻塞，不考虑性能，**完全非阻塞**
+    - while循环，主动轮询，**占用CPU**
+  - **`若应用层还想要阻塞来优化`**：
+    - 在select, poll的系统调用里面挂入等待队列，**read为非阻塞**，**阻塞在系统调用中**。
 # linux 阻塞与非阻塞
 这里的IO指的是**用户态程序**通过系统调用和**内核态的驱动程序**之间的**输入输出**。
 
@@ -44,7 +61,7 @@ tags: [嵌入式, linux, 驱动]
 - > 这里的**阻塞**，需要**驱动程序配合**，如果配合，还是阻塞不了.
 
 # linux实现**阻塞/非阻塞IO**的几个机制
-## 等待队列 wait queue（**阻塞**）
+## 等待队列 wait queue（**阻塞的底层实现机制**）
 阻塞访问的最大好处就是省资源，因为进程进入阻塞状态，让出了cpu。
 
 但是当设备文件可以操作的时候，必须要唤醒进程（一般在中断函数中完成唤醒工作）
@@ -61,6 +78,7 @@ tags: [嵌入式, linux, 驱动]
   - ![alt text](../images/imx6ull-linux-阻塞与非阻塞-06-0306230232.png)
 - **C. 入队与阻塞 (Wait Events) —— 最常用**
   - ![alt text](../images/imx6ull-linux-阻塞与非阻塞-07-0306230232.png)
+  - ![alt text](../images/imx6ull-linux-阻塞与非阻塞-01-0307151304.png)
 - **D. 唤醒 (Wake Up)**
   - ![alt text](../images/imx6ull-linux-阻塞与非阻塞-08-0306230232.png)
 ### demo
@@ -83,6 +101,8 @@ static int __init timer_init(void) {
 }
 ```
 
+
+
 **3. 在 read 函数中实现阻塞**
 ```c
 static ssize_t timer_read(struct file *filp, char __user *buf, size_t cnt, loff_t *offt) {
@@ -101,9 +121,27 @@ static ssize_t timer_read(struct file *filp, char __user *buf, size_t cnt, loff_
     return 0;
 }
 ```
-
-
-
+#### 两种阻塞api写法
+注：wait_event本质上是宏，下面两段等待阻塞的方法是一样的：
+```c
+DECLARE_WAITQUEUE(wait, current);
+if (atomic_read(&dev->releasekey) == 0) {
+    add_wait_queue(&dev->r_wait, &wait);
+    __set_current_state(TASK_INTERRUPTIBLE);
+    schedule();
+    if (signal_pending(current)) {
+        ret = -ERESTARTSYS;
+        goto wait_error;
+    }
+    __set_current_state(TASK_RUNNING);
+    remove_wait_queue(&dev->r_wait, &wait);
+}
+```
+等同于
+```c
+ret = wait_event_interruptible(dev->r_wait,
+                               atomic_read(&dev->releasekey));
+```
 
 
 
@@ -123,7 +161,7 @@ void timer_function(unsigned long arg) {
 > - 条件检查要严谨：wait_event 醒来后会重新检查 condition。如果多个进程在等同一个队列，**其中一个抢先处理了数据并把 condition 改回了 0**，其他进程会继续睡回去。
 > - 信号处理：`wait_event_interruptible` 返回非 0 值表示是被信号（信号量、Ctrl+C等）**意外叫醒的**，驱动应该及时返回并处理这个异常
 
-## 轮询
+## 轮询（系统调用阻塞，等待唤醒 == **监听**）
 如果**用户进程**以**非阻塞方式**访问设备，设备**驱动**程序就要**提供非阻塞的处理方式**
 
 前面我们说**非阻塞**，就是直接返回嘛，那么就是**轮询**了
@@ -274,6 +312,22 @@ int ret = poll(fds, 3, 500);
 
 #### 各种情况对比
 目前，我们学习了等待队列，轮询的select，以及他的升级版本poll。
+
+**这里要说明一点，阻塞是一件好事情**，因为可以休眠等待，不占用cpu。我们的目的就是用上阻塞来在IO的时候节约资源。
+
+**而阻塞本质上全部依赖等待队列的机制**
+
+- 1.我们在open时以阻塞打开，那么在读取的时候，就直接在read里面wait_event实现阻塞就行了
+  - 注意，这个的弊端是**单路阻塞**，进程因为要读就阻塞住了，也不能写。
+- 我们在open时以非阻塞方式打开，那么在读取的时候：
+  - 2.如果应用层不需要阻塞
+    - 直接read，驱动read即时返回即可。
+  - 3.如果应用层仍然需要阻塞：
+    - 就需要依赖poll/select，额外加入一层中间件，用于**阻塞**，**监听**。
+
+---
+
+**下面具体来分析一下这三种情况**
 
 当我们在读设备数据的时候，使用open 以阻塞/非阻塞方式打开，然后read。一般有3中使用情况：
 - 仅 `read` 指定 `O_NONBLOCK`（**纯非阻塞读，while 空转**）
@@ -505,6 +559,8 @@ const struct file_operations my_fops = {
 > ![alt text](../images/imx6ull-linux-阻塞与非阻塞-16-0307113353.png)
 
 ### read里面wait_event 和 select/poll中的poll_wait 对比
+> 如果我在应用层open的时候指定，阻塞方式read，那么就要在read里面wait_event实现阻塞。
+> 如果我在应用层open的时候指定，非阻塞方式read, 那么我就要在read里面即时返回，但是实际上我们的应用层还是还是想要数据，又不可能直接用while来主动轮询，所以只能用select, poll，来外置一个等待队列机制。
 可以看到，
 - 驱动的read里面的wait_event是真的利用等待队列机制库，来让自己的进程进入休眠了。 
 
