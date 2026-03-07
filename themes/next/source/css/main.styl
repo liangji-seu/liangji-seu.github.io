@@ -71,12 +71,12 @@ article { counter-reset: h1-count; }
 }
 
 // 阶梯缩进核心代码：每级标题按 8px 递增，且仅影响文章详情页
-.posts-expand .post-body h1 { margin-left: 0px !important; counter-reset: h2-count; }
-.posts-expand .post-body h2 { margin-left: 8px !important; counter-reset: h3-count; }
-.posts-expand .post-body h3 { margin-left: 16px !important; counter-reset: h4-count; }
-.posts-expand .post-body h4 { margin-left: 24px !important; counter-reset: h5-count; }
-.posts-expand .post-body h5 { margin-left: 32px !important; counter-reset: h6-count; }
-.posts-expand .post-body h6 { margin-left: 40px !important; counter-reset: h7-count; }
+.posts-expand .post-body h1 { margin-left: -16px !important; counter-reset: h2-count; }
+.posts-expand .post-body h2 { margin-left: -8px !important; counter-reset: h3-count; }
+.posts-expand .post-body h3 { margin-left: 0px !important; counter-reset: h4-count; }
+.posts-expand .post-body h4 { margin-left: 8px !important; counter-reset: h5-count; }
+.posts-expand .post-body h5 { margin-left: 16px !important; counter-reset: h6-count; }
+.posts-expand .post-body h6 { margin-left: 24px !important; counter-reset: h7-count; }
 
 .posts-expand .post-body h1::before, .posts-expand .post-body h2::before, .posts-expand .post-body h3::before, 
 .posts-expand .post-body h4::before, .posts-expand .post-body h5::before, .posts-expand .post-body h6::before, .posts-expand .post-body h7::before {
@@ -112,6 +112,9 @@ article { counter-reset: h1-count; }
 
 .posts-expand .post-body li { margin-bottom: 4px !important; }
 .posts-expand .post-body li p { margin-bottom: 4px !important; }
+.posts-expand .post-body li img { margin-left: 0 !important; }
+.post-body blockquote img { margin-left: 0 !important; }
+.posts-expand .post-body li blockquote { margin-left: 0 !important; }
 
 
 // ----------------------------------------------------------
@@ -124,8 +127,8 @@ article { counter-reset: h1-count; }
     border-right: 1px solid rgba(0, 122, 204, 0.1) !important;
     border-bottom: 1px solid rgba(0, 122, 204, 0.1) !important;
     border-top: 1px solid rgba(0, 122, 204, 0.1) !important;
-    padding: 3px 16px !important;
-    margin: 12px 0 12px 48px !important;
+    padding: 1px 10px !important;
+    margin: 4px 0 4px 24px !important;
     color: #444 !important;
     overflow: hidden !important;
 }
@@ -223,6 +226,18 @@ article { counter-reset: h1-count; }
 // ----------------------------------------------------------
 ::selection { background: #add6ff !important; color: inherit !important; }
 ::-moz-selection { background: #add6ff !important; color: inherit !important; }
+
+// ----------------------------------------------------------
+// 8.5 水平分割线 (---) 改为实线
+// ----------------------------------------------------------
+.post-body hr {
+    background-image: none !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    border-top: 1px solid #d1d5da !important;
+    height: 0 !important;
+    margin: 24px 0 !important;
+}
 
 
 // ----------------------------------------------------------
