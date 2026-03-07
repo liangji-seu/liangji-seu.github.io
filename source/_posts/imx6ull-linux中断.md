@@ -231,6 +231,8 @@ struct tasklet_struct
 };
 ```
 > **func函数**就是tasklet要执行的处理函数。由用户来定义函数内容。**就相当于我们的中断处理函数**。
+
+
 ---
 
 **使用：**
@@ -238,7 +240,9 @@ struct tasklet_struct
 先定义一个`tasklet`, 然后`tasklet_init`**初始化tasklet**
 > ![alt text](../images/imx6ull-linux中断-11-0306210532.png)
 > ![alt text](../images/imx6ull-linux中断-12-0306210532.png)
+> 
 > ---
+> 
 > ![alt text](../images/imx6ull-linux中断-13-0306210532.png)
 
 在**上半部**（我们实际的中断处理函数）中，调用`tasklet_schedule`就能使tasklet在**合适的时间运行**
@@ -580,8 +584,8 @@ static int __init xxxx_init(void)
             int idx = work - my_works;
             atomic_set(&work_idle[idx], 1);
         }
-      ```
-
+  - ```
+  - ---
   - **方案3**： 用workqueue_create创建专属队列(并非解决快速重挂工作)
     - 任务优先级高，不想和其他内核任务抢kworker
     - ```c
@@ -590,11 +594,12 @@ static int __init xxxx_init(void)
 
         // 挂任务到专属队列
         queue_work(my_wq, &my_work);
-      ```
+    -  ```
     - 使用专属队列的好处
       - 有一个好处是可以定制优先级，这样你这个专属队列对应的**worker线程有更高的优先级**，可以进行**抢占**。
-    - ![alt text](../images/imx6ull-linux中断-23-0306210532.png)
+      - ![alt text](../images/imx6ull-linux中断-23-0306210532.png)
 - ---
+- 
 - worker工作者线程，work_queue工作队列，work工作的对应关系
   - **工作队列（workqueue）**：
     - 内核预设了多个「**默认队列**」，驱动也可创建「**专属队列**」，是存放 **work 的 “任务容器”**；
@@ -611,6 +616,7 @@ static int __init xxxx_init(void)
     - >![alt text](../images/imx6ull-linux中断-28-0306210532.png)
 
 ---
+
 - **创建专属队列**
   - 调用**队列创建函数**，内核会自动为**每个CPU核心**创建对应的**kworker线程**
   - > ![alt text](../images/imx6ull-linux中断-29-0306210532.png)
