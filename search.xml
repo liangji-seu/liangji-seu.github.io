@@ -4,7 +4,40 @@
   
     
     <entry>
-      <title>imx6ull-异步通知</title>
+      <title>imx6ull-platform设备驱动框架</title>
+      <link href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/"/>
+      <url>/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> LINUX </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> linux </tag>
+            
+            <tag> 驱动 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>imx6ull-异步通知*</title>
       <link href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/"/>
       <url>/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/</url>
       
@@ -30,6 +63,8 @@
             
             <tag> 驱动 </tag>
             
+            <tag> 信号 </tag>
+            
         </tags>
       
     </entry>
@@ -37,7 +72,7 @@
     
     
     <entry>
-      <title>imx6ull linux 阻塞与非阻塞</title>
+      <title>imx6ull linux 阻塞与非阻塞*</title>
       <link href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/"/>
       <url>/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/</url>
       
@@ -63,6 +98,18 @@
             
             <tag> 驱动 </tag>
             
+            <tag> 阻塞 </tag>
+            
+            <tag> 等待队列 </tag>
+            
+            <tag> 非阻塞 </tag>
+            
+            <tag> select </tag>
+            
+            <tag> poll </tag>
+            
+            <tag> epoll </tag>
+            
         </tags>
       
     </entry>
@@ -70,7 +117,7 @@
     
     
     <entry>
-      <title>imx6ull linux中断</title>
+      <title>imx6ull linux中断*</title>
       <link href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/"/>
       <url>/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/</url>
       
@@ -95,6 +142,18 @@
             <tag> linux </tag>
             
             <tag> 驱动 </tag>
+            
+            <tag> 中断子系统 </tag>
+            
+            <tag> 中断下半部 </tag>
+            
+            <tag> 软中断 </tag>
+            
+            <tag> tasklet </tag>
+            
+            <tag> 工作队列 </tag>
+            
+            <tag> dts中断节点依赖关系 </tag>
             
         </tags>
       
@@ -169,7 +228,7 @@
     
     
     <entry>
-      <title>imx6ull 并发与竞争</title>
+      <title>imx6ull 并发与竞争*</title>
       <link href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/"/>
       <url>/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/</url>
       
@@ -194,6 +253,20 @@
             <tag> linux </tag>
             
             <tag> 驱动 </tag>
+            
+            <tag> 并发 </tag>
+            
+            <tag> 竞争 </tag>
+            
+            <tag> 原子操作 </tag>
+            
+            <tag> 锁 </tag>
+            
+            <tag> 自旋锁 </tag>
+            
+            <tag> 信号量 </tag>
+            
+            <tag> 互斥锁 </tag>
             
         </tags>
       
@@ -1561,11 +1634,11 @@
       
         <tags>
             
-            <tag> 嵌入式 </tag>
-            
             <tag> rk3399 </tag>
             
             <tag> android10 </tag>
+            
+            <tag> 嵌入式 </tag>
             
         </tags>
       

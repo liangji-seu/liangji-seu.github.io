@@ -23,7 +23,7 @@
 
     <meta name="description" content="内核中断 裸机的中断 linux内核中断 中断API 中断号 request_irq free_irq 中断处理函数 中断使能&#x2F;禁止函数   上半部 下半部 下半部的实现机制 软中断 tasklet tasklet流程图解   工作队列 概念梳理 工作队列流程图解 api 使用注意       dts中断拓破关系梳理 节点中断属性 实验    内核中断裸机的中断之前我们在裸机中，要想使">
 <meta property="og:type" content="article">
-<meta property="og:title" content="imx6ull linux中断">
+<meta property="og:title" content="imx6ull linux中断*">
 <meta property="og:url" content="http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="内核中断 裸机的中断 linux内核中断 中断API 中断号 request_irq free_irq 中断处理函数 中断使能&#x2F;禁止函数   上半部 下半部 下半部的实现机制 软中断 tasklet tasklet流程图解   工作队列 概念梳理 工作队列流程图解 api 使用注意       dts中断拓破关系梳理 节点中断属性 实验    内核中断裸机的中断之前我们在裸机中，要想使">
@@ -69,10 +69,16 @@
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-39-0306210532.png">
 <meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-40-0306210532.png">
 <meta property="article:published_time" content="2026-03-05T13:54:28.000Z">
-<meta property="article:modified_time" content="2026-03-07T03:43:43.829Z">
+<meta property="article:modified_time" content="2026-03-07T08:44:07.950Z">
 <meta property="article:author" content="liangji">
+<meta property="article:tag" content="dts中断节点依赖关系">
 <meta property="article:tag" content="linux">
+<meta property="article:tag" content="tasklet">
+<meta property="article:tag" content="中断下半部">
+<meta property="article:tag" content="中断子系统">
 <meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="工作队列">
+<meta property="article:tag" content="软中断">
 <meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png">
@@ -81,10 +87,10 @@
 <link rel="canonical" href="http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/","path":"2026/03/05/imx6ull-linux中断/","title":"imx6ull linux中断"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/","path":"2026/03/05/imx6ull-linux中断/","title":"imx6ull linux中断*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>imx6ull linux中断 | ji的博客</title>
+<title>imx6ull linux中断* | ji的博客</title>
   
 
 
@@ -191,7 +197,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">50</span>
+          <span class="site-state-item-count">51</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -202,7 +208,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">33</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -253,12 +259,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="imx6ull linux中断 | ji的博客">
+      <meta itemprop="name" content="imx6ull linux中断* | ji的博客">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          imx6ull linux中断
+          imx6ull linux中断*
         </h1>
 
         <div class="post-meta-container">
@@ -276,7 +282,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-03-07 11:43:43" itemprop="dateModified" datetime="2026-03-07T11:43:43+08:00">2026-03-07</time>
+      <time title="修改时间：2026-03-07 16:44:07" itemprop="dateModified" datetime="2026-03-07T16:44:07+08:00">2026-03-07</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -923,6 +929,12 @@ void my_drv_exit(void) {
               <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
               <a href="/tags/linux/" rel="tag"># linux</a>
               <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+              <a href="/tags/%E4%B8%AD%E6%96%AD%E5%AD%90%E7%B3%BB%E7%BB%9F/" rel="tag"># 中断子系统</a>
+              <a href="/tags/%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8/" rel="tag"># 中断下半部</a>
+              <a href="/tags/%E8%BD%AF%E4%B8%AD%E6%96%AD/" rel="tag"># 软中断</a>
+              <a href="/tags/tasklet/" rel="tag"># tasklet</a>
+              <a href="/tags/%E5%B7%A5%E4%BD%9C%E9%98%9F%E5%88%97/" rel="tag"># 工作队列</a>
+              <a href="/tags/dts%E4%B8%AD%E6%96%AD%E8%8A%82%E7%82%B9%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB/" rel="tag"># dts中断节点依赖关系</a>
           </div>
 
         
@@ -934,8 +946,8 @@ void my_drv_exit(void) {
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/" rel="next" title="imx6ull linux 阻塞与非阻塞">
-                  imx6ull linux 阻塞与非阻塞 <i class="fa fa-angle-right"></i>
+                <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/" rel="next" title="imx6ull linux 阻塞与非阻塞*">
+                  imx6ull linux 阻塞与非阻塞* <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
@@ -949,13 +961,16 @@ void my_drv_exit(void) {
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知</a>
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞</a>
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
             </li>
             <li class="category-nav-item current">
-              <span>imx6ull linux中断</span>
+              <span>imx6ull linux中断*</span>
             </li>
           
             <li class="category-nav-item">
@@ -965,7 +980,7 @@ void my_drv_exit(void) {
               <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争</a>
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
