@@ -4,6 +4,15 @@ date: 2025-12-24 23:15:03
 categories: [学习笔记, 嵌入式, MCU] 
 tags: [嵌入式, mcu, stm32]
 ---
+- [stm32 计时](#stm32-计时)
+  - [systick模块，sysclk时钟源 和 tick节拍](#systick模块sysclk时钟源-和-tick节拍)
+  - [delay\_us](#delay_us)
+    - [无OS](#无os)
+    - [有OS](#有os)
+  - [delay\_ms](#delay_ms)
+    - [无OS](#无os-1)
+    - [有OS](#有os-1)
+
 # stm32 计时
 1. hal_init()里面HAL_InitTick（）会设置好CM3内部的systick模块的时钟源头,为sysclk的/8，和节拍中断优先级。
 2. stm32 在设置好时钟树之后,sysclk = 72MHZ

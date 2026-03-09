@@ -4,6 +4,14 @@ date: 2026-02-12 19:02:21
 categories: [学习笔记, 嵌入式, MCU] 
 tags: [嵌入式, mcu, stm32]
 ---
+- [sys层](#sys层)
+  - [delay](#delay)
+    - [原理](#原理)
+    - [实现](#实现)
+      - [delay\_init()](#delay_init)
+      - [delay\_us()](#delay_us)
+  - [sys](#sys)
+  - [uart](#uart)
 
 # sys层
 这一层，主要剖析一下底层核心驱动函数, 基本上要访问一个系统的最小驱动就是这三个。

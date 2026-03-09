@@ -4,6 +4,17 @@ date: 2026-01-27 14:56:47
 categories: [学习笔记, 嵌入式, OS] 
 tags: [嵌入式, OS, XV6]
 ---
+- [页表](#页表)
+  - [usyscall](#usyscall)
+  - [vmprint](#vmprint)
+    - [1. 内核页表创建流程 (Kernel Page Table Initialization)](#1-内核页表创建流程-kernel-page-table-initialization)
+    - [2. 进程创建中的页表操作 (Process Page Table Operations)](#2-进程创建中的页表操作-process-page-table-operations)
+      - [A. 初始创建流程 (`allocproc` \& `proc_pagetable`)](#a-初始创建流程-allocproc--proc_pagetable)
+      - [B. 复制进程流程 (`fork`)](#b-复制进程流程-fork)
+    - [3. 关键函数逻辑摘要 (Note Summary)](#3-关键函数逻辑摘要-note-summary)
+    - [vmprint实现](#vmprint实现)
+  - [pgaccess](#pgaccess)
+
 # 页表
 本节主要学习页表，包括内核的地址空间，物理内存的分配，用户进程的地址空间，页表的作用和实现逻辑等。
 

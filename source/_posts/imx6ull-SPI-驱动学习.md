@@ -4,6 +4,18 @@ date: 2025-12-19 15:51:32
 categories: [学习笔记, 嵌入式, LINUX] 
 tags: [嵌入式, linux, 驱动]
 ---
+- [IMX6ULL SPI 驱动学习](#imx6ull-spi-驱动学习)
+  - [SPI 定义](#spi-定义)
+    - [SPI 协议](#spi-协议)
+    - [SPI 工作模式](#spi-工作模式)
+    - [SPI的工作时序](#spi的工作时序)
+  - [IMX6ULL SPI 资源](#imx6ull-spi-资源)
+    - [SPI 重要寄存器](#spi-重要寄存器)
+      - [CR](#cr)
+      - [DR](#dr)
+      - [SR](#sr)
+  - [SPI 外设： ICM-20608](#spi-外设-icm-20608)
+
 # IMX6ULL SPI 驱动学习
 ## SPI 定义
 （I2C 是串行通信， 主机从机通信仅需要2根线，I2C 的速度最高只能到 400KHz，访问速度要求比价高的话 I2C 就不适合了）

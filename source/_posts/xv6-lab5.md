@@ -4,6 +4,15 @@ date: 2026-02-03 12:53:23
 categories: [学习笔记, 嵌入式, OS] 
 tags: [嵌入式, OS, XV6]
 ---
+- [cow fork](#cow-fork)
+  - [存储空间定义](#存储空间定义)
+  - [pagetable\_t](#pagetable_t)
+  - [fork](#fork)
+  - [kalloc](#kalloc)
+  - [cow fork实现](#cow-fork实现)
+  - [copyout](#copyout)
+  - [cow fork 的基本实现（cowtest）](#cow-fork-的基本实现cowtest)
+  - [usertests分析](#usertests分析)
 
 # cow fork
 ## 存储空间定义

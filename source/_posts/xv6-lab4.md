@@ -4,6 +4,20 @@ date: 2026-01-31 12:39:32
 categories: [学习笔记, 嵌入式, OS] 
 tags: [嵌入式, OS, XV6]
 ---
+- [backtrace](#backtrace)
+  - [理解trampoline -\> trap -\> trampoline](#理解trampoline---trap---trampoline)
+  - [从TRAPFRAME里面写入内核Usertrap栈的一些地址是物理地址吗？什么时候写到trapframe中的？](#从trapframe里面写入内核usertrap栈的一些地址是物理地址吗什么时候写到trapframe中的)
+    - [关于什么时候创建的trapframe中的内核状态？](#关于什么时候创建的trapframe中的内核状态)
+  - [页面错误异常的应用](#页面错误异常的应用)
+  - [关于内核栈的结构](#关于内核栈的结构)
+  - [实现](#实现)
+- [alarm](#alarm)
+  - [用户态内核态切换分析](#用户态内核态切换分析)
+  - [c语言变量在虚拟内存空间分布](#c语言变量在虚拟内存空间分布)
+  - [alarm解法](#alarm解法)
+  - [代码实现](#代码实现)
+  - [后续思考](#后续思考)
+
 # backtrace
 ## 理解trampoline -> trap -> trampoline
 从用户到内核

@@ -5,6 +5,38 @@ categories: [学习笔记, 嵌入式, RTOS]
 tags: [嵌入式, RTOS, freertos]
 ---
 
+- [Freertos 基础实现](#freertos-基础实现)
+  - [freertos 代码结构分析](#freertos-代码结构分析)
+  - [stm32中，freertos内存分布预览](#stm32中freertos内存分布预览)
+  - [(前置知识)，CM3中断](#前置知识cm3中断)
+  - [A. freertos 中断配置](#a-freertos-中断配置)
+  - [B. freertos 任务](#b-freertos-任务)
+    - [任务task](#任务task)
+      - [task创建](#task创建)
+    - [任务链表与任务节点](#任务链表与任务节点)
+    - [链表，节点的使用](#链表节点的使用)
+  - [freertos的启动流程](#freertos的启动流程)
+    - [1. 裸机](#1-裸机)
+    - [2. 开启任务调度器](#2-开启任务调度器)
+    - [3. 启动第一个任务](#3-启动第一个任务)
+    - [4. 任务状态列表](#4-任务状态列表)
+    - [5. 任务的操作 与 任务状态](#5-任务的操作-与-任务状态)
+      - [xTaskCreate()](#xtaskcreate)
+        - [prvInitialiseNewTask() 初始化TCB](#prvinitialisenewtask-初始化tcb)
+        - [pxPortInitialiseStack() 初始化任务栈](#pxportinitialisestack-初始化任务栈)
+        - [prvAddNewTaskToReadyList() 加入就绪队列](#prvaddnewtasktoreadylist-加入就绪队列)
+      - [vTaskDelete() 删除任务](#vtaskdelete-删除任务)
+        - [prvDeleteTCB() 具体删除任务](#prvdeletetcb-具体删除任务)
+      - [vTaskSuspend() 挂起任务](#vtasksuspend-挂起任务)
+        - [补充：pendSV 保存当前任务现场操作](#补充pendsv-保存当前任务现场操作)
+        - [补充：pendSV中断实现任务切换的详细过程](#补充pendsv中断实现任务切换的详细过程)
+      - [恢复任务](#恢复任务)
+    - [6. 空闲任务](#6-空闲任务)
+  - [任务切换](#任务切换)
+    - [SVC中断，pendSV中断，systick中断](#svc中断pendsv中断systick中断)
+      - [**1. SVC中断：**](#1-svc中断)
+      - [**2. systick中断**](#2-systick中断)
+      - [**3. pendSV中断**](#3-pendsv中断)
 
 # Freertos 基础实现
 ## freertos 代码结构分析
