@@ -27,6 +27,7 @@ tags: [嵌入式, linux, 驱动]
     - [platform\_device](#platform_device)
       - [使用platform\_device描述一个设备的模板](#使用platform_device描述一个设备的模板)
   - [手动编写platform\_device， platform\_driver.](#手动编写platform_device-platform_driver)
+  - [pinctrl子系统，gpio子系统](#pinctrl子系统gpio子系统)
 
 
 # 前言
@@ -980,3 +981,18 @@ MODULE_AUTHOR("liangji");
 > ![alt text](../images/imx6ull-platform设备驱动框架-09-0309192303.png)
 > 
 > ![alt text](../images/imx6ull-platform设备驱动框架-10-0309192303.png)
+
+
+## pinctrl子系统，gpio子系统
+![alt text](../images/imx6ull-platform设备驱动框架-01-0309193702.png)
+
+![alt text](../images/imx6ull-platform设备驱动框架-02-0309193702.png)
+
+所以，我们平常自己写一个驱动，都是创建一个设备结构体来描述设备，然后弄一整套申请设备号，注册字符设备，然后实现各种字符设备操作函数等等。
+
+
+像这种子系统，比如pinctrl子系统，就是因为pinctrl的操作，gpio的操作，都太过于标准，所以这些子系统就相当于写了一大半的驱动。比如里面已经定义了一个pinctrl_desc的对象，然后完成好了申请设备号，注册设备，创建设备节点这些工作，只不过，具体的设备操作函数pinctrl_ops还没实现，需要原厂的工程师，根据他们自己的平台，去实现这些ops。是吗
+
+![alt text](../images/imx6ull-platform设备驱动框架-03-0309193702.png)
+![alt text](../images/imx6ull-platform设备驱动框架-04-0309193702.png)
+![alt text](../images/imx6ull-platform设备驱动框架-05-0309193702.png)
