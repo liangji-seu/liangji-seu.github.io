@@ -29,6 +29,8 @@ tags: [嵌入式, linux, 驱动]
   - [手动编写platform\_device， platform\_driver.](#手动编写platform_device-platform_driver)
   - [pinctrl子系统，gpio子系统](#pinctrl子系统gpio子系统)
     - [dts + platform\_driver](#dts--platform_driver)
+- [学习linux内核编写二级设备驱动](#学习linux内核编写二级设备驱动)
+  - [linux内核自带的led设备驱动](#linux内核自带的led设备驱动)
 
 
 # 前言
@@ -1231,7 +1233,15 @@ module_exit(leddriver_exit);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("zuozhongkai");
 
-
-
-
 ```
+
+
+# 学习linux内核编写二级设备驱动
+## linux内核自带的led设备驱动
+前面我们都是自己通过编写一个led的设备结构体，然后为他编写platform_driver驱动。
+
+![alt text](../images/imx6ull-platform设备驱动框架-01-0309210426.png)
+
+在menuconfig里面使能这个CONFIG_LED_GPIO这个编译选项之后
+
+linux内核自带的led驱动代码在`drivers/led/led-gpio.c`,这个就**相当于内核写好的一个二级设备驱动**，这就非常值得学习了，看别人是怎么写驱动的，是怎么描述设备的。
