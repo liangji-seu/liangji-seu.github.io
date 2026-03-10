@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="MISC 设备驱动笔记（MD格式） 57.1 MISC 设备驱动简介图解原来我们cdev的写法，把前端创建用户空间的设备文件节点也放到设备结构体里面 现在用杂项，把这些完全剥离开来，设备结构体内存仅描述设备的特征属性，相当于开辟第三块内存，单独做用户空间的前端链路 核心概念与优势MISC 设备驱动是 Linux 字符设备驱动的简化方案，核心解决主设备号资源紧张的问题，所有 MISC 设备驱动的主设">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull-linux内核的misc驱动">
+<meta property="og:url" content="http://example.com/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="MISC 设备驱动笔记（MD格式） 57.1 MISC 设备驱动简介图解原来我们cdev的写法，把前端创建用户空间的设备文件节点也放到设备结构体里面 现在用杂项，把这些完全剥离开来，设备结构体内存仅描述设备的特征属性，相当于开辟第三块内存，单独做用户空间的前端链路 核心概念与优势MISC 设备驱动是 Linux 字符设备驱动的简化方案，核心解决主设备号资源紧张的问题，所有 MISC 设备驱动的主设">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8-01-0310212247.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8-02-0310212247.png">
+<meta property="article:published_time" content="2026-03-10T12:23:47.000Z">
+<meta property="article:modified_time" content="2026-03-10T13:22:47.359Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8-01-0310212247.png">
+
+
+<link rel="canonical" href="http://example.com/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/","path":"2026/03/10/imx6ull-linux内核的misc驱动/","title":"imx6ull-linux内核的misc驱动"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull-linux内核的misc驱动 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#57-1-MISC-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">57.1 MISC 设备驱动简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E8%A7%A3"><span class="nav-number">1.1.</span> <span class="nav-text">图解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E4%BC%98%E5%8A%BF"><span class="nav-number">1.2.</span> <span class="nav-text">核心概念与优势</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#miscdevice-%E7%BB%93%E6%9E%84%E4%BD%93%E8%A7%A3%E6%9E%90"><span class="nav-number">1.3.</span> <span class="nav-text">miscdevice 结构体解析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%88%90%E5%91%98%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.3.1.</span> <span class="nav-text">关键成员设置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A2%84%E5%AE%9A%E4%B9%89%E5%AD%90%E8%AE%BE%E5%A4%87%E5%8F%B7"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">预定义子设备号</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99"><span class="nav-number">1.3.2.</span> <span class="nav-text">使用规则</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MISC-%E8%AE%BE%E5%A4%87%E6%B3%A8%E5%86%8C%E4%B8%8E%E6%B3%A8%E9%94%80%E5%87%BD%E6%95%B0"><span class="nav-number">1.4.</span> <span class="nav-text">MISC 设备注册与注销函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E5%87%BD%E6%95%B0%EF%BC%9Amisc-register"><span class="nav-number">1.4.1.</span> <span class="nav-text">注册函数：misc_register</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E9%94%80%E5%87%BD%E6%95%B0%EF%BC%9Amisc-deregister"><span class="nav-number">1.4.2.</span> <span class="nav-text">注销函数：misc_deregister</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E9%A9%B1%E5%8A%A8%E6%B5%81%E7%A8%8B-vs-MISC-%E9%A9%B1%E5%8A%A8%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.</span> <span class="nav-text">传统驱动流程 vs MISC 驱动流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%B5%81%E7%A8%8B%EF%BC%88%E7%B9%81%E7%90%90%EF%BC%89"><span class="nav-number">1.5.1.</span> <span class="nav-text">传统字符设备驱动流程（繁琐）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E6%B3%A8%E9%94%80%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.2.</span> <span class="nav-text">传统注销流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MISC-%E9%A9%B1%E5%8A%A8%E6%B5%81%E7%A8%8B%EF%BC%88%E6%9E%81%E7%AE%80%EF%BC%89"><span class="nav-number">1.5.3.</span> <span class="nav-text">MISC 驱动流程（极简）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E7%BB%AD%E5%BA%94%E7%94%A8"><span class="nav-number">1.6.</span> <span class="nav-text">后续应用</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull-linux内核的misc驱动 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull-linux内核的misc驱动
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-03-10 20:23:47 / 修改时间：21:22:47" itemprop="dateCreated datePublished" datetime="2026-03-10T20:23:47+08:00">2026-03-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>MISC 设备驱动笔记（MD格式）</p>
+<h1 id="57-1-MISC-设备驱动简介"><a href="#57-1-MISC-设备驱动简介" class="headerlink" title="57.1 MISC 设备驱动简介"></a>57.1 MISC 设备驱动简介</h1><h2 id="图解"><a href="#图解" class="headerlink" title="图解"></a>图解</h2><p>原来我们cdev的写法，把前端创建用户空间的设备文件节点也放到设备结构体里面<br><img src="/../images/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8-01-0310212247.png" alt="alt text"></p>
+<p>现在用杂项，把这些完全剥离开来，设备结构体内存仅描述设备的特征属性，相当于开辟第三块内存，单独做用户空间的前端链路<br><img src="/../images/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8-02-0310212247.png" alt="alt text"></p>
+<h2 id="核心概念与优势"><a href="#核心概念与优势" class="headerlink" title="核心概念与优势"></a>核心概念与优势</h2><p>MISC 设备驱动是 Linux 字符设备驱动的简化方案，核心解决<strong>主设备号资源紧张</strong>的问题，所有 MISC 设备驱动的<strong>主设备号固定为 10</strong>，无需手动创建 cdev，<strong>大幅简化字符设备驱动的编写流程</strong>。</p>
+<p><strong>就是原来我们编写一个led的驱动需要，在probe中需要：</strong></p>
+<ul>
+<li>初始化led设备结构体（后端链路：驱动-dts）<ul>
+<li><blockquote>
+<p><strong>开辟一块内存A，设置设备结构体</strong></p>
+</blockquote>
+</li>
+<li>获取设备节点</li>
+<li>申请gpio</li>
+<li>xxx</li>
+</ul>
+</li>
+<li>注册字符设备（前端链路：用户空间-设备文件节点-驱动）<ul>
+<li><blockquote>
+<p><strong>以前cdev这块内存(B∈A)是嵌在设备结构体的内存A里面的，cdev里面再指定操作方法集合（这个里面又操作设备结构体）</strong></p>
+</blockquote>
+</li>
+<li>申请设备号</li>
+<li>注册cdev</li>
+<li>创建class,device</li>
+</ul>
+</li>
+</ul>
+<p>现在前端链路不需要做这么一大节了，只需要方便的注册misc设备（打包后的cdev设备）</p>
+<ul>
+<li>（前端链路）注册杂项设备<ul>
+<li><blockquote>
+<p><strong>也开辟一块内存C(C不属于A)，作为杂项设备，设置操作方法（内部来操作设备结构体的内存A）</strong></p>
+</blockquote>
+</li>
+<li>misc_register(&amp;beep_miscdev)</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>注意：</p>
+<p>beep_miscdev是杂项设备，是struct miscdevice类型，他表示一个抽象的杂项设备。里面指定了他的操作方法，而这个操作方法里面，则是绑定我们真实的设备结构体（比如open方法里面，把我们的设备结构体加入到私有数据中）</p>
+</blockquote>
+<h2 id="miscdevice-结构体解析"><a href="#miscdevice-结构体解析" class="headerlink" title="miscdevice 结构体解析"></a>miscdevice 结构体解析</h2><p>MISC 设备通过 <code>miscdevice</code> 结构体描述，定义于 <code>include/linux/miscdevice.h</code>，核心成员及含义如下：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">miscdevice</span> &#123;</span></span><br><span class="line"></span><br><span class="line">    <span class="type">int</span> minor;                <span class="comment">/* 子设备号（核心需手动指定） */</span></span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *name;         <span class="comment">/* 设备名（注册后在 /dev 生成对应设备文件） */</span></span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> *<span class="title">fops</span>;</span> <span class="comment">/* 设备操作集合（字符设备核心） */</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span>    <span class="comment">/* 内核链表节点（内部使用） */</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">parent</span>;</span>    <span class="comment">/* 父设备（内部使用） */</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">this_device</span>;</span> <span class="comment">/* 设备结构体（内部使用） */</span></span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">attribute_group</span> **<span class="title">groups</span>;</span> <span class="comment">/* 设备属性组（可选） */</span></span><br><span class="line"></span><br><span class="line">    <span class="type">umode_t</span> mode;             <span class="comment">/* 设备文件权限（可选） */</span></span><br><span class="line"></span><br><span class="line"> <span class="type">const</span> <span class="type">char</span> *nodename;     <span class="comment">/* 设备文件名（可选，默认与 name 一致） */</span></span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="关键成员设置"><a href="#关键成员设置" class="headerlink" title="关键成员设置"></a>关键成员设置</h3><p>定义 MISC 设备时，<strong>必须设置 <code>minor</code>、<code>name</code>、<code>fops</code> 三个核心成员</strong>：</p>
+<ul>
+<li><p><code>minor</code>：子设备号，主设备号固定为 10，需用户手动指定（需保证未被其他设备占用）；</p>
+</li>
+<li><p><code>name</code>：设备名称，注册成功后会在 <code>/dev</code> 目录生成同名设备文件；</p>
+</li>
+<li><p><code>fops</code>：字符设备操作集合（如 <code>open</code>&#x2F;<code>read</code>&#x2F;<code>write</code> 等函数实现），是 MISC 设备驱动的核心逻辑载体。</p>
+</li>
+</ul>
+<h4 id="预定义子设备号"><a href="#预定义子设备号" class="headerlink" title="预定义子设备号"></a>预定义子设备号</h4><p>Linux 内核在 <code>include/linux/miscdevice.h</code> 中预定义了部分 MISC 子设备号（示例）：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PSMOUSE_MINOR      1      <span class="comment">/* 鼠标设备 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MS_BUSMOUSE_MINOR  2      <span class="comment">/* 未使用 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> ATARIMOUSE_MINOR   5      <span class="comment">/* 未使用 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SUN_MOUSE_MINOR    6      <span class="comment">/* 未使用 */</span></span></span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MISC_DYNAMIC_MINOR 255    <span class="comment">/* 动态子设备号 */</span></span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="使用规则"><a href="#使用规则" class="headerlink" title="使用规则"></a>使用规则</h3><ul>
+<li><p>可直接选用内核预定义的未占用子设备号；</p>
+</li>
+<li><p>也可自定义未被占用的子设备号，需保证唯一性。</p>
+</li>
+</ul>
+<h2 id="MISC-设备注册与注销函数"><a href="#MISC-设备注册与注销函数" class="headerlink" title="MISC 设备注册与注销函数"></a>MISC 设备注册与注销函数</h2><h3 id="注册函数：misc-register"><a href="#注册函数：misc-register" class="headerlink" title="注册函数：misc_register"></a>注册函数：misc_register</h3><ul>
+<li><p>函数原型：<code>int misc_register(struct miscdevice *misc)</code></p>
+</li>
+<li><p>功能：一次性完成字符设备驱动的<strong>申请设备号、初始化 cdev、添加 cdev、创建类、创建设备</strong>等所有步骤，替代传统繁琐的操作流程。</p>
+</li>
+<li><p>参数：<code>misc</code> - 待注册的 MISC 设备结构体指针；</p>
+</li>
+<li><p>返回值：<code>0</code> 成功，<strong>负数</strong> 失败。</p>
+</li>
+</ul>
+<h3 id="注销函数：misc-deregister"><a href="#注销函数：misc-deregister" class="headerlink" title="注销函数：misc_deregister"></a>注销函数：misc_deregister</h3><ul>
+<li><p>函数原型：<code>int misc_deregister(struct miscdevice *misc)</code></p>
+</li>
+<li><p>功能：一次性完成 MISC 设备的<strong>删除 cdev、注销设备号、删除设备、删除类</strong>等所有清理工作，简化卸载流程。</p>
+</li>
+<li><p>参数：<code>misc</code> - 待注销的 MISC 设备结构体指针；</p>
+</li>
+<li><p>返回值：<code>0</code> 成功，<strong>负数</strong> 失败。</p>
+</li>
+</ul>
+<h2 id="传统驱动流程-vs-MISC-驱动流程"><a href="#传统驱动流程-vs-MISC-驱动流程" class="headerlink" title="传统驱动流程 vs MISC 驱动流程"></a>传统驱动流程 vs MISC 驱动流程</h2><h3 id="传统字符设备驱动流程（繁琐）"><a href="#传统字符设备驱动流程（繁琐）" class="headerlink" title="传统字符设备驱动流程（繁琐）"></a>传统字符设备驱动流程（繁琐）</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">alloc_chrdev_region();  <span class="comment">// 申请设备号</span></span><br><span class="line"></span><br><span class="line">cdev_init();            <span class="comment">// 初始化 cdev</span></span><br><span class="line"></span><br><span class="line">cdev_add();             <span class="comment">// 添加 cdev</span></span><br><span class="line"></span><br><span class="line">class_create();         <span class="comment">// 创建类</span></span><br><span class="line"></span><br><span class="line">device_create();        <span class="comment">// 创建设备</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="传统注销流程"><a href="#传统注销流程" class="headerlink" title="传统注销流程"></a>传统注销流程</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">cdev_del();             <span class="comment">// 删除 cdev</span></span><br><span class="line"></span><br><span class="line">unregister_chrdev_region(); <span class="comment">// 注销设备号</span></span><br><span class="line"></span><br><span class="line">device_destroy();       <span class="comment">// 删除设备</span></span><br><span class="line"></span><br><span class="line">class_destroy();        <span class="comment">// 删除类</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="MISC-驱动流程（极简）"><a href="#MISC-驱动流程（极简）" class="headerlink" title="MISC 驱动流程（极简）"></a>MISC 驱动流程（极简）</h3><ul>
+<li><p>注册：仅需 <code>misc_register()</code> 完成所有初始化；</p>
+</li>
+<li><p>注销：仅需 <code>misc_deregister()</code> 完成所有清理。</p>
+</li>
+</ul>
+<h2 id="后续应用"><a href="#后续应用" class="headerlink" title="后续应用"></a>后续应用</h2><p>基于 MISC 驱动框架，可结合 platform 驱动模型编写具体设备驱动（如 beep 蜂鸣器驱动），简化开发步骤。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/delay.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/errno.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/of_gpio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/miscdevice.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/platform_device.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BEEPOFF 			0			<span class="comment">/* 关蜂鸣器 */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BEEPON 				1			<span class="comment">/* 开蜂鸣器 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* miscbeep设备结构体 */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">miscbeep_dev</span>&#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">device_node</span>	*<span class="title">nd</span>;</span> <span class="comment">/* 设备节点 */</span></span><br><span class="line">	<span class="type">int</span> beep_gpio;			<span class="comment">/* beep所使用的GPIO编号		*/</span></span><br><span class="line">&#125; miscbeep;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">miscbeep_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">	filp-&gt;private_data = &amp;miscbeep; <span class="comment">/* 设置私有数据 */</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">miscbeep_write</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">const</span> <span class="type">char</span> __user *buf, <span class="type">size_t</span> cnt, <span class="type">loff_t</span> *offt)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> retvalue;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> databuf[<span class="number">1</span>];</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> beepstat;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">miscbeep_dev</span> *<span class="title">dev</span> =</span> filp-&gt;private_data;</span><br><span class="line"></span><br><span class="line">	retvalue = copy_from_user(databuf, buf, cnt);</span><br><span class="line">	<span class="keyword">if</span>(retvalue &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		printk(<span class="string">&quot;kernel write failed!\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> -EFAULT;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	beepstat = databuf[<span class="number">0</span>];		<span class="comment">/* 获取状态值 */</span></span><br><span class="line">	<span class="keyword">if</span>(beepstat == BEEPON) &#123;	</span><br><span class="line">		gpio_set_value(dev-&gt;beep_gpio, <span class="number">0</span>);	<span class="comment">/* 打开蜂鸣器 */</span></span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span>(beepstat == BEEPOFF) &#123;</span><br><span class="line">		gpio_set_value(dev-&gt;beep_gpio, <span class="number">1</span>);	<span class="comment">/* 关闭蜂鸣器 */</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">miscbeep_fops</span> =</span> &#123;</span><br><span class="line">	.owner = THIS_MODULE,</span><br><span class="line">	.open = miscbeep_open,</span><br><span class="line">	.write = miscbeep_write,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MISCBEEP_NAME		<span class="string">&quot;miscbeep&quot;</span>	<span class="comment">/* 名字 	*/</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MISCBEEP_MINOR		144			<span class="comment">/* 子设备号 */</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">miscdevice</span> <span class="title">beep_miscdev</span> =</span> &#123;</span><br><span class="line">	.minor = MISCBEEP_MINOR,</span><br><span class="line">	.name = MISCBEEP_NAME,</span><br><span class="line">	.fops = &amp;miscbeep_fops</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">miscbeep_probe</span><span class="params">(<span class="keyword">struct</span> platform_device *dev)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//第一块内存，是设备结构体，最后会挂到struct device上面，使device变得特殊</span></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> 1</span></span><br><span class="line"></span><br><span class="line">	printk(<span class="string">&quot;beep driver and device was matched!\r\n&quot;</span>);</span><br><span class="line">	<span class="comment">/* 设置BEEP所使用的GPIO */</span></span><br><span class="line">	<span class="comment">/* 1、获取设备节点：beep */</span></span><br><span class="line">	miscbeep.nd = of_find_node_by_path(<span class="string">&quot;/mygpiobeep@0&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span>(miscbeep.nd == <span class="literal">NULL</span>) &#123;</span><br><span class="line">		printk(<span class="string">&quot;beep node not find!\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line">	&#125; </span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 2、 获取设备树中的gpio属性，得到BEEP所使用的BEEP编号 */</span></span><br><span class="line">	miscbeep.beep_gpio = of_get_named_gpio(miscbeep.nd, <span class="string">&quot;beep-gpio&quot;</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">if</span>(miscbeep.beep_gpio &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		printk(<span class="string">&quot;can&#x27;t get beep-gpio&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 3、设置GPIO5_IO01为输出，并且输出高电平，默认关闭BEEP */</span></span><br><span class="line">	ret = gpio_direction_output(miscbeep.beep_gpio, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">if</span>(ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		printk(<span class="string">&quot;can&#x27;t set gpio!\r\n&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="comment">//第二块内存，杂项misc（把原来设备结构体里面通用的cdev部分全部独立出来）</span></span><br><span class="line">	<span class="comment">//作为用户层访问的接口，内部操作方法来操作具体设备结构体的内存。</span></span><br><span class="line">	<span class="comment">//</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> 1</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 一般情况下会注册对应的字符设备，但是这里我们使用MISC设备</span></span><br><span class="line"><span class="comment">  	 * 所以我们不需要自己注册字符设备驱动，只需要注册misc设备驱动即可</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	ret = misc_register(&amp;beep_miscdev);</span><br><span class="line">	<span class="keyword">if</span>(ret &lt; <span class="number">0</span>)&#123;</span><br><span class="line">		printk(<span class="string">&quot;misc device register failed!\r\n&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> -EFAULT;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">miscbeep_remove</span><span class="params">(<span class="keyword">struct</span> platform_device *dev)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/* 注销设备的时候关闭LED灯 */</span></span><br><span class="line">	gpio_set_value(miscbeep.beep_gpio, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 注销misc设备 */</span></span><br><span class="line">	misc_deregister(&amp;beep_miscdev);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">of_device_id</span> <span class="title">beep_of_match</span>[] =</span> &#123;</span><br><span class="line">     &#123; .compatible = <span class="string">&quot;my-misc-beep&quot;</span> &#125;,</span><br><span class="line">     &#123; <span class="comment">/* Sentinel */</span> &#125;</span><br><span class="line"> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_driver</span> <span class="title">beep_driver</span> =</span> &#123;</span><br><span class="line">     .driver     = &#123;</span><br><span class="line">		 .name = <span class="string">&quot;my-misc-beep&quot;</span>,</span><br><span class="line">         .of_match_table = beep_of_match, <span class="comment">/* 设备树匹配表          */</span></span><br><span class="line">     &#125;,</span><br><span class="line">     .probe      = miscbeep_probe,</span><br><span class="line">     .remove     = miscbeep_remove,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">miscbeep_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">return</span> platform_driver_register(&amp;beep_driver);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __exit <span class="title function_">miscbeep_exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	platform_driver_unregister(&amp;beep_driver);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(miscbeep_init);</span><br><span class="line">module_exit(miscbeep_exit);</span><br><span class="line">MODULE_LICENSE(<span class="string">&quot;GPL&quot;</span>);</span><br><span class="line">MODULE_AUTHOR(<span class="string">&quot;zuozhongkai&quot;</span>);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/" rel="prev" title="platform设备，驱动梳理">
+                  <i class="fa fa-angle-left"></i> platform设备，驱动梳理
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item current">
+              <span>imx6ull-linux内核的misc驱动</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
