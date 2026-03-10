@@ -7,30 +7,30 @@ tags: [嵌入式, linux, 驱动]
 
 - [前言](#前言)
 - [linux驱动的三大设计思想](#linux驱动的三大设计思想)
-  - [分隔](#分隔)
-  - [分离](#分离)
-  - [分层](#分层)
+	- [分隔](#分隔)
+	- [分离](#分离)
+	- [分层](#分层)
 - [linux内核的platform驱动框架 （三大思想的具体实现）](#linux内核的platform驱动框架-三大思想的具体实现)
-  - [总线的定义](#总线的定义)
-  - [platform是什么](#platform是什么)
-  - [mpu6050这些该叫什么设备](#mpu6050这些该叫什么设备)
-  - [关系梳理](#关系梳理)
-  - [platform 的物理区域对应？DTS 里的位置对应](#platform-的物理区域对应dts-里的位置对应)
-  - [具体实现](#具体实现)
-    - [platform\_bus](#platform_bus)
-    - [platform\_driver](#platform_driver)
-      - [如何编写platform\_driver驱动](#如何编写platform_driver驱动)
-        - [xxx\_init中**注册**我们定义的platform\_driver变量](#xxx_init中注册我们定义的platform_driver变量)
-        - [xxx\_exit中**注销**我们定义的platform\_driver变量](#xxx_exit中注销我们定义的platform_driver变量)
-        - [platform\_driver驱动模板](#platform_driver驱动模板)
-        - [总结](#总结)
-    - [platform\_device](#platform_device)
-      - [使用platform\_device描述一个设备的模板](#使用platform_device描述一个设备的模板)
-  - [手动编写platform\_device， platform\_driver.](#手动编写platform_device-platform_driver)
-  - [pinctrl子系统，gpio子系统](#pinctrl子系统gpio子系统)
-    - [dts + platform\_driver](#dts--platform_driver)
+	- [总线的定义](#总线的定义)
+	- [platform是什么](#platform是什么)
+	- [mpu6050这些该叫什么设备](#mpu6050这些该叫什么设备)
+	- [关系梳理](#关系梳理)
+	- [platform 的物理区域对应？DTS 里的位置对应](#platform-的物理区域对应dts-里的位置对应)
+	- [具体实现](#具体实现)
+		- [platform\_bus](#platform_bus)
+		- [platform\_driver](#platform_driver)
+			- [如何编写platform\_driver驱动](#如何编写platform_driver驱动)
+				- [xxx\_init中**注册**我们定义的platform\_driver变量](#xxx_init中注册我们定义的platform_driver变量)
+				- [xxx\_exit中**注销**我们定义的platform\_driver变量](#xxx_exit中注销我们定义的platform_driver变量)
+				- [platform\_driver驱动模板](#platform_driver驱动模板)
+				- [总结](#总结)
+		- [platform\_device](#platform_device)
+			- [使用platform\_device描述一个设备的模板](#使用platform_device描述一个设备的模板)
+	- [手动编写platform\_device， platform\_driver.](#手动编写platform_device-platform_driver)
+	- [pinctrl子系统，gpio子系统](#pinctrl子系统gpio子系统)
+		- [dts + platform\_driver](#dts--platform_driver)
 - [学习linux内核编写二级设备驱动](#学习linux内核编写二级设备驱动)
-  - [linux内核自带的led设备驱动](#linux内核自带的led设备驱动)
+	- [linux内核自带的led设备驱动](#linux内核自带的led设备驱动)
 
 
 # 前言
@@ -1245,3 +1245,7 @@ MODULE_AUTHOR("zuozhongkai");
 在menuconfig里面使能这个CONFIG_LED_GPIO这个编译选项之后
 
 linux内核自带的led驱动代码在`drivers/led/led-gpio.c`,这个就**相当于内核写好的一个二级设备驱动**，这就非常值得学习了，看别人是怎么写驱动的，是怎么描述设备的。
+
+> 这里主要是学习如何利用linux内核自带的驱动，我们在他的逻辑下编写对应的设备节点，来使用他
+>
+> 一般都可以在`Document/devicetree/bindings/leds/`下能够看到一些教你如何编写对应的设备节点的txt
