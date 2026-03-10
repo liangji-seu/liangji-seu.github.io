@@ -7,6 +7,7 @@ tags: [嵌入式, linux, 驱动]
 - [platform device driver梳理](#platform-device-driver梳理)
   - [结构体成员变量一览](#结构体成员变量一览)
   - [内核中变量缩写命名](#内核中变量缩写命名)
+  - [gpiod和之前的gpio子系统](#gpiod和之前的gpio子系统)
   - [linux内核目录结构一览](#linux内核目录结构一览)
   - [platform\_bus是唯一的全局变量](#platform_bus是唯一的全局变量)
 - [关于/sys, /proc和驱动的关联](#关于sys-proc和驱动的关联)
@@ -46,10 +47,13 @@ struct device {
     const char *init_name;              // 初始名字
     const struct device_type *type;     // 设备类型
 
+    struct mutex mutex;                 //互斥锁，用来同步堆驱动程序的调用
+
     struct bus_type *bus;               // 设备所属的总线（如 &platform_bus_type）
     struct device_driver *driver;       // 指向当前已经绑定的驱动程序
 
-    void *platform_data;                // 老式驱动传参方式（如特定的配置结构体）
+    void *platform_data;                // 老式驱动传参方式 platform特有数据，device core不能访问他）
+    void *driver_data;                  //驱动数据，用dev_set/get_drvdata获取，保存设备结构体这些
     struct dev_pm_info power;           // 电源管理状态信息
     
     #ifdef CONFIG_OF
@@ -63,8 +67,17 @@ struct device {
 
     void (*release)(struct device *dev); // 当引用计数归零时释放资源的函数
     // ... 还有处理 DMA、IOMMU、Numa 节点等非常底层的成员
+
+
+    dev_t  devt;                        //设备号
+    u32    id;                          //设备实例
+    //....
 };
+
 ```
+区别platform_data, driver_data
+![alt text](../images/platform设备，驱动梳理-01-0310202041.png)
+![alt text](../images/platform设备，驱动梳理-02-0310202041.png)
 
 
 
@@ -200,6 +213,11 @@ struct platform_driver {
 
 所以看到pdev->dev, 就是获取设备的父类对象
 
+
+## gpiod和之前的gpio子系统
+![alt text](../images/platform设备，驱动梳理-03-0310202041.png)
+![alt text](../images/platform设备，驱动梳理-04-0310202041.png)
+![alt text](../images/platform设备，驱动梳理-05-0310202041.png)
 
 ## linux内核目录结构一览
 ```c
