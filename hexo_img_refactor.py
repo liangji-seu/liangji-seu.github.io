@@ -6,6 +6,7 @@ from datetime import datetime
 
 def refactor_md_images(md_path):
     # 路径标准化
+    print("start")
     md_path = os.path.abspath(md_path)
     if not os.path.exists(md_path):
         print(f"错误: 找不到文件 {md_path}")
