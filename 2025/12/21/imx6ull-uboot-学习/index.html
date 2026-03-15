@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="Uboot 学习笔记linux系统的组成部分 前面我们学习的是裸机开发，主要使用寄存器操作，实现对外设的驱动，掌握的外设的底层原理。之后就可以把重心放到linux驱动框架上。 在移植linux系统之前，需要  移植bootloader（用于启动linux内核， bootloader有很多种，常见的是uboot） 再移植linux内核 再移植根文件系统rootfs（这个里面包含了最常用的命令和文件）">
+    <meta name="description" content="Uboot 学习笔记 linux系统的组成部分 uboot 介绍 uboot 编译 uboot 烧录 uboot 网络（驱动开发调试用） ping底层网络联通（2层，3层） dhcp Ubuntu主机 安装dhcp服务器 配置dhcp服务器内容 指定dhcp服务器使用的网卡 启动Ubuntu主机dhcp服务器 关闭防火墙，防止阻挡dhcp服务   nfs服务(尝试失败，一直超时) tftp服务(">
 <meta property="og:type" content="article">
-<meta property="og:title" content="imx6ull uboot 学习">
+<meta property="og:title" content="imx6ull uboot 使用*">
 <meta property="og:url" content="http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="Uboot 学习笔记linux系统的组成部分 前面我们学习的是裸机开发，主要使用寄存器操作，实现对外设的驱动，掌握的外设的底层原理。之后就可以把重心放到linux驱动框架上。 在移植linux系统之前，需要  移植bootloader（用于启动linux内核， bootloader有很多种，常见的是uboot） 再移植linux内核 再移植根文件系统rootfs（这个里面包含了最常用的命令和文件）">
+<meta property="og:description" content="Uboot 学习笔记 linux系统的组成部分 uboot 介绍 uboot 编译 uboot 烧录 uboot 网络（驱动开发调试用） ping底层网络联通（2层，3层） dhcp Ubuntu主机 安装dhcp服务器 配置dhcp服务器内容 指定dhcp服务器使用的网卡 启动Ubuntu主机dhcp服务器 关闭防火墙，防止阻挡dhcp服务   nfs服务(尝试失败，一直超时) tftp服务(">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/7.1.png">
 <meta property="og:image" content="http://example.com/images/7.2.png">
@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://example.com/images/7.5.png">
 <meta property="og:image" content="http://example.com/images/7.6.png">
 <meta property="article:published_time" content="2025-12-21T07:08:50.000Z">
-<meta property="article:modified_time" content="2026-02-20T13:51:20.745Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.839Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -47,10 +47,10 @@
 <link rel="canonical" href="http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/","path":"2025/12/21/imx6ull-uboot-学习/","title":"imx6ull uboot 学习"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/","path":"2025/12/21/imx6ull-uboot-学习/","title":"imx6ull uboot 使用*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>imx6ull uboot 学习 | ji的博客</title>
+<title>imx6ull uboot 使用* | ji的博客</title>
   
 
 
@@ -93,6 +93,9 @@
       <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
   <div class="site-nav-toggle">
     <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
     </div>
   </div>
 
@@ -113,6 +116,10 @@
 
 
 
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
 
 
 
@@ -135,7 +142,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Uboot-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">Uboot 学习笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BB%84%E6%88%90%E9%83%A8%E5%88%86"><span class="nav-number">1.1.</span> <span class="nav-text">linux系统的组成部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.2.</span> <span class="nav-text">uboot 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%BC%96%E8%AF%91"><span class="nav-number">1.3.</span> <span class="nav-text">uboot 编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%83%A7%E5%BD%95"><span class="nav-number">1.4.</span> <span class="nav-text">uboot 烧录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%BD%91%E7%BB%9C%EF%BC%88%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95%E7%94%A8%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">uboot 网络（驱动开发调试用）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ping%E5%BA%95%E5%B1%82%E7%BD%91%E7%BB%9C%E8%81%94%E9%80%9A%EF%BC%882%E5%B1%82%EF%BC%8C3%E5%B1%82%EF%BC%89"><span class="nav-number">1.5.1.</span> <span class="nav-text">ping底层网络联通（2层，3层）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dhcp"><span class="nav-number">1.5.2.</span> <span class="nav-text">dhcp</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Ubuntu%E4%B8%BB%E6%9C%BA-%E5%AE%89%E8%A3%85dhcp%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">Ubuntu主机 安装dhcp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%86%85%E5%AE%B9"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">配置dhcp服务器内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E5%AE%9Adhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E7%BD%91%E5%8D%A1"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">指定dhcp服务器使用的网卡</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8Ubuntu%E4%B8%BB%E6%9C%BAdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">启动Ubuntu主机dhcp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%97%AD%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%8C%E9%98%B2%E6%AD%A2%E9%98%BB%E6%8C%A1dhcp%E6%9C%8D%E5%8A%A1"><span class="nav-number">1.5.2.5.</span> <span class="nav-text">关闭防火墙，防止阻挡dhcp服务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nfs%E6%9C%8D%E5%8A%A1-%E5%B0%9D%E8%AF%95%E5%A4%B1%E8%B4%A5%EF%BC%8C%E4%B8%80%E7%9B%B4%E8%B6%85%E6%97%B6"><span class="nav-number">1.5.3.</span> <span class="nav-text">nfs服务(尝试失败，一直超时)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tftp%E6%9C%8D%E5%8A%A1-%E5%B0%9D%E8%AF%95%E6%88%90%E5%8A%9F"><span class="nav-number">1.5.4.</span> <span class="nav-text">tftp服务(尝试成功)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-RAM-%E6%93%8D%E4%BD%9C"><span class="nav-number">1.6.</span> <span class="nav-text">uboot RAM 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-ROM-%E6%93%8D%E4%BD%9C"><span class="nav-number">1.7.</span> <span class="nav-text">uboot ROM 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%EF%BC%88%E4%B8%8D%E5%86%8D%E6%98%AF%E7%A3%81%E7%9B%98%E5%AD%97%E8%8A%82%E6%93%8D%E4%BD%9C%E4%BA%86%EF%BC%89"><span class="nav-number">1.8.</span> <span class="nav-text">uboot 文件操作（不再是磁盘字节操作了）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fat%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.8.1.</span> <span class="nav-text">fat文件系统格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ext%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.8.2.</span> <span class="nav-text">ext文件系统格式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-boot%E6%93%8D%E4%BD%9C"><span class="nav-number">1.9.</span> <span class="nav-text">uboot boot操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bootz-%E4%BB%8E%E8%BF%9C%E7%A8%8B%E6%8B%89%E5%8F%96kernel-dtb%E5%88%B0RAM-%E5%90%AF%E5%8A%A8linux%E5%86%85%E6%A0%B8"><span class="nav-number">1.9.1.</span> <span class="nav-text">bootz 从远程拉取kernel + dtb到RAM 启动linux内核</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootz-%E6%9C%AC%E5%9C%B0ROM%E5%90%AF%E5%8A%A8"><span class="nav-number">1.9.2.</span> <span class="nav-text">bootz 本地ROM启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootm"><span class="nav-number">1.9.3.</span> <span class="nav-text">bootm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#boot-%E8%87%AA%E5%8A%A8%E5%8C%96%E5%90%AF%E5%8A%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.9.4.</span> <span class="nav-text">boot 自动化启动命令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-go%E5%91%BD%E4%BB%A4"><span class="nav-number">1.10.</span> <span class="nav-text">uboot go命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-run%E5%91%BD%E4%BB%A4"><span class="nav-number">1.11.</span> <span class="nav-text">uboot run命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-mtest%E5%91%BD%E4%BB%A4"><span class="nav-number">1.12.</span> <span class="nav-text">uboot mtest命令</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Uboot-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">Uboot 学习笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BB%84%E6%88%90%E9%83%A8%E5%88%86"><span class="nav-number">1.1.</span> <span class="nav-text">linux系统的组成部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.2.</span> <span class="nav-text">uboot 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%BC%96%E8%AF%91"><span class="nav-number">1.3.</span> <span class="nav-text">uboot 编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%83%A7%E5%BD%95"><span class="nav-number">1.4.</span> <span class="nav-text">uboot 烧录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E7%BD%91%E7%BB%9C%EF%BC%88%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95%E7%94%A8%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">uboot 网络（驱动开发调试用）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ping%E5%BA%95%E5%B1%82%E7%BD%91%E7%BB%9C%E8%81%94%E9%80%9A%EF%BC%882%E5%B1%82%EF%BC%8C3%E5%B1%82%EF%BC%89"><span class="nav-number">1.5.1.</span> <span class="nav-text">ping底层网络联通（2层，3层）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dhcp"><span class="nav-number">1.5.2.</span> <span class="nav-text">dhcp</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Ubuntu%E4%B8%BB%E6%9C%BA-%E5%AE%89%E8%A3%85dhcp%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">Ubuntu主机 安装dhcp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%86%85%E5%AE%B9"><span class="nav-number">1.5.2.2.</span> <span class="nav-text">配置dhcp服务器内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8C%87%E5%AE%9Adhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E7%BD%91%E5%8D%A1"><span class="nav-number">1.5.2.3.</span> <span class="nav-text">指定dhcp服务器使用的网卡</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8Ubuntu%E4%B8%BB%E6%9C%BAdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.5.2.4.</span> <span class="nav-text">启动Ubuntu主机dhcp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B3%E9%97%AD%E9%98%B2%E7%81%AB%E5%A2%99%EF%BC%8C%E9%98%B2%E6%AD%A2%E9%98%BB%E6%8C%A1dhcp%E6%9C%8D%E5%8A%A1"><span class="nav-number">1.5.2.5.</span> <span class="nav-text">关闭防火墙，防止阻挡dhcp服务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nfs%E6%9C%8D%E5%8A%A1-%E5%B0%9D%E8%AF%95%E5%A4%B1%E8%B4%A5%EF%BC%8C%E4%B8%80%E7%9B%B4%E8%B6%85%E6%97%B6"><span class="nav-number">1.5.3.</span> <span class="nav-text">nfs服务(尝试失败，一直超时)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tftp%E6%9C%8D%E5%8A%A1-%E5%B0%9D%E8%AF%95%E6%88%90%E5%8A%9F"><span class="nav-number">1.5.4.</span> <span class="nav-text">tftp服务(尝试成功)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-RAM-%E6%93%8D%E4%BD%9C"><span class="nav-number">1.6.</span> <span class="nav-text">uboot RAM 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-ROM-%E6%93%8D%E4%BD%9C"><span class="nav-number">1.7.</span> <span class="nav-text">uboot ROM 操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%EF%BC%88%E4%B8%8D%E5%86%8D%E6%98%AF%E7%A3%81%E7%9B%98%E5%AD%97%E8%8A%82%E6%93%8D%E4%BD%9C%E4%BA%86%EF%BC%89"><span class="nav-number">1.8.</span> <span class="nav-text">uboot 文件操作（不再是磁盘字节操作了）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fat%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.8.1.</span> <span class="nav-text">fat文件系统格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ext%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F"><span class="nav-number">1.8.2.</span> <span class="nav-text">ext文件系统格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mmc0-1%E5%88%86%E5%8C%BA%E5%86%85%E5%AE%B9"><span class="nav-number">1.8.3.</span> <span class="nav-text">mmc0,1分区内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%8C%BA-0-%E9%87%8C%E9%9D%A2%E5%88%B0%E5%BA%95%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.8.4.</span> <span class="nav-text">分区 0 里面到底是什么？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#uboot-boot%E6%93%8D%E4%BD%9C"><span class="nav-number">1.9.</span> <span class="nav-text">uboot boot操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bootz-%E4%BB%8E%E8%BF%9C%E7%A8%8B%E6%8B%89%E5%8F%96kernel-dtb%E5%88%B0RAM-%E5%90%AF%E5%8A%A8linux%E5%86%85%E6%A0%B8"><span class="nav-number">1.9.1.</span> <span class="nav-text">bootz 从远程拉取kernel + dtb到RAM 启动linux内核</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootz-%E6%9C%AC%E5%9C%B0ROM%E5%90%AF%E5%8A%A8"><span class="nav-number">1.9.2.</span> <span class="nav-text">bootz 本地ROM启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bootm"><span class="nav-number">1.9.3.</span> <span class="nav-text">bootm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#boot-%E8%87%AA%E5%8A%A8%E5%8C%96%E5%90%AF%E5%8A%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.9.4.</span> <span class="nav-text">boot 自动化启动命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%9C%E7%A8%8B%E6%8B%89%E5%8F%96%E5%90%AF%E5%8A%A8"><span class="nav-number">1.9.4.1.</span> <span class="nav-text">远程拉取启动</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8EEMMC%E4%B8%AD%E5%90%AF%E5%8A%A8"><span class="nav-number">1.9.4.2.</span> <span class="nav-text">从EMMC中启动</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%91%BD%E4%BB%A4"><span class="nav-number">1.10.</span> <span class="nav-text">其他命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#reset"><span class="nav-number">1.10.1.</span> <span class="nav-text">reset</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#go"><span class="nav-number">1.10.2.</span> <span class="nav-text">go</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#run"><span class="nav-number">1.11.</span> <span class="nav-text">run</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mtest"><span class="nav-number">1.12.</span> <span class="nav-text">mtest</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -150,18 +157,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">52</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">32</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -212,12 +219,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="imx6ull uboot 学习 | ji的博客">
+      <meta itemprop="name" content="imx6ull uboot 使用* | ji的博客">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          imx6ull uboot 学习
+          imx6ull uboot 使用*
         </h1>
 
         <div class="post-meta-container">
@@ -235,7 +242,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -264,7 +271,57 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="Uboot-学习笔记"><a href="#Uboot-学习笔记" class="headerlink" title="Uboot 学习笔记"></a>Uboot 学习笔记</h1><h2 id="linux系统的组成部分"><a href="#linux系统的组成部分" class="headerlink" title="linux系统的组成部分"></a>linux系统的组成部分</h2><p><img src="/../images/7.1.png" alt="alt text"></p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#uboot-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0">Uboot 学习笔记</a><ul>
+<li><a href="#linux%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BB%84%E6%88%90%E9%83%A8%E5%88%86">linux系统的组成部分</a></li>
+<li><a href="#uboot-%E4%BB%8B%E7%BB%8D">uboot 介绍</a></li>
+<li><a href="#uboot-%E7%BC%96%E8%AF%91">uboot 编译</a></li>
+<li><a href="#uboot-%E7%83%A7%E5%BD%95">uboot 烧录</a></li>
+<li><a href="#uboot-%E7%BD%91%E7%BB%9C%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95%E7%94%A8">uboot 网络（驱动开发调试用）</a><ul>
+<li><a href="#ping%E5%BA%95%E5%B1%82%E7%BD%91%E7%BB%9C%E8%81%94%E9%80%9A2%E5%B1%823%E5%B1%82">ping底层网络联通（2层，3层）</a></li>
+<li><a href="#dhcp">dhcp</a><ul>
+<li><a href="#ubuntu%E4%B8%BB%E6%9C%BA-%E5%AE%89%E8%A3%85dhcp%E6%9C%8D%E5%8A%A1%E5%99%A8">Ubuntu主机 安装dhcp服务器</a></li>
+<li><a href="#%E9%85%8D%E7%BD%AEdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%86%85%E5%AE%B9">配置dhcp服务器内容</a></li>
+<li><a href="#%E6%8C%87%E5%AE%9Adhcp%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E7%BD%91%E5%8D%A1">指定dhcp服务器使用的网卡</a></li>
+<li><a href="#%E5%90%AF%E5%8A%A8ubuntu%E4%B8%BB%E6%9C%BAdhcp%E6%9C%8D%E5%8A%A1%E5%99%A8">启动Ubuntu主机dhcp服务器</a></li>
+<li><a href="#%E5%85%B3%E9%97%AD%E9%98%B2%E7%81%AB%E5%A2%99%E9%98%B2%E6%AD%A2%E9%98%BB%E6%8C%A1dhcp%E6%9C%8D%E5%8A%A1">关闭防火墙，防止阻挡dhcp服务</a></li>
+</ul>
+</li>
+<li><a href="#nfs%E6%9C%8D%E5%8A%A1%E5%B0%9D%E8%AF%95%E5%A4%B1%E8%B4%A5%E4%B8%80%E7%9B%B4%E8%B6%85%E6%97%B6">nfs服务(尝试失败，一直超时)</a></li>
+<li><a href="#tftp%E6%9C%8D%E5%8A%A1%E5%B0%9D%E8%AF%95%E6%88%90%E5%8A%9F">tftp服务(尝试成功)</a></li>
+</ul>
+</li>
+<li><a href="#uboot-ram-%E6%93%8D%E4%BD%9C">uboot RAM 操作</a></li>
+<li><a href="#uboot-rom-%E6%93%8D%E4%BD%9C">uboot ROM 操作</a></li>
+<li><a href="#uboot-%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%E4%B8%8D%E5%86%8D%E6%98%AF%E7%A3%81%E7%9B%98%E5%AD%97%E8%8A%82%E6%93%8D%E4%BD%9C%E4%BA%86">uboot 文件操作（不再是磁盘字节操作了）</a><ul>
+<li><a href="#fat%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F">fat文件系统格式</a></li>
+<li><a href="#ext%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A0%BC%E5%BC%8F">ext文件系统格式</a></li>
+<li><a href="#mmc01%E5%88%86%E5%8C%BA%E5%86%85%E5%AE%B9"><strong>mmc0,1分区内容</strong></a></li>
+<li><a href="#%E5%88%86%E5%8C%BA-0-%E9%87%8C%E9%9D%A2%E5%88%B0%E5%BA%95%E6%98%AF%E4%BB%80%E4%B9%88"><strong>分区 0 里面到底是什么</strong>？</a></li>
+</ul>
+</li>
+<li><a href="#uboot-boot%E6%93%8D%E4%BD%9C">uboot boot操作</a><ul>
+<li><a href="#bootz-%E4%BB%8E%E8%BF%9C%E7%A8%8B%E6%8B%89%E5%8F%96kernel--dtb%E5%88%B0ram-%E5%90%AF%E5%8A%A8linux%E5%86%85%E6%A0%B8">bootz 从远程拉取kernel + dtb到RAM 启动linux内核</a></li>
+<li><a href="#bootz-%E6%9C%AC%E5%9C%B0rom%E5%90%AF%E5%8A%A8">bootz 本地ROM启动</a></li>
+<li><a href="#bootm">bootm</a></li>
+<li><a href="#boot-%E8%87%AA%E5%8A%A8%E5%8C%96%E5%90%AF%E5%8A%A8%E5%91%BD%E4%BB%A4">boot 自动化启动命令</a><ul>
+<li><a href="#%E8%BF%9C%E7%A8%8B%E6%8B%89%E5%8F%96%E5%90%AF%E5%8A%A8"><strong>远程拉取启动</strong></a></li>
+<li><a href="#%E4%BB%8Eemmc%E4%B8%AD%E5%90%AF%E5%8A%A8"><strong>从EMMC中启动</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%85%B6%E4%BB%96%E5%91%BD%E4%BB%A4">其他命令</a><ul>
+<li><a href="#reset">reset</a></li>
+<li><a href="#go">go</a></li>
+</ul>
+</li>
+<li><a href="#run">run</a></li>
+<li><a href="#mtest">mtest</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="Uboot-学习笔记"><a href="#Uboot-学习笔记" class="headerlink" title="Uboot 学习笔记"></a>Uboot 学习笔记</h1><h2 id="linux系统的组成部分"><a href="#linux系统的组成部分" class="headerlink" title="linux系统的组成部分"></a>linux系统的组成部分</h2><p><img src="/../images/7.1.png" alt="alt text"></p>
 <p>前面我们学习的是裸机开发，主要使用寄存器操作，实现对外设的驱动，掌握的外设的底层原理。之后就可以把重心放到<strong>linux驱动框架</strong>上。</p>
 <p>在<strong>移植linux系统</strong>之前，需要</p>
 <ol>
@@ -280,7 +337,10 @@
 <p>现在的 uboot 已经支持液晶屏、网络、USB 等高级功能。</p>
 <p>可以从uboot官网找到uboot的源码，但是这个源码一般是给芯片原厂用的，用来给自家的芯片移植uboot，他们会维护自己的uboot版本。所以我们自己用肯定只能到NXP的官网去下载<strong>定制的uboot代码</strong>， 但是这个定制uboot都是针对原厂（NXP）的评估板的，如果是我们自己的板子，<strong>还需要二次修改NXP官方的uboot</strong>，使其适配我们自己的开发板。<br><img src="/../images/7.2.png" alt="alt text"></p>
 <p>你也可以在购买了第三方开发板以后使用半导体厂商提供的 uboot，只不过<strong>有些外设驱动可能不支持</strong>，需要自己移植，这个就是我们常说的 <strong>uboot 移植</strong>。</p>
-<h2 id="uboot-编译"><a href="#uboot-编译" class="headerlink" title="uboot 编译"></a>uboot 编译</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment"># make clean</span></span><br><span class="line">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean</span><br><span class="line"></span><br><span class="line"><span class="comment"># set uboot defconfig</span></span><br><span class="line">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- mx6ull_14x14_ddr512_emmc_defconfig</span><br><span class="line"></span><br><span class="line"><span class="comment"># cross-compile, -j = cpu core numbers</span></span><br><span class="line">make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j12</span><br></pre></td></tr></table></figure>
+<h2 id="uboot-编译"><a href="#uboot-编译" class="headerlink" title="uboot 编译"></a>uboot 编译</h2><blockquote>
+<p>我的imx的开发板是<strong>512G ddr</strong>, <strong>8G emmc</strong>, <strong>1G sd</strong>卡</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment"># make clean</span></span><br><span class="line">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean</span><br><span class="line"></span><br><span class="line"><span class="comment"># set uboot defconfig</span></span><br><span class="line">make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- mx6ull_14x14_ddr512_emmc_defconfig</span><br><span class="line"></span><br><span class="line"><span class="comment"># cross-compile, -j = cpu core numbers</span></span><br><span class="line">make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j12</span><br></pre></td></tr></table></figure>
 <p><img src="/../images/7.3.png" alt="alt text"></p>
 <p>注：uboot只是引导程序，是一个综合裸机例程，也<strong>可以引导其他系统</strong>，也可以<strong>支持其他架构</strong>，也可以<strong>拓展其他外设</strong>。</p>
 <p>所以在<strong>编译 uboot 之前</strong>，一定要<strong>根据自己的需求配置 uboot</strong>。<strong>mx6ull_14x14_ddr512_emmc_defconfig</strong>就是正点原子针对 I.MX6U-ALPHA 的 EMMC 核心板编写的<strong>配置文件</strong>。</p>
@@ -315,9 +375,10 @@
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. TFTP加载内核到指定地址</span></span><br><span class="line">tftp 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 之后直接执行dhcp，他会自动执行tftp拉取</span></span><br></pre></td></tr></table></figure>
 
 <p>将 tftpboot 文件夹里面的 zImage 文件下载到开发板 <strong>DRAM</strong> 的 <strong>0X80800000 地址处</strong></p>
-<h2 id="uboot-RAM-操作"><a href="#uboot-RAM-操作" class="headerlink" title="uboot RAM 操作"></a>uboot RAM 操作</h2><p>裸机都是对整个设备的寻址空间进行了存储空间映射，所以0x8080 0000, 表示的是RAM的其实地址（SRAM &#x3D; DDR）<br>md.(b&#x2F;w&#x2F;l) addr(H) count(H)</p>
+<h2 id="uboot-RAM-操作"><a href="#uboot-RAM-操作" class="headerlink" title="uboot RAM 操作"></a>uboot RAM 操作</h2><p>裸机都是对整个设备的寻址空间进行了存储空间映射，所以0x8080 0000, 表示的是RAM的其实地址（SRAM &#x3D; DDR）</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">md.(b/w/l) addr(H) count(H)</span><br><span class="line"></span><br><span class="line">md.l <span class="number">80800000</span> <span class="number">10</span>   <span class="comment">//从80800000开始，按l(4字节)为单位，打印0x10个单位</span></span><br><span class="line"></span><br><span class="line">ffffffff ffffffff ffffffff ffffffff</span><br><span class="line">ffffffff ffffffff ffffffff ffffffff</span><br><span class="line">ffffffff ffffffff ffffffff ffffffff</span><br><span class="line">ffffffff ffffffff ffffffff ffffffff</span><br></pre></td></tr></table></figure>
 <h2 id="uboot-ROM-操作"><a href="#uboot-ROM-操作" class="headerlink" title="uboot ROM 操作"></a>uboot ROM 操作</h2><p>ROM，磁盘，uboot会读取所有mmc设备（SD卡， EMMC， NAND）</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mmc info</span><br><span class="line">mmc rescan</span><br><span class="line">mmc list</span><br><span class="line">mmc dev mmc_id(0,1) (part分区号，默认0)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 读取磁盘（块block = 扇区 = 512字节）</span></span><br><span class="line">mmc <span class="built_in">read</span> ram_addr(0x80800000) start_block(H) count_block(H)</span><br><span class="line"></span><br><span class="line"><span class="comment"># RAM数据写入磁盘</span></span><br><span class="line">mmc write ram_addr(0x80800000) start_block(H) count_block(H)</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mmc info</span><br><span class="line">mmc rescan</span><br><span class="line">mmc <span class="built_in">list</span>  <span class="comment">//查看有哪些mmc设备</span></span><br><span class="line">mmc dev <span class="title function_">mmc_id</span><span class="params">(<span class="number">0</span>,<span class="number">1</span>)</span> <span class="comment">//(part分区号，默认0)（分区内容见下面分区分析）</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 读取磁盘（块block = 扇区 = 512字节）</span></span><br><span class="line">mmc read <span class="title function_">ram_addr</span><span class="params">(<span class="number">0x80800000</span>)</span> <span class="title function_">start_block</span><span class="params">(H)</span> <span class="title function_">count_block</span><span class="params">(H)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// RAM数据写入磁盘</span></span><br><span class="line">mmc write <span class="title function_">ram_addr</span><span class="params">(<span class="number">0x80800000</span>)</span> <span class="title function_">start_block</span><span class="params">(H)</span> <span class="title function_">count_block</span><span class="params">(H)</span></span><br></pre></td></tr></table></figure>
 
 <p> 可以使用命令<code>mmc write</code>来<strong>升级 uboot</strong>，也就是<strong>在 uboot 中更新 uboot</strong>。</p>
 <ul>
@@ -325,12 +386,107 @@
 </ul>
 <h2 id="uboot-文件操作（不再是磁盘字节操作了）"><a href="#uboot-文件操作（不再是磁盘字节操作了）" class="headerlink" title="uboot 文件操作（不再是磁盘字节操作了）"></a>uboot 文件操作（不再是磁盘字节操作了）</h2><p><strong>ROM</strong>中格式分布：<br>正常我们在EMMC里面安装了linux系统，那么他会有3个分区:</p>
 <ol>
-<li><strong>part 0</strong>(无格式)： uboot</li>
+<li><strong>part 0</strong>(无格式)： uboot (前面会留出2个块存放分区表，<strong>不要随便擦除</strong>)</li>
 <li><strong>part 1(fat)</strong>: kernel(zImage) + device tree(dtb)</li>
 <li><strong>part 2(ext)</strong>: rootfs</li>
 </ol>
 <h3 id="fat文件系统格式"><a href="#fat文件系统格式" class="headerlink" title="fat文件系统格式"></a>fat文件系统格式</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># info 查询指定 MMC 设备分区的文件系统信息</span></span><br><span class="line"><span class="comment">#fatinfo &lt;interface&gt; [&lt;dev[:part]&gt;]</span></span><br><span class="line">fatinfo mmc 1:1</span><br><span class="line"></span><br><span class="line"><span class="comment"># ls 查询 FAT 格式设备的目录和文件信息</span></span><br><span class="line"><span class="comment">#fatls &lt;interface&gt; [&lt;dev[:part]&gt;] [directory]</span></span><br><span class="line">fatls mmc 1:1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看 MMC 设备某个分区的文件系统格式</span></span><br><span class="line"><span class="comment"># fstype &lt;interface&gt; &lt;dev&gt;:&lt;part&gt;</span></span><br><span class="line">fstype mmc 1:0</span><br><span class="line">fstype mmc 1:1</span><br><span class="line">fstype mmc 1:2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将指定的文件读取到 DRAM 中</span></span><br><span class="line"><span class="comment"># fatload &lt;interface&gt; [&lt;dev[:part]&gt; [&lt;addr&gt; [&lt;filename&gt; [bytes [pos]]]]]</span></span><br><span class="line">fatload mmc 1:1 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在 uboot 中更新 linux 镜像文件和设备树。我们以更新 linux 镜像文件 zImage为例</span></span><br><span class="line"><span class="comment"># fatwrite &lt;interface&gt; &lt;dev[:part]&gt; &lt;addr&gt; &lt;filename&gt; &lt;bytes&gt;</span></span><br><span class="line"><span class="comment"># 需要修改uboot defconfig</span></span><br><span class="line">tftp 80800000 zImage</span><br><span class="line">fatwrite mmc 1:1 80800000 zImage 6788f8</span><br></pre></td></tr></table></figure>
 <h3 id="ext文件系统格式"><a href="#ext文件系统格式" class="headerlink" title="ext文件系统格式"></a>ext文件系统格式</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># EMMC 的分区 2 就是 ext4格式的，使用 ext4ls 就可以查询 EMMC 的分区 2 中的文件和目录</span></span><br><span class="line">ext4ls mmc 1:2</span><br><span class="line"></span><br><span class="line"><span class="comment"># 剩下的后面会提到</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="mmc0-1分区内容"><a href="#mmc0-1分区内容" class="headerlink" title="mmc0,1分区内容"></a><strong>mmc0,1分区内容</strong></h3><p>通过<code>fstype</code>, <code>fatl</code>s, <code>fatinfo</code>, 可以查看出<code>emmc(mmc 1)</code>, <code>sd(mmc 0)</code>里面的每个分区都是干什么的。</p>
+<p>可以看到</p>
+<p><strong>sd(mmc 0)</strong></p>
+<ul>
+<li><code>part0</code>: 无文件系统</li>
+<li><code>part1</code>: fat <ul>
+<li>zImage, dtb</li>
+</ul>
+</li>
+<li><code>part2</code>: fat<ul>
+<li>空</li>
+</ul>
+</li>
+</ul>
+<p><strong>emmc(mmc 1)</strong></p>
+<ul>
+<li><code>part0</code>: 无文件系统</li>
+<li><code>part1</code>: fat<ul>
+<li>zImage, dtb</li>
+</ul>
+</li>
+<li><code>part2</code>: ext<ul>
+<li>rootfs</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>(emmc)(mmc 1:2)rootfs，根文件系统里面的内容是这样：</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">=&gt; ext4ls mmc <span class="number">1</span>:<span class="number">2</span></span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> .</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> ..</span><br><span class="line">&lt;DIR&gt;      <span class="number">16384</span> lost+found</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> sbin</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> dev</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> boot</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> etc</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> lib</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> usr</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> proc</span><br><span class="line">&lt;SYM&gt;          <span class="number">8</span> tmp</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> var</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> opt</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> home</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> run</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> bin</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> media</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> mnt</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> .cache</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> sys</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> .config</span><br><span class="line">&lt;DIR&gt;       <span class="number">4096</span> .local</span><br></pre></td></tr></table></figure>
+<p>(emmc)(mmc 1:1) 的linux内核镜像+设备树文件</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">=&gt; fatls mmc <span class="number">1</span>:<span class="number">1</span></span><br><span class="line">  <span class="number">6785480</span>   zimage</span><br><span class="line">    <span class="number">39459</span>   imx6ull<span class="number">-14</span>x14-emmc<span class="number">-4.3</span><span class="number">-480</span>x272-c.dtb</span><br><span class="line">    <span class="number">39459</span>   imx6ull<span class="number">-14</span>x14-emmc<span class="number">-4.3</span><span class="number">-800</span>x480-c.dtb</span><br><span class="line">    <span class="number">39459</span>   imx6ull<span class="number">-14</span>x14-emmc<span class="number">-7</span><span class="number">-800</span>x480-c.dtb</span><br><span class="line">    <span class="number">39459</span>   imx6ull<span class="number">-14</span>x14-emmc<span class="number">-7</span><span class="number">-1024</span>x600-c.dtb</span><br><span class="line">    <span class="number">39459</span>   imx6ull<span class="number">-14</span>x14-emmc<span class="number">-10.1</span><span class="number">-1280</span>x800-c.dtb</span><br><span class="line">    <span class="number">40295</span>   imx6ull<span class="number">-14</span>x14-emmc-hdmi.dtb</span><br><span class="line">    <span class="number">40203</span>   imx6ull<span class="number">-14</span>x14-emmc-vga.dtb</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这样就可以通过uboot，来从远程下载zimage, dtb,rootfs来更新emmc，来实现在线升级。</p>
+</blockquote>
+<h3 id="分区-0-里面到底是什么？"><a href="#分区-0-里面到底是什么？" class="headerlink" title="分区 0 里面到底是什么？"></a><strong>分区 0 里面到底是什么</strong>？</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">=&gt; mmc dev <span class="number">0</span></span><br><span class="line"><span class="keyword">switch</span> to partitions #<span class="number">0</span>, OK</span><br><span class="line">mmc0 is current device</span><br><span class="line">=&gt; mmc part</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Partition Map <span class="keyword">for</span> MMC device <span class="number">0</span>  --   Partition Type: DOS</span><br><span class="line"></span><br><span class="line">Part    Start Sector    Num Sectors     UUID            Type</span><br><span class="line">  <span class="number">1</span>     <span class="number">20480</span>           <span class="number">262144</span>          f4ce62e9<span class="number">-01</span>     <span class="number">0</span>c</span><br><span class="line">  <span class="number">2</span>     <span class="number">282624</span>          <span class="number">1683456</span>         f4ce62e9<span class="number">-02</span>     <span class="number">0</span>e</span><br><span class="line">=&gt;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>严格来说，你执行 <code>mmc part</code> 看到的 <code>Part 1</code> 和 <code>Part 2</code> 是受 <strong>MBR（主引导记录）</strong> 管理的<code>有格式分区</code>。</p>
+<p>而你所谓的“分区 0”（即扇区 0 到扇区 20479 之间的区域），在 i.MX 架构中存放的是<strong>最核心的启动镜像</strong>：</p>
+<ul>
+<li><p><strong>Sector 0 (扇区 0)</strong>： 存放 MBR 分区表。(<strong>前两个块，1k字节</strong>)</p>
+</li>
+<li><p><strong>Sector 2 (偏移 1KB 处)</strong>： 存放 <code>u-boot.imx</code>。</p>
+</li>
+</ul>
+<blockquote>
+<p>i.MX6ULL 的 <strong>bootROM</strong> 固化了启动逻辑，它在加电后会<strong>固定去 MMC 设备</strong>（SD卡或 EMMC）的 1KB 偏移处 寻找启动头（IVT&#x2F;DCD 等）。</p>
+</blockquote>
+<p>剩余空闲空间： 用于存放环境变量（如果你配置 U-Boot 存放在 MMC 中）或者空闲。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">属性,         分区 <span class="number">1</span> (FAT),         分区 <span class="number">2</span> (FAT/EXT)</span><br><span class="line">起始扇区,       <span class="number">20480</span>,                <span class="number">282624</span></span><br><span class="line">起始位置 (MB),  <span class="number">20480</span>×<span class="number">512</span>=<span class="number">10</span> MB,      <span class="number">282624</span>×<span class="number">512</span>=<span class="number">138</span> MB</span><br><span class="line">总扇区数,       <span class="number">262144</span>,                     <span class="number">1683456</span></span><br><span class="line">容量计算,       <span class="number">262144</span>×<span class="number">512</span>=<span class="number">128</span> MB,    <span class="number">1683456</span>×<span class="number">512</span>≈<span class="number">822</span> MB</span><br></pre></td></tr></table></figure>
+<p>所以SD卡为例，我们1G的SD卡，分区0&#x3D;10MB，分区1&#x3D;128MB，分区2&#x3D;822MB</p>
+<p>（u-boot.imx &#x3D; 363KB， zImage &#x3D; 6MB）</p>
+<p>所以绰绰有余</p>
+<p>关于环境变量的保存，当你saveenv保存环境变量，你会看到保存到MMC0， sd卡中</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">=&gt; printenv bootcmd</span><br><span class="line">bootcmd=run findfdt;mmc dev $&#123;mmcdev&#125;;mmc dev $&#123;mmcdev&#125;; <span class="keyword">if</span> mmc rescan; then <span class="keyword">if</span>                                          run loadbootscript; then run bootscript; <span class="keyword">else</span> <span class="keyword">if</span> run loadimage; then run mmcbo                                         ot; <span class="keyword">else</span> run netboot; fi; fi; <span class="keyword">else</span> run netboot; fi</span><br><span class="line">=&gt; setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage;tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb;bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">=&gt; saveenv</span><br><span class="line">Saving Environment to MMC...</span><br><span class="line">Writing to MMC(<span class="number">0</span>)... done</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>实际环境变量：</p>
+<p>对于正点原子的 i.MX6ULL 开发板，默认配置通常如下：</p>
+<ul>
+<li><strong>U-Boot 程序</strong>： 存储在偏移 $1$ KB ($2$ 扇区) 处。</li>
+<li><strong>环境变量 (Env)</strong>： 存储在偏移 $768$ KB (即 $0xC0000$ 字节) 处。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">物理地址偏移,             内容,                     说明</span><br><span class="line"><span class="number">0</span> 字节,                   MBR 分区表,             存放分区信息</span><br><span class="line"><span class="number">1024</span> 字节 (<span class="number">1</span> KB),         u-boot.imx,             启动镜像</span><br><span class="line">...,                      空闲,                     ...</span><br><span class="line"><span class="number">786432</span> 字节 (<span class="number">768</span> KB),     Environment,          这就是你 saveenv 存放 bootcmd 的地方</span><br><span class="line">...,                      空闲,                     ...</span><br><span class="line"><span class="number">10485760</span> 字节 (<span class="number">10</span> MB),    Partition <span class="number">1</span> (FAT),      存放 zImage 和 dtb 的地方</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <h2 id="uboot-boot操作"><a href="#uboot-boot操作" class="headerlink" title="uboot boot操作"></a>uboot boot操作</h2><p><strong>uboot 的本质工作是引导 Linux</strong>，所以 uboot 肯定有相关的 boot(引导)命令来启动 Linux</p>
 <p>要<strong>启动 Linux</strong>，需要<strong>先将 Linux 镜像文件拷贝到 DRAM 中</strong>，有两种拷贝方式：</p>
@@ -346,32 +502,34 @@
 <li><strong>fdt</strong> 就是<strong>设备树文件</strong>在 DRAM 中的地址</li>
 </ul>
 <h3 id="bootz-从远程拉取kernel-dtb到RAM-启动linux内核"><a href="#bootz-从远程拉取kernel-dtb到RAM-启动linux内核" class="headerlink" title="bootz 从远程拉取kernel + dtb到RAM 启动linux内核"></a>bootz 从远程拉取kernel + dtb到RAM 启动linux内核</h3><p>因为我们没有根文件系统，所以内核启动后，只会到无法挂在rootfs，然后kernel panic</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 远程拉取kernel镜像</span></span><br><span class="line">ftp 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 远程拉取dtb设备树文件</span></span><br><span class="line">tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动linux系统，（没有指定rootfs， 所以只会到挂载rootfs停止）</span></span><br><span class="line">bootz 80800000 - 83000000</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment"># 远程拉取kernel镜像</span></span><br><span class="line">ftp 80800000 zImage</span><br><span class="line"></span><br><span class="line"><span class="comment"># 远程拉取dtb设备树文件</span></span><br><span class="line">tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动linux系统，（没有指定rootfs， 所以只会到挂载rootfs停止）</span></span><br><span class="line"><span class="comment"># bootz会从这两个地址开始自动寻找zImage 和 dtb</span></span><br><span class="line">bootz 80800000 - 83000000</span><br></pre></td></tr></table></figure>
 <p><img src="/../images/7.6.png" alt="alt text"></p>
 <h3 id="bootz-本地ROM启动"><a href="#bootz-本地ROM启动" class="headerlink" title="bootz 本地ROM启动"></a>bootz 本地ROM启动</h3><p>从 <strong>EMMC 中启动 Linux 系统</strong>的话只需要使用命令 <strong>fatload</strong> 将 zImage 和imx6ull-14x14-emmc-7-1024x600-c.dtb 从<strong>EMMC 的分区 1 中拷贝到 DRAM 中</strong>，然后使用命令 bootz 启动即可</p>
 <h3 id="bootm"><a href="#bootm" class="headerlink" title="bootm"></a>bootm</h3><p>bootm 和 bootz 功能类似，但是 bootm 用于启动 uImage 镜像文件</p>
 <h3 id="boot-自动化启动命令"><a href="#boot-自动化启动命令" class="headerlink" title="boot 自动化启动命令"></a>boot 自动化启动命令</h3><p>boot 命令也是用来启动 Linux 系统的，只是 boot 会<strong>读取环境变量 bootcmd</strong> 来启动 Linux 系统, <code>bootcmd</code>这个环境变量保存着引导命令,其实就是<strong>启动的命令集合</strong></p>
-<p>相当于Makefile</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb;</span></span><br><span class="line"><span class="string">bootz 80800000 - 83000000&#x27;</span></span><br><span class="line">saveenv</span><br><span class="line">boot</span><br></pre></td></tr></table></figure>
+<h4 id="远程拉取启动"><a href="#远程拉取启动" class="headerlink" title="远程拉取启动"></a><strong>远程拉取启动</strong></h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000 imx6ull-14x14-emmc-7-1024x600-c.dtb;</span></span><br><span class="line"><span class="string">bootz 80800000 - 83000000&#x27;</span></span><br><span class="line">saveenv</span><br><span class="line">boot</span><br></pre></td></tr></table></figure>
 
 <p>前面说过 <strong>uboot 倒计时结束</strong>以后就会<strong>启动 Linux 系统</strong>，其实就是执行的 <strong>bootcmd 中的启动命令</strong></p>
 <p>默认就是远程网络启动</p>
-<p>如果要默认从EMMC中启动，修改<code>bootcmd</code></p>
+<h4 id="从EMMC中启动"><a href="#从EMMC中启动" class="headerlink" title="从EMMC中启动"></a><strong>从EMMC中启动</strong></h4><p>修改<code>bootcmd</code></p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv bootcmd <span class="string">&#x27;fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 imx6ull-14x14-</span></span><br><span class="line"><span class="string">emmc-7-1024x600-c.dtb; bootz 80800000 - 83000000&#x27;</span></span><br><span class="line">savenev</span><br><span class="line">boot</span><br></pre></td></tr></table></figure>
 
 <p>最终kernel开始启动，最终会卡在：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Kernel panic – not Syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">[    3.784511] b310            4096 mmcblk1boot0  (driver?)</span><br><span class="line">[    3.789845] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span><br><span class="line">[    3.798121] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span><br><span class="line">[   73.813077] random: nonblocking pool is initialized</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<p>没有找到根文件系统，这个很正常，因为没有设置 uboot 的<br>bootargs 环境变量，关于 bootargs 环境变量后面会讲解</p>
-<h2 id="uboot-go命令"><a href="#uboot-go命令" class="headerlink" title="uboot go命令"></a>uboot go命令</h2><p>用于跳转到RAM的地方来运行<br>注：我们从MMC中拷贝东西到RAM中，都是到80800000, 而裸机程序本体的链接地址是因为裸机例程的链接首地址就是 0X87800000</p>
+
+<p><strong>没有找到根文件系统</strong>，这个很正常，因为没有设置 uboot 的<br>bootargs 环境变量，关于 bootargs 环境变量后面会讲解</p>
+<h2 id="其他命令"><a href="#其他命令" class="headerlink" title="其他命令"></a>其他命令</h2><h3 id="reset"><a href="#reset" class="headerlink" title="reset"></a>reset</h3><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">reset <span class="comment">//复位重启</span></span><br></pre></td></tr></table></figure>
+<h3 id="go"><a href="#go" class="headerlink" title="go"></a>go</h3><p>用于跳转到<code>RAM</code>的地方<code>来运行</code><br>注：我们从<code>MMC</code>中拷贝东西到RAM中，都是到80800000, 而裸机程序本体的链接地址是因为裸机例程的链接首地址就是 0X87800000</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">tftp 87800000 printf.bin</span><br><span class="line">go 87800000</span><br></pre></td></tr></table></figure>
 <blockquote>
 <p>复习裸机烧录的镜像的地址结构</p>
 </blockquote>
-<h2 id="uboot-run命令"><a href="#uboot-run命令" class="headerlink" title="uboot run命令"></a>uboot run命令</h2><p>run 命令用于运行环境变量中定义的命令，比如可以通过“run bootcmd”来运行 bootcmd 中的启动命令，这在后面调试linux驱动的时候，会频繁需要切换启动方式，用这个来执行环境变量脚本</p>
+<h2 id="run"><a href="#run" class="headerlink" title="run"></a>run</h2><p><strong>run 命令用于运行环境变量中定义的命令</strong>，</p>
+<p>比如可以通过“run bootcmd”来运行 bootcmd 中的启动命令，这在后面调试linux驱动的时候，会频繁需要切换启动方式，用这个来执行环境变量脚本</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">setenv mybootemmc <span class="string">&#x27;fatload mmc 1:1 80800000 zImage; fatload mmc 1:1 83000000 imx6ull- 14x14-emmc-7-1024x600-c.dtb;bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line">setenv mybootnand <span class="string">&#x27;nand read 80800000 4000000 800000;nand read 83000000 6000000 100000;bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line">setenv mybootnet <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000imx6ull-14x14-emmc-7-1024x600-c.dtb;</span></span><br><span class="line"><span class="string">bootz 80800000 - 83000000&#x27;</span></span><br><span class="line"></span><br><span class="line">saveenv</span><br><span class="line"></span><br><span class="line"><span class="comment">#run mybootemmc</span></span><br><span class="line"><span class="comment">#run mybootnet</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="uboot-mtest命令"><a href="#uboot-mtest命令" class="headerlink" title="uboot mtest命令"></a>uboot mtest命令</h2><p>mtest 命令是一个简单的<strong>内存读写测试命令</strong>，可以用来测试自己开发板上的 DDR</p>
+<h2 id="mtest"><a href="#mtest" class="headerlink" title="mtest"></a>mtest</h2><p>mtest 命令是一个简单的<strong>内存读写测试命令</strong>，可以用来测试自己开发板上的 DDR</p>
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mtest [start [end [pattern [iterations]]]]</span><br><span class="line"></span><br><span class="line">mtest 80000000 80001000</span><br></pre></td></tr></table></figure>
     </div>
 
@@ -409,6 +567,66 @@
         <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
       </h3>
       <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
             <li class="category-nav-item">
               <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
             </li>
@@ -479,7 +697,7 @@
               <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
             </li>
             <li class="category-nav-item current">
-              <span>imx6ull uboot 学习</span>
+              <span>imx6ull uboot 使用*</span>
             </li>
           
             <li class="category-nav-item">

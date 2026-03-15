@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="数据通信的基本概念由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：  USART IIC SPI CAN USB  按通信方式分类：1. 串行通信  基本特征是数据逐位顺序依次传输，优点是传输线少、布线成本低、灵活度高等优点 用于近距离人机交互，特殊处理后也可以用于远距离 缺点就是传输速率低  2. 并行通信  数据各位可以通过多">
+    <meta name="description" content="数据通信的基本概念 按通信方式分类： 按数据传输方向分类 按数据同步方式分类 通信速率   串口通信 串口通信的协议层 波特率 数据帧格式   stm32 uart 串口资源 框图 第一部分 USART 信号引脚 第二部分 数据寄存器 第三部分 控制器 第四部分 时钟与波特率    寄存器 CR DR SR   实验 1. uart发送数据。 直接发送 发送本地内存中的数据   2. uart">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32-uart*">
 <meta property="og:url" content="http://example.com/2025/12/03/stm32-uart/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="数据通信的基本概念由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：  USART IIC SPI CAN USB  按通信方式分类：1. 串行通信  基本特征是数据逐位顺序依次传输，优点是传输线少、布线成本低、灵活度高等优点 用于近距离人机交互，特殊处理后也可以用于远距离 缺点就是传输速率低  2. 并行通信  数据各位可以通过多">
+<meta property="og:description" content="数据通信的基本概念 按通信方式分类： 按数据传输方向分类 按数据同步方式分类 通信速率   串口通信 串口通信的协议层 波特率 数据帧格式   stm32 uart 串口资源 框图 第一部分 USART 信号引脚 第二部分 数据寄存器 第三部分 控制器 第四部分 时钟与波特率    寄存器 CR DR SR   实验 1. uart发送数据。 直接发送 发送本地内存中的数据   2. uart">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/27.1.png">
 <meta property="og:image" content="http://example.com/images/27.2.png">
@@ -42,7 +42,7 @@
 <meta property="og:image" content="http://example.com/images/27.12.png">
 <meta property="og:image" content="http://example.com/images/27.13.png">
 <meta property="article:published_time" content="2025-12-03T06:56:32.000Z">
-<meta property="article:modified_time" content="2026-02-20T13:51:20.751Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.846Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="mcu">
 <meta property="article:tag" content="stm32">
@@ -100,6 +100,9 @@
       <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
   <div class="site-nav-toggle">
     <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
     </div>
   </div>
 
@@ -120,6 +123,10 @@
 
 
 
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
 
 
 
@@ -157,18 +164,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">52</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">32</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -242,7 +249,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -271,7 +278,49 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="数据通信的基本概念"><a href="#数据通信的基本概念" class="headerlink" title="数据通信的基本概念"></a>数据通信的基本概念</h1><p>由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：</p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#%E6%95%B0%E6%8D%AE%E9%80%9A%E4%BF%A1%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5">数据通信的基本概念</a><ul>
+<li><a href="#%E6%8C%89%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F%E5%88%86%E7%B1%BB">按通信方式分类：</a></li>
+<li><a href="#%E6%8C%89%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E6%96%B9%E5%90%91%E5%88%86%E7%B1%BB">按数据传输方向分类</a></li>
+<li><a href="#%E6%8C%89%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E6%96%B9%E5%BC%8F%E5%88%86%E7%B1%BB">按数据同步方式分类</a></li>
+<li><a href="#%E9%80%9A%E4%BF%A1%E9%80%9F%E7%8E%87">通信速率</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1">串口通信</a></li>
+<li><a href="#%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1%E7%9A%84%E5%8D%8F%E8%AE%AE%E5%B1%82">串口通信的协议层</a><ul>
+<li><a href="#%E6%B3%A2%E7%89%B9%E7%8E%87">波特率</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E5%B8%A7%E6%A0%BC%E5%BC%8F">数据帧格式</a></li>
+</ul>
+</li>
+<li><a href="#stm32-uart">stm32 uart</a><ul>
+<li><a href="#%E4%B8%B2%E5%8F%A3%E8%B5%84%E6%BA%90">串口资源</a></li>
+<li><a href="#%E6%A1%86%E5%9B%BE">框图</a><ul>
+<li><a href="#%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86-usart-%E4%BF%A1%E5%8F%B7%E5%BC%95%E8%84%9A">第一部分 USART 信号引脚</a></li>
+<li><a href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86-%E6%95%B0%E6%8D%AE%E5%AF%84%E5%AD%98%E5%99%A8">第二部分 数据寄存器</a></li>
+<li><a href="#%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86-%E6%8E%A7%E5%88%B6%E5%99%A8">第三部分 控制器</a></li>
+<li><a href="#%E7%AC%AC%E5%9B%9B%E9%83%A8%E5%88%86-%E6%97%B6%E9%92%9F%E4%B8%8E%E6%B3%A2%E7%89%B9%E7%8E%87">第四部分 时钟与波特率</a></li>
+</ul>
+</li>
+<li><a href="#"></a></li>
+<li><a href="#%E5%AF%84%E5%AD%98%E5%99%A8">寄存器</a><ul>
+<li><a href="#cr">CR</a></li>
+<li><a href="#dr">DR</a></li>
+<li><a href="#sr">SR</a></li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E9%AA%8C">实验</a><ul>
+<li><a href="#1-uart%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE">1. uart发送数据。</a><ul>
+<li><a href="#%E7%9B%B4%E6%8E%A5%E5%8F%91%E9%80%81">直接发送</a></li>
+<li><a href="#%E5%8F%91%E9%80%81%E6%9C%AC%E5%9C%B0%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE">发送本地内存中的数据</a></li>
+</ul>
+</li>
+<li><a href="#2-uart-%E6%8E%A5%E6%94%B6">2. uart 接收</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="数据通信的基本概念"><a href="#数据通信的基本概念" class="headerlink" title="数据通信的基本概念"></a>数据通信的基本概念</h1><p>由于数据通信的需要，根据设备之间的电气特性，传输速率，可靠性要求不同，于是就有了各种的通信类型，通信协议，常见的有：</p>
 <ol>
 <li>USART</li>
 <li>IIC</li>
@@ -581,8 +630,8 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2025/12/03/RK3399-android10-%E9%80%82%E9%85%8Dxxx%E6%A8%A1%E5%9D%97-md/" rel="prev" title="RK3399-android10-适配xxx模块.md">
-                  <i class="fa fa-angle-left"></i> RK3399-android10-适配xxx模块.md
+                <a href="/2024/04/08/RK3399-android10-W3S-%E4%BA%8C%E5%90%88%E4%B8%80-%E6%94%AF%E6%8C%81typeC-otg%E5%88%87%E6%8D%A2host%E5%92%8Cdevice/" rel="prev" title="RK3399 android10 W3S 二合一 支持typeC otg切换host和device">
+                  <i class="fa fa-angle-left"></i> RK3399 android10 W3S 二合一 支持typeC otg切换host和device
                 </a>
             </div>
             <div class="post-nav-item">
@@ -600,6 +649,66 @@
         <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
       </h3>
       <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
             <li class="category-nav-item">
               <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
             </li>
@@ -670,7 +779,7 @@
               <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
             </li>
             <li class="category-nav-item">
               <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>

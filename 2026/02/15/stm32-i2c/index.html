@@ -21,12 +21,12 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备, 有两根线：SDA(数据线)，SCL(时钟线) IIC 总线有如下特点：  总线由数据线 SDA 和时钟线 SCL 构成的串行总线 数据线用来传输数据，时钟线用来同步数据收发。   总线上每一个器件都有一个唯一的地址识别， 所以我们只需要知道器件的地址，根据时序就可以实现微控制器与器件之间的通信。   数">
+    <meta name="description" content="stm32 i2c I2C 介绍 I2C 总线协议 1. 起始信号 2. 停止信号 3. 应答信号 4. 数据有效性 5. 数据传输 6. 空闲状态 读写通信过程 写操作 读操作   外设数据传输协议 24C02 24C02 单字节流写时序 24C02 页 写时序 24C02 读时序     实验    stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32 i2c">
 <meta property="og:url" content="http://example.com/2026/02/15/stm32-i2c/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备, 有两根线：SDA(数据线)，SCL(时钟线) IIC 总线有如下特点：  总线由数据线 SDA 和时钟线 SCL 构成的串行总线 数据线用来传输数据，时钟线用来同步数据收发。   总线上每一个器件都有一个唯一的地址识别， 所以我们只需要知道器件的地址，根据时序就可以实现微控制器与器件之间的通信。   数">
+<meta property="og:description" content="stm32 i2c I2C 介绍 I2C 总线协议 1. 起始信号 2. 停止信号 3. 应答信号 4. 数据有效性 5. 数据传输 6. 空闲状态 读写通信过程 写操作 读操作   外设数据传输协议 24C02 24C02 单字节流写时序 24C02 页 写时序 24C02 读时序     实验    stm32 i2cI2C 介绍I2C 是 两线式串行 总线, 用于连接微控制器以及其外围设备">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/29.1.png">
 <meta property="og:image" content="http://example.com/images/29.2.png">
@@ -37,7 +37,7 @@
 <meta property="og:image" content="http://example.com/images/29.7.png">
 <meta property="og:image" content="http://example.com/images/29.8.png">
 <meta property="article:published_time" content="2026-02-15T08:58:16.000Z">
-<meta property="article:modified_time" content="2026-02-20T13:51:20.749Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.845Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="mcu">
 <meta property="article:tag" content="stm32">
@@ -95,6 +95,9 @@
       <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
   <div class="site-nav-toggle">
     <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
     </div>
   </div>
 
@@ -115,6 +118,10 @@
 
 
 
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
 
 
 
@@ -152,18 +159,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-count">52</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-count">11</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">32</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -237,7 +244,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-02-20 21:51:20" itemprop="dateModified" datetime="2026-02-20T21:51:20+08:00">2026-02-20</time>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -266,7 +273,35 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h1 id="stm32-i2c"><a href="#stm32-i2c" class="headerlink" title="stm32 i2c"></a>stm32 i2c</h1><h2 id="I2C-介绍"><a href="#I2C-介绍" class="headerlink" title="I2C 介绍"></a>I2C 介绍</h2><p>I2C 是 <code>两线</code>式<code>串行</code> <code>总线</code>, 用于连接微控制器以及其<strong>外围设备</strong>, 有两根线：<code>SDA(数据线)</code>，<code>SCL(时钟线)</code></p>
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#stm32-i2c">stm32 i2c</a><ul>
+<li><a href="#i2c-%E4%BB%8B%E7%BB%8D">I2C 介绍</a></li>
+<li><a href="#i2c-%E6%80%BB%E7%BA%BF%E5%8D%8F%E8%AE%AE">I2C 总线协议</a><ul>
+<li><a href="#1-%E8%B5%B7%E5%A7%8B%E4%BF%A1%E5%8F%B7">1. 起始信号</a></li>
+<li><a href="#2-%E5%81%9C%E6%AD%A2%E4%BF%A1%E5%8F%B7">2. 停止信号</a></li>
+<li><a href="#3-%E5%BA%94%E7%AD%94%E4%BF%A1%E5%8F%B7">3. 应答信号</a></li>
+<li><a href="#4-%E6%95%B0%E6%8D%AE%E6%9C%89%E6%95%88%E6%80%A7">4. 数据有效性</a></li>
+<li><a href="#5-%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93">5. 数据传输</a></li>
+<li><a href="#6-%E7%A9%BA%E9%97%B2%E7%8A%B6%E6%80%81">6. 空闲状态</a></li>
+<li><a href="#%E8%AF%BB%E5%86%99%E9%80%9A%E4%BF%A1%E8%BF%87%E7%A8%8B">读写通信过程</a></li>
+<li><a href="#%E5%86%99%E6%93%8D%E4%BD%9C">写操作</a></li>
+<li><a href="#%E8%AF%BB%E6%93%8D%E4%BD%9C">读操作</a></li>
+</ul>
+</li>
+<li><a href="#%E5%A4%96%E8%AE%BE%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93%E5%8D%8F%E8%AE%AE">外设数据传输协议</a><ul>
+<li><a href="#24c02">24C02</a><ul>
+<li><a href="#24c02-%E5%8D%95%E5%AD%97%E8%8A%82%E6%B5%81%E5%86%99%E6%97%B6%E5%BA%8F">24C02 单字节流写时序</a></li>
+<li><a href="#24c02-%E9%A1%B5-%E5%86%99%E6%97%B6%E5%BA%8F">24C02 页 写时序</a></li>
+<li><a href="#24c02-%E8%AF%BB%E6%97%B6%E5%BA%8F">24C02 读时序</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%AE%9E%E9%AA%8C">实验</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="stm32-i2c"><a href="#stm32-i2c" class="headerlink" title="stm32 i2c"></a>stm32 i2c</h1><h2 id="I2C-介绍"><a href="#I2C-介绍" class="headerlink" title="I2C 介绍"></a>I2C 介绍</h2><p>I2C 是 <code>两线</code>式<code>串行</code> <code>总线</code>, 用于连接微控制器以及其<strong>外围设备</strong>, 有两根线：<code>SDA(数据线)</code>，<code>SCL(时钟线)</code></p>
 <p>IIC 总线有如下特点：</p>
 <ul>
 <li>总线由<code>数据线 SDA</code> 和<code>时钟线 SCL</code> 构成的串行总线<ul>
@@ -479,6 +514,66 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
               <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
             </li>
             <li class="category-nav-item">
@@ -549,7 +644,7 @@
               <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 学习</a>
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
             </li>
             <li class="category-nav-item">
               <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>

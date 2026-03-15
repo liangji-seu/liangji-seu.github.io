@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Linux 时间管理和内核定时器 内核 时间管理 系统节拍的高低选择   内核 定时器（软件定时器） 使用   内核短延时函数 led闪烁    Linux 时间管理和内核定时器内核 时间管理stm32中，freertos，是依靠专属于CM3内核的systick定时器来提供系统节拍，从而提供系统时钟，SYSCLK 在A7内核中，也是一样的，也是使用IMX6ULL内部的某个定时器来实现系统时钟的定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull 内核定时器">
+<meta property="og:url" content="http://example.com/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="Linux 时间管理和内核定时器 内核 时间管理 系统节拍的高低选择   内核 定时器（软件定时器） 使用   内核短延时函数 led闪烁    Linux 时间管理和内核定时器内核 时间管理stm32中，freertos，是依靠专属于CM3内核的systick定时器来提供系统节拍，从而提供系统时钟，SYSCLK 在A7内核中，也是一样的，也是使用IMX6ULL内部的某个定时器来实现系统时钟的定">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-01-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-02-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-03-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-04-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-05-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-06-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-07-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-08-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-09-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-10-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-11-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-12-0305172932.png">
+<meta property="og:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-13-0305172932.png">
+<meta property="article:published_time" content="2026-03-05T08:18:08.000Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.839Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-01-0305172932.png">
+
+
+<link rel="canonical" href="http://example.com/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/","path":"2026/03/05/imx6ull-内核定时器/","title":"imx6ull 内核定时器"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull 内核定时器 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Linux-%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86%E5%92%8C%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">Linux 时间管理和内核定时器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8-%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">内核 时间管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E8%8A%82%E6%8B%8D%E7%9A%84%E9%AB%98%E4%BD%8E%E9%80%89%E6%8B%A9"><span class="nav-number">1.1.1.</span> <span class="nav-text">系统节拍的高低选择</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8-%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%88%E8%BD%AF%E4%BB%B6%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">内核 定时器（软件定时器）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.1.</span> <span class="nav-text">使用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E7%9F%AD%E5%BB%B6%E6%97%B6%E5%87%BD%E6%95%B0"><span class="nav-number">1.3.</span> <span class="nav-text">内核短延时函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#led%E9%97%AA%E7%83%81"><span class="nav-number">1.4.</span> <span class="nav-text">led闪烁</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull 内核定时器 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull 内核定时器
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-05 16:18:08" itemprop="dateCreated datePublished" datetime="2026-03-05T16:18:08+08:00">2026-03-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#linux-%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86%E5%92%8C%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8">Linux 时间管理和内核定时器</a><ul>
+<li><a href="#%E5%86%85%E6%A0%B8-%E6%97%B6%E9%97%B4%E7%AE%A1%E7%90%86">内核 时间管理</a><ul>
+<li><a href="#%E7%B3%BB%E7%BB%9F%E8%8A%82%E6%8B%8D%E7%9A%84%E9%AB%98%E4%BD%8E%E9%80%89%E6%8B%A9">系统节拍的高低选择</a></li>
+</ul>
+</li>
+<li><a href="#%E5%86%85%E6%A0%B8-%E5%AE%9A%E6%97%B6%E5%99%A8%E8%BD%AF%E4%BB%B6%E5%AE%9A%E6%97%B6%E5%99%A8">内核 定时器（软件定时器）</a><ul>
+<li><a href="#%E4%BD%BF%E7%94%A8">使用</a></li>
+</ul>
+</li>
+<li><a href="#%E5%86%85%E6%A0%B8%E7%9F%AD%E5%BB%B6%E6%97%B6%E5%87%BD%E6%95%B0">内核短延时函数</a></li>
+<li><a href="#led%E9%97%AA%E7%83%81">led闪烁</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="Linux-时间管理和内核定时器"><a href="#Linux-时间管理和内核定时器" class="headerlink" title="Linux 时间管理和内核定时器"></a>Linux 时间管理和内核定时器</h1><h2 id="内核-时间管理"><a href="#内核-时间管理" class="headerlink" title="内核 时间管理"></a>内核 时间管理</h2><p>stm32中，freertos，是依靠专属于CM3内核的systick定时器来提供系统节拍，从而提供系统时钟，SYSCLK</p>
+<p>在A7内核中，也是一样的，也是使用IMX6ULL内部的某个定时器来实现系统时钟的定时</p>
+<p>这里他说驱动开发无需了解是那一个定时器，只要掌握基本的api就行。</p>
+<hr>
+<p><strong>硬件定时器</strong>提供<strong>时钟源</strong>，时钟源的频率可以设置， 设置好以后<br>就<strong>周期性的产生定时中断</strong>，系统使用<strong>定时中断</strong>来<strong>计时</strong>。</p>
+<p><strong>中断周期性产生的频率</strong>就是<strong>系统频率</strong>，也叫做<strong>节拍率</strong>(tick rate)(有的资料也叫系统频率)，比如 1000Hz，100Hz 等等说的就是<strong>系统节拍率</strong>。</p>
+<hr>
+<blockquote>
+<p><strong>系统频率，主频，系统节拍频率，systick定时器，SYSCLK辨析</strong></p>
+<p>stm32的systick</p>
+<p>我们的stm32是通过内部高速时钟8M -&gt; PLL锁相环倍频，得到系统时钟SYSCLK &#x3D; 72Mhz， 这个直接输入到systick这个硬件内核定时器中。</p>
+<p>systick因为直接接了时钟，所以直接就使能被打开了嘛。</p>
+<p>然后你可以设置他的分频系数（这就本质上就是控制systick内部的VAL的变化快慢的，本质上systick并不是一个对外输出的信号，对外界，仅有中断信号输出。）</p>
+<p>如果我设置systick定时器的分频系数位&#x2F;1，那么systick的VAL还是72Mhz变化，所以VAL-1，就相当于经过了1&#x2F;72 us。也就是说，如果我们读取VAL变化了72个，说明经过了1us</p>
+<hr>
+<p>我们stm32在裸机中，因为无需使用到systick中断，所以延时靠的是cpu不停读取VAL来判断是否经过1us</p>
+<p>在freertos中，我们通过设置LOAD，使能systick中断。比如说我们需要freertos中实现1ms的定时中断来调度任务，那么就要设置LOAD &#x3D; 71999。这样可以实现</p>
+<hr>
+<p><strong>概念梳理</strong>：</p>
+<ul>
+<li><strong>系统主频</strong>（心脏）：SYSCLK &#x3D; 72Mhz<ul>
+<li>决定了指令执行速度</li>
+</ul>
+</li>
+<li><strong>系统节拍</strong>（心脏跳动xxx下的提醒信号）：systick中断 1ms &#x3D; 1khz<ul>
+<li>作为操作系统运行时间的基准</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>linux和freertos一样，<strong>linux内核关心的是systick中断</strong>，也就是<strong>系统节拍</strong>，这是他调度任务的基准。毕竟linus也不会知道所有的芯片的主频。</p>
+<p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-01-0305172932.png" alt="alt text"></p>
+</blockquote>
+<hr>
+<p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-02-0305172932.png" alt="alt text"><br>linux内核会在<code>.config</code>的配置文件中，指定你要的<strong>系统节拍</strong>，<strong>作用一般有</strong>：</p>
+<ul>
+<li>任务调度<ul>
+<li>时间片管理</li>
+<li>抢占触发（任务切换）</li>
+</ul>
+</li>
+<li>软件时间的度量单位（内核感知时间的最小粒度）<ul>
+<li>Jiffies更新（内核的全局变量，节拍计数）</li>
+<li>系统运行时间</li>
+</ul>
+</li>
+<li>各种低精度延时&#x2F;定时<ul>
+<li>粗略延时：msleep这些</li>
+<li>内核定时器</li>
+</ul>
+</li>
+<li>统计信息&#x2F;负载监控<ul>
+<li>CPU负载计算<ul>
+<li>每个节拍时刻统计cpu运行时间，相当于采样用</li>
+</ul>
+</li>
+<li>资源统计</li>
+</ul>
+</li>
+</ul>
+<p>最终会在<code>include/asm-generic/param.h</code>中，调用上面我们定义<strong>需要的节拍频率</strong></p>
+<h3 id="系统节拍的高低选择"><a href="#系统节拍的高低选择" class="headerlink" title="系统节拍的高低选择"></a>系统节拍的高低选择</h3><p>linux上面选择的系统节拍是100hz,也就是10ms。太小了吧</p>
+<p><strong>高节拍率，低节拍率的优缺点</strong>：</p>
+<ul>
+<li><strong>高节拍率</strong><ul>
+<li>系统时间精度更高<ul>
+<li>100hz节拍率（systick中断）, 精度10ms, 1000hz就是1ms</li>
+</ul>
+</li>
+<li>中断更加频繁，加剧系统负担。<ul>
+<li>系统花10倍花销处理中断</li>
+<li><blockquote>
+<p>现在处理器很强，1000hz的系统节拍很正常<br>Linux 内核使用<strong>全局变量 <code>jiffies</code></strong> 来记录系统<strong>从启动以来的系统节拍数</strong></p>
+<p>定义在<code>include/linux/jiffies.h</code><br><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-03-0305172932.png" alt="alt text"><br>一个64位系统的，一个32位系统的</p>
+<p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-04-0305172932.png" alt="alt text"></p>
+<p><strong>两个全局变量底层都是一块内存</strong>，可以直接访问。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>溢出问题</strong></p>
+<ul>
+<li>32 位的 jiffies 只需要 49.7 天就发生了绕回，</li>
+<li>64 位的 jiffies 来说大概需要5.8 亿年才能绕回</li>
+</ul>
+<p><strong>所以需要处理32位置的绕回问题</strong></p>
+<p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-05-0305172932.png" alt="alt text"></p>
+<p><strong>将系统节拍jiffies 转换成ms时间单位</strong></p>
+<p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-06-0305172932.png" alt="alt text"></p>
+</blockquote>
+<h2 id="内核-定时器（软件定时器）"><a href="#内核-定时器（软件定时器）" class="headerlink" title="内核 定时器（软件定时器）"></a>内核 定时器（软件定时器）</h2><p>上面我们</p>
+<ul>
+<li>讲了基于系统节拍，来讲linux如何利用系统节拍来进行各种定时操作。</li>
+<li>分析了stm32里面的systick硬件定时器如何提供系统节拍</li>
+</ul>
+<p>现在来看看linux内核的定时器。这里说的<strong>Linux 内核定时器</strong>采用<strong>系统时钟</strong>来实现，并<strong>不是</strong>我们在裸机篇中讲解的 PIT 等<strong>硬件定时器</strong></p>
+<blockquote>
+<p>相当于<strong>基于系统节拍</strong>，内核里面实现了一套<strong>通用的 超时判断，和回调的机制</strong></p>
+<p>只需要提供<strong>超时时间</strong>(相当于<code>定时值</code>)和<strong>定时处理函数</strong>即可, 和我们使用硬件定时器的套路一样</p>
+</blockquote>
+<p><strong>注意</strong></p>
+<ul>
+<li>在使用内核定时器的时候要注意一点，内核定时器<strong>并不是周期性运行的</strong>，<strong>超时以后就会自动关闭</strong><ul>
+<li>因此如果想要实现<strong>周期性定时</strong>，那么就需要在<strong>定时处理函数中重新开启定时器</strong></li>
+</ul>
+</li>
+</ul>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><p>linux内核使用timer_list结构体，表示内核定时器。定义在<code>include/linux/timer.h</code>中</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timer_list</span> &#123;</span></span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">entry</span>;</span></span><br><span class="line">            <span class="type">unsigned</span> <span class="type">long</span> expires; <span class="comment">/* 定时器超时时间，单位是节拍数 */</span></span><br><span class="line">            <span class="class"><span class="keyword">struct</span> <span class="title">tvec_base</span> *<span class="title">base</span>;</span></span><br><span class="line">            <span class="type">void</span> (*function)(<span class="type">unsigned</span> <span class="type">long</span>); <span class="comment">/* 定时处理函数 */</span></span><br><span class="line">            <span class="type">unsigned</span> <span class="type">long</span> data; <span class="comment">/* 要传递给 function 函数的参数 */</span></span><br><span class="line">            <span class="type">int</span> slack;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><strong>api</strong>：</p>
+<ul>
+<li>init_timer<ul>
+<li><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-07-0305172932.png" alt="alt text"></li>
+<li><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-08-0305172932.png" alt="alt text"></li>
+</ul>
+</li>
+<li>add_timer<ul>
+<li><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-09-0305172932.png" alt="alt text"></li>
+</ul>
+</li>
+<li>del_timer<ul>
+<li><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-10-0305172932.png" alt="alt text"></li>
+</ul>
+</li>
+<li>del_timer_sync<ul>
+<li><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-11-0305172932.png" alt="alt text"></li>
+</ul>
+</li>
+<li>mod_timer<ul>
+<li><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-12-0305172932.png" alt="alt text"></li>
+</ul>
+</li>
+</ul>
+<p><strong>使用方法</strong>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">timer_list</span> <span class="title">timer</span>;</span> <span class="comment">/* 定义定时器 */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* 定时器回调函数 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">function</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> arg)</span></span><br><span class="line">&#123; </span><br><span class="line">    <span class="comment">/* </span></span><br><span class="line"><span class="comment">    * 定时器处理代码</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 如果需要定时器周期性运行的话就使用 mod_timer</span></span><br><span class="line"><span class="comment">    * 函数重新设置超时值并且启动定时器。</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">    mod_timer(&amp;dev-&gt;timertest, jiffies + msecs_to_jiffies(<span class="number">2000</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 初始化函数 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">init</span><span class="params">(<span class="type">void</span>)</span> </span><br><span class="line">&#123;</span><br><span class="line">    init_timer(&amp;timer); <span class="comment">/* 初始化定时器 */</span></span><br><span class="line"></span><br><span class="line">    timer.function = function; <span class="comment">/* 设置定时处理函数 */</span></span><br><span class="line">    timer.expires=jffies + msecs_to_jiffies(<span class="number">2000</span>);<span class="comment">/* 超时时间 2 秒 */</span></span><br><span class="line">    timer.data = (<span class="type">unsigned</span> <span class="type">long</span>)&amp;dev; <span class="comment">/* 将设备结构体作为参数 */</span></span><br><span class="line"></span><br><span class="line">    add_timer(&amp;timer); <span class="comment">/* 启动定时器 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 退出函数 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">exit</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    del_timer(&amp;timer); <span class="comment">/* 删除定时器 */</span></span><br><span class="line">    <span class="comment">/* 或者使用 */</span></span><br><span class="line">    del_timer_sync(&amp;timer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="内核短延时函数"><a href="#内核短延时函数" class="headerlink" title="内核短延时函数"></a>内核短延时函数</h2><p><img src="/../images/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8-13-0305172932.png" alt="alt text"></p>
+<h2 id="led闪烁"><a href="#led闪烁" class="headerlink" title="led闪烁"></a>led闪烁</h2><p>这个就很简单了，不说了。</p>
+<p>这边还是教你内核里面的接口，具体原厂的驱动工程师，应该是要知道linux内核是如何通过读取systick中断来设置我们的系统节拍的。这边相当于驱动里面的应用开发了。</p>
+<blockquote>
+<p><strong>这里发现正点原子的例程有问题</strong>，他们居然喜欢把结构体的led的初始化（获取界限信息啊，gpio_request这些）放到open里面，这些难道不是insmod模块加载成功后就要初始化好的吗？总之，改正之后，把led_init放到模块的入口函数里面，就可以了。不然根本打不开设备。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/" rel="prev" title="imx6ull 按键输入实验">
+                  <i class="fa fa-angle-left"></i> imx6ull 按键输入实验
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/" rel="next" title="imx6ull linux中断*">
+                  imx6ull linux中断* <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>imx6ull 内核定时器</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

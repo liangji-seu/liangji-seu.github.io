@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="led 驱动开发 linux下驱动led的原理 硬件资源 地址映射 为什么驱动处于内核态，依然要mmu才能访问物理地址？ ioremap iounmap 一些底层映射细节   i&#x2F;o 内存访问函数 读操作 写操作     关于驱动程序开头的头文件    led 驱动开发之前我们创建一个虚拟的chrdevbase字符设备，然后基于这个，写了一个驱动。现在要开始做实际的点灯linux驱动">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull led驱动">
+<meta property="og:url" content="http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="led 驱动开发 linux下驱动led的原理 硬件资源 地址映射 为什么驱动处于内核态，依然要mmu才能访问物理地址？ ioremap iounmap 一些底层映射细节   i&#x2F;o 内存访问函数 读操作 写操作     关于驱动程序开头的头文件    led 驱动开发之前我们创建一个虚拟的chrdevbase字符设备，然后基于这个，写了一个驱动。现在要开始做实际的点灯linux驱动">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/37.1.png">
+<meta property="og:image" content="http://example.com/images/37.2.png">
+<meta property="og:image" content="http://example.com/images/37.3.png">
+<meta property="og:image" content="http://example.com/images/37.4.png">
+<meta property="og:image" content="http://example.com/images/37.5.png">
+<meta property="og:image" content="http://example.com/images/37.6.png">
+<meta property="article:published_time" content="2026-03-01T02:30:16.000Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.833Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/37.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/","path":"2026/03/01/imx6ull-led驱动/","title":"imx6ull led驱动"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull led驱动 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#led-%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91"><span class="nav-number">1.</span> <span class="nav-text">led 驱动开发</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E4%B8%8B%E9%A9%B1%E5%8A%A8led%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">linux下驱动led的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E8%B5%84%E6%BA%90"><span class="nav-number">1.1.1.</span> <span class="nav-text">硬件资源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%B0%E5%9D%80%E6%98%A0%E5%B0%84"><span class="nav-number">1.1.2.</span> <span class="nav-text">地址映射</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%A9%B1%E5%8A%A8%E5%A4%84%E4%BA%8E%E5%86%85%E6%A0%B8%E6%80%81%EF%BC%8C%E4%BE%9D%E7%84%B6%E8%A6%81mmu%E6%89%8D%E8%83%BD%E8%AE%BF%E9%97%AE%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80%EF%BC%9F"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">为什么驱动处于内核态，依然要mmu才能访问物理地址？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ioremap"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">ioremap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iounmap"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">iounmap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E5%BA%95%E5%B1%82%E6%98%A0%E5%B0%84%E7%BB%86%E8%8A%82"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">一些底层映射细节</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#i-o-%E5%86%85%E5%AD%98%E8%AE%BF%E9%97%AE%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.3.</span> <span class="nav-text">i&#x2F;o 内存访问函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%BB%E6%93%8D%E4%BD%9C"><span class="nav-number">1.1.3.1.</span> <span class="nav-text">读操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E6%93%8D%E4%BD%9C"><span class="nav-number">1.1.3.2.</span> <span class="nav-text">写操作</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%A4%B4%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="nav-number">1.2.</span> <span class="nav-text">关于驱动程序开头的头文件</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull led驱动 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull led驱动
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-01 10:30:16" itemprop="dateCreated datePublished" datetime="2026-03-01T10:30:16+08:00">2026-03-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#led-%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91">led 驱动开发</a><ul>
+<li><a href="#linux%E4%B8%8B%E9%A9%B1%E5%8A%A8led%E7%9A%84%E5%8E%9F%E7%90%86">linux下驱动led的原理</a><ul>
+<li><a href="#%E7%A1%AC%E4%BB%B6%E8%B5%84%E6%BA%90">硬件资源</a></li>
+<li><a href="#%E5%9C%B0%E5%9D%80%E6%98%A0%E5%B0%84">地址映射</a><ul>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%A9%B1%E5%8A%A8%E5%A4%84%E4%BA%8E%E5%86%85%E6%A0%B8%E6%80%81%E4%BE%9D%E7%84%B6%E8%A6%81mmu%E6%89%8D%E8%83%BD%E8%AE%BF%E9%97%AE%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80">为什么驱动处于内核态，依然要mmu才能访问物理地址？</a></li>
+<li><a href="#ioremap">ioremap</a></li>
+<li><a href="#iounmap">iounmap</a></li>
+<li><a href="#%E4%B8%80%E4%BA%9B%E5%BA%95%E5%B1%82%E6%98%A0%E5%B0%84%E7%BB%86%E8%8A%82">一些底层映射细节</a></li>
+</ul>
+</li>
+<li><a href="#io-%E5%86%85%E5%AD%98%E8%AE%BF%E9%97%AE%E5%87%BD%E6%95%B0">i&#x2F;o 内存访问函数</a><ul>
+<li><a href="#%E8%AF%BB%E6%93%8D%E4%BD%9C">读操作</a></li>
+<li><a href="#%E5%86%99%E6%93%8D%E4%BD%9C">写操作</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#%E5%85%B3%E4%BA%8E%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%A4%B4%E7%9A%84%E5%A4%B4%E6%96%87%E4%BB%B6">关于驱动程序开头的头文件</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="led-驱动开发"><a href="#led-驱动开发" class="headerlink" title="led 驱动开发"></a>led 驱动开发</h1><p>之前我们创建一个虚拟的chrdevbase字符设备，然后基于这个，写了一个驱动。现在要开始做实际的点灯linux驱动</p>
+<h2 id="linux下驱动led的原理"><a href="#linux下驱动led的原理" class="headerlink" title="linux下驱动led的原理"></a>linux下驱动led的原理</h2><p>Linux 下的任何外设驱动，最终都是要<strong>配置相应的硬件寄存器</strong></p>
+<p>所以这一节的 <strong>LED 灯驱动</strong>最终也是对 I.MX6ULL 的 <strong>IO 口进行配置</strong>，<strong>与裸机实验不同</strong>的是，在 Linux 下编写驱动要<strong>符合 Linux的驱动框架</strong></p>
+<h3 id="硬件资源"><a href="#硬件资源" class="headerlink" title="硬件资源"></a>硬件资源</h3><p><strong>GPIO1_IO03</strong></p>
+<h3 id="地址映射"><a href="#地址映射" class="headerlink" title="地址映射"></a>地址映射</h3><p>这里说的就是linux是操作系统，需要用mmu + 虚拟地址来保证每个进程都有独立的地址空间。</p>
+<blockquote>
+<p>我的理解<strong>mmu的用途1</strong>：每个用户进程能够访问的地址都是虚拟地址，必须经过mmu来通过页表，映射到实际的物理地址上。</p>
+</blockquote>
+<p>所以如果你要访问外设基地址(物理地址)，是不能够直接访问的，必须要经过mmu来计算得到实际的物理地址。</p>
+<p>可是这里我有疑问，mmu，虚拟地址，<strong>驱动不是工作在内核空间吗，为何还需要mmu</strong>在<strong>我的理解里面，内核进程可以直接访问物理地址的。</strong></p>
+<blockquote>
+<p>原因如下：</p>
+</blockquote>
+<h4 id="为什么驱动处于内核态，依然要mmu才能访问物理地址？"><a href="#为什么驱动处于内核态，依然要mmu才能访问物理地址？" class="headerlink" title="为什么驱动处于内核态，依然要mmu才能访问物理地址？"></a>为什么驱动处于内核态，依然要mmu才能访问物理地址？</h4><p>我现在对mmu的认识有两个：</p>
+<ol>
+<li>用户空间的进程，每个进程独享一个虚拟地址空间，如果cpu要写入物理内存，就要通过mmu + 页表来获得实际的物理地址进行写入。</li>
+<li>驱动程序工作在内核状态，按照裸机的思路，工作在SVC，就应该可以直接访问，为何又需要mmu?</li>
+</ol>
+<p><strong>不是另外的用法，本质上是同一套逻辑</strong></p>
+<ol>
+<li>核心误区：权限 !&#x3D; 绕过MMU</li>
+</ol>
+<p>你觉得“<strong>内核态有权限直接访问物理内存</strong>”，这在<strong>裸机（Bare-metal）开发</strong>中是对的</p>
+<p>但在 <strong>Linux 这种开启了 MMU 的现代操作系统</strong>中，情况变了：</p>
+<ul>
+<li><p><strong>裸机模式</strong>：CPU 发出的地址直接通过地址线连到 Flash&#x2F;DDR。如果你想点灯，直接往 0x0209C000（GPIO 物理地址）写值就行。</p>
+</li>
+<li><p><strong>Linux 模式</strong>：一旦<strong>内核启动</strong>并<strong>开启了 MMU</strong>，<strong>CPU 发出的任何地址都会被自动视为“<code>虚拟地址</code>”</strong>。</p>
+<ul>
+<li>即使是<strong>内核代码</strong>，如果它直接访问 <code>0x0209C000</code>，<strong>MMU 也会去查表</strong>。</li>
+<li>如果表里没这个映射，CPU 就会报错（内核崩溃&#x2F;Oops）。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>内核态的“权限”高</strong>，指的是它**有权“修改页表”**或者“<strong>访问受保护的页</strong>”，而不是它可以关掉 MMU 瞬间瞬移到物理地址去。</p>
+</blockquote>
+<hr>
+<p><img src="/../images/37.1.png" alt="alt text"></p>
+<blockquote>
+<p>这里说的主要是用户态进程的虚拟地址空间 映射到物理地址的mmu应用。</p>
+</blockquote>
+<p><img src="/../images/37.2.png" alt="alt text"></p>
+<blockquote>
+<p>这里就指出了linux内核在打开MMU，设置好内存映射之后。以后<strong>CPU访问的都是虚拟地址</strong>, 这就是上面说的第二点。</p>
+<p>因此如果要访问裸机的外设基地址的物理内存，本质上<strong>还需要再映射到内核的虚拟地址空间上来</strong>。</p>
+<p>因此相当于<strong>要手动映射上报(动态申请映射)</strong>，就需要使用<code>ioremap</code>, <code>iounmap</code>这两个函数，来向<strong>内核的虚拟地址空间</strong>里面，<strong>增加一块虚拟地址</strong>，由<strong>MMU路由到外设寄存器的基地址物理地址</strong>。</p>
+<p>因为<strong>内核虚拟地址空间</strong>（通常是 3GB~4GB 之间的一块区域，比如 <code>vmalloc</code> 区）是有限的，驱动程序用时申请（ioremap），不用时释放（iounmap），这样能节省宝贵的虚拟地址资源</p>
+</blockquote>
+<h4 id="ioremap"><a href="#ioremap" class="headerlink" title="ioremap"></a>ioremap</h4><p>定义在 <code>arch/arm/include/asm/io.h</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> ioremap(cookie,size) __arm_ioremap((cookie), (size), MT_DEVICE)</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> __iomem * __arm_ioremap(<span class="type">phys_addr_t</span> phys_addr, <span class="type">size_t</span> size, <span class="type">unsigned</span> <span class="type">int</span> mtype)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> arch_ioremap_caller(phys_addr, size, mtype,</span><br><span class="line">    __builtin_return_address(<span class="number">0</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>ioremap</strong><ul>
+<li><code>__arm_ioremap</code>(phys_addr，size，mtype)<ul>
+<li>phys_addr: 要映射的<strong>物理起始地址</strong></li>
+<li>size: 要映射的内存空间大小</li>
+<li>mtype: 类型<ul>
+<li>MT_DEVICE</li>
+<li>MT_DEVICE_CACHED</li>
+<li>…</li>
+</ul>
+</li>
+<li>返回值 __iomem类型指针， 指向映射后的<strong>虚拟空间首地址</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>实际使用就是直接申请虚拟地址映射就行</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> SW_MUX_GPIO1_IO03_BASE      (0X020E0068)</span></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> __iomem * SW_MUX_GPIO1_IO03;</span><br><span class="line">SW_MUX_GPIO1_IO03 = ioremap(SW_MUX_GPIO1_IO03_BASE, <span class="number">4</span>);     <span class="comment">//4字节</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="iounmap"><a href="#iounmap" class="headerlink" title="iounmap"></a>iounmap</h4><p><strong>卸载驱动</strong>的时候需要使用 <code>iounmap</code> 函数释放掉 ioremap 函数所做的映射</p>
+<blockquote>
+<p>因为这个申请出来的虚拟地址空间，是属于linux内核的，由mmu管理。所以得释放，不然一直保留</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">iounmap</span> <span class="params">(<span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>     <span class="comment">//直接指定虚拟地址，即可释放映射</span></span><br></pre></td></tr></table></figure>
+
+<p>实际使用</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">iounmap(SW_MUX_GPIO1_IO03);</span><br></pre></td></tr></table></figure>
+<hr>
+<h4 id="一些底层映射细节"><a href="#一些底层映射细节" class="headerlink" title="一些底层映射细节"></a>一些底层映射细节</h4><p><img src="/../images/37.3.png" alt="alt text"><br><img src="/../images/37.4.png" alt="alt text"><br><img src="/../images/37.5.png" alt="alt text"></p>
+<h3 id="i-o-内存访问函数"><a href="#i-o-内存访问函数" class="headerlink" title="i&#x2F;o 内存访问函数"></a>i&#x2F;o 内存访问函数</h3><p>前面我们已经在linux驱动（内核态）中，把实际的外设物理地址，加入了映射，这样我们的内核能够访问的虚拟地址空间里面，也能经过mmu访问到实际的那一块物理地址了。</p>
+<p>下面说说，I&#x2F;O内存访问，这里提到两个概念：</p>
+<ul>
+<li><strong><code>I/O端口</code></strong><ul>
+<li>外设寄存器&#x2F;内存，<strong>映射到IO空间</strong></li>
+</ul>
+</li>
+<li><strong><code>I/O内存</code></strong><ul>
+<li>外设寄存器&#x2F;内存，<strong>映射到内存空间</strong></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>arm体系下只有I&#x2F;O内存</strong></p>
+</blockquote>
+<p>我们前面使用<code>ioremap</code>，把物理寄存器地址，<strong>映射到内核的虚拟地址后</strong>，实际上，我们就能<strong>像操作裸机一样，访问这些地址</strong>。</p>
+<p><strong>但是linux内核不建议这么做</strong>, 而是推荐使用<strong>一组操作函数</strong>来对映射后的内存进行读写</p>
+<h4 id="读操作"><a href="#读操作" class="headerlink" title="读操作"></a>读操作</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">u8 <span class="title function_">readb</span><span class="params">(<span class="type">const</span> <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>     <span class="comment">//1字节读</span></span><br><span class="line">u16 <span class="title function_">readw</span><span class="params">(<span class="type">const</span> <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>    <span class="comment">//2字节读</span></span><br><span class="line">u32 <span class="title function_">readl</span><span class="params">(<span class="type">const</span> <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>    <span class="comment">//4字节读</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="写操作"><a href="#写操作" class="headerlink" title="写操作"></a>写操作</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">writeb</span><span class="params">(u8 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>      <span class="comment">//1字节写</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">writew</span><span class="params">(u16 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>     <span class="comment">//2字节写</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">writel</span><span class="params">(u32 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>     <span class="comment">//4字节写</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="关于驱动程序开头的头文件"><a href="#关于驱动程序开头的头文件" class="headerlink" title="关于驱动程序开头的头文件"></a>关于驱动程序开头的头文件</h2><p>我们在编写驱动程序的时候，经常会发现包含了很多linux内核源码的一些头文件<br><img src="/../images/37.6.png" alt="alt text"></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//基础头文件</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span>   <span class="comment">//module_init(),module_exit(),MODULE_LICENSE()</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span>     <span class="comment">//定义 __init, __exit宏，告诉内核哪些代码初始化后可回收掉</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span>   <span class="comment">//提供内核最基础的函数，printk(), 数学宏等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span>    <span class="comment">//常用数据类型 u8 u16 u32 dev_t</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//字符设备相关</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/fs.h&gt;</span>       <span class="comment">//核心，定义file_operations结构体， 设备号申请注册设备register_chrdev等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/cdev.h&gt;</span>     <span class="comment">//用现代的cdev结构体，不是旧的设备注册函数。</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//内核空间-用户空间 数据搬运</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/uaccess.h&gt;</span>  <span class="comment">//旧版：asm/uaccess.h     copy_to_user(), copy_from_user()</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//硬件操作</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/io.h&gt;</span>         <span class="comment">//ioremap(), readl()等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span>     <span class="comment">//提供gpio_set_value()等标准库函数</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span>      <span class="comment">//大杂烩，包含很多其他文件，现代正规驱动中，按需包含</span></span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><code>asm/</code> 是指向特定架构，比如<code>arm的软链接</code></p>
+<p>现在的趋势是尽量<strong>包含linux&#x2F;下的通用头文件</strong>（如linux&#x2F;uaccess.h）,他会根据我的机器架构，去寻找对应的asm&#x2F;文件。兼容性更好</p>
+</blockquote>
+<p><strong>我怎么知道到底该包含哪个</strong>？</p>
+<p>如果你自己写一个新的驱动，有三个实用的方法：</p>
+<ul>
+<li><p><strong>“查字典”法（最正宗）</strong>：</p>
+<ul>
+<li>在 Linux 内核源码目录下使用 <code>grep</code> 搜索你调用的函数。<ul>
+<li>例如你想知道 <code>ioremap</code> 在哪：</li>
+<li><code>grep -r &quot;ioremap&quot; include/linux</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>“看报错”法（最高效）</strong>：</p>
+<ul>
+<li>先包含最基础的四个。当你编译时，编译器会报错 implicit declaration of function ‘xxx’。这时候你去查这个 xxx 函数定义的头文件补上即可。</li>
+</ul>
+</li>
+<li><p><strong>“找模版”法</strong>：</p>
+<ul>
+<li>参考<code>内核源码 drivers/</code> 目录下相似的设备驱动。</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/" rel="prev" title="imx6ull 字符设备驱动">
+                  <i class="fa fa-angle-left"></i> imx6ull 字符设备驱动
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/" rel="next" title="imx6ull-新字符设备驱动">
+                  imx6ull-新字符设备驱动 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>imx6ull led驱动</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

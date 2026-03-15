@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="根文件系统组成 介绍 VFS虚拟文件系统 挂载的含义 挂载时，内存的内容   根文件系统构建 先安装nfs busybox构建一个rootfs 添加常用的动态链接库 bootarg设置使用nfs 创建其他文件夹 创建启动文件 &#x2F;etc&#x2F;init.d&#x2F;rcS &#x2F;etc&#x2F;fstab &#x2F;etc&#x2F;inittab      根文件系统组">
+<meta property="og:type" content="article">
+<meta property="og:title" content="imx6ull rootfs">
+<meta property="og:url" content="http://example.com/2026/02/27/imx6ull-rootfs/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="根文件系统组成 介绍 VFS虚拟文件系统 挂载的含义 挂载时，内存的内容   根文件系统构建 先安装nfs busybox构建一个rootfs 添加常用的动态链接库 bootarg设置使用nfs 创建其他文件夹 创建启动文件 &#x2F;etc&#x2F;init.d&#x2F;rcS &#x2F;etc&#x2F;fstab &#x2F;etc&#x2F;inittab      根文件系统组">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/35.1.png">
+<meta property="og:image" content="http://example.com/images/35.2.png">
+<meta property="og:image" content="http://example.com/images/35.3.png">
+<meta property="og:image" content="http://example.com/images/35.4.png">
+<meta property="article:published_time" content="2026-02-27T08:44:18.000Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.836Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/35.1.png">
+
+
+<link rel="canonical" href="http://example.com/2026/02/27/imx6ull-rootfs/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/27/imx6ull-rootfs/","path":"2026/02/27/imx6ull-rootfs/","title":"imx6ull rootfs"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>imx6ull rootfs | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%84%E6%88%90"><span class="nav-number">1.</span> <span class="nav-text">根文件系统组成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VFS%E8%99%9A%E6%8B%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.2.</span> <span class="nav-text">VFS虚拟文件系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BD%E7%9A%84%E5%90%AB%E4%B9%89"><span class="nav-number">1.3.</span> <span class="nav-text">挂载的含义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%82%E8%BD%BD%E6%97%B6%EF%BC%8C%E5%86%85%E5%AD%98%E7%9A%84%E5%86%85%E5%AE%B9"><span class="nav-number">1.4.</span> <span class="nav-text">挂载时，内存的内容</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA"><span class="nav-number">2.</span> <span class="nav-text">根文件系统构建</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%88%E5%AE%89%E8%A3%85nfs"><span class="nav-number">2.1.</span> <span class="nav-text">先安装nfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#busybox%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AArootfs"><span class="nav-number">2.2.</span> <span class="nav-text">busybox构建一个rootfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E5%B8%B8%E7%94%A8%E7%9A%84%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93"><span class="nav-number">2.3.</span> <span class="nav-text">添加常用的动态链接库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bootarg%E8%AE%BE%E7%BD%AE%E4%BD%BF%E7%94%A8nfs"><span class="nav-number">2.4.</span> <span class="nav-text">bootarg设置使用nfs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%85%B6%E4%BB%96%E6%96%87%E4%BB%B6%E5%A4%B9"><span class="nav-number">2.5.</span> <span class="nav-text">创建其他文件夹</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%90%AF%E5%8A%A8%E6%96%87%E4%BB%B6"><span class="nav-number">2.6.</span> <span class="nav-text">创建启动文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#etc-init-d-rcS"><span class="nav-number">2.6.1.</span> <span class="nav-text">&#x2F;etc&#x2F;init.d&#x2F;rcS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#etc-fstab"><span class="nav-number">2.6.2.</span> <span class="nav-text">&#x2F;etc&#x2F;fstab</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#etc-inittab"><span class="nav-number">2.6.3.</span> <span class="nav-text">&#x2F;etc&#x2F;inittab</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/27/imx6ull-rootfs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="imx6ull rootfs | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          imx6ull rootfs
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-02-27 16:44:18" itemprop="dateCreated datePublished" datetime="2026-02-27T16:44:18+08:00">2026-02-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%84%E6%88%90">根文件系统组成</a><ul>
+<li><a href="#%E4%BB%8B%E7%BB%8D">介绍</a></li>
+<li><a href="#vfs%E8%99%9A%E6%8B%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F">VFS虚拟文件系统</a></li>
+<li><a href="#%E6%8C%82%E8%BD%BD%E7%9A%84%E5%90%AB%E4%B9%89">挂载的含义</a></li>
+<li><a href="#%E6%8C%82%E8%BD%BD%E6%97%B6%E5%86%85%E5%AD%98%E7%9A%84%E5%86%85%E5%AE%B9">挂载时，内存的内容</a></li>
+</ul>
+</li>
+<li><a href="#%E6%A0%B9%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9E%84%E5%BB%BA">根文件系统构建</a><ul>
+<li><a href="#%E5%85%88%E5%AE%89%E8%A3%85nfs">先安装nfs</a></li>
+<li><a href="#busybox%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AArootfs">busybox构建一个rootfs</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E5%B8%B8%E7%94%A8%E7%9A%84%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93">添加常用的动态链接库</a></li>
+<li><a href="#bootarg%E8%AE%BE%E7%BD%AE%E4%BD%BF%E7%94%A8nfs">bootarg设置使用nfs</a></li>
+<li><a href="#%E5%88%9B%E5%BB%BA%E5%85%B6%E4%BB%96%E6%96%87%E4%BB%B6%E5%A4%B9">创建其他文件夹</a></li>
+<li><a href="#%E5%88%9B%E5%BB%BA%E5%90%AF%E5%8A%A8%E6%96%87%E4%BB%B6">创建启动文件</a><ul>
+<li><a href="#etcinitdrcs">&#x2F;etc&#x2F;init.d&#x2F;rcS</a></li>
+<li><a href="#etcfstab">&#x2F;etc&#x2F;fstab</a></li>
+<li><a href="#etcinittab">&#x2F;etc&#x2F;inittab</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="根文件系统组成"><a href="#根文件系统组成" class="headerlink" title="根文件系统组成"></a>根文件系统组成</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p><strong>根文件系统并不是 FATFS，EXT4 这样的文件系统代码</strong></p>
+<p><code>EXT4</code> 这样的文件系统代码属于 <strong>Linux 内核的一部分</strong></p>
+<p>Linux 中的<strong>根文件系统</strong>更像是一个<strong>文件夹</strong>或者叫做<strong>目录</strong>(在我看来就是一个文件夹，只<br>不过是特殊的文件夹)</p>
+<p>在这个<strong>目录</strong>里面会有很多的<strong>子目录</strong>。根目录下和子目录中会有很多的文<br>件，<strong>这些文件是 Linux 运行所必须的</strong>，比如<code>库、常用的软件和命令、设备文件、配置文件</code>等等。</p>
+<p>以后我们<strong>说到文件系统</strong>，如果不特别指明，<strong>统一表示根文件系统</strong></p>
+<hr>
+<ul>
+<li>我们嵌入式 Linux 并没有将内核代码镜像保存在根文件系统中，而是保存到了其他地方, 比如emmc的专用分区</li>
+<li><strong>根文件系统</strong>是 Linux 内核启动以后<strong>挂载(mount)的第一个文件系统</strong>，然后从根文件系统中<strong>读取初始化脚本</strong>，比如 rcS，inittab 等</li>
+<li><strong>根文件系统和 Linux 内核是分开的</strong>，单独的 Linux 内核是没法正常工作的，必须要搭配根文件系统</li>
+<li>如果不提供根文件系统，Linux 内核在启动的时候就会提示**内核崩溃(Kernel panic)**的提示</li>
+</ul>
+<p>我们cd &#x2F;， 这个&#x2F;就是根的意思，根目录下有很多目录和文件，都是ubuntu需要的。</p>
+<p>其中有很多子目录和文件，是我们嵌入式linux用不到的，下面主要讲一下<strong>常用的子目录</strong>:</p>
+<ul>
+<li><code>/bin</code>&#x2F;<ul>
+<li>存放系统需要的<strong>可执行文件</strong>，ls,mv这些命令，<strong>所有用户都可以使用</strong></li>
+</ul>
+</li>
+<li><code>/dev</code>&#x2F;<ul>
+<li>是<code>device</code>缩写，所有文件和<strong>设备有关</strong></li>
+<li>此目录下的文件都是<strong>设备文件</strong>。</li>
+</ul>
+</li>
+<li><code>/etc</code>&#x2F;<ul>
+<li>存放<strong>配置文件</strong>，x86的ubuntu的etc非常多，但是嵌入式的linux比较简洁</li>
+</ul>
+</li>
+<li><code>/lib</code>&#x2F;<ul>
+<li>library的简称，库，存放linux所必须的<strong>库文件</strong>。是共享库，命令，用户编写的应用程序所要使用的这些库文件</li>
+</ul>
+</li>
+<li><code>/mnt</code>&#x2F;<ul>
+<li><strong>临时挂载目录</strong>，一般是空目录</li>
+<li>可以在这个目录下创建空的子目录，&#x2F;mnt&#x2F;sd, &#x2F;mnt&#x2F;usb&#x2F;， 这样可以把SD卡，U盘挂载到这些子目录里面</li>
+</ul>
+</li>
+<li><code>/proc</code>&#x2F;<ul>
+<li>一般是空的，当linux系统启动后，会把这个目录作为<strong>proc文件系统的挂载点</strong>。</li>
+<li>proc是一个<strong>虚拟文件系统</strong>，没有实际的存储设备，proc里面的文件都是临时存在的。一般用来存储系统运行信息文件</li>
+</ul>
+</li>
+<li><code>/usr</code>&#x2F;<ul>
+<li>usr不是user的缩写，是unix software resource的缩写，是unix操作系统的<strong>软件资源目录</strong>。</li>
+<li>一般是安装的系统软件</li>
+</ul>
+</li>
+<li><code>/var</code>&#x2F;<ul>
+<li>存放一些<strong>可以改变的数据</strong></li>
+</ul>
+</li>
+<li><code>/sbin</code>&#x2F;<ul>
+<li>存放一些<strong>可执行文件</strong>，只有<strong>管理员</strong>才能使用</li>
+</ul>
+</li>
+<li><code>/sys</code>&#x2F;<ul>
+<li>系统启动后，以此目录作为<strong>sysfs文件系统的挂载点</strong>。</li>
+<li>sysfs是类似proc文件系统的<strong>特殊文件系统</strong>，sysfs也是基于ram的文件系统。也没有实际的存储设备。</li>
+<li>此目录，是系统设备管理的重要目录，通过一定的组织结构，向用户提供详细的内核数据结构信息</li>
+</ul>
+</li>
+<li><code>/opt</code>&#x2F;<ul>
+<li>可选的文件，软件<strong>存放区</strong>，由<strong>用户</strong>选择将哪些文件或软件放到此目录</li>
+</ul>
+</li>
+</ul>
+<h2 id="VFS虚拟文件系统"><a href="#VFS虚拟文件系统" class="headerlink" title="VFS虚拟文件系统"></a>VFS虚拟文件系统</h2><blockquote>
+<p>这就是 Linux 的 <strong>VFS (Virtual File System，虚拟文件系统)</strong> 的功劳，是<strong>linux的一个组件功能</strong>。它在你的命令和底层存储之间加了一层抽象。</p>
+<ul>
+<li><p>你输入 write() 命令。</p>
+</li>
+<li><p>VFS 查看你操作的文件路径。</p>
+<ul>
+<li>如果路径在 &#x2F;，它就把任务交给 ext4 驱动（写进 Flash）。</li>
+<li>如果路径在 &#x2F;sys，它就把任务交给 内核驱动（修改内存里的寄存器值）。</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<h2 id="挂载的含义"><a href="#挂载的含义" class="headerlink" title="挂载的含义"></a>挂载的含义</h2><p>挂载的本质是“建立映射关系”。</p>
+<p>在 Linux 看来，磁盘分区（比如 eMMC 的第 2 个分区）只是一个块设备文件（如 &#x2F;dev&#x2F;mmcblk0p2），它是一串冰冷的二进制数据。</p>
+<p>而<strong>挂载动作</strong>，就是<strong>告诉内核的 VFS 组件</strong>：</p>
+<ul>
+<li>“请把 &#x2F;dev&#x2F;mmcblk0p2 这个设备里的数据，按照 ext4 的规则<strong>解析出来</strong>，并映射到 &#x2F;（根目录） 这个文件夹上。”</li>
+</ul>
+<p>一旦挂载成功，当你访问 &#x2F; 目录时，VFS 就知道该调用 ext4 驱动去这个设备里读写数据了。</p>
+<h2 id="挂载时，内存的内容"><a href="#挂载时，内存的内容" class="headerlink" title="挂载时，内存的内容"></a>挂载时，内存的内容</h2><p><strong>VFS 是运行在 DDR 里的代码</strong>。</p>
+<p>当一个文件系统被挂载时，内核确实会在 DDR 中<strong>开辟几块关键的数据结构（账本）</strong>：</p>
+<ul>
+<li><strong>Superblock (超级块对象)</strong>：<ul>
+<li>记录这个文件系统的<strong>整体信息</strong>（比如：总大小、已用空间、它是 ext4 还是 FAT32）。</li>
+</ul>
+</li>
+<li><strong>Inode (索引节点)</strong>：<ul>
+<li>记录每一个<strong>文件的元数据</strong>（大小、权限、在 Flash 的哪个位置）。</li>
+</ul>
+</li>
+<li><strong>Dentry (目录项缓存)</strong>：<ul>
+<li>这是最关键的。 它记录了文件名和 Inode 的对应关系。</li>
+<li>比如它记录了 bin 文件夹对应的 Inode 编号是 123。</li>
+</ul>
+</li>
+</ul>
+<h1 id="根文件系统构建"><a href="#根文件系统构建" class="headerlink" title="根文件系统构建"></a>根文件系统构建</h1><h2 id="先安装nfs"><a href="#先安装nfs" class="headerlink" title="先安装nfs"></a>先安装nfs</h2><p>网络文件系统，我们实际的rootfs是需要读写磁盘的，nfs应该就是把VFS下面换成网络去读取远程。</p>
+<h2 id="busybox构建一个rootfs"><a href="#busybox构建一个rootfs" class="headerlink" title="busybox构建一个rootfs"></a>busybox构建一个rootfs</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make</span><br><span class="line">make install CONFIG_PREFIX=/home/liangji/linux/nfs/rootfs</span><br></pre></td></tr></table></figure>
+<h2 id="添加常用的动态链接库"><a href="#添加常用的动态链接库" class="headerlink" title="添加常用的动态链接库"></a>添加常用的动态链接库</h2><ul>
+<li><p>rootfs&#x2F;lib添加库文件</p>
+<ul>
+<li><code>/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux/gnueabihf/libc/lib</code><ul>
+<li>cp <em>so</em> *.a ~&#x2F;linux&#x2F;nfs&#x2F;rootfs&#x2F;lib&#x2F; -d</li>
+<li>拷贝ld-linux-armhf.so.3的实体</li>
+</ul>
+</li>
+<li><code>/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux/gnueabihf/lib</code><ul>
+<li>cp <em>so</em> *.a ~&#x2F;linux&#x2F;nfs&#x2F;rootfs&#x2F;lib&#x2F; -d</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>rootfs&#x2F;usr&#x2F;lib添加库文件</p>
+<ul>
+<li><code>/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/lib</code><ul>
+<li>cp <em>so</em> *.a &#x2F;home&#x2F;liangji&#x2F;linux&#x2F;nfs&#x2F;rootfs&#x2F;usr&#x2F;lib&#x2F; -d</li>
+</ul>
+</li>
+</ul>
+<p><img src="/../images/35.1.png" alt="alt text"></p>
+</li>
+</ul>
+<h2 id="bootarg设置使用nfs"><a href="#bootarg设置使用nfs" class="headerlink" title="bootarg设置使用nfs"></a>bootarg设置使用nfs</h2><ol>
+<li>qemu自测rootfs</li>
+<li>nfs自己挂载到主机&#x2F;mnt测试nfs服务</li>
+<li><code>set bootargs &#39;console=ttymxc0,115200 root=/dev/nfs nfsroot=192.168.1.253:/home/liangji/linux/nfs/rootfs,v3,tcp rw ip=192.168.1.251:192.168.1.253:192.168.1.1:255.255.255.0::eth0:off&#39;</code><ol>
+<li>一定要指定NFS V3，不然握手会失败</li>
+</ol>
+</li>
+</ol>
+<h2 id="创建其他文件夹"><a href="#创建其他文件夹" class="headerlink" title="创建其他文件夹"></a>创建其他文件夹</h2><ul>
+<li>dev</li>
+<li>proc</li>
+<li>mnt</li>
+<li>sys</li>
+<li>tmp</li>
+<li>root</li>
+<li>etc</li>
+</ul>
+<h2 id="创建启动文件"><a href="#创建启动文件" class="headerlink" title="创建启动文件"></a>创建启动文件</h2><h3 id="etc-init-d-rcS"><a href="#etc-init-d-rcS" class="headerlink" title="&#x2F;etc&#x2F;init.d&#x2F;rcS"></a>&#x2F;etc&#x2F;init.d&#x2F;rcS</h3><ol>
+<li>PATH追加可执行文件的可能存在的目录</li>
+<li>LD_LIBRARY_PATH 追加 库文件所在目录</li>
+<li>导出这些变量</li>
+<li>mount -a挂载所有的文件系统，由&#x2F;etc&#x2F;fstab指定</li>
+<li>创建&#x2F;dev&#x2F;pts</li>
+<li>把devpts挂载到&#x2F;dev&#x2F;pts上</li>
+<li>指定mdev管理热插拔设备，这样linux内核可以在&#x2F;dev目录下自动创建设备节点。<blockquote>
+<p>rcS很复杂，更复杂的会借助buildroot来创建。</p>
+</blockquote>
+</li>
+</ol>
+<p>记得给权限</p>
+<h3 id="etc-fstab"><a href="#etc-fstab" class="headerlink" title="&#x2F;etc&#x2F;fstab"></a>&#x2F;etc&#x2F;fstab</h3><p><img src="/../images/35.2.png" alt="alt text"></p>
+<blockquote>
+<p>指定挂载3个文件系统</p>
+</blockquote>
+<h3 id="etc-inittab"><a href="#etc-inittab" class="headerlink" title="&#x2F;etc&#x2F;inittab"></a>&#x2F;etc&#x2F;inittab</h3><p>init程序会读取这个文件<br><img src="/../images/35.3.png" alt="alt text"><br><img src="/../images/35.4.png" alt="alt text"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/" rel="prev" title="imx6ull linux内核">
+                  <i class="fa fa-angle-left"></i> imx6ull linux内核
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/" rel="next" title="imx6ull 字符设备驱动">
+                  imx6ull 字符设备驱动 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>imx6ull rootfs</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

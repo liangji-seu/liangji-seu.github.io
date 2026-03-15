@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="platform device driver梳理 结构体成员变量一览 内核中变量缩写命名 gpiod和之前的gpio子系统 linux内核目录结构一览 platform_bus是唯一的全局变量   关于&#x2F;sys, &#x2F;proc和驱动的关联 &#x2F;sys &#x2F;proc是什么 我如何在驱动中创建&#x2F;sys下的一些东西 sysfs源码目录 疑问：class,de">
+<meta property="og:type" content="article">
+<meta property="og:title" content="platform设备，驱动梳理">
+<meta property="og:url" content="http://example.com/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="platform device driver梳理 结构体成员变量一览 内核中变量缩写命名 gpiod和之前的gpio子系统 linux内核目录结构一览 platform_bus是唯一的全局变量   关于&#x2F;sys, &#x2F;proc和驱动的关联 &#x2F;sys &#x2F;proc是什么 我如何在驱动中创建&#x2F;sys下的一些东西 sysfs源码目录 疑问：class,de">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-01-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-02-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-03-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-01-0310202041.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-02-0310202041.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-04-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-05-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-06-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-07-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-03-0310202041.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-04-0310202041.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-05-0310202041.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-08-0309230347.png">
+<meta property="og:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-09-0309230347.png">
+<meta property="article:published_time" content="2026-03-09T13:06:16.000Z">
+<meta property="article:modified_time" content="2026-03-12T05:15:45.842Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="驱动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-01-0309230347.png">
+
+
+<link rel="canonical" href="http://example.com/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/","path":"2026/03/09/platform设备，驱动梳理/","title":"platform设备，驱动梳理"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>platform设备，驱动梳理 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#platform-device-driver%E6%A2%B3%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">platform device driver梳理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E4%BD%93%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F%E4%B8%80%E8%A7%88"><span class="nav-number">1.1.</span> <span class="nav-text">结构体成员变量一览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E5%8F%98%E9%87%8F%E7%BC%A9%E5%86%99%E5%91%BD%E5%90%8D"><span class="nav-number">1.2.</span> <span class="nav-text">内核中变量缩写命名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gpiod%E5%92%8C%E4%B9%8B%E5%89%8D%E7%9A%84gpio%E5%AD%90%E7%B3%BB%E7%BB%9F"><span class="nav-number">1.3.</span> <span class="nav-text">gpiod和之前的gpio子系统</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#linux%E5%86%85%E6%A0%B8%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E4%B8%80%E8%A7%88"><span class="nav-number">1.4.</span> <span class="nav-text">linux内核目录结构一览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#platform-bus%E6%98%AF%E5%94%AF%E4%B8%80%E7%9A%84%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F"><span class="nav-number">1.5.</span> <span class="nav-text">platform_bus是唯一的全局变量</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E-sys-proc%E5%92%8C%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%85%B3%E8%81%94"><span class="nav-number">2.</span> <span class="nav-text">关于&#x2F;sys, &#x2F;proc和驱动的关联</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sys-proc%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">2.1.</span> <span class="nav-text">&#x2F;sys &#x2F;proc是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%88%91%E5%A6%82%E4%BD%95%E5%9C%A8%E9%A9%B1%E5%8A%A8%E4%B8%AD%E5%88%9B%E5%BB%BA-sys%E4%B8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E4%B8%9C%E8%A5%BF"><span class="nav-number">2.2.</span> <span class="nav-text">我如何在驱动中创建&#x2F;sys下的一些东西</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sysfs%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95"><span class="nav-number">2.3.</span> <span class="nav-text">sysfs源码目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%96%91%E9%97%AE%EF%BC%9Aclass-device%E6%98%AF%E4%B8%BA%E4%BA%86%E5%9C%A8sysfs%E9%87%8C%E9%9D%A2%E5%88%9B%E5%BB%BA%E8%8A%82%E7%82%B9%EF%BC%8C%E9%82%A3%E4%B9%88%E7%94%B3%E8%AF%B7%E8%AE%BE%E5%A4%87%E5%8F%B7%EF%BC%8C%E6%B3%A8%E5%86%8C%E8%AE%BE%E5%A4%87%E7%9A%84%E4%BD%9C%E7%94%A8%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.4.</span> <span class="nav-text">疑问：class,device是为了在sysfs里面创建节点，那么申请设备号，注册设备的作用是什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%B0%E4%BB%A3%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E7%9A%84%E4%B8%8D%E5%90%8C"><span class="nav-number">2.4.1.</span> <span class="nav-text">现代驱动开发的不同</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">52</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="platform设备，驱动梳理 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          platform设备，驱动梳理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-09 21:06:16" itemprop="dateCreated datePublished" datetime="2026-03-09T21:06:16+08:00">2026-03-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-03-12 13:15:45" itemprop="dateModified" datetime="2026-03-12T13:15:45+08:00">2026-03-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#platform-device-driver%E6%A2%B3%E7%90%86">platform device driver梳理</a><ul>
+<li><a href="#%E7%BB%93%E6%9E%84%E4%BD%93%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F%E4%B8%80%E8%A7%88">结构体成员变量一览</a></li>
+<li><a href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E5%8F%98%E9%87%8F%E7%BC%A9%E5%86%99%E5%91%BD%E5%90%8D">内核中变量缩写命名</a></li>
+<li><a href="#gpiod%E5%92%8C%E4%B9%8B%E5%89%8D%E7%9A%84gpio%E5%AD%90%E7%B3%BB%E7%BB%9F">gpiod和之前的gpio子系统</a></li>
+<li><a href="#linux%E5%86%85%E6%A0%B8%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E4%B8%80%E8%A7%88">linux内核目录结构一览</a></li>
+<li><a href="#platform_bus%E6%98%AF%E5%94%AF%E4%B8%80%E7%9A%84%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F">platform_bus是唯一的全局变量</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%B3%E4%BA%8Esys-proc%E5%92%8C%E9%A9%B1%E5%8A%A8%E7%9A%84%E5%85%B3%E8%81%94">关于&#x2F;sys, &#x2F;proc和驱动的关联</a><ul>
+<li><a href="#sys-proc%E6%98%AF%E4%BB%80%E4%B9%88">&#x2F;sys &#x2F;proc是什么</a></li>
+<li><a href="#%E6%88%91%E5%A6%82%E4%BD%95%E5%9C%A8%E9%A9%B1%E5%8A%A8%E4%B8%AD%E5%88%9B%E5%BB%BAsys%E4%B8%8B%E7%9A%84%E4%B8%80%E4%BA%9B%E4%B8%9C%E8%A5%BF">我如何在驱动中创建&#x2F;sys下的一些东西</a></li>
+<li><a href="#sysfs%E6%BA%90%E7%A0%81%E7%9B%AE%E5%BD%95">sysfs源码目录</a></li>
+<li><a href="#%E7%96%91%E9%97%AEclassdevice%E6%98%AF%E4%B8%BA%E4%BA%86%E5%9C%A8sysfs%E9%87%8C%E9%9D%A2%E5%88%9B%E5%BB%BA%E8%8A%82%E7%82%B9%E9%82%A3%E4%B9%88%E7%94%B3%E8%AF%B7%E8%AE%BE%E5%A4%87%E5%8F%B7%E6%B3%A8%E5%86%8C%E8%AE%BE%E5%A4%87%E7%9A%84%E4%BD%9C%E7%94%A8%E6%98%AF%E4%BB%80%E4%B9%88">疑问：class,device是为了在sysfs里面创建节点，那么申请设备号，注册设备的作用是什么？</a><ul>
+<li><a href="#%E7%8E%B0%E4%BB%A3%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%E7%9A%84%E4%B8%8D%E5%90%8C">现代驱动开发的不同</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="platform-device-driver梳理"><a href="#platform-device-driver梳理" class="headerlink" title="platform device driver梳理"></a>platform device driver梳理</h1><p>这边对linux内核里面的结构体定义做一个梳理：</p>
+<ul>
+<li>struct platform_device<ul>
+<li>struct device</li>
+</ul>
+</li>
+<li>struct platform_driver<ul>
+<li>struct device_driver</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><code>platform_xxx</code>的定义都在<code>include/linux/platform_device.h</code></p>
+<p><code>device</code>, <code>device_driver</code>的定义都在<code>include/linux/device.h</code></p>
+</blockquote>
+<p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-01-0309230347.png" alt="alt text"><br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-02-0309230347.png" alt="alt text"></p>
+<p><strong>Linux里面的继承和多态</strong><br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-03-0309230347.png" alt="alt text"></p>
+<h2 id="结构体成员变量一览"><a href="#结构体成员变量一览" class="headerlink" title="结构体成员变量一览"></a>结构体成员变量一览</h2><p><strong>设备</strong></p>
+<p><strong>基类</strong>：<code>struct device</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">device</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">parent</span>;</span>              <span class="comment">// 父设备（通常是其所属的总线控制器）</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device_private</span> *<span class="title">p</span>;</span>           <span class="comment">// 【严禁触碰】内核私有数据，存储总线链表位置等</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> <span class="title">kobj</span>;</span>                <span class="comment">// 内核对象，负责引用计数和 sysfs 层级生成</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *init_name;              <span class="comment">// 初始名字</span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">device_type</span> *<span class="title">type</span>;</span>     <span class="comment">// 设备类型</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> <span class="title">mutex</span>;</span>                 <span class="comment">//互斥锁，用来同步堆驱动程序的调用</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bus_type</span> *<span class="title">bus</span>;</span>               <span class="comment">// 设备所属的总线（如 &amp;platform_bus_type）</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device_driver</span> *<span class="title">driver</span>;</span>       <span class="comment">// 指向当前已经绑定的驱动程序</span></span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> *platform_data;                <span class="comment">// 老式驱动传参方式 platform特有数据，device core不能访问他）</span></span><br><span class="line">    <span class="type">void</span> *driver_data;                  <span class="comment">//驱动数据，用dev_set/get_drvdata获取，保存设备结构体这些</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dev_pm_info</span> <span class="title">power</span>;</span>           <span class="comment">// 电源管理状态信息</span></span><br><span class="line">    </span><br><span class="line">    <span class="meta">#<span class="keyword">ifdef</span> CONFIG_OF</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device_node</span> *<span class="title">of_node</span>;</span>        <span class="comment">// 【核心】指向设备树(DTS)中的节点，OF函数全靠它</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fwnode_handle</span> *<span class="title">fwnode</span>;</span>       <span class="comment">// 固件节点句柄（统一了 ACPI 和 DT）</span></span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="type">dev_t</span> devt;                         <span class="comment">// 设备号（主设备号+次设备号）</span></span><br><span class="line">    <span class="type">spinlock_t</span> devres_lock;             <span class="comment">// 管理设备资源的自旋锁</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">devres_head</span>;</span>       <span class="comment">// 由 devm_ 系列函数管理的资源列表</span></span><br><span class="line"></span><br><span class="line">    <span class="type">void</span> (*release)(<span class="keyword">struct</span> device *dev); <span class="comment">// 当引用计数归零时释放资源的函数</span></span><br><span class="line">    <span class="comment">// ... 还有处理 DMA、IOMMU、Numa 节点等非常底层的成员</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="type">dev_t</span>  devt;                        <span class="comment">//设备号</span></span><br><span class="line">    u32    id;                          <span class="comment">//设备实例</span></span><br><span class="line">    <span class="comment">//....</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>区别platform_data, driver_data<br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-01-0310202041.png" alt="alt text"><br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-02-0310202041.png" alt="alt text"></p>
+<p><strong>子类</strong>：<code>struct platform_device</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">platform_device</span> &#123;</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>  *name;                  <span class="comment">// 设备名，用于和驱动的 name 进行匹配</span></span><br><span class="line">    <span class="type">int</span>         id;                     <span class="comment">// 设备 ID，用于区分同名设备。若只有一个则设为 -1</span></span><br><span class="line">    <span class="type">bool</span>        id_auto;                <span class="comment">// 是否自动分配 ID</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> <span class="title">dev</span>;</span>                  <span class="comment">// 【基类】最核心的成员，包含了设备树节点和父设备信息</span></span><br><span class="line">    u32         num_resources;          <span class="comment">// 资源数组的数量</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">resource</span> *<span class="title">resource</span>;</span>          <span class="comment">// 【资源】指向 MEM、IRQ、DMA 等硬件资源描述的数组</span></span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device_id</span> *<span class="title">id_entry</span>;</span> <span class="comment">// 匹配成功后，指向匹配到的 ID 表项</span></span><br><span class="line">    <span class="type">char</span> *driver_override;              <span class="comment">/* 强制匹配特定驱动的名字 */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* MFD (多功能设备) 相关指针 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mfd_cell</span> *<span class="title">mfd_cell</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 架构特定的扩展数据 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pdev_archdata</span> <span class="title">archdata</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p><strong>驱动</strong></p>
+<p><strong>基类</strong>：<code>struct device_driver</code></p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">device_driver</span> &#123;</span></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *name;              <span class="comment">// 驱动程序的名字</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bus_type</span> *<span class="title">bus</span>;</span>          <span class="comment">// 所属总线</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span>          <span class="comment">// 模块属主，通常填 THIS_MODULE</span></span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *mod_name;          <span class="comment">// 用于内置模块的名字</span></span><br><span class="line">    <span class="type">bool</span> suppress_bind_attrs;      <span class="comment">// 是否禁止通过 sysfs 手动绑定/解绑</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">#<span class="keyword">ifdef</span> CONFIG_OF</span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">of_device_id</span> *<span class="title">of_match_table</span>;</span> <span class="comment">// 【核心】设备树匹配表</span></span><br><span class="line">    <span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通用探测函数：platform 总线会先调它，它内部再转换成 platform_device 调你的 probe</span></span><br><span class="line">    <span class="type">int</span> (*probe) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="type">int</span> (*remove) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="type">void</span> (*shutdown) (<span class="keyword">struct</span> device *dev);</span><br><span class="line">    <span class="type">int</span> (*suspend) (<span class="keyword">struct</span> device *dev, <span class="type">pm_message_t</span> state);</span><br><span class="line">    <span class="type">int</span> (*resume) (<span class="keyword">struct</span> device *dev);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 现代电源管理框架</span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">dev_pm_ops</span> *<span class="title">pm</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 内核维护的私有数据</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">driver_private</span> *<span class="title">p</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>子类</strong>：struct platform_driver</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">platform_driver</span> &#123;</span></span><br><span class="line">    <span class="comment">/* 当总线匹配成功、设备被添加时执行 */</span></span><br><span class="line">    <span class="type">int</span> (*probe)(<span class="keyword">struct</span> platform_device *);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 当驱动卸载或设备被拔出时执行 */</span></span><br><span class="line">    <span class="type">int</span> (*remove)(<span class="keyword">struct</span> platform_device *);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 系统关机时的回调 */</span></span><br><span class="line">    <span class="type">void</span> (*shutdown)(<span class="keyword">struct</span> platform_device *);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 电源管理：休眠回调 */</span></span><br><span class="line">    <span class="type">int</span> (*suspend)(<span class="keyword">struct</span> platform_device *, <span class="type">pm_message_t</span> state);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 电源管理：唤醒回调 */</span></span><br><span class="line">    <span class="type">int</span> (*resume)(<span class="keyword">struct</span> platform_device *);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 【基类】通用的驱动属性，包含了名字、匹配表和模块所有者 */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device_driver</span> <span class="title">driver</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* ID 匹配表，用于支持一个驱动对应多个不同名字的设备 */</span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">platform_device_id</span> *<span class="title">id_table</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 防止延迟探测的标志 */</span></span><br><span class="line">    <span class="type">bool</span> prevent_deferred_probe;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="内核中变量缩写命名"><a href="#内核中变量缩写命名" class="headerlink" title="内核中变量缩写命名"></a>内核中变量缩写命名</h2><p>遵循一套<strong>非常严谨的命名规范</strong></p>
+<p><strong>1. 核心对象缩写 (名词)</strong></p>
+<p>这些缩写通常代表<strong>结构体的实例指针</strong>。</p>
+<ul>
+<li><code>dev</code> (Device): 指向 <code>struct device</code> 的指针。它是所有设备的基类。</li>
+<li><code>pdev</code> (Platform Device): 指向 <code>struct platform_device</code> 的指针。</li>
+<li><code>drv</code> (Driver): 指向 <code>struct device_driver</code> 的指针。</li>
+<li><code>pdrv</code> (Platform Driver): 指向 <code>struct platform_driver</code> 的指针。</li>
+<li><code>node</code> &#x2F; <code>np</code> (Node Pointer): 通常指 <code>struct device_node *</code>，即设备树中的一个节点指针。</li>
+<li><code>priv</code> Private Data”（<strong>私有数据</strong><ul>
+<li>内核的设备类型platform_device是通用的，所以只定义了设备的共性，但是你的驱动中，常常要<strong>记录一些特有信息</strong>，比如GPIO编号，动态申请的内存地址，当前设备的运行状态，互斥锁，自旋锁</li>
+<li>我们驱动里面使用的platform_device变量都是通用的。所以我们只能自己在驱动中开辟一块内存，然后自己创建设备描述结构体。然后把他们绑定到我们创建使用的通用的platform_device上（里面的指针指向我们这一块内存）</li>
+<li>你不能修改内核定义的全局结构体，<strong>只能拿一个私有数据的指针</strong>，<strong>指向你驱动里面的开辟的全局内存</strong>。</li>
+<li><blockquote>
+<p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-04-0309230347.png" alt="alt text"></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-05-0309230347.png" alt="alt text"></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p><strong>关于内核申请的内存，其实是在空闲列表里面申请的，这个xv6里面搞清楚了</strong></p>
+</blockquote>
+</li>
+<li></li>
+<li><blockquote>
+<p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-06-0309230347.png" alt="alt text"></p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p><strong>2. 资源管理前缀 (动词&#x2F;特性)</strong></p>
+<p><code>devm_</code> (Device <strong>Managed</strong>)</p>
+<p>这是 Linux 内核的“<strong>自动垃圾回收</strong>”机制。</p>
+<ul>
+<li><p><strong>含义</strong>：带有 <code>devm_</code> 前缀的函数（如 <code>devm_kzalloc</code>, <code>devm_gpio_request</code>）申请的资源，会挂在 <code>struct device</code> 内部的 <code>devres_head</code> 链表上。</p>
+</li>
+<li><p><strong>作用</strong>：当驱动卸载（执行 <code>remove</code>）或 <code>probe 失败</code>时，<strong>内核会自动释放这些资源</strong>。你不需要在 remove 函数里手动写一堆 kfree 或 gpio_free。</p>
+</li>
+</ul>
+<hr>
+<p><code>of</code>_ (<strong>Open Firmware</strong>)</p>
+<ul>
+<li><p><strong>含义</strong>：所有<strong>处理设备树</strong> (Device Tree) 相关的函数都以 <code>of_</code> 开头。</p>
+</li>
+<li><p><strong>例子</strong>：of_get_named_gpio（从设备树获取 GPIO 编号），of_property_read_u32（读取设备树里的数字属性）。</p>
+</li>
+</ul>
+<hr>
+<p><strong>3. 常见缩写</strong><br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-07-0309230347.png" alt="alt text"></p>
+<p>所以看到pdev-&gt;dev, 就是获取设备的父类对象</p>
+<h2 id="gpiod和之前的gpio子系统"><a href="#gpiod和之前的gpio子系统" class="headerlink" title="gpiod和之前的gpio子系统"></a>gpiod和之前的gpio子系统</h2><p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-03-0310202041.png" alt="alt text"><br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-04-0310202041.png" alt="alt text"><br><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-05-0310202041.png" alt="alt text"></p>
+<h2 id="linux内核目录结构一览"><a href="#linux内核目录结构一览" class="headerlink" title="linux内核目录结构一览"></a>linux内核目录结构一览</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">linux-src/</span><br><span class="line">├── arch/                        # 体系结构相关代码 (如 arm64, riscv, x86)</span><br><span class="line">│   └── arm64/boot/dts/          # 【重点】这里存放了你经常修改的设备树文件 (.dts)</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">├── drivers/                     # 驱动程序主体</span><br><span class="line">│   ├── base/                    # 【核心核心】Linux 设备模型 (LDM) 的底层实现</span><br><span class="line">│   │   ├── bus.c                # 总线注册、匹配逻辑</span><br><span class="line">│   │   ├── dd.c                 # Driver <span class="title function_">Bound</span> <span class="params">(驱动绑定核心逻辑)</span></span><br><span class="line">│   │   ├── driver.c             <span class="meta"># struct device_driver 的通用操作</span></span><br><span class="line">│   │   ├── core.c               <span class="meta"># struct device 的通用操作</span></span><br><span class="line">│   │   └── platform.c           # 【重点】platform_driver_register 等函数的定义就在这！</span><br><span class="line">│   ├── leds/                    # LED 子系统目录</span><br><span class="line">│   │   ├── led-core.c           # LED 核心层逻辑</span><br><span class="line">│   │   ├── led-class.c          # /sys/class/leds 的创建与管理</span><br><span class="line">│   │   └── leds-gpio.c          # 【教科书】基于 platform 框架的最简单标准 LED 驱动</span><br><span class="line">│   ├── gpio/                    # GPIO 子系统 <span class="params">(gpiolib)</span></span><br><span class="line">│   ├── platform/                # 特定于某些硬件平台的“增强型”驱动 <span class="params">(非框架本身)</span></span><br><span class="line">│   │   └── x86/                 # 例如 Thinkpad 快捷键、华硕笔记本特有的驱动</span><br><span class="line">│   └── of/                      # Open <span class="title function_">Firmware</span> <span class="params">(设备树)</span> 的核心解析逻辑</span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">├── include/                     # 头文件目录</span><br><span class="line">│   ├── linux/                   # 【重点】通用的内核头文件 <span class="params">(与平台无关)</span></span><br><span class="line">│   │   ├── platform_device.h    <span class="meta"># struct platform_device 定义和 API 声明</span></span><br><span class="line">│   │   ├── device.h             <span class="meta"># struct device 基类定义</span></span><br><span class="line">│   │   ├── of.h                 # 设备树操作 <span class="title function_">API</span> <span class="params">(of_ 开头的函数)</span></span><br><span class="line">│   │   ├── leds.h               # LED 子系统相关结构体</span><br><span class="line">│   │   └── mod_devicetable.h    # of_device_id 等匹配表的定义</span><br><span class="line">│   └── uapi/                    # User <span class="title function_">API</span> <span class="params">(给应用层调用的头文件)</span></span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">├── Documentation/               # 内核文档</span><br><span class="line">│   └── devicetree/              # 设备树绑定文档 <span class="params">(告诉你 DTS 节点该怎么写)</span></span><br><span class="line">│</span><br><span class="line">│</span><br><span class="line">└── kernel/                      # 内核核心调度、同步、定时器逻辑</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="platform-bus是唯一的全局变量"><a href="#platform-bus是唯一的全局变量" class="headerlink" title="platform_bus是唯一的全局变量"></a>platform_bus是唯一的全局变量</h2><p>在 Linux 内核中，<code>platform_bus_type</code> 确实是一个全局唯一的 <code>struct bus_type</code> 实例</p>
+<p>根据上面的目录结构分类，就很容易找到他的全局变量创建在<code>drivers/base/platform.c</code>中</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bus_type</span> <span class="title">platform_bus_type</span> =</span> &#123;</span><br><span class="line">    .name		= <span class="string">&quot;platform&quot;</span>,</span><br><span class="line">    .dev_groups	= platform_dev_groups,</span><br><span class="line">    .match		= platform_match,      <span class="comment">// 【核心】决定设备和驱动能否“牵手”成功</span></span><br><span class="line">    .uevent		= platform_uevent,</span><br><span class="line">    .pm		    = &amp;platform_dev_pm_ops, <span class="comment">// 电源管理</span></span><br><span class="line">    .probe		= platform_drv_probe,  <span class="comment">// 封装后的探测函数</span></span><br><span class="line">    .remove		= platform_drv_remove,</span><br><span class="line">    .shutdown	= platform_drv_shutdown,</span><br><span class="line">&#125;;</span><br><span class="line">EXPORT_SYMBOL_GPL(platform_bus_type); <span class="comment">// 导出符号，让其他模块也能访问</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="关于-sys-proc和驱动的关联"><a href="#关于-sys-proc和驱动的关联" class="headerlink" title="关于&#x2F;sys, &#x2F;proc和驱动的关联"></a>关于&#x2F;sys, &#x2F;proc和驱动的关联</h1><h2 id="sys-proc是什么"><a href="#sys-proc是什么" class="headerlink" title="&#x2F;sys &#x2F;proc是什么"></a>&#x2F;sys &#x2F;proc是什么</h2><p><code>/proc</code> 是<strong>历史遗留的“大杂烩”</strong>，而 <code>/sys</code> 是伴随 Linux 设备模型（L<strong>DM</strong>）诞生的“<strong>现代化设备博物馆</strong>”</p>
+<p>这两个目录下面都是<strong>挂载的虚拟文件系统</strong></p>
+<hr>
+<p><code>/proc</code> (Process Information Pseudo-file System)</p>
+<ul>
+<li><p><strong>初衷</strong>：最早在 Unix 时代，<code>/proc</code> 仅仅是为了向用户空间导出<strong>进程（Process</strong>信息而创建的（比如现在的 &#x2F;proc&#x2F;1 就是 init 进程的状态）。</p>
+</li>
+<li><p><strong>演变</strong>（失控）：随着 Linux 发展，内核开发者发现从内核向用户层传递数据太麻烦了，而 &#x2F;proc 刚好是个现成的通道。于是，大家开始往里面<strong>塞各种与进程无关的东西</strong>：<code>内存信息</code>（meminfo）、<code>中断</code>（interrupts）、<code>命令行参数</code>（cmdline），甚至包括你提到的<code>设备树</code>（device-tree）。</p>
+</li>
+<li><p><strong>缺点</strong>：毫无结构可言，格式混乱。有些文件里面是一大坨文本，用户层写脚本去解析这些文本非常痛苦（比如用 awk&#x2F;grep 抓取特定字段）。</p>
+</li>
+</ul>
+<p><strong><code>/proc</code> 的常见目录</strong></p>
+<ul>
+<li><code>/proc/&quot;pid&quot;/</code>：各个进程的状态（老本行）。</li>
+<li><code>/proc/interrupts</code>：系统的<strong>中断统计</strong>。</li>
+<li><code>/proc/device-tree/</code>：设备树节点（实际上在现代内核中，它通常是一个指向 <code>/sys/firmware/devicetree/base</code> 的符号链接）。</li>
+</ul>
+<hr>
+<p><code>/sys</code> (Sysfs)</p>
+<ul>
+<li><p><strong>初衷</strong>：在 Linux 2.6 引入设备模型（L<strong>DM</strong>）时，内核鼻祖 Linus 和其他维护者受够了 &#x2F;proc 的混乱。他们决定<strong>专门为设备、总线、驱动</strong>设计一个<strong>新的文件系统</strong>，这就是 <code>sysfs</code>。</p>
+</li>
+<li><p><strong>核心规则</strong>：严格的层次结构和<strong>一个文件只干一件事（只包含一个值</strong>的原则。比如，你想看设备的电源状态，在 sysfs 里就是一个单独的文件，里面只有 0 或 1，不需要任何解析。</p>
+</li>
+<li><p><strong>本质</strong>：<code>sysfs</code> 就是内核中 <code>kobject</code>（内核对象的基类）树状拓扑结构在<strong>用户空间的直接映射</strong>。</p>
+</li>
+</ul>
+<p><strong>&#x2F;sys 的核心目录</strong>（<code>LDM(linux设备模型</code>) 的三维立体图）</p>
+<ul>
+<li><code>/sys/devices/</code>：<ul>
+<li><strong>族谱视角</strong>, <strong>全局设备树最真实的物理连接图</strong>。这是系统所有物理设备的真实拓扑结构（谁挂在谁下面，一清二楚）。</li>
+</ul>
+</li>
+<li><code>/sys/bus/</code>：<ul>
+<li><strong>相亲视角, 总线match视角</strong>。包含 platform、i2c、usb 等。目录下的 devices 和 drivers 实际上是指向 &#x2F;sys&#x2F;devices&#x2F; 的符号链接（这也是为什么你能在platform 下找到你创建的设备）。</li>
+<li>在 <code>/sys/bus/platform/</code> 下，你可以清楚地查账哪些设备挂在 platform 总线上？哪些驱动已经就绪？谁和谁配对成功了</li>
+</ul>
+</li>
+<li><code>/sys/class/</code>：<ul>
+<li><strong>职业视角</strong>。不管你是通过什么总线接入的，只要你是 <strong>LED</strong>，就归类到 <code>/sys/class/leds/</code>；是<strong>网卡</strong>，就归类到 <code>/sys/class/net/</code>。</li>
+</ul>
+</li>
+<li><code>/sys/module/</code>：系统加载的所有内核模块（ko文件）的状态。</li>
+</ul>
+<hr>
+<h2 id="我如何在驱动中创建-sys下的一些东西"><a href="#我如何在驱动中创建-sys下的一些东西" class="headerlink" title="我如何在驱动中创建&#x2F;sys下的一些东西"></a>我如何在驱动中创建&#x2F;sys下的一些东西</h2><p>在 sysfs 中，有一个极其优雅的设计哲学：</p>
+<p><strong>目录代表“对象” (kobject)</strong>，而<strong>文件代表对象的“属性” (attribute)</strong>。</p>
+<ul>
+<li>在你的<strong>驱动里</strong>，你只需要<strong>提供两个函数（读和写）</strong>，内核就会自动帮你把它们<strong>映射成 &#x2F;sys 下的一个普通文本文件</strong>。</li>
+<li>用户层只需使用最基础的 <code>cat</code> 和 <code>echo</code> 命令，就能跨越内核边界，直接调用你写的 C 函数！<blockquote>
+<p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-08-0309230347.png" alt="alt text"></p>
+</blockquote>
+</li>
+</ul>
+<h2 id="sysfs源码目录"><a href="#sysfs源码目录" class="headerlink" title="sysfs源码目录"></a>sysfs源码目录</h2><p>sysfs这些属于VFS虚拟文件系统，所以</p>
+<ul>
+<li><strong>Sysfs 核心机制</strong>：	<code>fs/sysfs/</code>	<ul>
+<li>sysfs 文件系统的挂载、文件读写回调的底层实现。</li>
+</ul>
+</li>
+<li><strong>Kobject</strong> (sysfs的灵魂)	<code>lib/kobject.c</code>	<ul>
+<li>重点！kobject 负责维护引用计数，它的每一次注册（kobject_add）都会在 sysfs 里生成一个目录。</li>
+</ul>
+</li>
+<li><strong>与设备模型的桥梁</strong>:	<code>drivers/base/core.c</code> <code>drivers/base/class.c</code><ul>
+<li>这里包含了 <code>class_create</code> 等函数，它们<strong>内部</strong>会调用 <code>kobject_add</code> 和 <code>sysfs 的 API</code>，最终在 &#x2F;sys&#x2F; 下建出你看到的结构。</li>
+</ul>
+</li>
+</ul>
+<h2 id="疑问：class-device是为了在sysfs里面创建节点，那么申请设备号，注册设备的作用是什么？"><a href="#疑问：class-device是为了在sysfs里面创建节点，那么申请设备号，注册设备的作用是什么？" class="headerlink" title="疑问：class,device是为了在sysfs里面创建节点，那么申请设备号，注册设备的作用是什么？"></a>疑问：class,device是为了在sysfs里面创建节点，那么申请设备号，注册设备的作用是什么？</h2><p>在linux的内核设备-驱动-总线模型中</p>
+<ul>
+<li>我们用<strong>dts来描述设备信息</strong>（属于<strong>总线层</strong>），<ul>
+<li>最终得到<code>platform_device</code></li>
+<li><strong>作用</strong>，是<strong>描述硬件资源</strong>（寄存器地址、中断号），此时，<strong>内核已经知道硬件的存在了</strong></li>
+<li><blockquote>
+<p><strong>但用户空间的程序（如你的 C 语言 App）还看不见它</strong>，<strong>没有接口</strong></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><strong>注册字符设备</strong>&#x2F;<strong>申请设备号</strong>（属于<strong>文件系统层</strong>）<ul>
+<li><strong>目的</strong>：在 <code>/dev/</code> 目录下生成一个“<strong>文件节点</strong>”</li>
+<li><blockquote>
+<p>Linux 的哲学是“万物皆文件”。用户 App 想要控制硬件，必须通过 open(“&#x2F;dev&#x2F;myled”, …)</p>
+</blockquote>
+</li>
+<li><strong>申请设备号</strong>, <strong>注册 cdev</strong>，就是为了<strong>告诉内核</strong>：“当有人<code>访问这个 /dev/</code> 文件时，请<strong>跳转到我驱动</strong>里写的 <code>read/write/ioctl</code> 函数去</li>
+</ul>
+</li>
+</ul>
+<h3 id="现代驱动开发的不同"><a href="#现代驱动开发的不同" class="headerlink" title="现代驱动开发的不同"></a>现代驱动开发的不同</h3><p>上面你还要自己手动让内核把用户层的访问，路由到驱动</p>
+<p>在<strong>现代驱动开发</strong>中，我们确实在<strong>减少直接操作设备号</strong></p>
+<ul>
+<li><strong>子系统封装（如 LED 子系统）</strong>：<ul>
+<li>如果你写的是<strong>标准的 <code>leds-gpio</code> 驱动</strong>，你不需要申请设备号，也不需要 cdev_add</li>
+<li>因为 <strong>LED 子系统框架</strong>（<code>led-class.c</code>）已经<strong>提前申请好了主设备号</strong>，并统一管理了 <code>/sys/class/leds/</code>。你只需要调<code>led_classdev_register</code>，框架就会自动帮你搞定一切</li>
+</ul>
+</li>
+<li><blockquote>
+<p>对比</p>
+</blockquote>
+</li>
+<li><blockquote>
+<p><img src="/../images/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86-09-0309230347.png" alt="alt text"></p>
+</blockquote>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/%E9%A9%B1%E5%8A%A8/" rel="tag"># 驱动</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/" rel="prev" title="深度学习-李沐">
+                  <i class="fa fa-angle-left"></i> 深度学习-李沐
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/" rel="next" title="imx6ull-linux内核的misc驱动">
+                  imx6ull-linux内核的misc驱动 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>platform设备，驱动梳理</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
