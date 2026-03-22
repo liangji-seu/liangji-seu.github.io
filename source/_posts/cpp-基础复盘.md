@@ -110,9 +110,20 @@ tags: [嵌入式, cpp]
 		- [继承中构造和析构顺序](#继承中构造和析构顺序)
 		- [继承同名成员处理方式](#继承同名成员处理方式)
 		- [继承同名静态成员处理方式](#继承同名静态成员处理方式)
-		- [多继承语法](#多继承语法)
-		- [菱形继承](#菱形继承)
+		- [多继承语法（一子多父）](#多继承语法一子多父)
+		- [菱形继承（虚继承）](#菱形继承虚继承)
 	- [多态](#多态)
+		- [多态的基本概念](#多态的基本概念)
+		- [纯虚函数 和 抽象类  (开始定义**接口类**了)](#纯虚函数-和-抽象类--开始定义接口类了)
+		- [虚析构和纯虚析构](#虚析构和纯虚析构)
+	- [c++文件操作](#c文件操作)
+		- [文本文件](#文本文件)
+			- [写文件](#写文件)
+			- [读文件](#读文件)
+		- [二进制文件](#二进制文件)
+			- [写二进制文件](#写二进制文件)
+			- [读二进制文件](#读二进制文件)
+		- [总结](#总结-1)
 - [泛型编程，STL](#泛型编程stl)
 
 # 基础语法
@@ -1674,7 +1685,7 @@ public:
 静态成员的处理与非静态成员类似，只是访问方式多了类名访问：
 
 
-### 多继承语法
+### 多继承语法（一子多父）
 一个子类，同时继承多个父类
 ```c
 class 派生类 : 继承方式 基类1, 继承方式 基类2, ... { ... };
@@ -1706,7 +1717,7 @@ int main() {
 ```
 **多继承可能导致成员名冲突，需用 Base1::m_A 明确指定**
 
-### 菱形继承
+### 菱形继承（虚继承）
 
 菱形继承指：**两个派生类继承同一个基类**，又有**一个类同时继承这两个派生类**，导致基类成员被重复继承，**引发数据冗余与二义性**
 ```c
@@ -1755,5 +1766,354 @@ int main() {
 ```
 
 ## 多态
+多态是面向对象编程的**核心特性**之一，核心思想是“**同一接口，多种实现**”，即**基类指针** / 引用可以根据实际**指向的派生类对象**，**调用对应的函数实现**。
+
+### 多态的基本概念
+**多态的分类**
+- **静态多态（编译期多态）**：函数重载、运算符重载，在编译阶段确定函数地址。
+- **动态多态（运行期多态）**：通过虚函数实现，在运行阶段根据对象实际类型确定函数地址。
+
+**动态多态的满足条件**
+- **继承关系**：必须存在基类与派生类。
+- **虚函数重写**：派生类重写基类的虚函数（函数名、参数列表、返回值类型完全一致，C++11 后协变返回类型也允许）。
+- **基类指针** / **引用调用**：通过基类指针或引用调用虚函数。
+
+> 核心就是靠基类指针，来指向子类对象，然后调用基类虚函数，来实际运行子类的实现方法，实际运行中，这样就实现了靠**指针指谁用谁**，接口不变，**龙生九子，各有不同，但接口名称一样，指针指谁用谁**
+
+```c
+class Base {
+public:
+    // 虚函数：virtual 关键字修饰
+    virtual void func() { cout << "Base::func()" << endl; }
+};
+
+class Derived : public Base {
+public:
+    // 重写基类虚函数（override显式标记）
+    void func() override { cout << "Derived::func()" << endl; }
+};
+
+int main() {
+    Base* p = new Derived();
+    p->func(); // 运行时绑定，调用 Derived::func()
+    delete p;
+    return 0;
+}
+```
+
+
+> 人的工作视角就是基类，因为我只关心基类这个东西，子类只是用来实现一些方法的。比如我的一个解法，**我就可以自己写一个子类，然后重写里面的solution()方法**。这样就可以通过基类指针来选择调用我的子类实现。
+
+```c
+#include <iostream>
+using namespace std;
+
+class base {
+protected:
+	int a;
+	int b;
+public:
+	base(int x, int y) :a(x), b(y) {
+		cout << "base construction" << endl;
+	}
+
+	virtual ~base() {
+		cout << "base析构" << endl;
+	}
+
+	virtual void cal() {
+		cout << "a = " << a << " b = " << b << endl;
+		cout << "this is base, not real calculator" << endl;
+	}
+};
+
+class add_cal : public base{
+public:
+	add_cal(int x, int y) : base(x, y) {
+		cout << "add_cal construction" << endl;
+	}
+
+	~add_cal() override {
+		cout << "add_cal 析构" << endl;
+	}
+
+	void cal() override {
+		cout << "a + b = " << a + b << endl;
+	}
+};
+
+class mul_cal : public base {
+public:
+	mul_cal(int x, int y) : base(x, y) {
+		cout << "mul_cal construction" << endl;
+	}
+
+	~mul_cal() override {
+		cout << "mul_cal 析构" << endl;
+	}
+
+
+	void cal() override {
+		cout << "a * b = " << a * b << endl;
+	}
+};
+
+
+
+
+int main()
+{
+	base* p = new add_cal(1, 2);
+	p->cal();
+	delete p;
+
+	p = new mul_cal(2, 3);
+	p->cal();
+	delete p;
+
+	return 0;
+}
+```
+
+
+### 纯虚函数 和 抽象类  (开始定义**接口类**了)
+**纯虚函数**：
+- 语法：virtual 返回值类型 函数名(参数列表) = 0;
+- 特点：**没有函数体，必须在派生类中重写**，否则派生类也为抽象类。
+
+**抽象类**
+- 包含至少一个纯虚函数的类称为抽象类。
+- 特点：**无法实例化对象**，只能作为接口被继承，强制派生类实现纯虚函数
+
+> 说白了，**抽象类**彻底变成一个**接口类**
+
+```c
+// 抽象类
+class AbstractClass {
+public:
+    // 纯虚函数
+    virtual void pureFunc() = 0;
+    // 普通虚函数
+    virtual void normalFunc() { cout << "Base normalFunc()" << endl; }
+};
+
+// 派生类必须实现纯虚函数
+class ConcreteClass : public AbstractClass {
+public:
+    void pureFunc() override {
+        cout << "ConcreteClass pureFunc()" << endl;
+    }
+};
+
+int main() {
+    // AbstractClass a; // 错误！抽象类不能实例化
+    AbstractClass* p = new ConcreteClass();
+    p->pureFunc(); // 调用派生类实现
+    p->normalFunc(); // 调用基类实现
+    delete p;
+    return 0;
+}
+```
+
+
+### 虚析构和纯虚析构
+> 这里说白了就是，必须强制让基类指针指向的子类对象释放的时候，强制调用子类实现的析构函数，不然会自动调用基类的析构函数（因为是基类指针）
+> 
+> （virtual只是一个重定向的过程。）
+>
+> **基类**，定义基本的抽象的接口需要的功能，虚函数virtual来让基类指针自动重定向内部函数的调用。（linux的gpio子系统）
+> 
+> **子类A**，是A实现的接口，A厂的原厂驱动实现
+> **子类B**，B厂的原厂驱动实现
+
+在多态场景下，**基类指针指向派生类对象时**，若基类析构函数不是虚函数，会导致**派生类对象无法被正确释放**，造成内存泄漏。
+
+**虚析构函数**
+- 语法：virtual ~类名() {}
+- 作用：保证基类指针删除时，能正确调用派生类析构函数。
+纯虚析构函数
+- 语法：virtual ~类名() = 0;
+- 特点：必须在类外提供实现，否则链接错误；包含**纯虚析构的类也是抽象类**
+
+```c
+class Base {
+public:
+    Base() { cout << "Base 构造" << endl; }
+    // 虚析构函数
+    virtual ~Base() { cout << "Base 析构" << endl; }
+};
+
+class Derived : public Base {
+public:
+    Derived() { cout << "Derived 构造" << endl; }
+    ~Derived() override { cout << "Derived 析构" << endl; }
+};
+
+int main() {
+    Base* p = new Derived();
+    delete p; // 先调用 Derived 析构，再调用 Base 析构
+    return 0;
+}
+```
+
+> 纯虚析构函数注意事项
+
+```c
+class AbstractBase {
+public:
+    virtual ~AbstractBase() = 0;
+};
+// 纯虚析构必须在类外实现
+AbstractBase::~AbstractBase() {}
+```
+
+## c++文件操作
+C++ 通过**文件流类**（fstream 家族）实现文件读写，文件分为**文本文件**和**二进制文件**两种类型
+
+### 文本文件
+文本文件以字符形式存储数据，**人类可读**，适合存储字符串、数字等文本内容
+
+```c
+#include <fstream>  // 文件流类
+#include <iostream>
+using namespace std;
+```
+
+#### 写文件
+**步骤：**
+![alt text](../images/cpp-基础复盘-01-0322134819.png)
+```c
+#include <fstream>
+using namespace std;
+
+int main() {
+    // 1. 创建输出流对象
+    ofstream ofs;
+    // 2. 打开文件：ios::out 表示写模式，文件不存在则创建，存在则清空
+    ofs.open("test.txt", ios::out);
+    // 3. 写入数据
+    ofs << "姓名：张三" << endl;
+    ofs << "年龄：18" << endl;
+    ofs << "性别：男" << endl;
+    // 4. 关闭文件
+    ofs.close();
+    return 0;
+}
+```
+
+**文件打开模式：**
+![alt text](../images/cpp-基础复盘-02-0322134819.png)
+
+#### 读文件
+**步骤：**
+![alt text](../images/cpp-基础复盘-03-0322134819.png)
+
+```c
+#include <fstream>
+#include <string>
+using namespace std;
+
+int main() {
+    ifstream ifs;
+    ifs.open("test.txt", ios::in);
+    // 判断是否打开成功
+    if (!ifs.is_open()) {
+        cout << "文件打开失败！" << endl;
+        return 1;
+    }
+
+    // 方式1：逐字符读取
+    char c;
+    while ((c = ifs.get()) != EOF) {  // EOF 表示文件结束
+        cout << c;
+    }
+
+    // 方式2：逐行读取（推荐）
+    char buf[1024] = {0};
+    while (ifs.getline(buf, sizeof(buf))) {
+        cout << buf << endl;
+    }
+
+    // 方式3：逐行读取（string 版）
+    string line;
+    while (getline(ifs, line)) {
+        cout << line << endl;
+    }
+
+    // 方式4：一次性读取到缓冲区（不推荐大文件）
+    char buf2[1024] = {0};
+    ifs.read(buf2, sizeof(buf2));
+    cout << buf2 << endl;
+
+    ifs.close();
+    return 0;
+}
+```
+
+### 二进制文件
+**二进制文件**以**字节**形式存储数据，**不可直接阅读**，适合存储自定义数据类型（如类、结构体），读写速度更快、数据更紧凑。
+
+#### 写二进制文件
+![alt text](../images/cpp-基础复盘-04-0322134819.png)
+```c
+#include <fstream>
+using namespace std;
+
+class Person {
+public:
+    char m_Name[64];
+    int m_Age;
+};
+
+int main() {
+    ofstream ofs;
+    ofs.open("person.bin", ios::out | ios::binary);
+    Person p = {"张三", 18};
+    // 写入二进制数据：(const char*)&p 是数据地址，sizeof(p) 是数据大小
+    ofs.write((const char*)&p, sizeof(p));
+    ofs.close();
+    return 0;
+}
+```
+
+#### 读二进制文件
+![alt text](../images/cpp-基础复盘-05-0322134819.png)
+
+```c
+#include <fstream>
+using namespace std;
+
+class Person {
+public:
+    char m_Name[64];
+    int m_Age;
+};
+
+int main() {
+    ifstream ifs;
+    ifs.open("person.bin", ios::in | ios::binary);
+    if (!ifs.is_open()) {
+        cout << "文件打开失败！" << endl;
+        return 1;
+    }
+    Person p;
+    ifs.read((char*)&p, sizeof(p));
+    cout << "姓名：" << p.m_Name << " 年龄：" << p.m_Age << endl;
+    ifs.close();
+    return 0;
+}
+```
+
+### 总结
+
+![alt text](../images/cpp-基础复盘-06-0322134819.png)
+
+> 辨析
+![alt text](../images/cpp-基础复盘-07-0322134819.png)
+![alt text](../images/cpp-基础复盘-08-0322134819.png)
+![alt text](../images/cpp-基础复盘-09-0322134819.png)
+![alt text](../images/cpp-基础复盘-10-0322134819.png)
+![alt text](../images/cpp-基础复盘-11-0322134819.png)
+
 
 # 泛型编程，STL
