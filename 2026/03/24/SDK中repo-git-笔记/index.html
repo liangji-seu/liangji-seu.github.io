@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Repo+Git嵌入式SDK开发核心笔记 一、核心概念（灵魂） 1. Manifest 仓库 2. Repo 工具 3. repo sync -c   二、分支结构与关系 1. Manifest 分支（版本入口） 2. 子仓库分支（开发使用）   三、Git 核心命令（必背） 1. git fetch 2. git rebase 【SDK 开发核心】 3. git pull   四、高频疑问与真">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SDK中repo,git 笔记">
+<meta property="og:url" content="http://example.com/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="Repo+Git嵌入式SDK开发核心笔记 一、核心概念（灵魂） 1. Manifest 仓库 2. Repo 工具 3. repo sync -c   二、分支结构与关系 1. Manifest 分支（版本入口） 2. 子仓库分支（开发使用）   三、Git 核心命令（必背） 1. git fetch 2. git rebase 【SDK 开发核心】 3. git pull   四、高频疑问与真">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-03-24T14:58:03.000Z">
+<meta property="article:modified_time" content="2026-03-24T14:59:35.235Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="SDK">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="repo">
+<meta property="article:tag" content="嵌入式">
+<meta property="article:tag" content="版本管理">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/","path":"2026/03/24/SDK中repo-git-笔记/","title":"SDK中repo,git 笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>SDK中repo,git 笔记 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Repo-Git%E5%B5%8C%E5%85%A5%E5%BC%8FSDK%E5%BC%80%E5%8F%91%E6%A0%B8%E5%BF%83%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">Repo+Git嵌入式SDK开发核心笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%EF%BC%88%E7%81%B5%E9%AD%82%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">一、核心概念（灵魂）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Manifest-%E4%BB%93%E5%BA%93"><span class="nav-number">1.1.1.</span> <span class="nav-text">1. Manifest 仓库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Repo-%E5%B7%A5%E5%85%B7"><span class="nav-number">1.1.2.</span> <span class="nav-text">2. Repo 工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-repo-sync-c"><span class="nav-number">1.1.3.</span> <span class="nav-text">3. repo sync -c</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%88%86%E6%94%AF%E7%BB%93%E6%9E%84%E4%B8%8E%E5%85%B3%E7%B3%BB"><span class="nav-number">1.2.</span> <span class="nav-text">二、分支结构与关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-Manifest-%E5%88%86%E6%94%AF%EF%BC%88%E7%89%88%E6%9C%AC%E5%85%A5%E5%8F%A3%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">1. Manifest 分支（版本入口）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AD%90%E4%BB%93%E5%BA%93%E5%88%86%E6%94%AF%EF%BC%88%E5%BC%80%E5%8F%91%E4%BD%BF%E7%94%A8%EF%BC%89"><span class="nav-number">1.2.2.</span> <span class="nav-text">2. 子仓库分支（开发使用）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Git-%E6%A0%B8%E5%BF%83%E5%91%BD%E4%BB%A4%EF%BC%88%E5%BF%85%E8%83%8C%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">三、Git 核心命令（必背）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-git-fetch"><span class="nav-number">1.3.1.</span> <span class="nav-text">1. git fetch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-git-rebase-%E3%80%90SDK-%E5%BC%80%E5%8F%91%E6%A0%B8%E5%BF%83%E3%80%91"><span class="nav-number">1.3.2.</span> <span class="nav-text">2. git rebase 【SDK 开发核心】</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-git-pull"><span class="nav-number">1.3.3.</span> <span class="nav-text">3. git pull</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E9%AB%98%E9%A2%91%E7%96%91%E9%97%AE%E4%B8%8E%E7%9C%9F%E7%9B%B8%EF%BC%88%E9%81%BF%E5%9D%91%E5%BF%85%E5%A4%87%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">四、高频疑问与真相（避坑必备）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%A4%E4%B8%AA%E5%88%86%E6%94%AF%E6%8F%90%E4%BA%A4%E4%B8%80%E6%A0%B7%EF%BC%8C%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%80%E4%B8%AA%E8%83%BD-sync-%E4%B8%80%E4%B8%AA%E6%8A%A5%E9%94%99%EF%BC%9F"><span class="nav-number">1.4.1.</span> <span class="nav-text">1. 两个分支提交一样，为什么一个能 sync 一个报错？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-repo-sync-%E5%88%B0%E5%BA%95%E4%BB%A5%E4%BB%80%E4%B9%88%E4%B8%BA%E5%87%86%EF%BC%9F"><span class="nav-number">1.4.2.</span> <span class="nav-text">2. repo sync 到底以什么为准？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E4%B8%BA%E4%BB%80%E4%B9%88-repo-sync-%E5%90%8E%E6%98%AF-no-branch-%EF%BC%9F"><span class="nav-number">1.4.3.</span> <span class="nav-text">3. 为什么 repo sync 后是 (no branch)？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-default-%E5%88%86%E6%94%AF%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.4.4.</span> <span class="nav-text">4. default 分支是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-manifests-%E7%9B%AE%E5%BD%95%E7%9A%84%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86%E9%80%BB%E8%BE%91%EF%BC%88%E6%A0%B8%E5%BF%83%E7%96%91%E9%97%AE%EF%BC%89"><span class="nav-number">1.4.5.</span> <span class="nav-text">5. manifests 目录的版本管理逻辑（核心疑问）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94%E3%80%81SDK-%E5%BC%80%E5%8F%91%E6%A0%87%E5%87%86%E5%B7%A5%E4%BD%9C%E6%B5%81%EF%BC%88%E6%B0%B8%E4%B8%8D%E7%BF%BB%E8%BD%A6%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">五、SDK 开发标准工作流（永不翻车）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%90%8C%E6%AD%A5%E5%AE%98%E6%96%B9%E6%9C%80%E6%96%B0%E5%9F%BA%E7%BA%BF"><span class="nav-number">1.5.1.</span> <span class="nav-text">1. 同步官方最新基线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%88%9B%E5%BB%BA%E8%87%AA%E5%B7%B1%E7%9A%84%E5%BC%80%E5%8F%91%E5%88%86%E6%94%AF%EF%BC%88%E5%AE%89%E5%85%A8%E9%9A%94%E7%A6%BB%EF%BC%89"><span class="nav-number">1.5.2.</span> <span class="nav-text">2. 创建自己的开发分支（安全隔离）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%AE%98%E6%96%B9%E6%9B%B4%E6%96%B0%E5%90%8E%EF%BC%8C%E5%88%B7%E6%96%B0%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81"><span class="nav-number">1.5.3.</span> <span class="nav-text">3. 官方更新后，刷新你的代码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%BB%88%E6%9E%81%E6%80%BB%E7%BB%93"><span class="nav-number">1.6.</span> <span class="nav-text">六、一句话终极总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83%E3%80%81%E9%81%BF%E5%9D%91%E9%93%81%E5%BE%8B"><span class="nav-number">1.7.</span> <span class="nav-text">七、避坑铁律</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">53</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">36</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="SDK中repo,git 笔记 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SDK中repo,git 笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-03-24 22:58:03 / 修改时间：22:59:35" itemprop="dateCreated datePublished" datetime="2026-03-24T22:58:03+08:00">2026-03-24</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/LINUX/" itemprop="url" rel="index"><span itemprop="name">LINUX</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><ul>
+<li><a href="#repogit%E5%B5%8C%E5%85%A5%E5%BC%8Fsdk%E5%BC%80%E5%8F%91%E6%A0%B8%E5%BF%83%E7%AC%94%E8%AE%B0">Repo+Git嵌入式SDK开发核心笔记</a><ul>
+<li><a href="#%E4%B8%80%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E7%81%B5%E9%AD%82">一、核心概念（灵魂）</a><ul>
+<li><a href="#1-manifest-%E4%BB%93%E5%BA%93">1. Manifest 仓库</a></li>
+<li><a href="#2-repo-%E5%B7%A5%E5%85%B7">2. Repo 工具</a></li>
+<li><a href="#3-repo-sync--c">3. repo sync -c</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%8C%E5%88%86%E6%94%AF%E7%BB%93%E6%9E%84%E4%B8%8E%E5%85%B3%E7%B3%BB">二、分支结构与关系</a><ul>
+<li><a href="#1-manifest-%E5%88%86%E6%94%AF%E7%89%88%E6%9C%AC%E5%85%A5%E5%8F%A3">1. Manifest 分支（版本入口）</a></li>
+<li><a href="#2-%E5%AD%90%E4%BB%93%E5%BA%93%E5%88%86%E6%94%AF%E5%BC%80%E5%8F%91%E4%BD%BF%E7%94%A8">2. 子仓库分支（开发使用）</a></li>
+</ul>
+</li>
+<li><a href="#%E4%B8%89git-%E6%A0%B8%E5%BF%83%E5%91%BD%E4%BB%A4%E5%BF%85%E8%83%8C">三、Git 核心命令（必背）</a><ul>
+<li><a href="#1-git-fetch">1. git fetch</a></li>
+<li><a href="#2-git-rebase-sdk-%E5%BC%80%E5%8F%91%E6%A0%B8%E5%BF%83">2. git rebase 【SDK 开发核心】</a></li>
+<li><a href="#3-git-pull">3. git pull</a></li>
+</ul>
+</li>
+<li><a href="#%E5%9B%9B%E9%AB%98%E9%A2%91%E7%96%91%E9%97%AE%E4%B8%8E%E7%9C%9F%E7%9B%B8%E9%81%BF%E5%9D%91%E5%BF%85%E5%A4%87">四、高频疑问与真相（避坑必备）</a><ul>
+<li><a href="#1-%E4%B8%A4%E4%B8%AA%E5%88%86%E6%94%AF%E6%8F%90%E4%BA%A4%E4%B8%80%E6%A0%B7%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%80%E4%B8%AA%E8%83%BD-sync-%E4%B8%80%E4%B8%AA%E6%8A%A5%E9%94%99">1. 两个分支提交一样，为什么一个能 sync 一个报错？</a></li>
+<li><a href="#2-repo-sync-%E5%88%B0%E5%BA%95%E4%BB%A5%E4%BB%80%E4%B9%88%E4%B8%BA%E5%87%86">2. repo sync 到底以什么为准？</a></li>
+<li><a href="#3-%E4%B8%BA%E4%BB%80%E4%B9%88-repo-sync-%E5%90%8E%E6%98%AF-no-branch">3. 为什么 repo sync 后是 (no branch)？</a></li>
+<li><a href="#4-default-%E5%88%86%E6%94%AF%E6%98%AF%E4%BB%80%E4%B9%88">4. default 分支是什么？</a></li>
+<li><a href="#5-manifests-%E7%9B%AE%E5%BD%95%E7%9A%84%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86%E9%80%BB%E8%BE%91%E6%A0%B8%E5%BF%83%E7%96%91%E9%97%AE">5. manifests 目录的版本管理逻辑（核心疑问）</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BA%94sdk-%E5%BC%80%E5%8F%91%E6%A0%87%E5%87%86%E5%B7%A5%E4%BD%9C%E6%B5%81%E6%B0%B8%E4%B8%8D%E7%BF%BB%E8%BD%A6">五、SDK 开发标准工作流（永不翻车）</a><ul>
+<li><a href="#1-%E5%90%8C%E6%AD%A5%E5%AE%98%E6%96%B9%E6%9C%80%E6%96%B0%E5%9F%BA%E7%BA%BF">1. 同步官方最新基线</a></li>
+<li><a href="#2-%E5%88%9B%E5%BB%BA%E8%87%AA%E5%B7%B1%E7%9A%84%E5%BC%80%E5%8F%91%E5%88%86%E6%94%AF%E5%AE%89%E5%85%A8%E9%9A%94%E7%A6%BB">2. 创建自己的开发分支（安全隔离）</a></li>
+<li><a href="#3-%E5%AE%98%E6%96%B9%E6%9B%B4%E6%96%B0%E5%90%8E%E5%88%B7%E6%96%B0%E4%BD%A0%E7%9A%84%E4%BB%A3%E7%A0%81">3. 官方更新后，刷新你的代码</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%AD%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%BB%88%E6%9E%81%E6%80%BB%E7%BB%93">六、一句话终极总结</a></li>
+<li><a href="#%E4%B8%83%E9%81%BF%E5%9D%91%E9%93%81%E5%BE%8B">七、避坑铁律</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="Repo-Git嵌入式SDK开发核心笔记"><a href="#Repo-Git嵌入式SDK开发核心笔记" class="headerlink" title="Repo+Git嵌入式SDK开发核心笔记"></a>Repo+Git嵌入式SDK开发核心笔记</h1><p>适用场景：RK3588 &#x2F; Linux &#x2F; Android 嵌入式 SDK 版本管理与开发</p>
+<hr>
+<h2 id="一、核心概念（灵魂）"><a href="#一、核心概念（灵魂）" class="headerlink" title="一、核心概念（灵魂）"></a>一、核心概念（灵魂）</h2><h3 id="1-Manifest-仓库"><a href="#1-Manifest-仓库" class="headerlink" title="1. Manifest 仓库"></a>1. Manifest 仓库</h3><ul>
+<li><p><strong>路径</strong>：<code>.repo/manifests/</code></p>
+</li>
+<li><p><strong>定位</strong>：<strong>整个 SDK 的版本总控制器、版本清单</strong></p>
+</li>
+<li><p><strong>作用</strong>：通过 XML 文件定义：</p>
+</li>
+<li><p>每个子仓库（kernel、u-boot、device 等）</p>
+</li>
+<li><p>来自哪个远程</p>
+</li>
+<li><p>使用哪个分支 &#x2F;commit</p>
+</li>
+</ul>
+<p><strong>本质</strong>：<strong>manifest 分支 &#x3D; 整套 SDK 的版本号</strong></p>
+<p><strong>远程分支</strong>：厂商发布的<strong>稳定、可编译、官方版本</strong></p>
+<p><strong>本地分支</strong>：你本地选中的版本入口</p>
+<h3 id="2-Repo-工具"><a href="#2-Repo-工具" class="headerlink" title="2. Repo 工具"></a>2. Repo 工具</h3><ul>
+<li><p>管理<strong>上百个 Git 子仓库</strong>的批量工具</p>
+</li>
+<li><p>不编写业务代码，<strong>只负责版本对齐</strong></p>
+</li>
+<li><p>所有子仓库的版本，<strong>完全由 manifest 决定</strong></p>
+</li>
+</ul>
+<h3 id="3-repo-sync-c"><a href="#3-repo-sync-c" class="headerlink" title="3. repo sync -c"></a>3. repo sync -c</h3><ul>
+<li><p><strong>作用</strong>：严格按照 manifest 清单，<strong>强制同步所有子仓库到官方指定版本</strong></p>
+</li>
+<li><p><strong>执行流程</strong>：</p>
+</li>
+<li><p>先同步 <code>.repo/manifests/</code> 自身到最新</p>
+</li>
+<li><p>读取当前分支下的 XML 配置</p>
+</li>
+<li><p>批量 checkout 所有子仓库到对应版本</p>
+</li>
+<li><p><strong>结果</strong>：子仓库变为 <code>(no branch)</code> 游离状态（正常）</p>
+</li>
+</ul>
+<hr>
+<h2 id="二、分支结构与关系"><a href="#二、分支结构与关系" class="headerlink" title="二、分支结构与关系"></a>二、分支结构与关系</h2><h3 id="1-Manifest-分支（版本入口）"><a href="#1-Manifest-分支（版本入口）" class="headerlink" title="1. Manifest 分支（版本入口）"></a>1. Manifest 分支（版本入口）</h3><ul>
+<li><p>远程分支：<code>origin/linux</code> → 官方稳定版本</p>
+</li>
+<li><p>本地分支：</p>
+</li>
+<li><p><code>default</code>：跟踪 <code>origin/linux</code>，<strong>推荐使用、安全稳定</strong></p>
+</li>
+<li><p><code>linux</code>：本地分支，若上游配置错误会导致同步失败</p>
+</li>
+</ul>
+<p><strong>铁律</strong>：</p>
+<ul>
+<li><p>切换 manifest 分支 &#x3D; <strong>切换整套 SDK 版本</strong></p>
+</li>
+<li><p>manifest 分支必须正确跟踪远程官方分支</p>
+</li>
+</ul>
+<h3 id="2-子仓库分支（开发使用）"><a href="#2-子仓库分支（开发使用）" class="headerlink" title="2. 子仓库分支（开发使用）"></a>2. 子仓库分支（开发使用）</h3><ul>
+<li><p>如 <code>kernel-5.10</code>、<code>u-boot</code> 内部分支</p>
+</li>
+<li><p><strong>repo sync 完全不看子仓库的本地分支</strong></p>
+</li>
+<li><p>子仓库会被 XML 配置<strong>强制覆盖版本</strong></p>
+</li>
+</ul>
+<hr>
+<h2 id="三、Git-核心命令（必背）"><a href="#三、Git-核心命令（必背）" class="headerlink" title="三、Git 核心命令（必背）"></a>三、Git 核心命令（必背）</h2><h3 id="1-git-fetch"><a href="#1-git-fetch" class="headerlink" title="1. git fetch"></a>1. git fetch</h3><ul>
+<li><p><strong>作用</strong>：仅下载远程最新提交到<strong>本地缓存</strong></p>
+</li>
+<li><p>特点：</p>
+</li>
+<li><p>不修改本地代码</p>
+</li>
+<li><p>不合并、不覆盖、不切换分支</p>
+</li>
+</ul>
+<p>生成：<code>origin/linux</code>（远程分支在本地的只读镜像）</p>
+<h3 id="2-git-rebase-【SDK-开发核心】"><a href="#2-git-rebase-【SDK-开发核心】" class="headerlink" title="2. git rebase 【SDK 开发核心】"></a>2. git rebase 【SDK 开发核心】</h3><ul>
+<li><p><strong>定义</strong>：变基 &#x3D; <strong>换底座</strong></p>
+</li>
+<li><p><strong>逻辑</strong>：</p>
+</li>
+<li><p>把本地提交从「旧基线」拆下</p>
+</li>
+<li><p>重新嫁接到「最新官方基线」之上</p>
+</li>
+</ul>
+<p><strong>优点</strong>：</p>
+<ul>
+<li><p>历史线性干净</p>
+</li>
+<li><p>无多余合并提交</p>
+</li>
+<li><p>你的代码永远基于最新官方版本</p>
+</li>
+</ul>
+<p><strong>禁忌</strong>：SDK 基线更新<strong>只用 rebase，不用 merge</strong></p>
+<h3 id="3-git-pull"><a href="#3-git-pull" class="headerlink" title="3. git pull"></a>3. git pull</h3><ul>
+<li><p>&#x3D; <code>git fetch + git merge</code></p>
+</li>
+<li><p><strong>不推荐在嵌入式 SDK 中使用</strong></p>
+</li>
+<li><p>会产生网状历史，难以维护、排查问题</p>
+</li>
+</ul>
+<hr>
+<h2 id="四、高频疑问与真相（避坑必备）"><a href="#四、高频疑问与真相（避坑必备）" class="headerlink" title="四、高频疑问与真相（避坑必备）"></a>四、高频疑问与真相（避坑必备）</h2><h3 id="1-两个分支提交一样，为什么一个能-sync-一个报错？"><a href="#1-两个分支提交一样，为什么一个能-sync-一个报错？" class="headerlink" title="1. 两个分支提交一样，为什么一个能 sync 一个报错？"></a>1. 两个分支提交一样，为什么一个能 sync 一个报错？</h3><ul>
+<li><p>提交一样 &#x3D; 代码 &#x2F; XML 文件完全一致</p>
+</li>
+<li><p><strong>差异点</strong>：<strong>分支上游跟踪配置（upstream）</strong></p>
+</li>
+<li><p><code>repo sync</code> 会先同步 manifest 自身</p>
+</li>
+<li><p>若上游指向不存在的分支（如 <code>master</code>），直接报错</p>
+</li>
+</ul>
+<h3 id="2-repo-sync-到底以什么为准？"><a href="#2-repo-sync-到底以什么为准？" class="headerlink" title="2. repo sync 到底以什么为准？"></a>2. repo sync 到底以什么为准？</h3><ul>
+<li><p><strong><code>.repo/manifests</code></strong> <strong>以  当前分支为准</strong></p>
+</li>
+<li><p><strong>不以子仓库当前分支为准</strong></p>
+</li>
+<li><p>子仓库会被强制覆盖为 XML 中的版本</p>
+</li>
+</ul>
+<h3 id="3-为什么-repo-sync-后是-no-branch-？"><a href="#3-为什么-repo-sync-后是-no-branch-？" class="headerlink" title="3. 为什么 repo sync 后是 (no branch)？"></a>3. 为什么 repo sync 后是 (no branch)？</h3><ul>
+<li><p>因为 repo 直接切到一个 <strong>commit 哈希</strong></p>
+</li>
+<li><p>不是切到本地分支</p>
+</li>
+<li><p>属于<strong>正常、标准、预期</strong>状态</p>
+</li>
+</ul>
+<h3 id="4-default-分支是什么？"><a href="#4-default-分支是什么？" class="headerlink" title="4. default 分支是什么？"></a>4. default 分支是什么？</h3><ul>
+<li><p>本地分支，跟踪远程官方 <code>origin/linux</code></p>
+</li>
+<li><p><strong>官方版本在本地的镜像</strong></p>
+</li>
+<li><p>永远不要在 <code>default</code> 上开发写代码</p>
+</li>
+</ul>
+<h3 id="5-manifests-目录的版本管理逻辑（核心疑问）"><a href="#5-manifests-目录的版本管理逻辑（核心疑问）" class="headerlink" title="5. manifests 目录的版本管理逻辑（核心疑问）"></a>5. manifests 目录的版本管理逻辑（核心疑问）</h3><ul>
+<li><p><strong>核心原则</strong>：manifest 仓库的 <strong>远程分支 &#x3D; 官方 SDK 版本</strong>，但并非“一个改进一个新分支”，而是分「主版本分支」和「迭代更新」两种逻辑</p>
+</li>
+<li><p><strong>版本管理方式（官方常用）</strong>：</p>
+<ul>
+<li><p>① 主版本分支（长期存在）：比如 <code>origin/linux</code>（对应 SDK 主线版本）、<code>origin/linux-5.10</code>（对应 5.10 内核的稳定主线），这类分支会长期维护，用于承接日常小改进、bug 修复</p>
+</li>
+<li><p>② 里程碑版本（标签 tag 辅助）：官方发布重大版本（如 V1.0、V2.0）时，不会新建分支，而是在主分支（如 <code>origin/linux</code>）上打 <code>tag</code>（如 <code>v1.0.0</code>），标记该 commit 为“正式发布版本”，方便开发者回溯历史稳定版</p>
+</li>
+<li><p>③ 特殊版本分支（按需新建）：仅当出现“分支并行开发”需求时（如同时维护旧版 SDK 和新版 SDK），才会新建远程分支，比如 <code>origin/linux-legacy</code>（旧版维护）、<code>origin/linux-next</code>（新版测试）</p>
+</li>
+</ul>
+</li>
+<li><p><strong>官方新改进的推进逻辑</strong>：</p>
+<ul>
+<li><p>日常小改进、bug 修复、小版本迭代：<strong>不新建分支</strong>，直接在原有主分支（如 <code>origin/linux</code>）上提交更新，不断向前推进（commit 叠加）</p>
+</li>
+<li><p>重大版本升级（如内核从 5.10 升级到 6.1）：通常会新建分支（如 <code>origin/linux-6.1</code>），作为新的主版本分支，原有分支（<code>origin/linux-5.10</code>）保留，仅做 bug 修复，不再推进新功能</p>
+</li>
+<li><p>测试版、预览版：可能会新建临时分支（如 <code>origin/linux-dev</code>），测试稳定后，将代码合并到主分支，再删除临时分支</p>
+</li>
+</ul>
+</li>
+<li><p><strong>对开发者的影响</strong>：</p>
+<ul>
+<li><p>跟踪主分支（如 <code>origin/linux</code>）：执行 <code>git fetch + git rebase</code> 就能同步到官方最新改进，不用切换分支</p>
+</li>
+<li><p>需要固定版本：可以基于主分支的某个 tag（如 <code>v1.0.0</code>）新建本地分支，避免被官方更新覆盖</p>
+</li>
+<li><p>切换版本：若官方新建了新版本分支（如 <code>origin/linux-6.1</code>），只需修改 manifest 分支的跟踪关系，或切换 manifest 到对应分支，再执行 <code>repo sync -c</code> 即可同步整套新版本 SDK</p>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="五、SDK-开发标准工作流（永不翻车）"><a href="#五、SDK-开发标准工作流（永不翻车）" class="headerlink" title="五、SDK 开发标准工作流（永不翻车）"></a>五、SDK 开发标准工作流（永不翻车）</h2><h3 id="1-同步官方最新基线"><a href="#1-同步官方最新基线" class="headerlink" title="1. 同步官方最新基线"></a>1. 同步官方最新基线</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 切换到正确的 manifest 分支</span></span><br><span class="line"><span class="built_in">cd</span> .repo/manifests</span><br><span class="line">git checkout default</span><br><span class="line">git fetch origin</span><br><span class="line">git rebase origin/linux</span><br><span class="line"></span><br><span class="line"><span class="comment"># 同步整套 SDK</span></span><br><span class="line"><span class="built_in">cd</span> ../..</span><br><span class="line">.repo/repo/repo <span class="built_in">sync</span> -c -j1</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-创建自己的开发分支（安全隔离）"><a href="#2-创建自己的开发分支（安全隔离）" class="headerlink" title="2. 创建自己的开发分支（安全隔离）"></a>2. 创建自己的开发分支（安全隔离）</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 进入要开发的仓库</span></span><br><span class="line"><span class="built_in">cd</span> kernel-5.10</span><br><span class="line"><span class="comment"># 从官方基线新建开发分支</span></span><br><span class="line">git checkout -b develop</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-官方更新后，刷新你的代码"><a href="#3-官方更新后，刷新你的代码" class="headerlink" title="3. 官方更新后，刷新你的代码"></a>3. 官方更新后，刷新你的代码</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git fetch origin</span><br><span class="line">git rebase origin/linux</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="六、一句话终极总结"><a href="#六、一句话终极总结" class="headerlink" title="六、一句话终极总结"></a>六、一句话终极总结</h2><ul>
+<li><p><strong>Manifest &#x3D; 版本清单</strong></p>
+</li>
+<li><p><strong>Manifest 分支 &#x3D; 整套 SDK 版本</strong></p>
+</li>
+<li><p><strong>repo sync &#x3D; 按清单还原官方版本</strong></p>
+</li>
+<li><p><strong>git fetch &#x3D; 下载远程最新状态</strong></p>
+</li>
+<li><p><strong>git rebase &#x3D; 把你的代码搬家到最新官方基线</strong></p>
+</li>
+<li><p><strong>default 分支 &#x3D; 本地官方镜像，只用于同步，不用于开发</strong></p>
+</li>
+<li><p><strong>manifests 版本管理 &#x3D; 主分支承接日常迭代，tag 标记正式版本，特殊需求才新建分支</strong></p>
+</li>
+</ul>
+<hr>
+<h2 id="七、避坑铁律"><a href="#七、避坑铁律" class="headerlink" title="七、避坑铁律"></a>七、避坑铁律</h2><ol>
+<li><p><strong>不要随意修改 manifest 分支</strong></p>
+</li>
+<li><p><strong>不要在 default 分支上写业务代码</strong></p>
+</li>
+<li><p><strong>repo sync 不会覆盖你的独立开发分支</strong></p>
+</li>
+<li><p><strong>上游配置错误是 manifest 同步失败的第一原因</strong></p>
+</li>
+<li><p><strong>SDK 基线更新永远用 rebase，不用 merge</strong></p>
+</li>
+<li><p><strong>不要随意切换 manifest 远程分支，避免同步到非预期的 SDK 版本</strong></p>
+</li>
+<li><p><strong>固定版本时，用 tag 新建本地分支，不要直接依赖主分支</strong></p>
+<blockquote>
+<p>（注：文档部分内容可能由 AI 生成）</p>
+</blockquote>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/" rel="tag"># 嵌入式</a>
+              <a href="/tags/SDK/" rel="tag"># SDK</a>
+              <a href="/tags/repo/" rel="tag"># repo</a>
+              <a href="/tags/git/" rel="tag"># git</a>
+              <a href="/tags/%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86/" rel="tag"># 版本管理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/" rel="prev" title="imx6ull-linux内核的misc驱动">
+                  <i class="fa fa-angle-left"></i> imx6ull-linux内核的misc驱动
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item current">
+              <span>SDK中repo,git 笔记</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
