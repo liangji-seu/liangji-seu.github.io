@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/测试.md",
+                "file": "_posts/imx6ull-异步通知.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "测试"
+              "title": "imx6ull-异步通知"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_posts/测试.md",
+                "file": "_posts/imx6ull-异步通知.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "测试 的反向链接列表"
+              "title": "imx6ull-异步通知 的反向链接列表"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_posts/测试.md",
+                "file": "_posts/imx6ull-异步通知.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "测试 的出链列表"
+              "title": "imx6ull-异步通知 的出链列表"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_posts/测试.md",
+                "file": "_posts/imx6ull-异步通知.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "测试 的大纲"
+              "title": "imx6ull-异步通知 的大纲"
             }
           }
         ],
@@ -186,14 +186,18 @@
   },
   "active": "11db00a8f05f95df",
   "lastOpenFiles": [
+    "_posts/imx6ull-并发与竞争.md",
+    "_posts/imx6ull-按键输入实验.md",
+    "_posts/vfs-磁盘-讨论笔记.md",
     "_posts/ACM模式输入输出.md",
+    "_posts/测试.md",
+    "_posts/imx6ull-内核定时器.md",
+    "_posts/imx6ull-rootfs.md",
     "_posts/imx6ull-platform设备驱动框架.md",
     "_posts/platform设备，驱动梳理.md",
     "_posts/imx6ull-linux内核的misc驱动.md",
     "_posts/ROS2-完整学习指南.md",
-    "_posts/vfs-磁盘-讨论笔记.md",
     "_posts/深度学习-李沐.md",
-    "_posts/测试.md",
     "_data/whiteboards/测试白板.canvas",
     "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
     "wait",
@@ -211,10 +215,6 @@
     "_posts/stm32-esp32s3-imx-存储架构讨论.md",
     "_posts/imx6ull-uboot-学习.md",
     "_posts/imx6ull-uboot-启动分析.md",
-    "_posts/imx6ull-linux内核.md",
-    "_posts/imx6ull-设备树.md",
-    "_posts/imx6ull-pinctrl和gpio子系统.md",
-    "_posts/imx6ull-蜂鸣器驱动编写实验.md",
     "images/Pasted image 20260428144616.png",
     "_posts/未命名 1.base",
     "_posts/未命名.base",

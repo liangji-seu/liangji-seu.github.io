@@ -1,0 +1,28 @@
+/* 1. 根节点初始化所有计数器 */
+.markdown-rendered, 
+.markdown-source-view.mod-cm6 .cm-content {
+    counter-reset: h1-c h2-c h3-c h4-c h5-c h6-c !important;
+}
+
+/* 2. 每一级标题：增加自己，并重置所有后续级别 */
+h1, .cm-header-1 { counter-increment: h1-c; counter-reset: h2-c h3-c h4-c h5-c h6-c !important; }
+h2, .cm-header-2 { counter-increment: h2-c; counter-reset: h3-c h4-c h5-c h6-c !important; }
+h3, .cm-header-3 { counter-increment: h3-c; counter-reset: h4-c h5-c h6-c !important; }
+h4, .cm-header-4 { counter-increment: h4-c; counter-reset: h5-c h6-c !important; }
+h5, .cm-header-5 { counter-increment: h5-c; counter-reset: h6-c !important; }
+h6, .cm-header-6 { counter-increment: h6-c; }
+
+/* 3. 渲染序号 - 仅显示已存在的层级，避免出现 1.0.1 */
+h1::before, .cm-header-1::before { content: counter(h1-c) ". " !important; }
+h2::before, .cm-header-2::before { content: counter(h1-c) "." counter(h2-c) " " !important; }
+h3::before, .cm-header-3::before { content: counter(h1-c) "." counter(h2-c) "." counter(h3-c) " " !important; }
+h4::before, .cm-header-4::before { content: counter(h1-c) "." counter(h2-c) "." counter(h3-c) "." counter(h4-c) " " !important; }
+
+/* 4. 样式修正：确保颜色和间距 */
+h1::before, h2::before, h3::before, h4::before,
+.cm-header-1::before, .cm-header-2::before, .cm-header-3::before, .cm-header-4::before {
+    color: #e67e22 !important; /* 橙色序号 */
+    font-weight: bold !important;
+    margin-right: 8px !important;
+    display: inline-block;
+}
