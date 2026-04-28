@@ -29,11 +29,11 @@
 <meta property="og:description" content="新字符设备驱动 复盘 新字符设备驱动原理 分配和释放设备号 新的字符设备注册方法   自动创建设备节点 mdev机制 创建和删除类 创建设备     前面记录的有点乱，这里整体总结一下 疑问回答 设备号：主号与次号的本质 cdev 注册：为什么不能直接赋值？ 设备节点、类、设备的三角关系 为什么创建设备节点，既需要创建类，又需要创建设备？ &#x2F;sys(sysfs) 到底是什么 class_crea">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/images/38.1.png">
-<meta property="og:image" content="http://example.com/iamges/38.2.png">
-<meta property="og:image" content="http://example.com/iamges/38.3.png">
+<meta property="og:image" content="http://example.com/images/38.2.png">
+<meta property="og:image" content="http://example.com/images/38.3.png">
 <meta property="og:image" content="http://example.com/iamges/38.4.png">
 <meta property="article:published_time" content="2026-03-02T02:08:37.000Z">
-<meta property="article:modified_time" content="2026-03-02T08:22:56.114Z">
+<meta property="article:modified_time" content="2026-04-28T04:54:14.291Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
@@ -232,9 +232,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-03-02 10:08:37 / 修改时间：16:22:56" itemprop="dateCreated datePublished" datetime="2026-03-02T10:08:37+08:00">2026-03-02</time>
+      <time title="创建时间：2026-03-02 10:08:37" itemprop="dateCreated datePublished" datetime="2026-03-02T10:08:37+08:00">2026-03-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-04-28 12:54:14" itemprop="dateModified" datetime="2026-04-28T12:54:14+08:00">2026-04-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -374,8 +380,8 @@
 <blockquote>
 <p>所以不是全自动，是驱动里面手动添加的</p>
 </blockquote>
-<p><img src="/../iamges/38.2.png" alt="alt text"></p>
-<h3 id="创建设备"><a href="#创建设备" class="headerlink" title="创建设备"></a>创建设备</h3><p><img src="/../iamges/38.3.png" alt="alt text"></p>
+<p><img src="/../images/38.2.png" alt="alt text"></p>
+<h3 id="创建设备"><a href="#创建设备" class="headerlink" title="创建设备"></a>创建设备</h3><p><img src="/../images/38.3.png" alt="alt text"></p>
 <blockquote>
 <p>可以看到，原来我们创建设备节点，只要mknod，现在要在驱动里面实现设备节点随驱动模块一起创建注销。还是相对比较复杂</p>
 <p>要<strong>先创建类</strong>，然后再<strong>在这个类下面创建设备</strong>，这样才能实现<strong>创建设备节点</strong></p>
