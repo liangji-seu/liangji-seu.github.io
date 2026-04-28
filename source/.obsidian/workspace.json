@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "83f376a424c8d373",
+        "id": "49da0771d2993089",
         "type": "tabs",
         "children": [
           {
-            "id": "03aa431ff58bcff0",
+            "id": "11db00a8f05f95df",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
+                "file": "_posts/测试.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "大模型学习项目1-7B模型QLoRA指令微调-SFT"
+              "title": "测试"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
+                "file": "_posts/测试.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "大模型学习项目1-7B模型QLoRA指令微调-SFT 的反向链接列表"
+              "title": "测试 的反向链接列表"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
+                "file": "_posts/测试.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "大模型学习项目1-7B模型QLoRA指令微调-SFT 的出链列表"
+              "title": "测试 的出链列表"
             }
           },
           {
@@ -184,9 +184,14 @@
       "obsidian-shellcommands:Shell commands: Custom variables": false
     }
   },
-  "active": "03aa431ff58bcff0",
+  "active": "11db00a8f05f95df",
   "lastOpenFiles": [
     "_posts/深度学习-李沐.md",
+    "_posts/测试.md",
+    "_data/whiteboards/测试白板.canvas",
+    "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
+    "wait",
+    "_data/whiteboards",
     "_posts/stm32-dma.md",
     "_posts/IMX6U-RGBLCD-学习笔记.md",
     "_posts/stm32-project结构.md",
@@ -209,9 +214,6 @@
     "_posts/imx6ull-内核定时器.md",
     "_posts/imx6ull-linux-阻塞与非阻塞.md",
     "_posts/imx6ull-linux中断.md",
-    "_posts/imx6ull-并发与竞争.md",
-    "_posts/imx6ull-异步通知.md",
-    "_posts/xv6-lab5.md",
     "images/Pasted image 20260428144616.png",
     "_posts/未命名 1.base",
     "_posts/未命名.base",

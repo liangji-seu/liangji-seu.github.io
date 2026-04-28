@@ -1,0 +1,12 @@
+{
+	"nodes":[
+		{"id":"bc76d30cc6bf2477","x":-325,"y":-183,"width":250,"height":60,"type":"text","text":"范德萨"},
+		{"id":"972ff558d2312d35","x":92,"y":-188,"width":250,"height":60,"type":"text","text":"范德萨"},
+		{"id":"009cb3353abdf5df","x":92,"y":-20,"width":400,"height":400,"type":"file","file":"_posts/stm32-dma.md"},
+		{"id":"c5dea185752f888a","x":-500,"y":120,"width":250,"height":60,"type":"text","text":""}
+	],
+	"edges":[
+		{"id":"04baf42bd2a66a99","fromNode":"bc76d30cc6bf2477","fromSide":"right","toNode":"972ff558d2312d35","toSide":"left"},
+		{"id":"ef1f8f8152964eff","fromNode":"bc76d30cc6bf2477","fromSide":"right","toNode":"009cb3353abdf5df","toSide":"left"}
+	]
+}
