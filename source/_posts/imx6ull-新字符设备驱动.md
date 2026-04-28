@@ -205,11 +205,11 @@ echo /sbin/mdev > /proc/sys/kernel/hotplug
 **自动创建设备节点**的工作是在驱动程序的**入口函数中完成的**，一般在 `cdev_add` 函数**后面添加自动创建设备节点相关代码**
 > 所以不是全自动，是驱动里面手动添加的
 
-![alt text](../iamges/38.2.png)
+![alt text](../images/38.2.png)
 
 
 ### 创建设备
-![alt text](../iamges/38.3.png)
+![alt text](../images/38.3.png)
 
 > 可以看到，原来我们创建设备节点，只要mknod，现在要在驱动里面实现设备节点随驱动模块一起创建注销。还是相对比较复杂
 >

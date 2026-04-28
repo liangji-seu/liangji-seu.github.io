@@ -1,0 +1,57 @@
+{
+  "confirmDeletion": true,
+  "showAddCommand": true,
+  "debug": false,
+  "editorMenu": [],
+  "fileMenu": [],
+  "leftRibbon": [
+    {
+      "id": "editor:insert-table",
+      "icon": "lucide-table",
+      "name": "插入表格",
+      "mode": "any"
+    }
+  ],
+  "rightRibbon": [],
+  "titleBar": [],
+  "statusBar": [
+    {
+      "id": "markdown:add-metadata-property",
+      "icon": "lucide-plus-circle",
+      "name": "增加笔记属性",
+      "mode": "any"
+    }
+  ],
+  "pageHeader": [
+    {
+      "id": "theme:toggle-light-dark",
+      "icon": "lucide-alarm-check",
+      "name": "切换浅色/深色模式",
+      "mode": "any"
+    }
+  ],
+  "macros": [],
+  "explorer": [
+    {
+      "id": "editor:insert-link",
+      "icon": "lucide-link",
+      "name": "插入链接",
+      "mode": "any"
+    }
+  ],
+  "hide": {
+    "statusbar": [],
+    "leftRibbon": []
+  },
+  "spacing": "8",
+  "advancedToolbar": {
+    "rowHeight": 48,
+    "rowCount": 1,
+    "spacing": 0,
+    "buttonWidth": 48,
+    "columnLayout": false,
+    "mappedIcons": [],
+    "tooltips": false,
+    "heightOffset": 0
+  }
+}
