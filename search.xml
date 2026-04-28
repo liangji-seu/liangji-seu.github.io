@@ -4,6 +4,64 @@
   
     
     <entry>
+      <title>ACM模式输入输出</title>
+      <link href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/"/>
+      <url>/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/</url>
+      
+        <content type="html"><![CDATA[<h1 id="ACM输入输出模式"><a href="#ACM输入输出模式" class="headerlink" title="ACM输入输出模式"></a>ACM输入输出模式</h1><p><img src="/../images/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA-01-0428123440.png" alt="alt text"></p><h2 id="输入"><a href="#输入" class="headerlink" title="输入"></a>输入</h2><h3 id="指定输入个数"><a href="#指定输入个数" class="headerlink" title="指定输入个数"></a>指定输入个数</h3><p><img src="/../images/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA-02-0428123440.png" alt="alt text"></p><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> n;</span><br><span class="line"><span class="built_in">cin</span> &gt;&gt; n; <span class="comment">// 读入3，说明数组的大小是3</span></span><br><span class="line"><span class="built_in">vector</span>&lt;<span class="type">int</span>&gt; <span class="title function_">nums</span><span class="params">(n)</span>; <span class="comment">// 创建大小为3的vector&lt;int&gt;</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line"><span class="built_in">cin</span> &gt;&gt; nums[i];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 验证是否读入成功</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; nums.size(); i++) &#123;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; nums[i] &lt;&lt; <span class="string">&quot; &quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure><h3 id="不指定输入个数，以换行符-“-n”-结束"><a href="#不指定输入个数，以换行符-“-n”-结束" class="headerlink" title="不指定输入个数，以换行符 “\n” 结束"></a>不指定输入个数，以换行符 “\n” 结束</h3><h2 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h2>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 嵌入式 </category>
+          
+          <category> CPP </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 嵌入式 </tag>
+            
+            <tag> cpp </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>大模型学习项目1: 7B模型QLoRA指令微调(SFT)</title>
+      <link href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/"/>
+      <url>/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/</url>
+      
+        <content type="html"><![CDATA[<h1 id="项目1：7B模型QLoRA-指令微调-SFT"><a href="#项目1：7B模型QLoRA-指令微调-SFT" class="headerlink" title="项目1：7B模型QLoRA 指令微调(SFT)"></a>项目1：7B模型QLoRA 指令微调(SFT)</h1><p><img src="/../images/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT-01-0414090753.png" alt="alt text"></p><h2 id="概念扫盲"><a href="#概念扫盲" class="headerlink" title="概念扫盲"></a>概念扫盲</h2><p>Alpaca 格式 是最经典的指令微调格式。每一条数据通常包含：instruction, input, output</p><h2 id=""><a href="#" class="headerlink" title=""></a></h2><figure class="highlight py"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 2. 安装核心“四大件”</span></span><br><span class="line"><span class="comment"># transformers: 模型加载</span></span><br><span class="line"><span class="comment"># peft: LoRA 核心库</span></span><br><span class="line"><span class="comment"># bitsandbytes: 4-bit 量化工具（QLoRA 的灵魂）</span></span><br><span class="line"><span class="comment"># accelerate: 分布式训练加速</span></span><br><span class="line">pip install torch torchvision torchaudio</span><br><span class="line">pip install transformers peft bitsandbytes accelerate datasets trl</span><br></pre></td></tr></table></figure><p><strong>量化</strong>就是压缩模型体积，通过降低精度，来用更少的内存空间来存储模型</p><p><img src="/../images/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT-02-0414090753.png" alt="alt text"></p><ol><li><p><strong>为什么不能直接微调（全量微调）</strong>？<br>假设你想让 Qwen 学会说“扬州话”。在传统的深度学习里，你会更新 $\theta$ 里的所有参数。但对于 7B 模型：<br> 显存灾难：训练时不仅要存参数，还要存梯度（Gradients）和优化器状态（Optimizer States）。</p><p> 全量微调一个 7B 模型通常需要 80GB~100GB 的显存。灾难性遗忘：如果你用力过猛，模型学会了扬州话，但可能把怎么写 Python 代码给忘了。</p></li></ol><p>LoRA 的核心：外挂“低秩矩阵”，思路是不动原始参数 θ<br><img src="/../images/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT-03-0414090753.png" alt="alt text"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 学习笔记 </category>
+          
+          <category> 大模型算法 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 大模型 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>ROS2 完整学习指南</title>
       <link href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/"/>
       <url>/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/</url>
@@ -24,9 +82,9 @@
       
         <tags>
             
-            <tag> ros </tag>
-            
             <tag> cpp </tag>
+            
+            <tag> ros </tag>
             
         </tags>
       
@@ -1812,9 +1870,9 @@
             
             <tag> 嵌入式 </tag>
             
-            <tag> Android10 </tag>
-            
             <tag> linux </tag>
+            
+            <tag> Android10 </tag>
             
         </tags>
       
@@ -1843,9 +1901,9 @@
             
             <tag> 嵌入式 </tag>
             
-            <tag> Android10 </tag>
-            
             <tag> linux </tag>
+            
+            <tag> Android10 </tag>
             
         </tags>
       
