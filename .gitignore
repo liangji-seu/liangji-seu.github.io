@@ -12,3 +12,10 @@ logs/
 .deploy_git/
 .deploy*/
 _multiconfig.yml
+
+# 忽略 Obsidian 的工作区状态（最建议忽略）
+source/.obsidian/workspace.json
+source/.obsidian/workspace-mobile.json
+
+# 如果你不想同步不同电脑的插件开关状态，也可以忽略：
+# source/.obsidian/community-plugins.json
