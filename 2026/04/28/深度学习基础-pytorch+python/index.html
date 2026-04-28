@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="python概念扫盲基础的python语法，这里就不讲了，python本身底层是用c++来实现的，所以全部都是面向对象变成，里面所有的库，都是实现的类。 python的所有变量 &#x3D; auto指针指针创建在栈区，指向堆区的内存。实际的对象内存，在堆区里面。 pytorch&#x3D;&#x3D;pytorch特性&#x3D;&#x3D;：![[..&#x2F;images&#x2F;Pas">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深度学习基础-pytorch+python">
+<meta property="og:url" content="http://example.com/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="python概念扫盲基础的python语法，这里就不讲了，python本身底层是用c++来实现的，所以全部都是面向对象变成，里面所有的库，都是实现的类。 python的所有变量 &#x3D; auto指针指针创建在栈区，指向堆区的内存。实际的对象内存，在堆区里面。 pytorch&#x3D;&#x3D;pytorch特性&#x3D;&#x3D;：![[..&#x2F;images&#x2F;Pas">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-04-28T06:21:00.000Z">
+<meta property="article:modified_time" content="2026-04-28T15:30:12.084Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="#python">
+<meta property="article:tag" content="#pytorch">
+<meta property="article:tag" content="#深度学习">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/","path":"2026/04/28/深度学习基础-pytorch+python/","title":"深度学习基础-pytorch+python"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>深度学习基础-pytorch+python | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#python%E6%A6%82%E5%BF%B5%E6%89%AB%E7%9B%B2"><span class="nav-number">1.</span> <span class="nav-text">python概念扫盲</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#pytorch"><span class="nav-number">2.</span> <span class="nav-text">pytorch</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#pytorch%E7%89%B9%E6%80%A7-%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">&#x3D;&#x3D;pytorch特性&#x3D;&#x3D;：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E6%B1%82%E5%AF%BC%E6%9C%BA%E5%88%B6"><span class="nav-number">2.2.</span> <span class="nav-text">&#x3D;&#x3D;自动求导机制&#x3D;&#x3D;</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pytorch%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">2.3.</span> <span class="nav-text">&#x3D;&#x3D;pytorch的作用&#x3D;&#x3D;</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pytorch%E5%BA%93%E6%9E%B6%E6%9E%84%E5%9B%BE"><span class="nav-number">2.4.</span> <span class="nav-text">&#x3D;&#x3D;pytorch库架构图&#x3D;&#x3D;</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E5%BE%AE%E5%88%86"><span class="nav-number">2.5.</span> <span class="nav-text">自动微分</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A2%AF%E5%BA%A6"><span class="nav-number">2.5.1.</span> <span class="nav-text">梯度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#torch%E5%BA%93%E8%87%AA%E5%8A%A8%E8%AE%A1%E7%AE%97%E6%A2%AF%E5%BA%A6"><span class="nav-number">2.5.2.</span> <span class="nav-text">torch库自动计算梯度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#python%E7%9A%84with-%E8%AF%AD%E5%8F%A5"><span class="nav-number">2.5.3.</span> <span class="nav-text">python的with 语句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#torch-no-grad"><span class="nav-number">2.5.4.</span> <span class="nav-text">torch.no_grad()</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%9A%84%E7%BB%84%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text">深度学习的组成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%84%E6%88%90"><span class="nav-number">3.1.</span> <span class="nav-text">组成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%B1%82-%E6%9E%B6%E6%9E%84%E5%88%86%E7%B1%BB"><span class="nav-number">3.2.</span> <span class="nav-text">网络层&#x2F;架构分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E5%B0%8F%E9%9B%B6%E4%BB%B6"><span class="nav-number">3.3.</span> <span class="nav-text">一些小零件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E6%8A%80%E5%B7%A7"><span class="nav-number">3.4.</span> <span class="nav-text">一些技巧</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#torch-%E6%95%B0%E6%8D%AE"><span class="nav-number">4.</span> <span class="nav-text">torch 数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">4.1.</span> <span class="nav-text">创建自定义数据集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86-%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86"><span class="nav-number">4.2.</span> <span class="nav-text">预定义数据集 + 数据预处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90"><span class="nav-number">4.3.</span> <span class="nav-text">例子</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#torch-%E6%A8%A1%E5%9E%8B"><span class="nav-number">5.</span> <span class="nav-text">torch 模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#torch-%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0"><span class="nav-number">6.</span> <span class="nav-text">torch 损失函数</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#torch-%E8%AE%AD%E7%BB%83"><span class="nav-number">7.</span> <span class="nav-text">torch 训练</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#torch-%E8%AF%84%E4%BC%B0"><span class="nav-number">8.</span> <span class="nav-text">torch 评估</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">welcome to my blog</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">60</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="welcome to my blog">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="深度学习基础-pytorch+python | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          深度学习基础-pytorch+python
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-04-28 14:21:00 / 修改时间：23:30:12" itemprop="dateCreated datePublished" datetime="2026-04-28T14:21:00+08:00">2026-04-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">大模型算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="python概念扫盲"><a href="#python概念扫盲" class="headerlink" title="python概念扫盲"></a>python概念扫盲</h1><p>基础的python语法，这里就不讲了，python本身底层是用c++来实现的，所以全部都是面向对象变成，里面所有的库，都是实现的类。</p>
+<p>python的所有变量 &#x3D; auto指针<br>指针创建在栈区，指向堆区的内存。实际的对象内存，在堆区里面。</p>
+<h1 id="pytorch"><a href="#pytorch" class="headerlink" title="pytorch"></a>pytorch</h1><h2 id="pytorch特性-："><a href="#pytorch特性-：" class="headerlink" title="&#x3D;&#x3D;pytorch特性&#x3D;&#x3D;："></a><strong>&#x3D;&#x3D;pytorch特性&#x3D;&#x3D;</strong>：</h2><p>![[..&#x2F;images&#x2F;Pasted image 20260428211057.png]]</p>
+<p>比较重要的就是：</p>
+<ol>
+<li>动态计算图的理解-&gt; 自动微分的实现</li>
+<li>torch.tensor(), 张量，和numpy库里面的数组定义类似。</li>
+</ol>
+<h2 id="自动求导机制"><a href="#自动求导机制" class="headerlink" title="&#x3D;&#x3D;自动求导机制&#x3D;&#x3D;"></a>&#x3D;&#x3D;<strong>自动求导机制</strong>&#x3D;&#x3D;</h2><p>我们模型的Loss函数，需要对w, b求导，其自动求导是依赖计算图的。 当我们建立好了计算图</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">w → * → y_pred → - → (差) → **<span class="number">2</span> → loss</span><br><span class="line">    ↑                 ↑</span><br><span class="line">    x               y_true</span><br><span class="line">    </span><br><span class="line">    w = torch.tensor(<span class="number">2.0</span>, requires_grad=True)</span><br><span class="line">    loss.backward()</span><br></pre></td></tr></table></figure>
+
+<p>我们通过标记变量为需要求导，相当于把这个对象的标志位，置1，这样当你调用loss.backward()的时候，他就可以根据这个计算链表图，找到对应的变量，求Loss()关于这个变量的偏微分，也就是偏导数。所有的偏导数的动态数组，就是梯度</p>
+<h2 id="pytorch的作用"><a href="#pytorch的作用" class="headerlink" title="&#x3D;&#x3D;pytorch的作用&#x3D;&#x3D;"></a><strong>&#x3D;&#x3D;pytorch的作用&#x3D;&#x3D;</strong></h2><p>我们使用pytorch，本质上，是为了快速的</p>
+<ul>
+<li>搭建网络模型</li>
+<li>处理数据</li>
+<li>训练&#x2F;评估</li>
+<li>推理<br>本质上都是在干这4件事情。所以需要学会用哪些库来实现我们想要的功能。</li>
+</ul>
+<h2 id="pytorch库架构图"><a href="#pytorch库架构图" class="headerlink" title="&#x3D;&#x3D;pytorch库架构图&#x3D;&#x3D;"></a><strong>&#x3D;&#x3D;pytorch库架构图&#x3D;&#x3D;</strong></h2><p>pytorch是一个大的库，里面有不同功能模块子库<br>![[..&#x2F;images&#x2F;Pasted image 20260428211528.png]]</p>
+<h2 id="自动微分"><a href="#自动微分" class="headerlink" title="自动微分"></a>自动微分</h2><p>pytorch里最重要的就是依靠动态计算图，来进行自动微分的计算了。</p>
+<h3 id="梯度"><a href="#梯度" class="headerlink" title="梯度"></a>梯度</h3><p>一元函数，因变量关于自变量求导，叫做导数。<br>			y &#x3D; f(x)  &#x3D;&gt;  ∂f&#x2F;∂x（导数）<br>多元函数，因变量关于自变量们求导，叫做梯度。<br>			y &#x3D; f(x1, x2, x3,….., xn) &#x3D;&gt;<br>			{∂f&#x2F;∂x1, ∂f&#x2F;∂x2, ∂f&#x2F;∂x3, …… , ∂f&#x2F;∂xn} （叫做y的梯度）<br>所以<mark style="background:rgba(163, 67, 31, 0.2)">梯度本身，就是这个多元函数（标量），关于各个自变量的导数</mark>。</p>
+<p>![[..&#x2F;images&#x2F;Pasted image 20260428212737.png]]</p>
+<h3 id="torch库自动计算梯度"><a href="#torch库自动计算梯度" class="headerlink" title="torch库自动计算梯度"></a>torch库自动计算梯度</h3><p>上面我们定义好了梯度的计算公式，下面就是torch库，来帮我们计算梯度</p>
+<p>我们不需要自己定义求梯度的公式。在构建前向传播的损失函数的时候。torch利用动态计算图，来表达出计算的公式。然后利用<strong>链式求导</strong>法则，来进行求导。<br>![[..&#x2F;images&#x2F;4d9fa9e1a77e75d9eeee8d3ff9e162ad.jpg]]</p>
+<p>可以看到，通过链式法则，就可以把求梯度的过程，和计算图的每个环节联系上。</p>
+<p>通过一次<mark style="background:rgba(163, 67, 31, 0.2)">loss.backward()</mark>, 就可以计算一次loss(x1, x2, x3, …, xn)的梯度了（同时路上所有中间变量的梯度也都求出来了。）</p>
+<p>![[..&#x2F;images&#x2F;ce9e727371321e54859b9ff0f2112171.jpg]]</p>
+<blockquote>
+<p>注意：<strong>n元函数</strong>loss，输入是n元向量，<strong>loss的梯度</strong>，也是一个<strong>n元向量</strong>，是关于所有自变量的向量<br>因此，梯度向量的每个元素，都应该存放在n元输入向量的每个元素对象的<strong>内存</strong>里面。<br>所以输入元素<mark style="background:rgba(240, 200, 0, 0.2)">x1.grad</mark>， <mark style="background:rgba(240, 200, 0, 0.2)">x2.grad,</mark> ….,<mark style="background:rgba(240, 200, 0, 0.2)"> xn.grad</mark>. 这个成员变量，专门用来存放梯度元素分量</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">x = torch.randn(<span class="number">2</span>,<span class="number">2</span>, requires_grad=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(x)</span><br><span class="line"></span><br><span class="line">y = x + <span class="number">2</span></span><br><span class="line">z = y * y * <span class="number">3</span></span><br><span class="line"><span class="built_in">print</span>(z)</span><br><span class="line">out = z.mean()</span><br><span class="line"><span class="built_in">print</span>(out)</span><br><span class="line"></span><br><span class="line">out.backward()</span><br><span class="line"><span class="built_in">print</span>(x.grad)</span><br></pre></td></tr></table></figure>
+
+<p>通过标记x这个变量的内部标志位 <mark style="background:#affad1">requires_grad</mark>&#x3D;True, 之后，整个计算图只要包含x这个变量，全部会被标记这个标志位。</p>
+<p>![[..&#x2F;images&#x2F;5c6b7683240dd461a33b50d78be89db2.jpg]]</p>
+<p>之后out.backward(), 触发torch的求导过程，并把out(x), 关于各个自变量，中间环节的导数（梯度分类），全部存放在对于的对象内存里面。</p>
+<p><strong><mark style="background:#ff4d4f">梯度本身也是一个关于(x1, x2,x3, ….., xn)的n元函数</mark></strong>。</p>
+<p>每次计算的梯度都不一样，当然不一样了，<strong>梯度也是一个函数</strong>（关于x的函数）<br>![[..&#x2F;images&#x2F;Pasted image 20260428215003.png]]</p>
+<h3 id="python的with-语句"><a href="#python的with-语句" class="headerlink" title="python的with 语句"></a>python的with 语句</h3><p>python里面，with语句，通常用来申请某类资源，然后里面实现在占用这个资源时要做的事情，跳出这个过程之后，会<strong>自动释放这个资源</strong></p>
+<h3 id="torch-no-grad"><a href="#torch-no-grad" class="headerlink" title="torch.no_grad()"></a>torch.no_grad()</h3><p>用torch.no_grad(), 可以暂时关闭自动求导的标志位传到, 相当于关中断一样。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个需要梯度的张量</span></span><br><span class="line">x = torch.tensor([<span class="number">1.0</span>, <span class="number">2.0</span>], requires_grad=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 正常操作：会追踪梯度</span></span><br><span class="line">y1 = x * <span class="number">2</span></span><br><span class="line"><span class="built_in">print</span>(y1.requires_grad)  <span class="comment"># 输出 True，会被加入计算图</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 用 torch.no_grad()：块内操作不追踪梯度</span></span><br><span class="line"><span class="keyword">with</span> torch.no_grad():</span><br><span class="line">    y2 = x * <span class="number">2</span></span><br><span class="line">    <span class="built_in">print</span>(y2.requires_grad)  <span class="comment"># 输出 False，不加入计算图</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 块外恢复正常</span></span><br><span class="line">y3 = x * <span class="number">2</span></span><br><span class="line"><span class="built_in">print</span>(y3.requires_grad)  <span class="comment"># 输出 True，恢复追踪</span></span><br></pre></td></tr></table></figure>
+<p>![[..&#x2F;images&#x2F;Pasted image 20260428215400.png]]</p>
+<hr>
+<h1 id="深度学习的组成"><a href="#深度学习的组成" class="headerlink" title="深度学习的组成"></a>深度学习的组成</h1><h2 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h2><p>我们的torch深度学习，主要做一下几件事：</p>
+<ol>
+<li>数据</li>
+<li>模型</li>
+<li>衡量模型质量（定义损失函数）</li>
+<li>训练<ol>
+<li>前向传播</li>
+<li>计算损失（得到这次的模型性能）</li>
+<li>反向传播（计算参数更新值）</li>
+<li>参数更新（优化器来具体更新参数）</li>
+</ol>
+</li>
+<li>评估&#x2F;推理</li>
+</ol>
+<h2 id="网络层-架构分类"><a href="#网络层-架构分类" class="headerlink" title="网络层&#x2F;架构分类"></a>网络层&#x2F;架构分类</h2><ul>
+<li>FNN（前馈神经网络）</li>
+<li>CNN（卷积神经网络）</li>
+<li>RNN（循环神经网络）</li>
+<li>Transformer （注意力机制）</li>
+</ul>
+<h2 id="一些小零件"><a href="#一些小零件" class="headerlink" title="一些小零件"></a>一些小零件</h2><ul>
+<li>各层之间的激活函数</li>
+<li>各种损失函数</li>
+<li>各种优化器</li>
+</ul>
+<h2 id="一些技巧"><a href="#一些技巧" class="headerlink" title="一些技巧"></a>一些技巧</h2><ul>
+<li>dropout 随机丢失</li>
+<li>权重衰退（正则化）</li>
+<li>BatchNorm 批量归一化</li>
+</ul>
+<h1 id="torch-数据"><a href="#torch-数据" class="headerlink" title="torch 数据"></a>torch 数据</h1><p>这一节，来讲一下，torch库，是如何处理模型所需要的数据的</p>
+<p>torch库里面专门用来处理数据的库是：</p>
+<ul>
+<li><code>torch.utils.data.Dataset</code> torch库的<strong>数据集类</strong></li>
+<li><code>torch.utils.data.DataLoader</code> torch库的<strong>数据集迭代器类</strong>（帮助获取数据的类）<blockquote>
+<p>既然都是类，那么要用，肯定要创建各自的对象，才能实际发挥作用。</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="创建自定义数据集"><a href="#创建自定义数据集" class="headerlink" title="创建自定义数据集"></a>创建自定义数据集</h3><p>创建自定义的数据集，需要自己实现一个自定义数据集类（集成Dataset基类），然后为迭代器提供两个必要的方法。用来告诉迭代器如何访问你的自定义数据集。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch.utils.data <span class="keyword">import</span> Dataset, DataLoader</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义 自定义数据集类，继承Dataset基类</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MyDataset</span>(<span class="title class_ inherited__">Dataset</span>):</span><br><span class="line">	<span class="comment"># 类的构造函数下半段， 获取我的数据集内容</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, X_data, Y_data</span>):</span><br><span class="line">        <span class="variable language_">self</span>.X_data = X_data</span><br><span class="line">        <span class="variable language_">self</span>.Y_data = Y_data</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 实现内置__len__方法，用来返回数据集的数据长度</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">len</span>(<span class="variable language_">self</span>.X_data)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 实现内置__getitem__方法，用来返回一条张量的数据样本</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, idx</span>):</span><br><span class="line">        x = torch.tensor(<span class="variable language_">self</span>.X_data[idx], dtype = torch.float32)</span><br><span class="line">        y = torch.tensor(<span class="variable language_">self</span>.Y_data[idx], dtype = torch.float32)</span><br><span class="line">        <span class="keyword">return</span> x, y</span><br><span class="line"></span><br><span class="line"><span class="comment"># 这是我们自定义的数据X（输入），Y（标签）</span></span><br><span class="line">X_data = np.arange(<span class="number">8</span>).reshape(<span class="number">4</span>,<span class="number">2</span>) <span class="comment">#先用numpy创建一个4x2的 0-7的数组</span></span><br><span class="line">Y_data = [<span class="number">1</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建出我们自己的数据集对象dataset</span></span><br><span class="line">dataset = MyDataset(X_data, Y_data)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建一个数据集迭代器，用来替我们自由的随机选择数据集。</span></span><br><span class="line"><span class="string">&quot;&quot;&quot; 迭代器设置：指定数据集对象， batch_size批数（分成batch_size批），shuffle表示随机选取&quot;&quot;&quot;</span></span><br><span class="line">dataloader = DataLoader(dataset, batch_size=<span class="number">2</span>, shuffle=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>):</span><br><span class="line">    <span class="keyword">for</span> batch_idx, (inputs, labels) <span class="keyword">in</span> <span class="built_in">enumerate</span>(dataloader):</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;batch index = &quot;</span>, batch_idx)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&quot;(inputs, labels) = &quot;</span>, (inputs, labels))</span><br></pre></td></tr></table></figure>
+<p>![[..&#x2F;images&#x2F;aeb02221b8034f0046e6deb51189b886.jpg]]</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">batch index =  0</span><br><span class="line">(inputs, labels) =  (tensor([[0., 1.],</span><br><span class="line">        [6., 7.]]), tensor([1., 0.]))</span><br><span class="line">batch index =  1</span><br><span class="line">(inputs, labels) =  (tensor([[2., 3.],</span><br><span class="line">        [4., 5.]]), tensor([0., 1.]))</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">batch index =  0</span><br><span class="line">(inputs, labels) =  (tensor([[2., 3.],</span><br><span class="line">        [6., 7.]]), tensor([0., 0.]))</span><br><span class="line">batch index =  1</span><br><span class="line">(inputs, labels) =  (tensor([[0., 1.],</span><br><span class="line">        [4., 5.]]), tensor([1., 1.]))</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，连续两次运行后，enumerate( dataloader), 枚举迭代器让它一次返回一个迭代单位</p>
+<ul>
+<li>第x&#x2F;2批数据样本</li>
+<li>随机返回抽取</li>
+</ul>
+<p>所以可以看到，每次返回的是2x2的，也就是<strong>随机两个样本</strong>组成的<strong>张量</strong>，也就是<strong>一个batch</strong>，<strong>一个批次</strong></p>
+<blockquote>
+<p>从这里就可以看出，深度学习的训练，对数据的使用，是以批为单位的。一批才计算一次损失，更新一次模型参数。</p>
+</blockquote>
+<h3 id="预定义数据集-数据预处理"><a href="#预定义数据集-数据预处理" class="headerlink" title="预定义数据集 + 数据预处理"></a>预定义数据集 + 数据预处理</h3><p>torch里面还内置了一些比较知名的数据集。比如手写数字图片MNIST数据集。</p>
+<p>同时，我们针对数据，肯定也希望有一些管线的预处理，来实现数据增强。比如图片的翻转，裁剪，数据范围的归一化等等。</p>
+<p>我们这里使用的MNIST，手写图片，是属于CV领域的，所以是定义在torchvision模块库里面的。</p>
+<ul>
+<li><code>torchvision.transforms</code> (数据处理库)<ul>
+<li><code>transforms.ToTensor()</code> <ul>
+<li>openCV的图片格式是(<strong>高度</strong>x<strong>宽度</strong>x<strong>通道</strong>)，里面<strong>每个元素</strong>的范围是<strong>0-255</strong></li>
+<li>.ToTensor()转换维度格式化（<strong>通道</strong>x<strong>高度</strong>x<strong>宽度</strong>），元素取值范围&#x2F;255（也就是0-1）![[..&#x2F;images&#x2F;Pasted image 20260428224503.png]]</li>
+<li>这样将opencv的图片格式转成 卷积能用的张量。</li>
+</ul>
+</li>
+<li><code>transforms.Normalize(mean, std)</code> 调整每个像素的值的范围从（0-1）到（-1-1），这样方便收敛，因为以0为中心<ul>
+<li>![[..&#x2F;images&#x2F;Pasted image 20260428224650.png]]</li>
+<li>![[..&#x2F;images&#x2F;Pasted image 20260428224711.png]]</li>
+<li>![[..&#x2F;images&#x2F;Pasted image 20260428224727.png]]</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>torchvision.datasets</code> (<strong>官方提供</strong>的“素材库”和“工具箱”)<ul>
+<li>是一个内置数据集的库，内置了CV领域的经典公开数据集。</li>
+<li>![[..&#x2F;images&#x2F;Pasted image 20260428224913.png]]</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span>  torch</span><br><span class="line"><span class="keyword">import</span> torchvision.transforms <span class="keyword">as</span> transforms</span><br><span class="line"><span class="keyword">import</span> torchvision.datasets <span class="keyword">as</span> datasets</span><br><span class="line"></span><br><span class="line"><span class="comment"># 这里我们预定义一个数据处理流（一组数据处理函数，用来实现一系列的数据处理）</span></span><br><span class="line">transform = transforms.Compose([</span><br><span class="line">    transforms.ToTensor(), <span class="comment">#转成tensor张量格式</span></span><br><span class="line">    transforms.Normalize(mean=[<span class="number">0.5</span>], std=[<span class="number">0.5</span>]) <span class="comment">#归一化，核心作用是将图像的像素值分布调整到一个特定的范围（通常是 0 均值附近），从而加速模型的收敛</span></span><br><span class="line">])</span><br><span class="line"></span><br><span class="line"><span class="string">&quot;&quot;&quot;开始加载经典MNIST手写数据集</span></span><br><span class="line"><span class="string">dataset.MNIST()库函数提供下载，读取方式</span></span><br><span class="line"><span class="string">	- root=&quot;./data&quot;  指定数据集的存储目录，下载后其他项目也能指定使用</span></span><br><span class="line"><span class="string">	- train=True     区分训练集60000个样本/测试集10000个样本。</span></span><br><span class="line"><span class="string">	- transform=transform    指定每个数据样本（一张图片）的加工流水线，处理成能输入CNN的张量tensor</span></span><br><span class="line"><span class="string">	- download=True   自动下载开关（打开后，会自动检查root下是否有数据，有就直接加载。）</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="comment"># 加载了两个数据集</span></span><br><span class="line">train_dataset = datasets.MNIST(root=<span class="string">&quot;./data&quot;</span>, train=<span class="literal">True</span>, transform=transform, download=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">test_dataset = datasets.MNIST(root=<span class="string">&quot;./data&quot;</span>, train=<span class="literal">False</span>, transform=transform, download=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">开始创建两个数据集的迭代器。64个批，训练集随机采样，测试集不随机。</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line">train_dataloader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size = <span class="number">64</span>, shuffle=<span class="literal">True</span>)</span><br><span class="line">test_dataloader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=<span class="number">64</span>, shuffle=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>举一个RNN的数据输入。</p>
+<p>想要1000个样本，每个样本的序列长度为10， 输入维度input_size &#x3D; 5， 输出维度为2（<strong>每个样本一个输出标签</strong>）</p>
+<p>参数解析：</p>
+<ul>
+<li>一个样本（序列段）<ul>
+<li>seq_len（序列段长度，有多少个时间步）</li>
+<li>input_size (输入特征维度)</li>
+</ul>
+</li>
+<li>样本数量 1000</li>
+<li><strong>批batch</strong>， 这个和<strong>迭代器</strong>绑定。</li>
+</ul>
+<p>torch的随机张量：</p>
+<ul>
+<li><code>torch.randn</code>(形状) 标准正态分布</li>
+<li><code>torch.rand</code>(形状) [0, 1),均匀分布</li>
+<li><code>torch.randint()</code>， 生成指定范围内的随机整数</li>
+</ul>
+<p><code>torch.utils.data.TensorDataset</code> 从<strong>tensor张量</strong>直接创建数据集，<strong>属于Dataset的一个子类</strong>。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torch.utils.data <span class="keyword">import</span> DataLoader, TensorDataset</span><br><span class="line"></span><br><span class="line">num_samples = <span class="number">1000</span></span><br><span class="line">seq_len = <span class="number">10</span></span><br><span class="line">input_size = <span class="number">5</span></span><br><span class="line">output_size = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">X = torch.randn(num_samples, seq_len, input_size) <span class="comment"># 定义num_samples个样本。元素服从标准正态分布（大部分集中于0）</span></span><br><span class="line">Y = torch.randint(<span class="number">0</span>, output_size, size=(num_samples,)) <span class="comment"># 0表示随机数最小值，output_size 随机数最大值.[0,2)之间的整数，也就是0/1, size=指定尺寸，一维1000个。一个样本，对应一个标签值。一共1000个样本的标签</span></span><br><span class="line"></span><br><span class="line">dataset = TensorDataset(X,Y)</span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">把这1000个样本，随机切割成32个批</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line">train_loader = DataLoader(dataset, batch_size = <span class="number">32</span>, shuffle=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<p>所以数据的逻辑是：</p>
+<ol>
+<li>元素<ol>
+<li>（一个时间步）</li>
+<li>图片的一个通道</li>
+</ol>
+</li>
+<li><strong>样本</strong>（多个元素）<ol>
+<li>多个时间步</li>
+<li>3个通道的完整一张图片。（<strong>通道</strong>x 高度 x 宽度）（很像3个时间步）</li>
+</ol>
+</li>
+<li><strong>批batch</strong>（多个样本）<ol>
+<li>多个序列块</li>
+<li>多张图片</li>
+</ol>
+</li>
+</ol>
+<h1 id="torch-模型"><a href="#torch-模型" class="headerlink" title="torch 模型"></a>torch 模型</h1><h1 id="torch-损失函数"><a href="#torch-损失函数" class="headerlink" title="torch 损失函数"></a>torch 损失函数</h1><h1 id="torch-训练"><a href="#torch-训练" class="headerlink" title="torch 训练"></a>torch 训练</h1><h1 id="torch-评估"><a href="#torch-评估" class="headerlink" title="torch 评估"></a>torch 评估</h1>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># #深度学习</a>
+              <a href="/tags/python/" rel="tag"># #python</a>
+              <a href="/tags/pytorch/" rel="tag"># #pytorch</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/" rel="prev" title="ACM模式输入输出">
+                  <i class="fa fa-angle-left"></i> ACM模式输入输出
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/04/28/%E6%B5%8B%E8%AF%95/" rel="next" title="测试">
+                  测试 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/04/28/%E6%B5%8B%E8%AF%95/">测试</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>深度学习基础-pytorch+python</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">SDK中repo,git 笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/08/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0-%E6%9D%8E%E6%B2%90/">深度学习-李沐</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>
