@@ -1,8 +1,12 @@
 ---
-title: '大模型学习项目1: 7B模型QLoRA指令微调(SFT)'
+title: "大模型学习项目1: 7B模型QLoRA指令微调(SFT)"
 date: 2026-04-12 17:30:57
-categories: [学习笔记, 大模型算法] 
-tags: [大模型]
+categories:
+  - 学习笔记
+  - 大模型算法
+  - 大模型基础
+tags:
+  - 大模型
 ---
 
 # 项目1：7B模型QLoRA 指令微调(SFT)

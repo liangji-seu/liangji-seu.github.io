@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/深度学习-李沐.md",
+                "file": "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "深度学习-李沐"
+              "title": "大模型学习项目1-7B模型QLoRA指令微调-SFT"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_posts/深度学习-李沐.md",
+                "file": "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "深度学习-李沐 的反向链接列表"
+              "title": "大模型学习项目1-7B模型QLoRA指令微调-SFT 的反向链接列表"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_posts/深度学习-李沐.md",
+                "file": "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "深度学习-李沐 的出链列表"
+              "title": "大模型学习项目1-7B模型QLoRA指令微调-SFT 的出链列表"
             }
           },
           {
@@ -186,6 +186,7 @@
   },
   "active": "03aa431ff58bcff0",
   "lastOpenFiles": [
+    "_posts/深度学习-李沐.md",
     "_posts/stm32-dma.md",
     "_posts/IMX6U-RGBLCD-学习笔记.md",
     "_posts/stm32-project结构.md",
@@ -211,7 +212,6 @@
     "_posts/imx6ull-并发与竞争.md",
     "_posts/imx6ull-异步通知.md",
     "_posts/xv6-lab5.md",
-    "_posts/xv6-lab4.md",
     "images/Pasted image 20260428144616.png",
     "_posts/未命名 1.base",
     "_posts/未命名.base",
