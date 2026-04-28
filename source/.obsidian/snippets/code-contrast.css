@@ -1,0 +1,18 @@
+/* 针对所有模式：强制行内代码样式 */
+.markdown-source-view.mod-cm6 .cm-inline-code, 
+.markdown-rendered code {
+    background-color: #f2f2f2 !important; /* 明显的灰底 */
+    color: #e67e22 !important;           /* 醒目的深橙色 */
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;         /* 稍微加粗 */
+    border: 1px solid #d1d1d1 !important; /* 细灰色边框 */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* 避免在代码块内部生效 */
+pre code {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+}

@@ -4,7 +4,7 @@
     "type": "split",
     "children": [
       {
-        "id": "49da0771d2993089",
+        "id": "13c96e2b8720090b",
         "type": "tabs",
         "children": [
           {
@@ -143,7 +143,7 @@
               "type": "all-properties",
               "state": {
                 "sortOrder": "frequency",
-                "showSearch": false,
+                "showSearch": true,
                 "searchQuery": ""
               },
               "icon": "lucide-archive",
@@ -151,26 +151,26 @@
             }
           },
           {
-            "id": "2e23deb120280ac5",
+            "id": "c231024b1dc984a1",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
+                "file": "_posts/测试.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "大纲"
+              "title": "测试 的大纲"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -186,6 +186,12 @@
   },
   "active": "11db00a8f05f95df",
   "lastOpenFiles": [
+    "_posts/ACM模式输入输出.md",
+    "_posts/imx6ull-platform设备驱动框架.md",
+    "_posts/platform设备，驱动梳理.md",
+    "_posts/imx6ull-linux内核的misc驱动.md",
+    "_posts/ROS2-完整学习指南.md",
+    "_posts/vfs-磁盘-讨论笔记.md",
     "_posts/深度学习-李沐.md",
     "_posts/测试.md",
     "_data/whiteboards/测试白板.canvas",
@@ -209,11 +215,6 @@
     "_posts/imx6ull-设备树.md",
     "_posts/imx6ull-pinctrl和gpio子系统.md",
     "_posts/imx6ull-蜂鸣器驱动编写实验.md",
-    "_posts/imx6ull-rootfs.md",
-    "_posts/imx6ull-按键输入实验.md",
-    "_posts/imx6ull-内核定时器.md",
-    "_posts/imx6ull-linux-阻塞与非阻塞.md",
-    "_posts/imx6ull-linux中断.md",
     "images/Pasted image 20260428144616.png",
     "_posts/未命名 1.base",
     "_posts/未命名.base",
