@@ -1,8 +1,14 @@
 ---
 title: RK3399 android10 W3S 二合一 支持typeC otg切换host和device
 date: 2024-04-08 13:11:02
-categories: [嵌入式, linux] 
-tags: [嵌入式, Android10, linux]
+categories:
+  - 项目笔记
+  - 嵌入式
+  - LINUX
+tags:
+  - 嵌入式
+  - Android10
+  - linux
 ---
 - [背景](#背景)
 - [需求](#需求)

@@ -1,8 +1,14 @@
 ---
 title: RK3399 android10 二合一 支持GM8775c mipi转lvds 10.1寸屏幕适配
 date: 2024-02-05 12:46:47
-categories: [嵌入式, linux] 
-tags: [嵌入式, Android10, linux]
+categories:
+  - 项目笔记
+  - 嵌入式
+  - LINUX
+tags:
+  - 嵌入式
+  - Android10
+  - linux
 ---
 - [项目背景](#项目背景)
 - [原理图分析](#原理图分析)
