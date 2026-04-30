@@ -1,18 +1,29 @@
-/* 针对所有模式：强制行内代码样式 */
-.markdown-source-view.mod-cm6 .cm-inline-code, 
-.markdown-rendered code {
+/* 1. 只针对真正的“行内代码”：即不在 pre 标签内部的 code */
+:not(pre) > code {
     background-color: #f2f2f2 !important; /* 明显的灰底 */
     color: #e67e22 !important;           /* 醒目的深橙色 */
     padding: 2px 5px !important;
     border-radius: 4px !important;
-    font-weight: 600 !important;         /* 稍微加粗 */
-    border: 1px solid #d1d1d1 !important; /* 细灰色边框 */
+    font-weight: 600 !important;         
+    border: 1px solid #d1d1d1 !important; 
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-/* 避免在代码块内部生效 */
+/* 2. 针对编辑模式（Live Preview）的行内代码限制 */
+.markdown-source-view.mod-cm6 .cm-inline-code {
+    background-color: #f2f2f2 !important;
+    color: #e67e22 !important;
+    padding: 2px 0px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+}
+
+/* 3. 明确强制代码块内部不应用上述边框和背景 */
+pre[class*="language-"] code,
 pre code {
     background-color: transparent !important;
     border: none !important;
-    color: inherit !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-weight: inherit !important;
 }
