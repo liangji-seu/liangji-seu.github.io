@@ -440,7 +440,7 @@ MODULE_AUTHOR("liangji");
 
 - **`class_create`**(THIS_MODULE, `NEWCHRDEV_NAME`)
   - 指定了类名，在/sys/class下创建了一个叫new_chrdev的文件夹
-  - ![alt text](../iamges/38.4.png)
+  - ![alt text](../images/38.4.png)
 - **`device_create`**(newchrdev.`_class`, NULL, newchrdev.`devid`, NULL, `NEWCHRDEV_NAME`)
   - 指定了类，设备号，设备名
   - 在`sysfs`中**建档**，**创建名为`dev`的文件**
