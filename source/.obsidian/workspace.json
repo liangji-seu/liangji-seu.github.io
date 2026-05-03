@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "13c96e2b8720090b",
+        "id": "8392c514e2479dd0",
         "type": "tabs",
         "children": [
           {
-            "id": "80f0ff9cb179dbee",
+            "id": "91fa21c542b7ebe0",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -78,8 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 358.5,
-    "collapsed": true
+    "width": 358.5
   },
   "right": {
     "id": "ad730a9d2db06c20",
@@ -184,12 +183,28 @@
       "bases:新建数据库": false
     }
   },
-  "active": "80f0ff9cb179dbee",
+  "active": "91fa21c542b7ebe0",
   "lastOpenFiles": [
+    "get_image2.py~",
+    "get_image2.py",
+    "get_image.py~",
+    "get_image.py",
+    "_posts/imx6ull-platform设备驱动框架.md",
+    "_posts/深度学习基础-pytorch+python.md",
+    "_data/文件树.md",
+    "_posts/platform设备，驱动梳理.md",
     "_posts/ACM模式输入输出.md",
+    "_data/whiteboards/测试白板.canvas",
+    "_data/dir",
+    "images/30cc6650562dca8dba76dccc480bac21.jpg",
+    "images/Pasted image 20260503155431.png",
+    "_posts/xv6-lab4.md",
+    "_posts/imx6ull-并发与竞争.md",
+    "_posts/未命名.md",
+    "images/Pasted image 20260503112117.png",
+    "images/Pasted image 20260503112037.png",
     "_posts/cache-学习笔记.md",
     "_posts/vfs-磁盘-讨论笔记.md",
-    "_posts/深度学习基础-pytorch+python.md",
     "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
     "_posts/测试.md",
     "_posts/前面的多层反向传播对上了.md",
@@ -199,21 +214,13 @@
     "images/Pasted image 20260503103225.png",
     "images/Pasted image 20260503103213.png",
     "images/Pasted image 20260503103021.png",
-    "images/Pasted image 20260503102909.png",
-    "images/Pasted image 20260503102722.png",
-    "images/Pasted image 20260503102331.png",
-    "images/Pasted image 20260503102305.png",
     "_posts/imx6ull-异步通知.md",
-    "_posts/imx6ull-并发与竞争.md",
     "_posts/imx6ull-按键输入实验.md",
     "_posts/imx6ull-内核定时器.md",
     "_posts/imx6ull-rootfs.md",
-    "_posts/imx6ull-platform设备驱动框架.md",
-    "_posts/platform设备，驱动梳理.md",
     "_posts/imx6ull-linux内核的misc驱动.md",
     "_posts/ROS2-完整学习指南.md",
     "_posts/深度学习-李沐.md",
-    "_data/whiteboards/测试白板.canvas",
     "wait",
     "_data/whiteboards",
     "_posts/stm32-dma.md",
@@ -221,16 +228,10 @@
     "_posts/stm32-project结构.md",
     "_posts/stm32-启动流程.md",
     "_posts/stm32-学习.md",
-    "_posts/stm32-hal库.md",
-    "_posts/xv6-lab1.md",
-    "_posts/xv6-lab2.md",
-    "_posts/学习计划.md",
     "_posts/未命名 1.base",
     "_posts/未命名.base",
     "_posts/未命名 2.base",
     "未命名.canvas",
-    "_data/dataview",
-    "_data/templates",
-    "_posts/未命名 3.base"
+    "_data/dataview"
   ]
 }
