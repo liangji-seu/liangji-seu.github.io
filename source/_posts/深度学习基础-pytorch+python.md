@@ -5200,6 +5200,782 @@ for eng, fra in zip(engs, fras):
 
 ![618](images/Pasted%20image%2020260508101631.png)
 
+### 补充：TCN
+
+TCN时序卷积神经网络，严格来说他不算RNN，但是他同样是处理序列输入的，借鉴了CNN和RNN，他把序列，看成是一个1xl的图片，通过一个1xk的卷积核，来做卷积运算
+
+<mark style="background:#affad1">卷积核的分类</mark>
+![535](images/Pasted%20image%2020260510103600.png)
+
+- full卷积
+- same卷积
+- valid卷积
+
+
+<mark style="background:#affad1">因果卷积</mark>
+这里的因果卷积，是说，我们每层卷积层（一个卷积核就是一个通道）的输出序列的每个token，只能向左一对多，不能用未来的输入序列的token来进行
+
+![599](images/Pasted%20image%2020260510104855.png)
+
+
+
+<mark style="background:#affad1">膨胀卷积</mark>
+膨胀卷积的意思，就是，卷积层输出的每个token，原来是依靠原始输入序列的，和kernel_size相同的相邻序列来卷积计算，膨胀卷积，就是原始的输入序列，是采用的隔k隔选一个token，凑够kernel_size，来进行计算
+![526](images/Pasted%20image%2020260510105557.png)
+
+d 就是我们的膨胀率， 可以看到，
+- d=1的时候，膨胀卷积，就是我们普通的卷积计算，选择相邻的3隔输入序列（kernel_size=3）
+- d=2的时候，膨胀卷积，是选择的token步长2的3个token，（kernel_size =3）
+- d=4的时候，膨胀卷积，是选择的token步长4的3个token，（kernel_size = 3）
+
+![508](images/Pasted%20image%2020260510105824.png)
+换成计算角度，也就是在卷积核里面添加0，这样就可以实现token步长了
+
+![](images/Pasted%20image%2020260510105901.png)
+
+
+
+![551](images/Pasted%20image%2020260510105913.png)
+
+
+<mark style="background:#affad1">残差连接</mark>
+![](images/Pasted%20image%2020260510110309.png)
+
+>和这里的CNN的通道理解是一样的，你的原始序列，就一个通道，但是经过一层卷积层之后（里面有多个卷积核），会产生多个通道的卷积后的序列。这里就是残差连接里面的部分了，通道数不一样了，所以，如果你这个时候，要残差链接，从旁路，把这多通道的序列，和原始单通道的序列汇合，肯定需要在1这个通路上，用一个1x1的卷积，调整输入序列的通道，变成和残差里面的通道数一致（也就是卷积核的个数）
+
+
+![490](images/Pasted%20image%2020260510110352.png)
+
+
+
+
+## 注意力机制
+
+### 注意力提示（Q，K，V）
+
+首先，我们人类的注意力方式，分为主动和被动：
+- **被动注意（非自主性注意）**：
+	- 类似被鲜艳的东西吸引，偏向感官输入（**值**）
+	- 每个值都有对应的键配对（**键**相当于这些值的都有的**一个索引目录**）
+	- 纯粹从全连接层的输入特征显示出来的焦点（左上角比较红，特征多这种）
+- **主动注意（自主性注意）**：
+	- 虽然我们看到了有焦点的画面，但是我们有自己的意志，想要看右下角的不起眼的内容
+	- 通过**注意力汇聚层**， 把**查询**（自主性提示）与 **键**（索引目录）进行匹配，从而引导得出**最匹配的值（感官输入）**
+
+
+意思就是假设我们的眼睛是全连接，卷积，出来的某一层的特征就是值V，然后对应的索引就是键K，我们的查询Q和K，通过注意力汇聚层，就是我不看内容V，我只根据目录K，来加入我的意图，也就是注意力，这样Q，K 就形成了类似一个掩码mask层，对V进行过滤
+
+![460](images/Pasted%20image%2020260508113823.png)
+
+![572](images/Pasted%20image%2020260508114210.png)
+
+![583](images/Pasted%20image%2020260508114139.png)
+
+![520](images/Pasted%20image%2020260508114231.png)
+
+
+### 注意力汇聚（Watson 核回归）
+前面提到Q和K，再通过注意力汇聚，从而得到一张**掩码（注意力汇聚）**。
+
+
+这一届，主要介绍**Nadaraya-Watson** **核回归模型**
+
+现在假设有50个样本的训练集训练的模型f(x)，我现在输入一个新的x， 我期待他能回归出来一个ypred
+
+<mark style="background:#affad1">平均汇聚</mark>
+如果是平均汇聚，那么我的f(x)无论输入什么x，回归出来的预测，都是训练集的标签的均值
+
+
+<mark style="background:#affad1">非参数注意力汇聚</mark>
+Watson他们提出了一个回归方法，就是如何把训练集的50个样本来训练后，根据输入的未知，对训练集标签，进行加权
+
+![367](images/Pasted%20image%2020260508132827.png)
+
+其中这个**K（）** 就是**核（kernel）**， 这个公式所描述的一个估计器（模型），被称为 **Nadaraya-Watson 核回归**
+
+
+受这个的启发，我们回到前面注意力机制框架的角度，重写这个核回归的估计器，从而得到，一个更加通用的<mark style="background:#fff88f">注意力汇聚</mark>的公式
+
+![211](images/Pasted%20image%2020260508133041.png)
+
+其中，x是查询，（xi,yi）是键值对。 这个f(x)输出就是注意力汇聚，也就是**加上我们的掩码之后的输出**
+
+**所以本质上还是加权平均，对所有的值yi，乘上权重α（Q，K）**（注意力权重）
+
+所以，这个权重，会被分配给每一个对应的值yi。 对任何查询x(Q), 模型在所有键值对注意力权重α，都是一个有效的概率分布，也就是说，每个值V的**权重α（Q，K）**：
+- 非负
+- 和为1
+
+我们使用一个高斯核，
+
+![227](images/Pasted%20image%2020260508133447.png)
+这个核，利用上面的式子，可以组合出α权重，然后乘到每个值上去，最终得到：
+![367](images/Pasted%20image%2020260508133557.png)
+
+可以看到就是`∑ softmax(-0.5(Q-Ki)2) Vi`
+
+也就是说，如果一个键Ki(xi), 越是接近给定的查询x(Q), 那么分配给这个值yi（Vi）的注意力权重就会越大。也就获得了更多的注意力。
+
+此时我们的Nadaraya-Watson核回归是一个非参数模型，所以上面的softmax的构成的注意力汇聚层，实际上，是**非参数的注意力汇聚模型**
+
+
+```python
+import torch
+from torch import nn
+from d2l import torch as d2l
+
+
+"""
+创建数据集
+"""
+n_train = 50 # 训练集 50个样本
+
+# 训练集的输入，随机产生，然后按照从小到大的排序
+x_train, _ = torch.sort(torch.rand(n_train)*5)
+
+def f(x):
+    return 2*torch.sin(x) + x**0.8
+
+# 训练集的标签，并添加高斯噪声
+y_train = f(x_train) + torch.normal(0.0, 0.5, (n_train,))
+
+
+# 测试集
+x_test = torch.arange(0,5,0.1)
+y_truth = f(x_test)
+
+def plot_kernel_reg(y_hat):
+
+    # 预测结果
+    d2l.plt.plot(x_test, y_hat, 'o', alpha=0.9)
+
+    # 测试集
+    d2l.plt.plot(x_test, y_truth, 'o', alpha=0.5)
+    """d2l.plot(x_test, [y_truth, y_hat], 'x', 'y', legend=['Truth', 'Pred'],
+             xlim=[0, 5], ylim=[-1, 5])"""
+    # 训练集
+    d2l.plt.plot(x_train, y_train, 'o', alpha=0.5)
+
+
+
+
+
+"""
+查询Q：x_test, 测试集的输入
+键K: x_train, 训练集的输入
+值V：y_train, 训练集的标签
+"""
+
+X_repeat = x_test.repeat_interleave(n_train).reshape((-1, n_train))
+# X_repeat (n_test, n_train), 还是n_test个查询，只不过把每个查询Q，复制成len=n_train的张量
+print(X_repeat)
+
+
+
+"""
+x_test = Q 是(n_test, )
+x_train = K 是(n_train, )
+
+X_repeat:
+[Q1, Q1, ....., Q1] (n_train列)
+[Q2, Q2, ....., Q2]
+...
+[Qn_test, Qn_test, ....]
+"""
+
+# 注意力权重α（Q，Ki）
+"""
+x_train (n_train, ) = [K1, K2, K3, .... Kn_train]
+广播之后：
+
+x_train:
+[K1, K2, K3, .... Kn_train]
+[K1, K2, K3, .... Kn_train]
+...
+[K1, K2, K3, .... Kn_train]
+n_test行
+
+所以这样形状都是(n_test, n_train), 就可以用矩阵来并行计算了，不用因为两个张量形状不同for循环
+X_repeat - x_train = 就是
+[Q1 - K1, Q1 - K2, ...., Q1 - Kn_train]
+[Q2 - K1, Q2 - K2, ...., Q2 - Kn_train]
+...
+所以就可以实现对所有的测试集的Qi, 计算得到
+[Q1 - Ki]
+[Q2 - Ki]
+...
+就跟batch_size一个道理，一个Qi就是一个样本
+我们要计算测试集的每个样本输入Q，他关于所有的训练集的输入Kj的权重
+
+"""
+attention_weights = nn.functional.softmax(-(X_repeat - x_train)**2 / 2, dim=1)
+# attention_weights (test_batch_size, n_train)
+
+#print(attention_weights.shape)
+y_hat = torch.matmul(attention_weights, y_train)
+#plot_kernel_reg(y_hat)
+```
+
+
+就跟batch_size一个道理，一个Qi就是一个样本
+我们要计算测试集的每个样本输入Q，他关于所有的训练集的输入Kj的权重
+
+所以，我们的α（Q，Ki）,他的形状是（n_test, n_train）
+- n_test 也就是测试集的样本数，test_batch_size
+- n_train 也就是训练集的样本数，train_batch_size
+- 我们的**小目标**是给定一个测试集的输入Q，计算他关于所有训练集输入K的关联性（用softmax（平方差）表示），
+- 我们的**大目标**：得到所有的测试集的输入Q，计算他们分别关于训练集输入K的关联性，也就是我们的注意力权重。
+
+
+![](images/e6cd8c468932108f3309dac3165528b4.jpg)
+
+
+![601](images/Pasted%20image%2020260508143820.png)
+
+
+**所以，这里用测试集，来当作我们的主动注意力的查询Q，可以看到，经过（Q，K）的注意力汇聚层之后，有点像是，让原来的上一层的输出V，按照我的主动注意力Q，调整一下权重变化，这样，得到我们的注意力汇聚**， 故名思意，前一层的输出（V），融合了我的Q，得到了新的V'， 也就是注意力汇聚，y_hat
+
+![](images/Pasted%20image%2020260508144055.png)
+
+所以，attention_weights， 就是一个注意力权重
+
+
+<mark style="background:#affad1">带参数的注意力汇聚</mark>
+
+> **我们这里讲的是注意力汇聚层，地位有点像是CNN里面的池化层**
+
+
+**非参数**的Nadaraya-Watson核回归具有_**一致性_**（consistency）的优点： 如果有足够的数据，此模型会收敛到最优结果
+
+
+我们还是可以轻松地将**可学习的参数**集成到**注意力汇聚**中
+
+![551](images/Pasted%20image%2020260508144421.png)
+
+对（Q，Ki）的距离计算，乘上了一个系数w
+
+
+
+
+<mark style="background:#affad1">torch的小批量矩阵乘法bmm</mark>
+![561](images/Pasted%20image%2020260508144907.png)
+
+
+![378](images/Pasted%20image%2020260508145351.png)
+.unsqueeze(1), 在第一维插入1， 所以是(2,1,10) 
+.unsqueeze(-1). 在最后一维插入1，所以是(2, 10, 1)
+所以最后小批量乘法是(2,1,1)
+
+
+<mark style="background:#affad1">定义模型</mark>
+```python
+"""
+定义了一个注意力汇聚层，拥有一个参数w
+"""
+class NWKernelRegression(nn.Module):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.w = nn.Parameter(torch.rand((1,), requires_grad=True))
+
+    # 定义了注意力汇聚层的一次前向传播
+    def forward(self, queries, keys, values):
+        # queries和attention_weights的形状为(查询个数，“键－值”对个数)
+        """
+        queries (n_test, n_train) (查询个数，“键－值”对个数)
+        attention_weights (n_test, n_train ) (查询个数，“键－值”对个数)
+        """
+        queries = queries.repeat_interleave(keys.shape[1]).reshape((-1, keys.shape[1]))
+        self.attention_weights = nn.functional.softmax(
+            -((queries - keys) * self.w)**2 / 2, dim=1)
+        # values的形状为(查询个数，“键－值”对个数)
+        return torch.bmm(self.attention_weights.unsqueeze(1),
+                         values.unsqueeze(-1)).reshape(-1)
+```
+
+
+<mark style="background:#affad1">训练</mark>
+用训练数据集的留一法，构造Q，K，V
+
+```python
+# X_tile的形状:(n_train，n_train)，每一行都包含着相同的训练输入
+X_tile = x_train.repeat((n_train, 1))
+# Y_tile的形状:(n_train，n_train)，每一行都包含着相同的训练输出
+Y_tile = y_train.repeat((n_train, 1))
+# keys的形状:('n_train'，'n_train'-1)
+keys = X_tile[(1 - torch.eye(n_train)).type(torch.bool)].reshape((n_train, -1))
+# values的形状:('n_train'，'n_train'-1)
+values = Y_tile[(1 - torch.eye(n_train)).type(torch.bool)].reshape((n_train, -1))
+
+
+net = NWKernelRegression()
+loss = nn.MSELoss(reduction='none')
+trainer = torch.optim.SGD(net.parameters(), lr=0.5)
+animator = d2l.Animator(xlabel='epoch', ylabel='loss', xlim=[1, 5])
+
+for epoch in range(5):
+    trainer.zero_grad()
+    l = loss(net(x_train, keys, values), y_train)
+    l.sum().backward()
+    trainer.step()
+    print(f'epoch {epoch + 1}, loss {float(l.sum()):.6f}')
+    animator.add(epoch + 1, float(l.sum()))
+
+```
+
+![476](images/Pasted%20image%2020260508150631.png)
+
+
+<mark style="background:#affad1">测试注意力汇聚</mark>
+
+```python
+n_test = len(x_test)
+
+# keys的形状:(n_test，n_train)，每一行包含着相同的训练输入（例如，相同的键）
+
+keys = x_train.repeat((n_test, 1))
+
+# value的形状:(n_test，n_train)
+
+values = y_train.repeat((n_test, 1))
+
+y_hat = net(x_test, keys, values).unsqueeze(1).detach()
+
+plot_kernel_reg(y_hat)
+```
+![418](images/Pasted%20image%2020260508151002.png)
+
+![546](images/Pasted%20image%2020260508151328.png)
+
+
+### 注意力评分函数（重要）
+
+前面使用了高斯核来对查询和键之间的关系建模
+
+![547](images/Pasted%20image%2020260508152008.png)
+
+ [(10.2.6)](https://zh-v2.d2l.ai/chapter_attention-mechanisms/nadaraya-waston.html#equation-eq-nadaraya-watson-gaussian)中的 高斯核指数部分可以视为_注意力评分函数_（attention scoring function）， 简称_评分函数_（scoring function），然后把这个函数的输出结果输入到softmax函数中进行运算
+
+通过上述步骤，将得到与键对应的**值的概率分布**（即**注意力权重**）。 最后，**注意力汇聚的输出**就是**基于这些注意力权重的值的加权和**。
+
+![](images/Pasted%20image%2020260508152253.png)
+
+
+从宏观来看，上述算法可以用来实现 [图10.1.3](https://zh-v2.d2l.ai/chapter_attention-mechanisms/attention-cues.html#fig-qkv)中的注意力机制框架
+![](images/Pasted%20image%2020260508152122.png)
+
+![657](images/Pasted%20image%2020260508152315.png)
+
+所以，q,k就是索引与索引之间的匹配关联程度，然后按照样本的标签，回归我们自己的预测。
+
+
+
+softmax()里面的**q,ki的计算方法**，叫做**评分函数**
+
+
+<mark style="background:#affad1">掩蔽softmax操作</mark>
+这个在[序列到序列学习](#序列到序列学习)这一节已经学过了
+
+指定每个序列的有效token长度 = valid_len 是一个list
+
+![619](images/Pasted%20image%2020260508152736.png)
+
+
+
+<mark style="background:#affad1">加性注意力</mark> （当查询和键是**不同长度的矢量时**，可以使用可加性注意力评分函数）
+一般来说，当<mark style="background:#fff88f">Q，K是不同长度的向量时</mark>，可以使用**加性注意力** 作为**评分函数**
+
+![](images/Pasted%20image%2020260508152916.png)
+
+softmax(a(q,ki))
+
+说白了，就是用全连接来实现维度的统一
+
+
+<mark style="background:#affad1">缩放点积注意力</mark>（当它们的长度相同时，使用**缩放的“点－积”注意力评分函数**的**计算效率更高**）
+
+![](images/Pasted%20image%2020260508153147.png)
+
+![](images/Pasted%20image%2020260508153334.png)
+![531](images/Pasted%20image%2020260508154750.png)
+![](images/5768d8a2677de272e295ed73cae332ad.jpg)
+**缩放点积注意力权重**的实现：包含评分函数+softmax
+```python
+#@save
+class DotProductAttention(nn.Module):
+    """缩放点积注意力"""
+    def __init__(self, dropout, **kwargs):
+        super(DotProductAttention, self).__init__(**kwargs)
+        self.dropout = nn.Dropout(dropout)
+
+    # queries的形状：(batch_size，查询的个数，d)
+    # keys的形状：(batch_size，“键－值”对的个数，d)
+    # values的形状：(batch_size，“键－值”对的个数，值的维度)
+    # valid_lens的形状:(batch_size，)或者(batch_size，查询的个数)
+    def forward(self, queries, keys, values, valid_lens=None):
+        d = queries.shape[-1]
+        # 设置transpose_b=True为了交换keys的最后两个维度
+        scores = torch.bmm(queries, keys.transpose(1,2)) / math.sqrt(d)
+        self.attention_weights = masked_softmax(scores, valid_lens)
+        return torch.bmm(self.dropout(self.attention_weights), values)
+```
+
+
+<mark style="background:#fff88f">热力图查看</mark>
+![489](images/Pasted%20image%2020260508154134.png)
+
+
+---
+### Bahdanau 注意力
+前面，我们学会了一个层，叫做注意力汇聚层，然后我们里面使用的是缩放点积注意力评分函数
+
+再前面的序列-序列的模型，通过设计一个**基于两个循环神经网络的编码器-解码器架构**， 用于**序列到序列学习**
+
+然而，即使<mark style="background:#fff88f">并非所有输入（源）词元都对解码某个词元都有用</mark>， 在每个解码步骤中仍使用编码_相同_的上下文变量。 <mark style="background:#fff88f">有什么方法能改变上下文变量呢</mark>？
+
+> 原来的上下文变量C，里面包含了所有的源序列的token的信息，但是不是所有的源序列的token都有用，所有在这里做一点改变
+
+Bahdanau等人提出了一个**没有严格单向对齐限制**的 **可微注意力模型**
+
+<mark style="background:#fff88f">在预测词元时，如果不是所有输入词元都相关，模型将仅对齐（或参与）输入序列中与当前预测相关的部分，这是通过将上下文变量视为注意力集中的输出来实现的</mark>
+
+
+**下面描述的Bahdanau注意力模型**
+
+这个新的基于注意力的模型与 [9.7节](https://zh-v2.d2l.ai/chapter_recurrent-modern/seq2seq.html#sec-seq2seq)中的模型相同， 只不过 [(9.7.3)](https://zh-v2.d2l.ai/chapter_recurrent-modern/seq2seq.html#equation-eq-seq2seq-s-t)中的上下文变量C，在任何解码器的时间步t'， 都会被Ct'替换（**就是解码器在自回归的过程中，也会调整上下文变量C**）
+
+假设解码器的输入序列是T个token， 解码时间步t’ 的上下文更新后 = 注意力集中的输出：
+![](images/Pasted%20image%2020260508160645.png)
+
+st'-1, 是**查询**=**解码器上一时刻的隐状态**，
+**编码器隐状态ht** 视为键和值）
+
+> 编码器在解码器运行前，就已经跑完了，所以他的**所有层的最终状态**，作为**解码器的初始状态**。也就是我们的K，V
+
+![499](images/Pasted%20image%2020260508161120.png)
+
+所以这样的注意力模型，如上所示。
+
+在大模型里面，RNN的编码器解码器已经不用了，现在主流是transformer，所以这一节不算特别重要
+```python
+import torch
+from torch import nn
+from d2l import torch as d2l
+
+
+
+class AttentionDecoder(d2l.Decoder):
+    """带有注意力机制解码器的基本接口"""
+    def __init__(self, **kwargs):
+        super(AttentionDecoder, self).__init__(**kwargs)
+
+    @property
+    def attention_weights(self):
+        raise NotImplementedError
+    
+
+class Seq2SeqAttentionDecoder(AttentionDecoder):
+    def __init__(self, vocab_size, embed_size, num_hiddens, num_layers,
+                 dropout=0, **kwargs):
+        super(Seq2SeqAttentionDecoder, self).__init__(**kwargs)
+
+        # 注意力集中层，利用编码器的状态，以及解码器的当前状态，产生上下文变量
+        # 这里使用的是加性注意力，不是缩放点积注意力
+        self.attention = d2l.AdditiveAttention(
+            num_hiddens, dropout, **kwargs)
+        
+        # 嵌入层，用来把token转换成(embed_size, )的格式
+        self.embedding = nn.Embedding(vocab_size, embed_size)
+
+        # 解码器的循环神经网络
+        # 输入：(batch_size, y_seq_len, embed_size + hidden_size)
+        self.rnn = nn.GRU(
+            embed_size + num_hiddens, num_hiddens, num_layers,
+            dropout=dropout)
+        
+        # 产生token种类的打分的全连接层
+        self.dense = nn.Linear(num_hiddens, vocab_size)
+
+    def init_state(self, enc_outputs, enc_valid_lens, *args):
+        # outputs的形状为(batch_size，num_steps，num_hiddens).
+        # hidden_state的形状为(num_layers，batch_size，num_hiddens)
+        outputs, hidden_state = enc_outputs
+        return (outputs.permute(1, 0, 2), hidden_state, enc_valid_lens)
+
+    """
+    
+    编码器的输入
+    X（batch_size, seq_len）
+    state (layer_num, batch_size, hidden_size)
+    """
+    def forward(self, X, state):
+        enc_outputs, hidden_state, enc_valid_lens = state
+        # enc_outputs的形状为(batch_size,num_steps,num_hiddens). 为编码器最后一层隐状态的所有历史状态
+        # hidden_state的形状为(num_layers,batch_size, num_hiddens)，为编码器所有层最后一个时间步的状态
+        
+        X = self.embedding(X).permute(1, 0, 2)
+        # 输出X的形状为(num_steps,batch_size,embed_size), 可以开始内部循环自回归了
+
+        outputs, self._attention_weights = [], []
+        for x in X:
+            # 对于每一个时间步，x (batch_size, embed_size)
+            # query的形状为(batch_size,1,num_hiddens)
+            # hidden_state的形状为(num_layers,batch_size, num_hiddens)
+            query = torch.unsqueeze(hidden_state[-1], dim=1)
+            # query(batch_size, 1, hidden_size),为编码器最后一层隐状态最终时间步的状态
+
+
+            # context的形状为(batch_size,1,num_hiddens)
+            # query就是Q，enc_outputs就是K，enc_outputs就是V
+            # K,V = enc_outputs的形状为(batch_size,num_steps,num_hiddens).
+            context = self.attention(
+                query, enc_outputs, enc_outputs, enc_valid_lens)
+            # context 就是 ct', 为解码器该时间步的注意力集中的输出
+
+
+
+            # 在特征维度上连结
+            x = torch.cat((context, torch.unsqueeze(x, dim=1)), dim=-1)
+
+            # 将x变形为(1,batch_size,embed_size+num_hiddens)
+            out, hidden_state = self.rnn(x.permute(1, 0, 2), hidden_state)
+
+            outputs.append(out)
+            self._attention_weights.append(self.attention.attention_weights)
+        # 全连接层变换后，outputs的形状为
+        # (num_steps,batch_size,vocab_size)
+        outputs = self.dense(torch.cat(outputs, dim=0))
+        return outputs.permute(1, 0, 2), [enc_outputs, hidden_state,
+                                          enc_valid_lens]
+
+    @property
+    def attention_weights(self):
+        return self._attention_weights
+    
+
+
+"""
+encoder = d2l.Seq2SeqEncoder(vocab_size=10, embed_size=8, num_hiddens=16,
+                             num_layers=2)
+encoder.eval()
+decoder = Seq2SeqAttentionDecoder(vocab_size=10, embed_size=8, num_hiddens=16,
+                                  num_layers=2)
+decoder.eval()
+X = torch.zeros((4, 7), dtype=torch.long)  # (batch_size,num_steps)
+state = decoder.init_state(encoder(X), None)
+output, state = decoder(X, state)
+print(output.shape, len(state), state[0].shape, len(state[1]), state[1][0].shape)
+
+"""
+
+
+
+
+
+"""
+训练
+"""
+
+class EncoderDecoder(nn.Module):
+    """编码器-解码器架构的基类"""
+    def __init__(self, encoder, decoder, **kwargs):
+        super(EncoderDecoder, self).__init__(**kwargs)
+        self.encoder = encoder
+        self.decoder = decoder
+
+    def forward(self, enc_X, dec_X, *args):
+        enc_outputs = self.encoder(enc_X)
+        dec_state = self.decoder.init_state(enc_outputs, *args)
+        dec_outputs, dec_state = self.decoder(dec_X, dec_state)
+        # 这里只返回 2 个值：预测输出和解码器状态
+        return dec_outputs, dec_state
+    
+
+
+embed_size, num_hiddens, num_layers, dropout = 32, 32, 2, 0.1
+batch_size, num_steps = 64, 10
+lr, num_epochs, device = 0.005, 250, d2l.try_gpu()
+
+train_iter, src_vocab, tgt_vocab = d2l.load_data_nmt(batch_size, num_steps)
+encoder = d2l.Seq2SeqEncoder(
+    len(src_vocab), embed_size, num_hiddens, num_layers, dropout)
+decoder = Seq2SeqAttentionDecoder(
+    len(tgt_vocab), embed_size, num_hiddens, num_layers, dropout)
+net = EncoderDecoder(encoder, decoder)
+d2l.train_seq2seq(net, train_iter, lr, num_epochs, tgt_vocab, device)
+
+
+
+"""测试"""
+engs = ['go .', "i lost .", 'he\'s calm .', 'i\'m home .']
+fras = ['va !', 'j\'ai perdu .', 'il est calme .', 'je suis chez moi .']
+for eng, fra in zip(engs, fras):
+    translation, dec_attention_weight_seq = d2l.predict_seq2seq(
+        net, eng, src_vocab, tgt_vocab, num_steps, device, True)
+    print(f'{eng} => {translation}, ',
+          f'bleu {d2l.bleu(translation, fra, k=2):.3f}')
+    
+
+```
+
+### 自注意力+位置编码
+![](images/Pasted%20image%2020260509162707.png)
+![](images/Pasted%20image%2020260509162715.png)
+
+
+![](images/Pasted%20image%2020260509162733.png)
+就是对X增加了一层摩尔纹意义，这个sin，cos的设计，主要目的是为了模仿二进制编码的变化频率，（地位变化频率高，高位变化频率低），简单说就是：
+该序列的第i个token，他有d维，j∈d，然后按照奇数偶数的不同来得到一个固定的编码值，他的好处是，在j，也就是d维里面比较低的位置，变化的频率快，高维的位置，变化的频率慢（模拟二进制编码的变化）
+
+![453](images/Pasted%20image%2020260509163035.png)
+
+![](images/Pasted%20image%2020260509163147.png)
+可以看到，一个token的d位，低位变化密集，高位变化慢，**本质上就是叠了一层二进制地址**（address + value， 可以理解为，在这块内存的数据上，加了内存的地址），上图就是模拟二进制地址本身热力图的变化
+
+
+
+
+
+
+### 多头注意力（重要）
+
+![614](images/Pasted%20image%2020260508202017.png)
+
+
+使用的是Q，K，V的不同子空间的表示。
+
+也就是，把QKV，进入MLP，投影到不同的特征空间，然后再进入注意力层回归出我们需要的Q的V‘
+
+原来我们的注意力层：h = f(q,k,v)=f(q, (k1,v1), (k2,v2), ...,(kn,vn))
+现在多头注意力的一个头是hi = f(Wi(q)q, Wi(k)k, Wi(v)v)
+也就是每个头，q,k,v都要经过一个独立的全连接层，投影到相同的h维度的特征空间上，然后在完成后续的注意力计算。
+
+![](images/Pasted%20image%2020260509162016.png)
+
+所以，一共有hx3个参数需要学习
+f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqxq + wk x k)）/缩放点积注意力(无参)
+![](images/Pasted%20image%2020260509162022.png)
+
+![659](images/Pasted%20image%2020260509162637.png)
+
+![](images/Pasted%20image%2020260509211544.png)
+
+![494](images/Pasted%20image%2020260509211549.png)
+![592](images/Pasted%20image%2020260509211558.png)
+
+
+
+我理解了，因为每个头是并行的存在，所以，我为了并行计算，所以，必须用一个大矩阵Wq = [Wq1, Wq2, Wq3,....,Wqh]来同时作用在q上，得到[q1, q2, q3, ..., qh] 就可以实现多头的并行。
+
+所以我的全连接的输出hidden_size = num_heads * query_size 是吗？
+
+那这样的话，如果q,k,v不是一个d， 那岂不是，Q，K，V的全连接输出的hidden_size, 也是不一样的？
+
+  
+
+然后呢，我为什么需要使用transpose_qkv，来把这一整个的[q1, q2, q3, ..., qh]，拆分成h个头的专属q,k,v? 是因为不能让头1的q，也算到头2的KV是吧
+
+  
+
+我这里还有一个疑问，既然是并行计算每个头的pq, pk, pv, 那我直接设置一个大的Wq = [Wq1, Wq2, Wq3,....,Wqh], 因为我初始化不一样，所以里面每个头的全连接的参数都不一样，
+
+
+![](images/Pasted%20image%2020260509212241.png)
+
+![](images/bf47cdcc441370097dcd7273eb7c1003.jpg)
+![](images/5ee6617adde3a3448d208e1a2988c0f2.jpg)
+![](images/5d17e7458effb36eea15d88152492ee2.jpg)
+![](images/15de1a2d460f73003713319c82f74d9f.jpg)
+**全连接变维度，又是每个头只注意高维空间的部分维，最后又全连接整合映射到一个低维上**
+
+
+是：**先拆分升维做多视角建模，再拼接降维做特征融合**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 总结
+
+<mark style="background:#affad1">朴素注意力机制</mark>
+所以注意力机制，依赖（K，V）数据库，以及我们的输入查询Q，
+
+他的作用是，通过计算（K，V）中，不同的ki, 对 Q的贡献程度，来实现输入Q的回归预测
+注意力权重，就是显示Q和Ki们的贡献程度
+
+所以注意力机制，是没有模型参数的
+
+<mark style="background:#affad1">全连接层</mark>，则是把数据的关系，全部训练到模型参数里面
+
+
+<mark style="background:#affad1">transformer里面的注意力</mark>（多头注意力）
+
+所以实际的transformer注意力里面，是**先用全连接，把Q，K，V映射到合适做注意力回归的空间**（MLP来改变数据维数，也就是空间变形，投影）然后在这个特征空间里面，再来做朴素注意力回归
+
+
+
+<mark style="background:#affad1">Bahdanau注意力</mark>
+原来seq2seq，使用到编码器-解码器的架构，里面用到两层的GRU，此时他的模型参数，主要是里面的RNN的模型参数，他的主要两个设计点是： 
+-  编码器最后一层隐藏层的最后一个时间步的状态hT 作为上下文变量context 
+-  编码器所有隐藏层的最后一个时间步的状态[hT，hT], 作为解码器的隐藏层的初始状态[s0, s0] 
+
+然后再bahdanau注意力里面，通过引入注意力层，来改进这个seq2seq的模型 
+
+他的改进是： 
+- 上下文变量，不再是一成不变的，而是，我在输入解码器的x1'之前，编码器已经把源序列都输入完成了
+
+因此，我们已经得到了编码器最后一层的所有时间步的状态[h1,h2,...,hT], 我们把这个状态作为K，V，把解码器在接受输入xt'时，他的上一时刻的状态st'-1, 所谓查询，把q,K,V 作为我们的注意力层的输入（这里有一个细节，就是纳入KV的计算，是源序列的所有T时间步的KV）从而得到真实的，根据我们当前解码器的时间步t'的，上下文变量context，然后和输入xt‘合并，输入解码器
+
+![590](images/Pasted%20image%2020260509153537.png)
+
+![499](images/Pasted%20image%2020260509153503.png)
+
+
+<mark style="background:#affad1">编码器遮罩（填充掩码：enc_valid_len）</mark>
+
+![530](images/Pasted%20image%2020260509153851.png)
+
+
+
+<mark style="background:#affad1">解码器自身的遮罩</mark>
+这个是**自注意力**，**不能让当前时间步，看到未来时刻的token**
+
+
+<mark style="background:#affad1">自注意力</mark>
+
+> 自注意力层，我知道他计算出的自注意力权重，可以反应一个序列中，一个token和其他token的相关程度。
+> 
+>  但是我想知道，这个自注意力权重，乘上V（整个序列）之后，有什么意义呢？这个新的序列，有什么意义呢？
+
+![456](images/Pasted%20image%2020260509155740.png)
+
+![455](images/Pasted%20image%2020260509155755.png)
+
+所以作用就是，<mark style="background:#fff88f">让这个token，里面能够包含整个序列的上下文信息</mark>
+（对比RNN，只能从左到右挨个计算攒上下文，远距离的依赖弱
+	自注意力，直接并行计算，可以把序列内全部的token信息，全部融合到每个token里面
+）
+
+但是，这个自注意力层，**有一个问题**：<mark style="background:#fff88f">就是没有未知关系。只有相对的token2token的关系，没有第一位，第二位的时序关系。</mark>
+
+所以，才需要，<mark style="background:#affad1">位置编码</mark>
+
+**位置编码可以通过学习得到也可以直接固定得到**
+
+
+
+
 
 
 # torch 损失函数
