@@ -15,7 +15,7 @@
 block之间相互独立，thread是最小执行单元，warp是一些thread的打包，是最小调度单元
 
 一个thread，他的内存模型是：
-![](images/Pasted%20image%2020260515221949.png)
+![](../images/Pasted%20image%2020260515221949.png)
 （这里和CPU的内存模型不一样的是，CPU的进程之间是不考虑共享的，只考虑调度）
 （GPU上的thread，是考虑共享的，而且每个部分存放的位置也不如CPU上的进程存放的整齐）
 
@@ -60,7 +60,7 @@ block之间相互独立，thread是最小执行单元，warp是一些thread的�
 
 下图展示了并行计算的内存模型，在物理硬件上的分布
 
-![](images/Untitled%20Diagram.drawio%20(2).png)
+![](../images/Untitled%20Diagram.drawio%20(2).png)
 
 
 # CUDA编程
@@ -124,7 +124,7 @@ dim3 blockDim(16, 16) //一个block里面16x16个thread
 dim3 gridDim((width+15)/16,(height+15)/16) //这里的width, height 是thread阵列的形状
 ```
 
-![](images/Pasted%20image%2020260516102414.png)
+![](../images/Pasted%20image%2020260516102414.png)
 
 
 
@@ -184,8 +184,8 @@ cudaStreamDestroy(stream);
 但是DMA只知道物理地址，所以物理地址不能改变，且这块内存不能被swap到磁盘。
 
 
-![](images/Pasted%20image%2020260516103838.png)
-![](images/Pasted%20image%2020260516103914.png)
+![](../images/Pasted%20image%2020260516103838.png)
+![](../images/Pasted%20image%2020260516103914.png)
 
 ```c
 
@@ -321,7 +321,7 @@ float c = coefficients[idx];
 
 
 ```
-![](images/Pasted%20image%2020260516105808.png)![](images/Pasted%20image%2020260516110027.png)
+![](../images/Pasted%20image%2020260516105808.png)![](../images/Pasted%20image%2020260516110027.png)
 
 
 ## warp
@@ -368,8 +368,8 @@ float val = __shfl_xor_sync(0xFFFFFFFF, myVal, mask);
 */
 float sum = __reduce_add_sync(0xFFFFFFF, myVal);
 ```
-![](images/Pasted%20image%2020260516112359.png)![](images/Pasted%20image%2020260516112441.png)![](images/Pasted%20image%2020260516112519.png)![](images/Pasted%20image%2020260516112746.png)![](images/Pasted%20image%2020260516112813.png)
-![](images/Pasted%20image%2020260516112842.png)
+![](../images/Pasted%20image%2020260516112359.png)![](../images/Pasted%20image%2020260516112441.png)![](../images/Pasted%20image%2020260516112519.png)![](../images/Pasted%20image%2020260516112746.png)![](../images/Pasted%20image%2020260516112813.png)
+![](../images/Pasted%20image%2020260516112842.png)
 具体mask是有交换规则的。
 
 
@@ -378,7 +378,7 @@ float sum = __reduce_add_sync(0xFFFFFFF, myVal);
 
 这里先解释一下共享内存的bank，也就是数据在shared memory上是如何存储的
 
-![](images/Pasted%20image%2020260516134140.png)
+![](../images/Pasted%20image%2020260516134140.png)
 可以看到，
 - **第0个4字节，在bank0**
 - 第一个4字节，在bank1
@@ -424,9 +424,9 @@ float val = smem[threadIdx.x][0]
 ## occupancy
 即实际活跃warp数/SM最大warp数
 
-![](images/Pasted%20image%2020260516141034.png)
+![](../images/Pasted%20image%2020260516141034.png)
 
-![](images/Pasted%20image%2020260516141056.png)
+![](../images/Pasted%20image%2020260516141056.png)
 
 
 
@@ -436,9 +436,9 @@ float val = smem[threadIdx.x][0]
 GPU通过多个流来实现并行，单个流里面，相当于顺序的工作队列，只能顺序执行，同步异步这里的概念都是针对cpu，同步的数据拷贝，该进程会阻塞，具体是进入睡眠等待cuda驱动拷贝完唤醒吗？异步的启动核函数，就是相当于在cuda驱动里面增加了一个任务，然后继续向下执行
 （同步里面有阻塞与非阻塞，阻塞就是睡眠，非阻塞就是空转轮询）
 
-![](images/Pasted%20image%2020260516145200.png)
+![](../images/Pasted%20image%2020260516145200.png)
 
-![](images/Pasted%20image%2020260516145401.png)
+![](../images/Pasted%20image%2020260516145401.png)
 
 
 
@@ -534,7 +534,7 @@ int main(){
 
 # 基础算子学习
 ## softmax算子
-![](images/Pasted%20image%2020260520194902.png)
+![](../images/Pasted%20image%2020260520194902.png)
 
 ### 计算过程分析：
 首先，所有的数据是放在全局内存里面的，
@@ -887,7 +887,7 @@ softmax_v2 time: 5.70531 ms
 
 本质就是**利用数学的结合率**，来把**线性执行**转化为**树状执行**。
 
-![383](images/Pasted%20image%2020260522163802.png)
+![383](../images/Pasted%20image%2020260522163802.png)
 
 总的来说，归约有三种方式
 1. **跨线程块归约**：如何将多个线程块（CTA）的局部结果进一步聚合为最终结果；
@@ -899,7 +899,7 @@ softmax_v2 time: 5.70531 ms
 
 ### 朴素归约reduce实现(分块归约)
 
-![](images/675e0ba0ab52c669f5eb1120f68eb488.jpg)
+![](../images/675e0ba0ab52c669f5eb1120f68eb488.jpg)
 
 ```cpp
 #include<iostream>
@@ -1049,7 +1049,7 @@ Result verified successfully!
 
 从上述 CUDA 实现可以看出，该归约核函数采用的是分块归约（block-wise reduction）策略：每个线程块独立处理输入数据的一个子集，并将该子集的归约结果写入输出数组 `g_odata[blockIdx.x]`
 
-![](images/Pasted%20image%2020260522174902.png)
+![](../images/Pasted%20image%2020260522174902.png)
 
 
 #### 问题分析
@@ -1088,7 +1088,7 @@ Result verified successfully!
 	- `%`（取模）、`/`（除法）在 GPU 上比 `+ - *` 慢 **10~20 倍**
 	- 浮点加法的吞吐通常为几十到上百个/时钟/SM
 
-![](images/Pasted%20image%2020260522180724.png)
+![](../images/Pasted%20image%2020260522180724.png)
 
 
 <mark style="background:#affad1">计算效率：</mark>
@@ -1100,7 +1100,7 @@ Result verified successfully!
 	- warp stall, 等访存，等barrier, 等指令依赖，会降低IPC
 - Warp内活跃thread占比
 
-![349](images/Pasted%20image%2020260522181050.png)
+![349](../images/Pasted%20image%2020260522181050.png)
 
 - 指令吞吐
 	- 取模指令会被编译成一长串整数指令序列，特别是对非 2 的幂取模
@@ -1113,7 +1113,7 @@ Result verified successfully!
 - 全局内存带宽利用率
 	- 每个thread读的数据不多，导致每次访存明明最多可以拿128字节，但是你就拿了32字节，跑不满
 - L1/L2 cache 缓存命中率
-	- ![278](images/Pasted%20image%2020260522181350.png)
+	- ![278](../images/Pasted%20image%2020260522181350.png)
 - 全局内存 Access Pattern / Transaction 效率
 	- **指标**：`gld_efficiency`（global load efficiency）、`gst_efficiency`（global store efficiency）
 	- 实际用到的字节 / 实际传输的字节
@@ -1136,14 +1136,14 @@ Result verified successfully!
 	1. 因为采用两两归约方式，从最开始block所有thread/2, 后面每次减半
 	2. **总的来说就是参与计算的线程数过少。**
 2. warp **线程束分化**，导致warp的效率低（**每个warp内的活跃线程越少**）
-	1. 导致warp效率不高![](images/Pasted%20image%2020260522210526.png)![](images/Pasted%20image%2020260522210541.png)
-	2. ![](images/94905b858d7ddf417b1a792c43a2ed88.jpg)
+	1. 导致warp效率不高![](../images/Pasted%20image%2020260522210526.png)![](../images/Pasted%20image%2020260522210541.png)
+	2. ![](../images/94905b858d7ddf417b1a792c43a2ed88.jpg)
 3. **存储体冲突**（bank conflict）
 	1. **因为活跃线程间隔分散，导致不同warp的同位置活跃**
 		warp=32个thread，当步长超过32后，还容易出现共享内存bankconflict
-![](images/Pasted%20image%2020260522210908.png)
+![](../images/Pasted%20image%2020260522210908.png)
 4. **循环展开最后一个warp**
-![](images/675e0ba0ab52c669f5eb1120f68eb488.jpg)
+![](../images/675e0ba0ab52c669f5eb1120f68eb488.jpg)
 **当逐渐归约到只剩下编号在0-31的thread之后，其实就只剩下一个warp在SM里面执行了。**
 
 此时，这些线程在硬件层面是以 **SIMT（Single Instruction, Multiple Thread）** 模式同步执行的
@@ -1153,16 +1153,16 @@ Result verified successfully!
 在这个阶段，也没必要条件判断来筛选计算的线程了，**直接算得了**，没必要两两归约了
 
 所以在归约的循环的后期，（tid < 32）对归约操作进行手动展开，直接执行对应的加法操作，从而消除分支判断和同步开销。
-![](images/Pasted%20image%2020260522211537.png)
+![](../images/Pasted%20image%2020260522211537.png)
 
 
 ### 优化1：线程闲置（活跃越来越少）
 
 策略：在归约循环前增加一次额外的**预归约**操作。
-![](images/Pasted%20image%2020260522212804.png)
+![](../images/Pasted%20image%2020260522212804.png)
 
-![341](images/Pasted%20image%2020260522212512.png)
-![](images/Pasted%20image%2020260522212532.png)
+![341](../images/Pasted%20image%2020260522212512.png)
+![](../images/Pasted%20image%2020260522212532.png)
 
 ```cpp
 #include<iostream>
@@ -1322,17 +1322,17 @@ Result verified successfully!
 
 现在是二分后，等分的后半部分的thread，归约到前半段。
 
-![](images/Pasted%20image%2020260522220853.png)
+![](../images/Pasted%20image%2020260522220853.png)
 
 其实这里也优雅的解决了bank conflict的问题
-![](images/Pasted%20image%2020260522222153.png)
+![](../images/Pasted%20image%2020260522222153.png)
 
-![](images/Pasted%20image%2020260522222209.png)
+![](../images/Pasted%20image%2020260522222209.png)
 因为他是同一个thread来访问同一个bank所以不叫bank conflict
 
 我们说的bank conflict 是多个thread，访问同一个bank
-![](images/Pasted%20image%2020260522222307.png)
-![](images/Pasted%20image%2020260522224858.png)
+![](../images/Pasted%20image%2020260522222307.png)
+![](../images/Pasted%20image%2020260522224858.png)
 ```cpp
 
     //归约
@@ -1361,18 +1361,18 @@ Result verified successfully!
 就是说，当归约到就剩前32个thred之后，就已经处于一个warp里面了，这样就不需要再每次一半访问共享内存了，而是直接warp内归约，直接用寄存器
 
 
-![](images/Pasted%20image%2020260522231144.png)
+![](../images/Pasted%20image%2020260522231144.png)
 
 
 但是教程里面还有一点技巧
 
-![](images/Pasted%20image%2020260522231159.png)
+![](../images/Pasted%20image%2020260522231159.png)
 
 
 ### 另一种实现方式：BlockReduce
 
 用warp内归约，warpReduce的基础上，进一步构建blockReduce,来实现整个block内的归约操作。
-![](images/Pasted%20image%2020260522231538.png)
+![](../images/Pasted%20image%2020260522231538.png)
 
 ```C++
 __inline__ __device__ float block_reduce(float val) {
@@ -1409,13 +1409,13 @@ val += __shfl_down_sync(0xFFFFFFFF, val, 1);
 3. **确定性** — 虽然 nvcc 对小循环通常会自动展开，但加 `#pragma unroll` 是强制保证，避免编译器"犯懒"
 
 ### 总结
-![](images/Pasted%20image%2020260522231923.png)
+![](../images/Pasted%20image%2020260522231923.png)
 
 
 ## 矩阵乘 Matmul 基础
 
 ### 基础实现
-![](images/8e99e75e5e531575a18eaf10d936ad65%201.jpg)
+![](../images/8e99e75e5e531575a18eaf10d936ad65%201.jpg)
 就是最直接的，一个thread负责计算一个输出矩阵的元素。
 
 
@@ -1430,7 +1430,7 @@ val += __shfl_down_sync(0xFFFFFFFF, val, 1);
 
 
 
-![](images/Pasted%20image%2020260525225818.png)
+![](../images/Pasted%20image%2020260525225818.png)
 
 ### 优化：共享内存
 
@@ -1442,7 +1442,7 @@ val += __shfl_down_sync(0xFFFFFFFF, val, 1);
 
 这样输出矩阵中<mark style="background:#fff88f">这个分块矩阵里面所有元素的计算都仅需要访问共享内存即可</mark>
 
-![](images/309c29197f495b899cfdbfbf47b83b45.jpg)
+![](../images/309c29197f495b899cfdbfbf47b83b45.jpg)
 
 假设每个A的子矩阵是(32x1024)
 所以M = N = K =1024
@@ -1455,16 +1455,16 @@ bk = 1024
 那么所需要的共享内存为2 x (32 x 1024) 太大了。
 
 所以这里每个block不是一次性拷贝A，B的分块。而是分批拷贝
-![](images/9c95276756652b8c6be811863714a8b1.jpg)
+![](../images/9c95276756652b8c6be811863714a8b1.jpg)
 
 所以定义的共享内存是 2 x （32 x 32）
 
-![](images/29c2339d615058e1d6c4ddde4e16c63e.jpg)
+![](../images/29c2339d615058e1d6c4ddde4e16c63e.jpg)
 所以，共享内存里面存放的是一个C_tile里面所有元素在每个Aip小块上的分量。也就是Aip
 
 重新梳理一下就是：
-![](images/d0be94d5c78c42f28f39c75c225c8dbe.jpg)
-![](images/Pasted%20image%2020260525224153.png)
+![](../images/d0be94d5c78c42f28f39c75c225c8dbe.jpg)
+![](../images/Pasted%20image%2020260525224153.png)
 
 ```cpp
 /*
@@ -1531,20 +1531,20 @@ __global__ void mysgemm_v2(int M, int N, int K, float alpha, float *A,
 }
 
 ```
-![](images/Pasted%20image%2020260525225801.png)
+![](../images/Pasted%20image%2020260525225801.png)
 
 这样可以**减少拷贝重复**，<mark style="background:#fff88f">v2里面，每个thread仅仅拷贝对应位置的float</mark>，<mark style="background:#fff88f">所以整个全局内存的每个float仅仅被访问过一次</mark>。
 
 v1里面，相邻两个C元素的计算，访问的全局内存，有一半都是重复的。
 
-![285](images/Pasted%20image%2020260525230533.png)
-![](images/Pasted%20image%2020260525230546.png)
-![](images/Pasted%20image%2020260525230646.png)
+![285](../images/Pasted%20image%2020260525230533.png)
+![](../images/Pasted%20image%2020260525230546.png)
+![](../images/Pasted%20image%2020260525230646.png)
 
 **分析软件也给出了优化建议**
 
 
-![](images/Pasted%20image%2020260525230904.png)
+![](../images/Pasted%20image%2020260525230904.png)
 
 
 
@@ -1564,11 +1564,11 @@ v1里面，相邻两个C元素的计算，访问的全局内存，有一半都�
 不再让一个线程处理一个数据元素，而是让每个线程负责处理一个大小为 TM×TN 的数据 **tile**
 
 
-![](images/bf9a61bb751d8f82ced61ada7b10bea6.jpg)
+![](../images/bf9a61bb751d8f82ced61ada7b10bea6.jpg)
 
 
-![](images/28f2678cbbeb1e029cf2b6b2537b52f1.jpg)
-![](images/f576d2e5676490448b0043ede7a4cdc5.jpg)
+![](../images/28f2678cbbeb1e029cf2b6b2537b52f1.jpg)
+![](../images/f576d2e5676490448b0043ede7a4cdc5.jpg)
 
 ```cpp
 
@@ -1672,7 +1672,7 @@ __global__ void mysgemm_v3(int M, int N, int K, float alpha, float *A, float* B,
 ```
 
 ### 优化：向量化加载+转置hit
-![](images/Pasted%20image%2020260526175742.png)
+![](../images/Pasted%20image%2020260526175742.png)
 
 >可以看到，前面三个版本，对于每个输出元素，都需要挨个取A向量，B向量的元素，然后乘加。
 
@@ -1682,8 +1682,8 @@ __global__ void mysgemm_v3(int M, int N, int K, float alpha, float *A, float* B,
 
 V4 中，我们的优化重点从计算并行转向了**访存向量化**
 
-![](images/Pasted%20image%2020260526180213.png)
-![402](images/Pasted%20image%2020260526180235.png)
+![](../images/Pasted%20image%2020260526180213.png)
+![402](../images/Pasted%20image%2020260526180235.png)
 
 
 因为是优化的读取全局内存，所以是**优化的从A_tile，拷贝到共享内存的这一个部分**
@@ -1691,20 +1691,20 @@ V4 中，我们的优化重点从计算并行转向了**访存向量化**
 所以，<mark style="background:#fff88f">第一个优化点：拷贝全局内存到共享内存阶段：一次读多个float</mark>
 
 
-![](images/Pasted%20image%2020260526191906.png)
+![](../images/Pasted%20image%2020260526191906.png)
 这里，当m增加的时候，就是计算每一行的时候，M_p访问都是访问一列，对于M_p这个共享内存的计算效率不高
-![265](images/d9f6a5e024e7d9a289289e44f43ed38f.jpg)
+![265](../images/d9f6a5e024e7d9a289289e44f43ed38f.jpg)
 
 > 也就是说，你在拷贝阶段拷贝出来的As，我在用的阶段，是访问一列的。而Bs，在用的时候，主要是n在变，所以是访问一行
 > As用的时候，主要是m在变，访问一列，所以这里也要优化。
 
 <mark style="background:#fff88f">所以第二个优化点：在从共享内存里面读取数据来使用：As更频繁的访问是访问一列数据，所以这里在前一个阶段，可以直接存转置的</mark>
 
-![](images/Pasted%20image%2020260526192940.png)
+![](../images/Pasted%20image%2020260526192940.png)
 
 
-![](images/6fb9a5fc28bac9d762e0cecd74eed952.jpg)
-![](images/18856483705dc7764f19beda243449bb.jpg)
+![](../images/6fb9a5fc28bac9d762e0cecd74eed952.jpg)
+![](../images/18856483705dc7764f19beda243449bb.jpg)
 
 
 ```cpp
@@ -1845,7 +1845,7 @@ __global__ void mysgemm_v4(int M, int N, int K, float alpha, float beta, float *
 但是整体的计算，都串行在访存的指令后面，必须严格等待访存结束后，__syncthreads()，才能使用这些数据进行计算。
 
 
-![](images/3ac04ccafec5173c776b4078bef2462b%201.jpg)
+![](../images/3ac04ccafec5173c776b4078bef2462b%201.jpg)
 
 这导致<mark style="background:#ff4d4f">访存与计算完全串行</mark>，GPU 的计算单元在**等待数据时大量空闲**，造成算力浪费。为解决这一问题，我们将引入一种经典且高效的优化技术：**双缓冲（Double Buffering）**
 
@@ -1854,14 +1854,14 @@ __global__ void mysgemm_v4(int M, int N, int K, float alpha, float beta, float *
 <mark style="background:#fff88f">所以，这里的双缓冲区，也涉及两个地方</mark>：
 - 全局->共享内存
 	- 读全局的下一个时刻数据到共享内存2，下面计算用共享内存1中当前时刻的数据。
-	- ![387](images/Pasted%20image%2020260527144142.png)
+	- ![387](../images/Pasted%20image%2020260527144142.png)
 - 共享内存->寄存器
 	- 读共享内存中下一时刻的数据到寄存器2，下面计算用寄存器1中当前时刻的数据。
-	- ![](images/Pasted%20image%2020260527144208.png)
+	- ![](../images/Pasted%20image%2020260527144208.png)
 
-![](images/Pasted%20image%2020260527144113.png)
+![](../images/Pasted%20image%2020260527144113.png)
 
-![](images/Pasted%20image%2020260527144313.png)
+![](../images/Pasted%20image%2020260527144313.png)
 
 > 这是根据自己的逻辑的理解，写的一版，但是只是框架对了，并没有并行，所以效果很烂
 ```cpp
@@ -2047,12 +2047,12 @@ __global__ void mysgemm_v5(int M, int N, int K, float alpha, float *A, float*B, 
 ```
 
 但是实际测试发现，这个效果并不好：所以发现，<mark style="background:#ff4d4f">这个写法其实是错误的。</mark>
-![313](images/Pasted%20image%2020260527171357.png)
-![](images/Pasted%20image%2020260527171030.png)
+![313](../images/Pasted%20image%2020260527171357.png)
+![](../images/Pasted%20image%2020260527171030.png)
 
 所以，真正能够使用流水线指令重叠的流程应该是这样子的：
 
-![421](images/2fc463cedf397e438cf7fef85148ae14.jpg)
+![421](../images/2fc463cedf397e438cf7fef85148ae14.jpg)
 
 根据上图，可以看到，
 - 除了一开始，先完成
@@ -2072,7 +2072,7 @@ __global__ void mysgemm_v5(int M, int N, int K, float alpha, float *A, float*B, 
 
 关于为什么能够指令重叠的详细解释：
 
-![458](images/Pasted%20image%2020260527232433.png)
+![458](../images/Pasted%20image%2020260527232433.png)
 
 
 
@@ -2082,7 +2082,7 @@ __global__ void mysgemm_v5(int M, int N, int K, float alpha, float *A, float*B, 
 ```
 来拆开循环，这样指令才能进行重叠
 
-![](images/Pasted%20image%2020260528111232.png)
+![](../images/Pasted%20image%2020260528111232.png)
 
 所以，最终实现如下
 ```cpp
@@ -2325,7 +2325,7 @@ __global__ void mysgemm_v5_2(int M, int N, int K, float alpha, float *A, float*B
 ```
 
 <mark style="background:#40a9ff">可以看到，这回根据自己的理解写的V5_2，性能已经比老师的要好了</mark>
-![](images/Pasted%20image%2020260528111329.png)
+![](../images/Pasted%20image%2020260528111329.png)
 
 
 
@@ -2373,21 +2373,21 @@ __global__ void mysgemm_v5_2(int M, int N, int K, float alpha, float *A, float*B
 
 <mark style="background:#affad1">warp tiling 真正带来的好处是</mark>：
 
-![531](images/Pasted%20image%2020260528111931.png)
+![531](../images/Pasted%20image%2020260528111931.png)
 
 
-![341](images/Pasted%20image%2020260528111938.png)
+![341](../images/Pasted%20image%2020260528111938.png)
 
-![443](images/Pasted%20image%2020260528111945.png)
+![443](../images/Pasted%20image%2020260528111945.png)
 
 <mark style="background:#affad1">所以最后总结为</mark>
-![](images/Pasted%20image%2020260528112139.png)
+![](../images/Pasted%20image%2020260528112139.png)
 
-![506](images/Pasted%20image%2020260528112236.png)
+![506](../images/Pasted%20image%2020260528112236.png)
 
 
-![](images/Pasted%20image%2020260528112247.png)
-![](images/Pasted%20image%2020260528112300.png)
+![](../images/Pasted%20image%2020260528112247.png)
+![](../images/Pasted%20image%2020260528112300.png)
 
 
 那thread划分好了，那整个矩阵运算，其实就是两个大的部分：
@@ -2395,20 +2395,20 @@ __global__ void mysgemm_v5_2(int M, int N, int K, float alpha, float *A, float*B
 - 共享内存->寄存器（拷贝l步的As的t_m行，Bs的t_n列）
 
 那么在warp tiling优化中，<mark style="background:#fff88f">第一个全局内存 -> 共享内存是没有变化的</mark>。
-![](images/Pasted%20image%2020260528113233.png)
+![](../images/Pasted%20image%2020260528113233.png)
 
 
 
 
 真正的变化是<mark style="background:#fff88f">共享内存->寄存器这一步，多了C_tile内的C_tile_sub迭代这一个细粒度</mark>
-![](images/Pasted%20image%2020260528113253.png)
-![](images/Pasted%20image%2020260528113302.png)
+![](../images/Pasted%20image%2020260528113253.png)
+![](../images/Pasted%20image%2020260528113302.png)
 
-![255](images/Pasted%20image%2020260528113331.png)
+![255](../images/Pasted%20image%2020260528113331.png)
 
-![](images/67794b5dd69ce62b9e51b98c68433b44.jpg)
+![](../images/67794b5dd69ce62b9e51b98c68433b44.jpg)
 
-![](images/b24d7b6a4e7021fc89cc114796579623.jpg)
+![](../images/b24d7b6a4e7021fc89cc114796579623.jpg)
 
 ```cpp
 
@@ -2569,7 +2569,7 @@ __global__ void mysgemm_v6(int M, int N, int K, float alpha, float* A, float* B,
 
 
 可以看到，效果非常的nice。
-![](images/Pasted%20image%2020260528152139.png)
+![](../images/Pasted%20image%2020260528152139.png)
 
 
 
@@ -2586,22 +2586,22 @@ __global__ void mysgemm_v6(int M, int N, int K, float alpha, float* A, float* B,
 至此，我们总结一下目前学到的优化策略：
 - **共享内存优化**
 	- 一口气多读一些全局内存到共享内存，然后这部分计算用共享内存
-	- ![461](images/Pasted%20image%2020260528153111.png)
+	- ![461](../images/Pasted%20image%2020260528153111.png)
 - **向量化访存**
 	- 优化访存密度，原来一次访问全局内存一个float的时间 = 访问全局内存4个float的时间
-	- ![544](images/Pasted%20image%2020260528153151.png)
-	- ![509](images/Pasted%20image%2020260528153216.png)
+	- ![544](../images/Pasted%20image%2020260528153151.png)
+	- ![509](../images/Pasted%20image%2020260528153216.png)
 - **thread tiling(warp tiling的简易版) + 共享内存转置**
 	- 共享内存转置：（利用计算访存的特性，减少bank conflict）
-	- ![427](images/Pasted%20image%2020260528153520.png)
+	- ![427](../images/Pasted%20image%2020260528153520.png)
 	- 把thread数和要计算的float元素分离，一个thread计算多个float元素，计算效率上升，GFLOPs提高（这叫什么？计算密度？也就是单位时间内发生的浮点数计算次数？）
-	- ![215](images/Pasted%20image%2020260528153257.png)![255](images/Pasted%20image%2020260528153407.png)
+	- ![215](../images/Pasted%20image%2020260528153257.png)![255](../images/Pasted%20image%2020260528153407.png)
 - **双缓冲区**
 	- 利用双缓冲区+指令重叠（FMA指令执行上下不依赖），空间换时间
-	- ![421](images/Pasted%20image%2020260528153550.png)
+	- ![421](../images/Pasted%20image%2020260528153550.png)
 - **warp tiling**
 	- 按照GPU的warp调度的特性，来划分计算的工作，所以，一个block确定后，先按照warp来分配工作量（C_tile），然后里面用32个thread(一个warp)来处理，同时里面根据warp调度的特性，划分成各个迭代分区C_tile_sub, 然后每个C_tile_sub内，再划分出32个thread各自的(t_m, t_n)的工作任务。
-	- ![445](images/Pasted%20image%2020260528153616.png)
+	- ![445](../images/Pasted%20image%2020260528153616.png)
 
 
 
@@ -2613,7 +2613,7 @@ __global__ void mysgemm_v6(int M, int N, int K, float alpha, float* A, float* B,
 
 所以需要原子操作，保证指令级不会被中断。
 
-![](images/Pasted%20image%2020260528160951.png)
+![](../images/Pasted%20image%2020260528160951.png)
 
 
 
@@ -2784,17 +2784,17 @@ Speedup: 2.44444x
 
 
 **不同thread访问不同地址但同一bank，会出现bank conflict**
-![](images/Pasted%20image%2020260528192313.png)
+![](../images/Pasted%20image%2020260528192313.png)
 
 注意，访问同一地址，不会构成bank conflict
-![](images/Pasted%20image%2020260528192511.png)
+![](../images/Pasted%20image%2020260528192511.png)
 
 
 
 ### 朴素实现
-![](images/Pasted%20image%2020260528194816.png)
+![](../images/Pasted%20image%2020260528194816.png)
 
-![](images/Pasted%20image%2020260528194809.png)
+![](../images/Pasted%20image%2020260528194809.png)
 
 ```cpp
 /*
@@ -2830,14 +2830,14 @@ void call_naiveGmem(float*d_out, float*d_in, int nx, int ny){
 从Nsight分析来看，计算效率很低，只有10%不到，说明执行的thread的大部分时间都是在阻塞等待全局内存的数据的读写。尤其是**非合并写入**
 
 
-![](images/Pasted%20image%2020260528194948.png)
+![](../images/Pasted%20image%2020260528194948.png)
 
 **注意点：**
 
-![377](images/Pasted%20image%2020260528203041.png)
+![377](../images/Pasted%20image%2020260528203041.png)
 1. **我们这里的转置任务，特地配置了总的thread数量是等于nx * ny的，所以一个thread只需要拷贝它对应iy, ix 处的float即可。**
 
-![](images/Pasted%20image%2020260528203205.png)
+![](../images/Pasted%20image%2020260528203205.png)
 
 所以这里的**主要问题**有两个：
 - 没有共享显存的加速
@@ -2854,16 +2854,16 @@ void call_naiveGmem(float*d_out, float*d_in, int nx, int ny){
 
 **合并访问**：
 加入一个warp的32个线程，一共能访问128个字节。
-![223](images/Pasted%20image%2020260528203800.png)
+![223](../images/Pasted%20image%2020260528203800.png)
 
 此时就可以做一个合并的访问，把这32个请求同步发给全局显存的设备
-![159](images/Pasted%20image%2020260528203832.png)
+![159](../images/Pasted%20image%2020260528203832.png)
 **哪怕他是在128字节范围内随机访问，也可以合并访问**
 
 
 **非合并访问**
 32个线程，每次访问的跨度，远远大于128字节。
-![306](images/Pasted%20image%2020260528204000.png)
+![306](../images/Pasted%20image%2020260528204000.png)
 
 这种情况下，没有办法合并，显存的利用率非常的低下，就**只能挨个发射访问请求**， 这个就是上面的out的写入，因为ix变化平凡，所以没办法合并优化。
 
@@ -2889,9 +2889,9 @@ void call_naiveGmem(float*d_out, float*d_in, int nx, int ny){
 - 原来朴素实现，每个线程是和值绑死的，thread读出的是3，就负责把这个3写入到全局内存的对应位置
 	- 这就导致连续线程访问不连续的内存位置
 - 现在的共享显存优化：每个线程和内存位置绑死，thread只负责读/写[4]这个位置，读的时候这个位置是3，写的时候这个位置可能就是2了，这就要去共享内存里面去获得这个值（转置之后的值）
-![408](images/4f038047b079e03bf7c666c1b12d3866.jpg)
+![408](../images/4f038047b079e03bf7c666c1b12d3866.jpg)
 
-![](images/Pasted%20image%2020260528210846.png)
+![](../images/Pasted%20image%2020260528210846.png)
 所以，他的思路就是：
 - 我先从**固定的顺序位置**，拷贝当前的值，写入共享显存，
 	- 上面写共享内存，下面读共享内存，所以需要sync
@@ -2952,7 +2952,7 @@ __global__ void transposeSmen(float *out, float *in, const int nx, const int ny)
 
 上面的共享内存优化，在最后一句，读共享内存的时候，频繁变动的是t_x_out, 所以实际上是竖着访问共享内存中的每一个数据的。
 
-![](images/Pasted%20image%2020260529213208.png)
+![](../images/Pasted%20image%2020260529213208.png)
 
 首先说明一下bank conflict的出现的原因：
 - 共享内存的硬件设计上，是32个bank，每个bank一次访问的带宽是一个float。
@@ -2969,10 +2969,10 @@ __global__ void transposeSmen(float *out, float *in, const int nx, const int ny)
 那么它填充是什么办法呢？
 
 <mark style="background:#fff88f">所谓填充，其实是破环原来的一维索引下的32个间隔的关系，变成33个间隔。</mark> <mark style="background:#40a9ff">破坏的是线性下标</mark>
-![342](images/Pasted%20image%2020260529223129.png)
-![372](images/Pasted%20image%2020260529223140.png)
+![342](../images/Pasted%20image%2020260529223129.png)
+![372](../images/Pasted%20image%2020260529223140.png)
 
-![324](images/Pasted%20image%2020260529223202.png)![338](images/Pasted%20image%2020260529223228.png)
+![324](../images/Pasted%20image%2020260529223202.png)![338](../images/Pasted%20image%2020260529223228.png)
 
 
 
@@ -3021,14 +3021,14 @@ __global__ void transposeSmempad(float *out, float *in, const int N, const int M
 ```
 
 
-![](images/Pasted%20image%2020260529225005.png)
-![](images/Pasted%20image%2020260529225031.png)
+![](../images/Pasted%20image%2020260529225005.png)
+![](../images/Pasted%20image%2020260529225031.png)
 
 
 
 ### 优化：共享显存和循环展开
 
-![](images/Pasted%20image%2020260529225634.png)
+![](../images/Pasted%20image%2020260529225634.png)
 
 该核函数通过让每个线程同时处理两个数据元素的方式来提升性能。这种优化策略旨在提高内存访问的并行性，从而更高效地利用设备的内存带宽
 
@@ -3086,8 +3086,8 @@ __global__ void transposeSmemUnrollPad(float *out, float *in, int N, int M)
 
 ```
 
-![](images/Pasted%20image%2020260530120531.png)
-![277](images/Pasted%20image%2020260530120542.png)
+![](../images/Pasted%20image%2020260530120531.png)
+![277](../images/Pasted%20image%2020260530120542.png)
 
  但是 unroll 版本里，一个 block 覆盖范围不等于 blockDim
 
@@ -3139,13 +3139,13 @@ constexpr int TILE_M = 16;constexpr int TILE_N = 64;dim3 block(32, 16);dim3 grid
 gridDim 不是一定按 blockDim 算，而是按“一个 block 实际覆盖多少数据”来算。
 ```
 
-![](images/Pasted%20image%2020260530120659.png)
+![](../images/Pasted%20image%2020260530120659.png)
 
-![329](images/Pasted%20image%2020260530120735.png)
-
-
-![367](images/Pasted%20image%2020260530120825.png)
-![391](images/Pasted%20image%2020260530120833.png)
+![329](../images/Pasted%20image%2020260530120735.png)
 
 
-![](images/Pasted%20image%2020260530120847.png)
+![367](../images/Pasted%20image%2020260530120825.png)
+![391](../images/Pasted%20image%2020260530120833.png)
+
+
+![](../images/Pasted%20image%2020260530120847.png)

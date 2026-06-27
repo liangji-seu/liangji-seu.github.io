@@ -21,19 +21,19 @@ make 或 cmake --build .
 生成可执行文件 test
 ```
 
-![510](images/Pasted%20image%2020260602162512.png)
+![510](../images/Pasted%20image%2020260602162512.png)
 
 ### cmake的使用
 - **第一阶段（构建编译文件）**
 ```bash
 cmake ..
 ```
-![282](images/Pasted%20image%2020260602162604.png)![255](images/Pasted%20image%2020260602162634.png)
+![282](../images/Pasted%20image%2020260602162604.png)![255](../images/Pasted%20image%2020260602162634.png)
 
 
 
 - **第二阶段(编译)**
-![131](images/Pasted%20image%2020260602162707.png)![334](images/Pasted%20image%2020260602162738.png)
+![131](../images/Pasted%20image%2020260602162707.png)![334](../images/Pasted%20image%2020260602162738.png)
 
 
 ### CMakeLists.txt
@@ -52,14 +52,14 @@ add_executable(test test.cpp)
 ```
 
 最后生成的Makefile约等于：`/usr/bin/g++ -std=c++17 -o test test.cpp`
-![193](images/Pasted%20image%2020260602163104.png)![209](images/Pasted%20image%2020260602163115.png)![223](images/Pasted%20image%2020260602163138.png)
-![234](images/Pasted%20image%2020260602163152.png)![320](images/Pasted%20image%2020260602163212.png)
+![193](../images/Pasted%20image%2020260602163104.png)![209](../images/Pasted%20image%2020260602163115.png)![223](../images/Pasted%20image%2020260602163138.png)
+![234](../images/Pasted%20image%2020260602163152.png)![320](../images/Pasted%20image%2020260602163212.png)
 
 
 ### cmake真正的好处
-![276](images/Pasted%20image%2020260602163306.png)![365](images/Pasted%20image%2020260602163315.png)
+![276](../images/Pasted%20image%2020260602163306.png)![365](../images/Pasted%20image%2020260602163315.png)
 
-![428](images/Pasted%20image%2020260602163334.png)
+![428](../images/Pasted%20image%2020260602163334.png)
 
 
 
@@ -217,25 +217,95 @@ gdb ./build/bin/test
 	8. 查看所有局部变量
 		1. `info locals`  一次性打印当前函数所有变量
 
-![222](images/Pasted%20image%2020260602170336.png)
+![222](../images/Pasted%20image%2020260602170336.png)
 
 8. 查看各种界面
 	1. `layout src` 源码界面
-		1. ![322](images/Pasted%20image%2020260602170553.png)
+		1. ![322](../images/Pasted%20image%2020260602170553.png)
 	2. `layout asm` 汇编界面
-		1. ![388](images/Pasted%20image%2020260602170707.png)
+		1. ![388](../images/Pasted%20image%2020260602170707.png)
 	3. `layout regs` 寄存器界面
-		1. ![402](images/Pasted%20image%2020260602170757.png)
+		1. ![402](../images/Pasted%20image%2020260602170757.png)
 
 
 
 # c++20的特性
+## 命名空间
+我的理解，就是相当于形象的理解成模块归属的机制就行。
 
+## 关键字
+
+1. explicit
+静止编译器做隐式类型转换，强迫调用者显式写出构造动作，避免编译器帮你自动做类型转换。
+
+2. override
+`void* allocate(size_t byte_size) const override;`
+用来告诉编译器，我在重写基类虚函数，帮我检查，如果这个不是基类的虚函数，就变成新函数。override的作用是把错误提前到编译阶段。
+
+这个里面的const，是表示常函数，这个函数内部，不会修改这个对象内存的任何成员变量。
+
+3. mutable
+这个是const的后门，如果const修饰了成员函数，那么内部就不能改变变量，但是有一个例外，就是如果这个成员函数被标记了mutable。那么即便在常函数里面也能修改。
+
+## 容器
+1. map
+STL标准库里面的有序键值对容器，`#include<map>`
+
+
+
+## 语法
+
+1. static_cast<type*>xxx
+c++风格的强制类型转换， 比（）直接转换更安全。
+（）转换等于：
+- `static_cast` — 相关类型间的转换（只做编译期可检查的转换）
+- `reinterpret_cast` — 不相关指针类型间的暴力转换
+- `const_cast` — 悄悄去掉 const
+
+
+
+
+## 智能指针
+1. **shared_ptr**, c11引入的智能指针之一，功能：**引用计数自动管理内存，没人用了就自动delete**。
+![521](../images/Pasted%20image%2020260627084716.png)
+
+
+创建方法：
+```
+auto p1 = std::make_shared<Buffer>(128, allocator);
+
+std::make_shared<typename T>(...）
+
+= new Buffer(128, allocator)
+
+
+```
+
+## cuda相关
+
+1. 异步拷贝，流
+`cudaMemcpyAsync` 的"异步"是指：**函数调用本身立即返回给 CPU，不等待拷贝实际完成**。对比 `cudaMemcpy`（同步），CPU 会卡在那行直到拷贝结束。
+
+
+至于流内的顺序：同一个流上，任务**依然按挂上去的顺序执行**，后面的任务仍要等前面的异步拷贝完成。异步只是说 CPU 调用那一刻不等。
+
+所以你这个文件里用 `cudaMemcpyAsync` 的好处是，CPU 可以快速跑完这段 `memcpy` 函数，去干别的事（比如准备下一层的输入）。
+
+cudaDeviceSynchronize, 是cpu阻塞等待GPU所有流的任务完成。只要GPU还在干活，就不返回。
+
+- **异步** = CPU 不等 GPU 任务完成就继续往下执行。
+- **`cudaDeviceSynchronize`** = CPU 死等 GPU 上全部任务干完。
+
+
+
+
+
+---
 
 
 
 # 项目一：cuda自制大模型推理框架
-## 内存管理模块
+## 1. base/基础组件层
 
 这边主要三个部分：
 - base
@@ -249,7 +319,19 @@ gdb ./build/bin/test
 	- 这个模块对不同设备的内存空间做了一层抽象封装
 	- 抽象存储空间
 - alloc
-	- 这个模块是对内存分配管理器的封装
+	- 这个模块是对**内存分配管理器**的封装
+
+## 2. op/算子层
+## 3. tensor/张量层
+## 4. model/模型组装层
+
+
+
+
+
+
+
+
 
 
 
@@ -356,3 +438,5 @@ gdb ./build/bin/test
    - KV Cache 使用率
    - 显存占用
 ```
+
+

@@ -3001,9 +3001,9 @@ net = nn.Sequential(
 - **第二种策略**：保留一些对过去观测的总结ht（状态），并且同时产生输出xt_hat, 和状态ht, 此时的输出就是用：`xt_hat = P(xt | ht)` 估计xt（**输出方程**）, ht = g(ht-1, xt-1) 作为**状态转移**。
 	- 因为这种模型，内部的ht是无法被观测的，所以被叫做<mark style="background:#fff88f">隐变量自回归模型</mark>
 
-![472](images/7792ff16418ebc10db00ea92d775aa59.jpg)
+![472](../images/7792ff16418ebc10db00ea92d775aa59.jpg)
 **纠正一下时间步的对应关系**
-![](images/31fff10de21302e259b255a796208e0f.jpg)
+![](../images/31fff10de21302e259b255a796208e0f.jpg)
 
 
 那如何来生成训练数据？
@@ -3011,14 +3011,14 @@ net = nn.Sequential(
 
 所以，整个序列的估计值，可以通过以下方式获取：
 
-![308](images/Pasted%20image%2020260504101838.png)
+![308](../images/Pasted%20image%2020260504101838.png)
 
 简单说就是，这个公式描述了，**如何计算一个长度为 $T$ 的观测序列 $(x_1, \dots, x_T)$ 出现的联合概率**
 
 这里我觉得要分清：
 - 观测：x, 是真实发生的一个序列
 - 预测：x_hat, 也就是对观测的预测/估计，也就是P(x)
-![423](images/6c687ff551c6f7a4b9d4a4aefb6beef3.jpg)
+![423](../images/6c687ff551c6f7a4b9d4a4aefb6beef3.jpg)
 
 ##### <mark style="background:#ff4d4f">模型和概率模型的理解</mark>
 我的理解是，我们深度学习，建立的模型，来对输出进行预测，本质上，是得到一个输出的分布，也就是概率模型
@@ -3055,7 +3055,7 @@ net = nn.Sequential(
 - **点估计（Point Estimate）**：你目前看到的输出是一个点估计。它只是分布律中最具有代表性的一个点（通常是均值或众数）。
 - **隐式分布**：模型其实学到了整个 $P(x_t \mid x_{t-1}, \dots, x_1)$，但在最后的输出层（Output Layer），它为了给你一个确定的执行指令（比如给外骨骼电机一个确定的电流值），它不得不把整个分布“压缩”成了这一个点。
 
-![594](images/Pasted%20image%2020260504104137.png)
+![594](../images/Pasted%20image%2020260504104137.png)
 
 那么又带来一个问题：<mark style="background:#affad1">是怎么实现让回归模型，分类模型，输出的值，是选择的条件概率分布的期望值，还是概率最大的那一个？</mark>
 
@@ -3122,7 +3122,7 @@ net = nn.Sequential(
 - **MAE (平均绝对误差)**：强制模型输出该分布的**中位数**。这在处理有大幅噪声（离群值）的外骨骼数据时非常有用，因为它不会被偶尔的传感器脉冲带偏。
 - **分位数损失 (Quantile Loss)**：如果你想知道扭矩有 90% 的概率不会超过多少，你可以通过这个损失函数让模型输出分布的 **90% 分位数**。
 
-![](images/2915bf6e766fa21b228e621708f64c2a.jpg)
+![](../images/2915bf6e766fa21b228e621708f64c2a.jpg)
 
 ---
 
@@ -3178,7 +3178,7 @@ net = nn.Sequential(
     - **得到**：当前时刻的条件分布。
     - **输出 $\hat{x}_t$**：损失函数（如你在 RTX 4090 上用的 MSE）决定了 $\hat{x}_t$ 是这个分布的**均值（期望）**。
 
-![](images/Pasted%20image%2020260504114045.png)
+![](../images/Pasted%20image%2020260504114045.png)
 
 **结论：**
 
@@ -3237,7 +3237,7 @@ net = nn.Sequential(
     
 - **应用场景**：比如 ChatGPT 生成文本，或者外骨骼在没有任何传感器输入的情况下，只靠自己预测下一秒的步态趋势。
 
-![563](images/Pasted%20image%2020260504144736.png)
+![563](../images/Pasted%20image%2020260504144736.png)
 
 
 
@@ -3249,26 +3249,26 @@ net = nn.Sequential(
 
 特别的，如果r等于1，就是一阶马尔可夫模型，也就是条件仅依赖上一个时间步的输入，此时公式如下：
 
-![462](images/Pasted%20image%2020260504144958.png)
+![462](../images/Pasted%20image%2020260504144958.png)
 
 比如说这个，我们就可以使用**条件概率公式**+**全概率公式**
-![610](images/Pasted%20image%2020260504145145.png)
-![](images/Pasted%20image%2020260504145300.png)
+![610](../images/Pasted%20image%2020260504145145.png)
+![](../images/Pasted%20image%2020260504145300.png)
 这个是隐马尔可夫的动态规划问题，后面讲。这种动态规划在控制算法和强化学习中用的多一点
 
 
 #### 因果关系
 原则上P(x1, x2, ..., xt) 倒序展开也没啥问题，基于条件概率公式，总是能写出顺序的概率推导，因为乘法具有交换律
-![320](images/Pasted%20image%2020260504145518.png)
+![320](../images/Pasted%20image%2020260504145518.png)
 
 
 
 下面我们<mark style="background:#fff88f">自己实现一个自回归模型</mark>，在这之前，
 
-![491](images/Pasted%20image%2020260504204208.png)
-![487](images/Pasted%20image%2020260504204225.png)
+![491](../images/Pasted%20image%2020260504204208.png)
+![487](../images/Pasted%20image%2020260504204225.png)
 
-![543](images/Pasted%20image%2020260504204242.png)
+![543](../images/Pasted%20image%2020260504204242.png)
 
 
 自回归（Autoregressive）从任务属性上分类，完全属于回归（Regression）模型。
@@ -3382,41 +3382,41 @@ plt.savefig("prediction_plot.png", dpi=300, bbox_inches="tight")
 plt.close()
 ```
 
-![394](images/Pasted%20image%2020260504204303.png)
+![394](../images/Pasted%20image%2020260504204303.png)
 
 由此可见，<mark style="background:#affad1">单步预测</mark>效果都不错（`(xt-4, xt-3, xt-2, xt-1)~(xt)`）
 
 但此时针对这600个训练样本，
-![495](images/Pasted%20image%2020260504205347.png)
+![495](../images/Pasted%20image%2020260504205347.png)
 
 这里还有一个问题，当我们的标签数据没有了之后（观察序列只到604）
-![552](images/Pasted%20image%2020260504205540.png)
+![552](../images/Pasted%20image%2020260504205540.png)
 
 
 所以，<mark style="background:#fff88f">K步预测，本质上就是执行k次单步预测</mark>， 所以这里的k步，是说，**一次性预测多少个未来的数据**
 
 <mark style="background:#affad1">k步预测</mark>
-![](images/Pasted%20image%2020260504204512.png)
+![](../images/Pasted%20image%2020260504204512.png)
 
 **“k 步预测”指的就是在当前时刻，仅凭现有的观测数据，连续向未来推算 $k$ 个时间点的数值**
 
-![269](images/Pasted%20image%2020260504204438.png)
+![269](../images/Pasted%20image%2020260504204438.png)
 
 > 所以这里要把K步预测，和你给到多少真实标签，和你实际有多少真值标签分开来
 > 就是说，现在输入，给到604的真实标签，这个时候，你去预测未来的k步，你不准用605向后的真实标签，所以就出现上图所示，自己用自己的预测值作为输入。**本质上还是离线里面的局部在线**
 
 
 所以，下面我们来做一个**k步预测，把k弄大一点**，比如到604步之后，就不提供标签真值作为输入了，让他预测400步的预测。也就是**400步预测**，k=400
-![487](images/Pasted%20image%2020260504212535.png)
+![487](../images/Pasted%20image%2020260504212535.png)
 
 
 可以看到，**这个k很大之后，这个预测就不好了**，我们要进行400步的预测，自己左脚踩右脚，结果发现，预测的结果，**很快衰减到一个常数**。
 
 **事实是由于错误的累积**
 
-![](images/Pasted%20image%2020260504212711.png)
+![](../images/Pasted%20image%2020260504212711.png)
 
-![](images/Pasted%20image%2020260504212722.png)
+![](../images/Pasted%20image%2020260504212722.png)
 
 以上例子清楚地说明了**当我们试图预测更远的未来时**，**预测的质量是如何变化的**（越来越差）。 虽然“步预测”看起来仍然不错，但超过这个跨度的任何预测几乎都是无用的。
 
@@ -3432,7 +3432,7 @@ plt.close()
 
 
 
-![531](images/ae19c51525de1999fdc89dfcfcff76b3.jpg)
+![531](../images/ae19c51525de1999fdc89dfcfcff76b3.jpg)
 
 ```python
 import collections
@@ -3586,19 +3586,19 @@ print(vocab["i"])
 - corpus 为索引展平， vocab为词表，里面已经没有顺序关系了。只有频率关系
 
 ### 语言模型+数据集
-![233](images/98d1b0c5f68a57964eef2b179a1e2503.jpg)
+![233](../images/98d1b0c5f68a57964eef2b179a1e2503.jpg)
 
 当给定文本序列{x1, x2, ...., xT}, 原来的序列模型，就变成了语言模型了
 
 语言模型（序列模型）的目标是估计序列的联合概率`P(x1, x2, ..., xT)`
 
-![](images/Pasted%20image%2020260505212148.png)
+![](../images/Pasted%20image%2020260505212148.png)
 虽然这样的预测下一步，并不能够理解文本，但还是有用的
 
 现在先对token序列建模，假设在word级别得到词元序列，我们可以依靠前面序列模型的分析，把对`P(x1, x2, ..., xT)`的预测，拆分成逐步条件概率预测
-![398](images/Pasted%20image%2020260505212358.png)
+![398](../images/Pasted%20image%2020260505212358.png)
 
-![](images/Pasted%20image%2020260505212416.png)
+![](../images/Pasted%20image%2020260505212416.png)
 
 为了训练语言模型，我们需要**计算单词的概率**， 以及给定前面几个单词后出现某个单词的**条件概率**。 这些概率本质上就是**语言模型的参数**
 
@@ -3606,17 +3606,17 @@ print(vocab["i"])
 
 一种（稍稍不太精确的）方法是统计单词“deep”在数据集中的**出现次数**， 然后将其**除以**整个语料库中的**单词总数**
 
-![375](images/Pasted%20image%2020260505212625.png)（用了条件概率公式）
+![375](../images/Pasted%20image%2020260505212625.png)（用了条件概率公式）
 这种计算数据集概率的方法，当token联合起来之后，概率变得很低，不太靠谱了
 
 所以考虑拉普拉斯平滑，在计数里面添加一个常量
 
-![569](images/Pasted%20image%2020260505212915.png)
+![569](../images/Pasted%20image%2020260505212915.png)
 
 <mark style="background:#fff88f">模型如果只是简单地统计先前“看到”的单词序列频率， 那么模型面对这种问题肯定是表现不佳的</mark>
 
 
-![](images/Pasted%20image%2020260505213533.png)
+![](../images/Pasted%20image%2020260505213533.png)
 
 因此，我们不能再用上面的频率来统计token（这样就没有顺序关系了）
 
@@ -3633,13 +3633,13 @@ print(vocab["i"])
 - 文本序列是可以任意长的，所以，可以被我们**划分成具有相同时间步的子序列**。
 - 训练网络时，一个小批量的子序列，被输入模型。
 
-![438](images/Pasted%20image%2020260505214408.png)
+![438](../images/Pasted%20image%2020260505214408.png)
 
 - token = char， 一个字符，算一个token。
 - n = 5, 表示序列长度5个token，表示一次输送5个token进入序列模型，然后预测下一个token
 	- 就和8.1的序列模型一样{1,2,3,4}->5_hat
 
-![439](images/3fdc4e641c56d5e6ef641aee21875c6f.jpg)
+![439](../images/3fdc4e641c56d5e6ef641aee21875c6f.jpg)
 
  因此，我们可以从**随机偏移量**开始**划分序列**， 以同时获得_**覆盖性**_（coverage）和_**随机性_**（randomness）
 <mark style="background:#affad1">-_随机采样_</mark>
@@ -3688,35 +3688,35 @@ def seq_data_iter_random(corpus, batch_size, num_steps):  #@save
         yield torch.tensor(X), torch.tensor(Y)
 ```
 > **corpus是一个按文本顺序，但是用token索引表示的超长列表**
-![474](images/1d4298c47da1b534c57878f6e63920aa.jpg)
+![474](../images/1d4298c47da1b534c57878f6e63920aa.jpg)
 
-![463](images/cdbc9116ce39fa8ae8094ae00ca4a4c1.jpg)（实际的一个样本是这样的）
-![334](images/Pasted%20image%2020260505221749.png)
+![463](../images/cdbc9116ce39fa8ae8094ae00ca4a4c1.jpg)（实际的一个样本是这样的）
+![334](../images/Pasted%20image%2020260505221749.png)
 
-![523](images/cd4fcf7aae7751f15adc7c0466202850.jpg)
+![523](../images/cd4fcf7aae7751f15adc7c0466202850.jpg)
 这里的**语言模型**和前面的**序列模型**，似乎不太一致
 > 我很好奇，这样的数据要如何输入到模型？我在前面序列模型的学习是，假设还是一个样本{13,14,15,16,17} = {xt-5, xt-4, xt-3, xt-2,xt-1}, 要来预测xt， 就是输入到MLP里面，把给定的历史输入序列，一次性输入MLP，得到xt_hat.
 >
   但是现在，一个样本是{13,14,15,16,17}->似乎没有时间步的概念了，按照现在的逻辑是，xt-1 -> xt, 就是 13-> 14, 14->15的感觉，似乎不一样，序列模型和语言模型
 
 这正是**全连接网络**（MLP）与**循环神经网络**（RNN）在处理序列数据时最本质的逻辑差异
-![512](images/Pasted%20image%2020260505223028.png)
+![512](../images/Pasted%20image%2020260505223028.png)
 
-![546](images/Pasted%20image%2020260505223113.png)
+![546](../images/Pasted%20image%2020260505223113.png)
 
-![622](images/Pasted%20image%2020260505223158.png)
+![622](../images/Pasted%20image%2020260505223158.png)
 
 
 
-![463](images/Pasted%20image%2020260505223443.png)
+![463](../images/Pasted%20image%2020260505223443.png)
 
-![630](images/Pasted%20image%2020260505223528.png)
+![630](../images/Pasted%20image%2020260505223528.png)
 
 **标准的 MLP 序列模型确实不是严格意义上的自回归模型**。
 
-![594](images/Pasted%20image%2020260505223742.png)
-![](images/Pasted%20image%2020260505223812.png)
-![](images/Pasted%20image%2020260505223818.png)
+![594](../images/Pasted%20image%2020260505223742.png)
+![](../images/Pasted%20image%2020260505223812.png)
+![](../images/Pasted%20image%2020260505223818.png)
 
 
 
@@ -3738,12 +3738,12 @@ def seq_data_iter_random(corpus, batch_size, num_steps):  #@save
 
 
 前面已经指出，我们构造的数据集，不再是像前面序列模型MLP那样，一口气输入模型，然后预测xt， 现在的挨个输入，挨个预测。
-![539](images/Pasted%20image%2020260505223957.png)
+![539](../images/Pasted%20image%2020260505223957.png)
 所以，原来的P(14,15,16,17,18) = P(14|13) * P(15| 14, 13) * P(16| 15, 14, 13) * P(17| 16, 15,14,13) * P(18 | 17, 16, 15,14, 13) 我们的计算公式。左边是我们的预测目标，右边就是体现的逐个token输入，逐步预测
 
-![472](images/Pasted%20image%2020260505224354.png)
+![472](../images/Pasted%20image%2020260505224354.png)
 
-![561](images/Pasted%20image%2020260505224407.png)
+![561](../images/Pasted%20image%2020260505224407.png)
 
 
 
@@ -3760,13 +3760,13 @@ def seq_data_iter_random(corpus, batch_size, num_steps):  #@save
 
 **目的**：这样做是为了在训练循环神经网络（RNN）时，可以将上一个小批量的最终隐藏状态（Hidden State）直接传递给下一个小批量，从而让模型学习到比 `num_steps` 更长的依赖关系
 
-![](images/Pasted%20image%2020260505224645.png)
+![](../images/Pasted%20image%2020260505224645.png)
 
 
 
 ### 循环神经网络RNN
 
-![](images/Pasted%20image%2020260505224829.png)
+![](../images/Pasted%20image%2020260505224829.png)
 
 开始引入隐变量
 
@@ -3777,7 +3777,7 @@ def seq_data_iter_random(corpus, batch_size, num_steps):  #@save
 -> **隐变量模型： P(xt | ht-1)**
 -  $h_{t-1}$ 就像是一个“压缩包”，它试图把从 $x_1$ 到 $x_{t-1}$ 的所有有用信息都揉进一个向量里。
 - 预测 $x_t$ 时，模型只需要看一眼这个“压缩包”即可。
-![](images/Pasted%20image%2020260505225004.png)
+![](../images/Pasted%20image%2020260505225004.png)
 
 
 其中，ht-1, 叫做隐状态/隐藏变量， 他存储了到t-1时间步的序列信息。
@@ -4162,19 +4162,19 @@ train_ch8(net, train_iter=train_iter, vocab=vocab, lr=lr, num_epochs=num_epochs,
 
 
 ### BPTT 通过时间反向传播
-![](images/847aa0a58ce607f545656c6510a21cbe.jpg)
+![](../images/847aa0a58ce607f545656c6510a21cbe.jpg)
 
 
-![](images/Pasted%20image%2020260506195707.png)
+![](../images/Pasted%20image%2020260506195707.png)
 
 
 ## 现代循环神经网络
 ### GRU 门控循环单元
-![](images/0849c799212bdc8149c76a05f74d194f.jpg)
+![](../images/0849c799212bdc8149c76a05f74d194f.jpg)
 
 ### LSTM 长短期记忆网络
 
-![480](images/e41d10cc82fb008c654be33927cbb193.jpg)
+![480](../images/e41d10cc82fb008c654be33927cbb193.jpg)
 
 
 
@@ -4184,7 +4184,7 @@ train_ch8(net, train_iter=train_iter, vocab=vocab, lr=lr, num_epochs=num_epochs,
 
 现在的深度循环神经网络，是通过在向后，增加到多层，后面层的隐藏层，不仅以来前一层（第一层就是输入）的隐状态输出，还有自己本层的上一时刻的隐状态。
 
-![303](images/Pasted%20image%2020260507151433.png)
+![303](../images/Pasted%20image%2020260507151433.png)
 网络时移图如上所示。
 
 - 加入了门控机制：更好的捕捉时间步距离很长的序列的依赖关系
@@ -4199,7 +4199,7 @@ train_ch8(net, train_iter=train_iter, vocab=vocab, lr=lr, num_epochs=num_epochs,
 
 <mark style="background:#fff88f">数学上已经证明，深层网络可以用比浅层网络更少的神经元，去拟合极其复杂的函数。</mark>
 
-![545](images/Pasted%20image%2020260507151856.png)
+![545](../images/Pasted%20image%2020260507151856.png)
 
 
 
@@ -4208,7 +4208,7 @@ train_ch8(net, train_iter=train_iter, vocab=vocab, lr=lr, num_epochs=num_epochs,
 
 ### 编码器解码器架构
 
-![451](images/Pasted%20image%2020260507111716.png)
+![451](../images/Pasted%20image%2020260507111716.png)
 
 **解决的问题是**：输入输出都是长度可变的序列，我们要把可变长度的输入，通过编码器转成固定长度的状态编码，然后输入到解码器，解码器将这个状态映射到长度可变的序列。
 
@@ -4235,7 +4235,7 @@ train_ch8(net, train_iter=train_iter, vocab=vocab, lr=lr, num_epochs=num_epochs,
 |**所属序列**|源序列 (Source)|目标序列 (Target)|
 |**语言**|通常是语言 A (如中文)|通常是语言 B (如英文)|
 |**时间点**|一次性输入完整序列|随时间步逐个输入（Autoregressive）|
-![510](images/Pasted%20image%2020260507112139.png)
+![510](../images/Pasted%20image%2020260507112139.png)
 
 ```python
 #@save
@@ -4269,8 +4269,8 @@ class EncoderDecoder(nn.Module):
 - 使用循环神经网络<mark style="background:#fff88f">编码器最终的隐状态</mark>来初始化解码器的隐状态
 
 
-![501](images/Pasted%20image%2020260507153724.png)
-![442](images/434a1f10da21a0a72506790b7e987d96.jpg)
+![501](../images/Pasted%20image%2020260507153724.png)
+![442](../images/434a1f10da21a0a72506790b7e987d96.jpg)
 
 
 
@@ -4280,10 +4280,10 @@ class EncoderDecoder(nn.Module):
 假设输入的batch_size = 1,  输入序列{x1, x2,... , xT}
 
 状态转移如下：
-![158](images/Pasted%20image%2020260507160907.png)
+![158](../images/Pasted%20image%2020260507160907.png)
 
 上下文变量就是用q方法，得到的向量，他是依赖所有的状态量得到的
-![468](images/Pasted%20image%2020260507160927.png)
+![468](../images/Pasted%20image%2020260507160927.png)
 
 所以，如果选择q(h1, ..., hT) = hT时，**上下文变量**就是最后的hT
 
@@ -4295,7 +4295,7 @@ class EncoderDecoder(nn.Module):
  **嵌入层**的**权重**是一个矩阵， **其行数等于输入词表的大小**（`vocab_size`）
 
 其**列数**等于**特征向量的维度**（`embed_size`）
-![327](images/5f131d34f96c2ba5135cc6efc90ad39e.jpg)
+![327](../images/5f131d34f96c2ba5135cc6efc90ad39e.jpg)
 
 
 
@@ -4357,10 +4357,10 @@ output, state = encoder(X)
 
 print(output.shape)
 ```
-![199](images/Pasted%20image%2020260507162531.png)
+![199](../images/Pasted%20image%2020260507162531.png)
 以上，我们已经实现了编码器这一部分了，最后输出的这个state, 返回的是**所有隐藏层**的**最后一个时间步的状态**， 也就是我们编码器输出的上下文变量c
-![158](images/Pasted%20image%2020260507160907.png)
-![468](images/Pasted%20image%2020260507160927.png)
+![158](../images/Pasted%20image%2020260507160907.png)
+![468](../images/Pasted%20image%2020260507160927.png)
 
 
 
@@ -4385,15 +4385,15 @@ print(output.shape)
 #### 解码器
 
 来自训练数据集的输出序列{y1, y2,..., yT'}, 对于每个时间步t‘, 解码器输出yt’的预测概率取决于前面的输入，以及上下文变量c
-![242](images/Pasted%20image%2020260507163119.png)
+![242](../images/Pasted%20image%2020260507163119.png)
 
 
 为了在序列上**模型化这种条件概率**， 我们可以使用**另一个循环神经网络**作为**解码器**
 
-![390](images/188f7d0c9a4e3340ea757afe459d5c81.jpg)
+![390](../images/188f7d0c9a4e3340ea757afe459d5c81.jpg)
 
 
-所以，状态转移为：![](images/Pasted%20image%2020260507163510.png)
+所以，状态转移为：![](../images/Pasted%20image%2020260507163510.png)
 
 当实现解码器时， 我们直接使用**编码器最后一个时间步的隐状态**来**初始化解码器的隐状态**
 
@@ -4471,8 +4471,8 @@ print(state.shape)
 注意：我们之前用填充词添加到序列里面，这样能够让不同长度的序列，能够相同形状进行加载，所以我们在损失计算的时候，需要排除掉这些填充词
 
 > 模型架构（Encoder-Decoder）确实支持不同长度，但为了**计算效率**，我们必须在“**批处理**（Batching）”这一层做填充。
-> ![358](images/Pasted%20image%2020260507171456.png)
-> ![478](images/Pasted%20image%2020260507171512.png)
+> ![358](../images/Pasted%20image%2020260507171456.png)
+> ![478](../images/Pasted%20image%2020260507171512.png)
 
 所以，我们还是要对不同长度的序列，做填充，这样才能把不同长度的序列，塞到一个X（seq_len, batch_size, input_size）里面，让self.rnn， 进行批量化计算，一次计算一个batch的样本。
 
@@ -4484,7 +4484,7 @@ print(state.shape)
 
 在训练过程中，由于我们采用了“方方正正”的矩阵输入，模型的**输出也确实是“方方正正”的**。
 
-![450](images/Pasted%20image%2020260507171929.png)
+![450](../images/Pasted%20image%2020260507171929.png)
 
 **例如，如果两个序列的有效长度（不包括填充词元）分别为1和2， 则第一个序列的第一项和第二个序列的前两项之后的剩余项将被清除为零**
 
@@ -4506,11 +4506,11 @@ print(state.shape)
 **语言模型的训练样本，就是一个序列**，**把下一个token作为当前token输入的预测的标签**，
 
 一旦编码器（Encoder）完成了任务，接下来的训练过程在**本质上就是一个带条件的语言模型（Conditional Language Model）训练**。
-![633](images/Pasted%20image%2020260507214532.png)
+![633](../images/Pasted%20image%2020260507214532.png)
 
 
 “把下一个 token 作为当前 token 输入的预测标签”正是 **Teacher Forcing（强制教学）** 的精髓。
-![331](images/Pasted%20image%2020260507214607.png)
+![331](../images/Pasted%20image%2020260507214607.png)
 
 
 
@@ -4536,11 +4536,11 @@ print(state.shape)
 
 
 
-![](images/Pasted%20image%2020260507213919.png)
+![](../images/Pasted%20image%2020260507213919.png)
 
-![629](images/Pasted%20image%2020260507213953.png)
+![629](../images/Pasted%20image%2020260507213953.png)
 
-![626](images/Pasted%20image%2020260507214016.png)
+![626](../images/Pasted%20image%2020260507214016.png)
 
 
 #### 完整实现（非常有学习价值）
@@ -5150,11 +5150,11 @@ for eng, fra in zip(engs, fras):
 这里讲的搜索办法，是从模型得到的分布中得到一个确定的预测值的方法，也就是从最后一层的MLP的各个token种类的打分中，拿到一个确定的预测。
 
 因为我们的目标是预测T‘个token， 所以我们的目的是为了让：
-![](images/Pasted%20image%2020260508095414.png)
+![](../images/Pasted%20image%2020260508095414.png)
 
 有以下几种方法：
 - **贪心搜索**
-	- ![310](images/Pasted%20image%2020260508095456.png)
+	- ![310](../images/Pasted%20image%2020260508095456.png)
 	- 每次都选则当前预测token分布的最大概率，也就是argmax那个操作
 	- <mark style="background:#fff88f">计算成本最低</mark>
 	- 问题：
@@ -5167,10 +5167,10 @@ for eng, fra in zip(engs, fras):
 	- 有一个**超参数**：<mark style="background:#fff88f">束宽k</mark>
 		- 第一个预测：y1, 我们选择**最高条件概率**的**k个token**， 这k个token是**候选**第一个token预测
 		- 第二个预测：y2, 基于前面的k个候选输出预测，继续分化前k个概率最大的。
-		- ![535](images/Pasted%20image%2020260508100042.png)
+		- ![535](../images/Pasted%20image%2020260508100042.png)
 
-		- ![](images/Pasted%20image%2020260508100211.png)
-		- ![](images/Pasted%20image%2020260508100315.png)
+		- ![](../images/Pasted%20image%2020260508100211.png)
+		- ![](../images/Pasted%20image%2020260508100315.png)
 
 
 那束搜索是如何具体实现的呢？
@@ -5190,23 +5190,23 @@ for eng, fra in zip(engs, fras):
 >
 >所以束搜索是如何实现的呢？还是说，他把模型预测的进程复制了k份？
 
-![541](images/Pasted%20image%2020260508100928.png)
+![541](../images/Pasted%20image%2020260508100928.png)
 
-![502](images/Pasted%20image%2020260508100956.png)
-![532](images/Pasted%20image%2020260508101253.png)
+![502](../images/Pasted%20image%2020260508100956.png)
+![532](../images/Pasted%20image%2020260508101253.png)
 
 
 
 **第一层预测了k个，第二层理论上得到k^2个，我需要手动从这k^2个里面筛选出k个, 总之保证每次预测仅保留k个给后面，也就是束（等宽传递）**
 
-![618](images/Pasted%20image%2020260508101631.png)
+![618](../images/Pasted%20image%2020260508101631.png)
 
 ### 补充：TCN
 
 TCN时序卷积神经网络，严格来说他不算RNN，但是他同样是处理序列输入的，借鉴了CNN和RNN，他把序列，看成是一个1xl的图片，通过一个1xk的卷积核，来做卷积运算
 
 <mark style="background:#affad1">卷积核的分类</mark>
-![535](images/Pasted%20image%2020260510103600.png)
+![535](../images/Pasted%20image%2020260510103600.png)
 
 - full卷积
 - same卷积
@@ -5216,36 +5216,36 @@ TCN时序卷积神经网络，严格来说他不算RNN，但是他同样是处�
 <mark style="background:#affad1">因果卷积</mark>
 这里的因果卷积，是说，我们每层卷积层（一个卷积核就是一个通道）的输出序列的每个token，只能向左一对多，不能用未来的输入序列的token来进行
 
-![599](images/Pasted%20image%2020260510104855.png)
+![599](../images/Pasted%20image%2020260510104855.png)
 
 
 
 <mark style="background:#affad1">膨胀卷积</mark>
 膨胀卷积的意思，就是，卷积层输出的每个token，原来是依靠原始输入序列的，和kernel_size相同的相邻序列来卷积计算，膨胀卷积，就是原始的输入序列，是采用的隔k隔选一个token，凑够kernel_size，来进行计算
-![526](images/Pasted%20image%2020260510105557.png)
+![526](../images/Pasted%20image%2020260510105557.png)
 
 d 就是我们的膨胀率， 可以看到，
 - d=1的时候，膨胀卷积，就是我们普通的卷积计算，选择相邻的3隔输入序列（kernel_size=3）
 - d=2的时候，膨胀卷积，是选择的token步长2的3个token，（kernel_size =3）
 - d=4的时候，膨胀卷积，是选择的token步长4的3个token，（kernel_size = 3）
 
-![508](images/Pasted%20image%2020260510105824.png)
+![508](../images/Pasted%20image%2020260510105824.png)
 换成计算角度，也就是在卷积核里面添加0，这样就可以实现token步长了
 
-![](images/Pasted%20image%2020260510105901.png)
+![](../images/Pasted%20image%2020260510105901.png)
 
 
 
-![551](images/Pasted%20image%2020260510105913.png)
+![551](../images/Pasted%20image%2020260510105913.png)
 
 
 <mark style="background:#affad1">残差连接</mark>
-![](images/Pasted%20image%2020260510110309.png)
+![](../images/Pasted%20image%2020260510110309.png)
 
 >和这里的CNN的通道理解是一样的，你的原始序列，就一个通道，但是经过一层卷积层之后（里面有多个卷积核），会产生多个通道的卷积后的序列。这里就是残差连接里面的部分了，通道数不一样了，所以，如果你这个时候，要残差链接，从旁路，把这多通道的序列，和原始单通道的序列汇合，肯定需要在1这个通路上，用一个1x1的卷积，调整输入序列的通道，变成和残差里面的通道数一致（也就是卷积核的个数）
 
 
-![490](images/Pasted%20image%2020260510110352.png)
+![490](../images/Pasted%20image%2020260510110352.png)
 
 
 
@@ -5266,13 +5266,13 @@ d 就是我们的膨胀率， 可以看到，
 
 意思就是假设我们的眼睛是全连接，卷积，出来的某一层的特征就是值V，然后对应的索引就是键K，我们的查询Q和K，通过注意力汇聚层，就是我不看内容V，我只根据目录K，来加入我的意图，也就是注意力，这样Q，K 就形成了类似一个掩码mask层，对V进行过滤
 
-![460](images/Pasted%20image%2020260508113823.png)
+![460](../images/Pasted%20image%2020260508113823.png)
 
-![572](images/Pasted%20image%2020260508114210.png)
+![572](../images/Pasted%20image%2020260508114210.png)
 
-![583](images/Pasted%20image%2020260508114139.png)
+![583](../images/Pasted%20image%2020260508114139.png)
 
-![520](images/Pasted%20image%2020260508114231.png)
+![520](../images/Pasted%20image%2020260508114231.png)
 
 
 ### 注意力汇聚（Watson 核回归）
@@ -5290,14 +5290,14 @@ d 就是我们的膨胀率， 可以看到，
 <mark style="background:#affad1">非参数注意力汇聚</mark>
 Watson他们提出了一个回归方法，就是如何把训练集的50个样本来训练后，根据输入的未知，对训练集标签，进行加权
 
-![367](images/Pasted%20image%2020260508132827.png)
+![367](../images/Pasted%20image%2020260508132827.png)
 
 其中这个**K（）** 就是**核（kernel）**， 这个公式所描述的一个估计器（模型），被称为 **Nadaraya-Watson 核回归**
 
 
 受这个的启发，我们回到前面注意力机制框架的角度，重写这个核回归的估计器，从而得到，一个更加通用的<mark style="background:#fff88f">注意力汇聚</mark>的公式
 
-![211](images/Pasted%20image%2020260508133041.png)
+![211](../images/Pasted%20image%2020260508133041.png)
 
 其中，x是查询，（xi,yi）是键值对。 这个f(x)输出就是注意力汇聚，也就是**加上我们的掩码之后的输出**
 
@@ -5309,9 +5309,9 @@ Watson他们提出了一个回归方法，就是如何把训练集的50个样本
 
 我们使用一个高斯核，
 
-![227](images/Pasted%20image%2020260508133447.png)
+![227](../images/Pasted%20image%2020260508133447.png)
 这个核，利用上面的式子，可以组合出α权重，然后乘到每个值上去，最终得到：
-![367](images/Pasted%20image%2020260508133557.png)
+![367](../images/Pasted%20image%2020260508133557.png)
 
 可以看到就是`∑ softmax(-0.5(Q-Ki)2) Vi`
 
@@ -5428,15 +5428,15 @@ y_hat = torch.matmul(attention_weights, y_train)
 - 我们的**大目标**：得到所有的测试集的输入Q，计算他们分别关于训练集输入K的关联性，也就是我们的注意力权重。
 
 
-![](images/e6cd8c468932108f3309dac3165528b4.jpg)
+![](../images/e6cd8c468932108f3309dac3165528b4.jpg)
 
 
-![601](images/Pasted%20image%2020260508143820.png)
+![601](../images/Pasted%20image%2020260508143820.png)
 
 
 **所以，这里用测试集，来当作我们的主动注意力的查询Q，可以看到，经过（Q，K）的注意力汇聚层之后，有点像是，让原来的上一层的输出V，按照我的主动注意力Q，调整一下权重变化，这样，得到我们的注意力汇聚**， 故名思意，前一层的输出（V），融合了我的Q，得到了新的V'， 也就是注意力汇聚，y_hat
 
-![](images/Pasted%20image%2020260508144055.png)
+![](../images/Pasted%20image%2020260508144055.png)
 
 所以，attention_weights， 就是一个注意力权重
 
@@ -5451,7 +5451,7 @@ y_hat = torch.matmul(attention_weights, y_train)
 
 我们还是可以轻松地将**可学习的参数**集成到**注意力汇聚**中
 
-![551](images/Pasted%20image%2020260508144421.png)
+![551](../images/Pasted%20image%2020260508144421.png)
 
 对（Q，Ki）的距离计算，乘上了一个系数w
 
@@ -5459,10 +5459,10 @@ y_hat = torch.matmul(attention_weights, y_train)
 
 
 <mark style="background:#affad1">torch的小批量矩阵乘法bmm</mark>
-![561](images/Pasted%20image%2020260508144907.png)
+![561](../images/Pasted%20image%2020260508144907.png)
 
 
-![378](images/Pasted%20image%2020260508145351.png)
+![378](../images/Pasted%20image%2020260508145351.png)
 .unsqueeze(1), 在第一维插入1， 所以是(2,1,10) 
 .unsqueeze(-1). 在最后一维插入1，所以是(2, 10, 1)
 所以最后小批量乘法是(2,1,1)
@@ -5523,7 +5523,7 @@ for epoch in range(5):
 
 ```
 
-![476](images/Pasted%20image%2020260508150631.png)
+![476](../images/Pasted%20image%2020260508150631.png)
 
 
 <mark style="background:#affad1">测试注意力汇聚</mark>
@@ -5543,28 +5543,28 @@ y_hat = net(x_test, keys, values).unsqueeze(1).detach()
 
 plot_kernel_reg(y_hat)
 ```
-![418](images/Pasted%20image%2020260508151002.png)
+![418](../images/Pasted%20image%2020260508151002.png)
 
-![546](images/Pasted%20image%2020260508151328.png)
+![546](../images/Pasted%20image%2020260508151328.png)
 
 
 ### 注意力评分函数（重要）
 
 前面使用了高斯核来对查询和键之间的关系建模
 
-![547](images/Pasted%20image%2020260508152008.png)
+![547](../images/Pasted%20image%2020260508152008.png)
 
  [(10.2.6)](https://zh-v2.d2l.ai/chapter_attention-mechanisms/nadaraya-waston.html#equation-eq-nadaraya-watson-gaussian)中的 高斯核指数部分可以视为_注意力评分函数_（attention scoring function）， 简称_评分函数_（scoring function），然后把这个函数的输出结果输入到softmax函数中进行运算
 
 通过上述步骤，将得到与键对应的**值的概率分布**（即**注意力权重**）。 最后，**注意力汇聚的输出**就是**基于这些注意力权重的值的加权和**。
 
-![](images/Pasted%20image%2020260508152253.png)
+![](../images/Pasted%20image%2020260508152253.png)
 
 
 从宏观来看，上述算法可以用来实现 [图10.1.3](https://zh-v2.d2l.ai/chapter_attention-mechanisms/attention-cues.html#fig-qkv)中的注意力机制框架
-![](images/Pasted%20image%2020260508152122.png)
+![](../images/Pasted%20image%2020260508152122.png)
 
-![657](images/Pasted%20image%2020260508152315.png)
+![657](../images/Pasted%20image%2020260508152315.png)
 
 所以，q,k就是索引与索引之间的匹配关联程度，然后按照样本的标签，回归我们自己的预测。
 
@@ -5578,14 +5578,14 @@ softmax()里面的**q,ki的计算方法**，叫做**评分函数**
 
 指定每个序列的有效token长度 = valid_len 是一个list
 
-![619](images/Pasted%20image%2020260508152736.png)
+![619](../images/Pasted%20image%2020260508152736.png)
 
 
 
 <mark style="background:#affad1">加性注意力</mark> （当查询和键是**不同长度的矢量时**，可以使用可加性注意力评分函数）
 一般来说，当<mark style="background:#fff88f">Q，K是不同长度的向量时</mark>，可以使用**加性注意力** 作为**评分函数**
 
-![](images/Pasted%20image%2020260508152916.png)
+![](../images/Pasted%20image%2020260508152916.png)
 
 softmax(a(q,ki))
 
@@ -5594,11 +5594,11 @@ softmax(a(q,ki))
 
 <mark style="background:#affad1">缩放点积注意力</mark>（当它们的长度相同时，使用**缩放的“点－积”注意力评分函数**的**计算效率更高**）
 
-![](images/Pasted%20image%2020260508153147.png)
+![](../images/Pasted%20image%2020260508153147.png)
 
-![](images/Pasted%20image%2020260508153334.png)
-![531](images/Pasted%20image%2020260508154750.png)
-![](images/5768d8a2677de272e295ed73cae332ad.jpg)
+![](../images/Pasted%20image%2020260508153334.png)
+![531](../images/Pasted%20image%2020260508154750.png)
+![](../images/5768d8a2677de272e295ed73cae332ad.jpg)
 **缩放点积注意力权重**的实现：包含评分函数+softmax
 ```python
 #@save
@@ -5622,7 +5622,7 @@ class DotProductAttention(nn.Module):
 
 
 <mark style="background:#fff88f">热力图查看</mark>
-![489](images/Pasted%20image%2020260508154134.png)
+![489](../images/Pasted%20image%2020260508154134.png)
 
 
 ---
@@ -5645,14 +5645,14 @@ Bahdanau等人提出了一个**没有严格单向对齐限制**的 **可微注�
 这个新的基于注意力的模型与 [9.7节](https://zh-v2.d2l.ai/chapter_recurrent-modern/seq2seq.html#sec-seq2seq)中的模型相同， 只不过 [(9.7.3)](https://zh-v2.d2l.ai/chapter_recurrent-modern/seq2seq.html#equation-eq-seq2seq-s-t)中的上下文变量C，在任何解码器的时间步t'， 都会被Ct'替换（**就是解码器在自回归的过程中，也会调整上下文变量C**）
 
 假设解码器的输入序列是T个token， 解码时间步t’ 的上下文更新后 = 注意力集中的输出：
-![](images/Pasted%20image%2020260508160645.png)
+![](../images/Pasted%20image%2020260508160645.png)
 
 st'-1, 是**查询**=**解码器上一时刻的隐状态**，
 **编码器隐状态ht** 视为键和值）
 
 > 编码器在解码器运行前，就已经跑完了，所以他的**所有层的最终状态**，作为**解码器的初始状态**。也就是我们的K，V
 
-![499](images/Pasted%20image%2020260508161120.png)
+![499](../images/Pasted%20image%2020260508161120.png)
 
 所以这样的注意力模型，如上所示。
 
@@ -5819,17 +5819,17 @@ for eng, fra in zip(engs, fras):
 ```
 
 ### 自注意力+位置编码
-![](images/Pasted%20image%2020260509162707.png)
-![](images/Pasted%20image%2020260509162715.png)
+![](../images/Pasted%20image%2020260509162707.png)
+![](../images/Pasted%20image%2020260509162715.png)
 
 
-![](images/Pasted%20image%2020260509162733.png)
+![](../images/Pasted%20image%2020260509162733.png)
 就是对X增加了一层摩尔纹意义，这个sin，cos的设计，主要目的是为了模仿二进制编码的变化频率，（地位变化频率高，高位变化频率低），简单说就是：
 该序列的第i个token，他有d维，j∈d，然后按照奇数偶数的不同来得到一个固定的编码值，他的好处是，在j，也就是d维里面比较低的位置，变化的频率快，高维的位置，变化的频率慢（模拟二进制编码的变化）
 
-![453](images/Pasted%20image%2020260509163035.png)
+![453](../images/Pasted%20image%2020260509163035.png)
 
-![](images/Pasted%20image%2020260509163147.png)
+![](../images/Pasted%20image%2020260509163147.png)
 可以看到，一个token的d位，低位变化密集，高位变化慢，**本质上就是叠了一层二进制地址**（address + value， 可以理解为，在这块内存的数据上，加了内存的地址），上图就是模拟二进制地址本身热力图的变化
 
 
@@ -5839,7 +5839,7 @@ for eng, fra in zip(engs, fras):
 
 ### 多头注意力（重要）
 
-![614](images/Pasted%20image%2020260508202017.png)
+![614](../images/Pasted%20image%2020260508202017.png)
 
 
 使用的是Q，K，V的不同子空间的表示。
@@ -5850,18 +5850,18 @@ for eng, fra in zip(engs, fras):
 现在多头注意力的一个头是hi = f(Wi(q)q, Wi(k)k, Wi(v)v)
 也就是每个头，q,k,v都要经过一个独立的全连接层，投影到相同的h维度的特征空间上，然后在完成后续的注意力计算。
 
-![](images/Pasted%20image%2020260509162016.png)
+![](../images/Pasted%20image%2020260509162016.png)
 
 所以，一共有hx3个参数需要学习
 f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqxq + wk x k)）/缩放点积注意力(无参)
-![](images/Pasted%20image%2020260509162022.png)
+![](../images/Pasted%20image%2020260509162022.png)
 
-![659](images/Pasted%20image%2020260509162637.png)
+![659](../images/Pasted%20image%2020260509162637.png)
 
-![](images/Pasted%20image%2020260509211544.png)
+![](../images/Pasted%20image%2020260509211544.png)
 
-![494](images/Pasted%20image%2020260509211549.png)
-![592](images/Pasted%20image%2020260509211558.png)
+![494](../images/Pasted%20image%2020260509211549.png)
+![592](../images/Pasted%20image%2020260509211558.png)
 
 
 
@@ -5880,12 +5880,12 @@ f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqx
 我这里还有一个疑问，既然是并行计算每个头的pq, pk, pv, 那我直接设置一个大的Wq = [Wq1, Wq2, Wq3,....,Wqh], 因为我初始化不一样，所以里面每个头的全连接的参数都不一样，
 
 
-![](images/Pasted%20image%2020260509212241.png)
+![](../images/Pasted%20image%2020260509212241.png)
 
-![](images/bf47cdcc441370097dcd7273eb7c1003.jpg)
-![](images/5ee6617adde3a3448d208e1a2988c0f2.jpg)
-![](images/5d17e7458effb36eea15d88152492ee2.jpg)
-![](images/15de1a2d460f73003713319c82f74d9f.jpg)
+![](../images/bf47cdcc441370097dcd7273eb7c1003.jpg)
+![](../images/5ee6617adde3a3448d208e1a2988c0f2.jpg)
+![](../images/5d17e7458effb36eea15d88152492ee2.jpg)
+![](../images/15de1a2d460f73003713319c82f74d9f.jpg)
 **全连接变维度，又是每个头只注意高维空间的部分维，最后又全连接整合映射到一个低维上**
 
 
@@ -5938,14 +5938,14 @@ f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqx
 
 因此，我们已经得到了编码器最后一层的所有时间步的状态[h1,h2,...,hT], 我们把这个状态作为K，V，把解码器在接受输入xt'时，他的上一时刻的状态st'-1, 所谓查询，把q,K,V 作为我们的注意力层的输入（这里有一个细节，就是纳入KV的计算，是源序列的所有T时间步的KV）从而得到真实的，根据我们当前解码器的时间步t'的，上下文变量context，然后和输入xt‘合并，输入解码器
 
-![590](images/Pasted%20image%2020260509153537.png)
+![590](../images/Pasted%20image%2020260509153537.png)
 
-![499](images/Pasted%20image%2020260509153503.png)
+![499](../images/Pasted%20image%2020260509153503.png)
 
 
 <mark style="background:#affad1">编码器遮罩（填充掩码：enc_valid_len）</mark>
 
-![530](images/Pasted%20image%2020260509153851.png)
+![530](../images/Pasted%20image%2020260509153851.png)
 
 
 
@@ -5959,9 +5959,9 @@ f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqx
 > 
 >  但是我想知道，这个自注意力权重，乘上V（整个序列）之后，有什么意义呢？这个新的序列，有什么意义呢？
 
-![456](images/Pasted%20image%2020260509155740.png)
+![456](../images/Pasted%20image%2020260509155740.png)
 
-![455](images/Pasted%20image%2020260509155755.png)
+![455](../images/Pasted%20image%2020260509155755.png)
 
 所以作用就是，<mark style="background:#fff88f">让这个token，里面能够包含整个序列的上下文信息</mark>
 （对比RNN，只能从左到右挨个计算攒上下文，远距离的依赖弱
@@ -5980,11 +5980,11 @@ f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqx
 <mark style="background:#affad1">掩码多头自注意力</mark>：
 
 **解码器的第一层**，是掩码自注意力，如果没有掩码，他就会直接计算目标序列的所有token关于其他全部token的关联，加上掩码之后，只计算该目标序列和之前目标序列的相关程度
-![307](images/Pasted%20image%2020260511131945.png)
+![307](../images/Pasted%20image%2020260511131945.png)
 
 **我们先讨论训练情况，我一次性输入目标序列，然后多头掩码自注意力，计算第i个token和和前面i-1个token的相关性，作为这个token的注意力权重，所以这个多头掩码自注意力，输出的还是一个序列**
 
-![570](images/Pasted%20image%2020260511133956.png)
+![570](../images/Pasted%20image%2020260511133956.png)
 
 
 **所以transformer自回归，因为有多头自注意力开头的原因，所以，每次自回归，都是把自己预测出来的token，和之前的历史token序列拼起来，然后再输送回解码器开头，增加计算这个token关于历史token的自注意力**
@@ -6004,68 +6004,68 @@ f的注意力计算，我们一般使用加性注意力（带参：wv*  tanh(wqx
 
 >然后呢，这个多头注意力层，以编码器的输入的序列的掩码多头自注意力的序列维输入，作为Q，我想知道，用目标序列作为查询，原始序列作为键值，输出的物理含义，我又如何形象的理解，最后的FFN又是想干嘛？他的目的是为了什么？是为了学习在编码后的语义空间里面，源序列和目标序列的一个预测的分布关系吗
 
-![](images/Pasted%20image%2020260511151516.png)
+![](../images/Pasted%20image%2020260511151516.png)
 <mark style="background:#fff88f">所以，掩码多头自注意力的输出序列，**每个 token 的向量，已经融合了 “它前面所有 token 的上下文信息 + 多个维度的语义关系”**，但依然保持序列的长度不变</mark>
 
-![588](images/Pasted%20image%2020260511151617.png)
+![588](../images/Pasted%20image%2020260511151617.png)
 
-![](images/Pasted%20image%2020260511151704.png)
+![](../images/Pasted%20image%2020260511151704.png)
 
 
-![](images/Pasted%20image%2020260511151839.png)
+![](../images/Pasted%20image%2020260511151839.png)
 
-![676](images/Pasted%20image%2020260511152501.png)
-![384](images/Pasted%20image%2020260511152951.png)
+![676](../images/Pasted%20image%2020260511152501.png)
+![384](../images/Pasted%20image%2020260511152951.png)
 注意，这里是中间有一个非线性
 
-![604](images/Pasted%20image%2020260511153031.png)
+![604](../images/Pasted%20image%2020260511153031.png)
 
-![570](images/Pasted%20image%2020260511153200.png)
-![518](images/Pasted%20image%2020260511153247.png)
+![570](../images/Pasted%20image%2020260511153200.png)
+![518](../images/Pasted%20image%2020260511153247.png)
 
 
 <mark style="background:#affad1">总的来看，解码器的输入输出（训练阶段）</mark>
-![](images/Pasted%20image%2020260511153631.png)
+![](../images/Pasted%20image%2020260511153631.png)
 
 
-![257](images/Pasted%20image%2020260511153702.png)
+![257](../images/Pasted%20image%2020260511153702.png)
 
 <mark style="background:#affad1">解码器的输出和模型的预测输出</mark>
 
-![](images/Pasted%20image%2020260511153944.png)
+![](../images/Pasted%20image%2020260511153944.png)
 
 ### transformer架构认知修正
-![](images/Pasted%20image%2020260511154249.png)
+![](../images/Pasted%20image%2020260511154249.png)
 
-![616](images/Pasted%20image%2020260511154300.png)
+![616](../images/Pasted%20image%2020260511154300.png)
 
 - 编码器和解码器，本质上都是**特征处理器**，输出的是语义向量，不是词。
 - 真正的 “预测”，是靠解码器后面的线性层，把向量投影到词表空间，再通过 Softmax 变成概率。
 
 
-![627](images/Pasted%20image%2020260511154949.png)
+![627](../images/Pasted%20image%2020260511154949.png)
 
-![](images/Pasted%20image%2020260511155033.png)
-![376](images/Pasted%20image%2020260511155123.png)
-![457](images/Pasted%20image%2020260511155134.png)
-![319](images/Pasted%20image%2020260511155150.png)
-
-
+![](../images/Pasted%20image%2020260511155033.png)
+![376](../images/Pasted%20image%2020260511155123.png)
+![457](../images/Pasted%20image%2020260511155134.png)
+![319](../images/Pasted%20image%2020260511155150.png)
 
 
-![](images/Pasted%20image%2020260511155212.png)
+
+
+![](../images/Pasted%20image%2020260511155212.png)
 
 
 
 #### 解码器的KVcache
 
-![481](images/Pasted%20image%2020260511164945.png)
+![481](../images/Pasted%20image%2020260511164945.png)
 
-![457](images/Pasted%20image%2020260511165005.png)
+![457](../images/Pasted%20image%2020260511165005.png)
 
 
-![](images/b7c4a7123d24f0e164c81cf416573970.jpg)
-![](images/cf4bf1a10767c28fd2a4f0837d233871.jpg)
+![](../images/b7c4a7123d24f0e164c81cf416573970.jpg)
+![](../images/cf4bf1a10767c28fd2a4f0837d233871.jpg)
 
 
 # torch 损失函数

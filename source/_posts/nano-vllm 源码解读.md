@@ -8,7 +8,7 @@
 `nano-vllm` 是一个教学级别的轻量化 vLLM**推理引擎**实现
 
 整体框架图如下：
-![](images/Pasted%20image%2020260516183919.png)![](images/Pasted%20image%2020260516184129.png)
+![](../images/Pasted%20image%2020260516183919.png)![](../images/Pasted%20image%2020260516184129.png)
 
 所以，总共包含4个部分：
 - API层，提供用户接口，比如对话等
@@ -59,14 +59,14 @@
 
 注意，这里我们的nano-vllm，并没有完全脱离pytorch，而是在torch的基础上，做了定制和优化。
 
-![](images/Pasted%20image%2020260516185301.png)
+![](../images/Pasted%20image%2020260516185301.png)
 
 各层的实现不同
-![](images/Pasted%20image%2020260516185311.png)
+![](../images/Pasted%20image%2020260516185311.png)
 
 相当于就是对大模型的各个主要组件（算子），为了解决他们的性能问题，而进行了重构
 
-![](images/Pasted%20image%2020260516185412.png)
+![](../images/Pasted%20image%2020260516185412.png)
 主要有：
 - FlashAttention, 解决注意力计算的O(n2)的显存问题
 - FFN，解决张量并行问题（TP）
@@ -86,7 +86,7 @@ nn.MultiheadAttention ─→ 自定义 Attention（FlashAttention + KV Cache）
 无                  ──→   RotaryEmbedding（RoPE 位置编码）
 ```
 
-![](images/Pasted%20image%2020260516185921.png)
+![](../images/Pasted%20image%2020260516185921.png)
 
 ## 工具层
 ```text
@@ -110,7 +110,7 @@ prompts     token_ids    Sequence     scheduled    input_ids    logits   token_i
 ---
 
 # python语法补充
-![379](images/Pasted%20image%2020260517134106.png)
+![379](../images/Pasted%20image%2020260517134106.png)
 
 ----
 
@@ -184,7 +184,7 @@ Book.xxx 这里面有
 		类的命名空间，存所有类属性、方法（包括你写的 `title`/`author`，以及自动生成的特殊方法）
 	
 ```
-![476](images/Pasted%20image%2020260517112701.png)
+![476](../images/Pasted%20image%2020260517112701.png)
 
 所以，一个类，默认有三个方法：
 - __init__
@@ -192,12 +192,12 @@ Book.xxx 这里面有
 - delattr
 
 **当然这不是全部，一个类实例，有很多个方法**
-![414](images/Pasted%20image%2020260517112943.png)
-![465](images/Pasted%20image%2020260517113006.png)
+![414](../images/Pasted%20image%2020260517112943.png)
+![465](../images/Pasted%20image%2020260517113006.png)
 
 **因为 Python 的 `object` 类默认提供了这些方法的基础实现。**
 
-![256](images/Pasted%20image%2020260517113108.png)
+![256](../images/Pasted%20image%2020260517113108.png)
 
 
 ### 常用的类实例的方法
@@ -244,7 +244,7 @@ class mybase:
 
 自动识别你的类型注解，然后写入你的init来帮你构造初始化函数
 
-![246](images/Pasted%20image%2020260517113537.png)
+![246](../images/Pasted%20image%2020260517113537.png)
 
 
 2. **__repr__方法
@@ -257,14 +257,14 @@ class mybase:
 重载==
 
 
-4. <mark style="background:#fff88f">如果开启了order=True参数</mark>![](images/Pasted%20image%2020260517113958.png)
-5. `frozen=True` → 让对象不可修改![](images/Pasted%20image%2020260517114049.png)
-6. `slots=True`![](images/Pasted%20image%2020260517114236.png)
+4. <mark style="background:#fff88f">如果开启了order=True参数</mark>![](../images/Pasted%20image%2020260517113958.png)
+5. `frozen=True` → 让对象不可修改![](../images/Pasted%20image%2020260517114049.png)
+6. `slots=True`![](../images/Pasted%20image%2020260517114236.png)
 正常，我们是通过__dict__字典，来查看所有的成员变量的，也可以动态增减成员属性。但是占内存，速度慢
 
 <mark style="background:#fff88f">而开启了slots之后，就等于锁死了属性，不能动态增减属性，但是内存占用少了，访问速度更快，但是没有__dict__了。</mark>
 
-![300](images/Pasted%20image%2020260517114445.png)![363](images/Pasted%20image%2020260517114509.png)
+![300](../images/Pasted%20image%2020260517114445.png)![363](../images/Pasted%20image%2020260517114509.png)
 
 
 
@@ -280,7 +280,7 @@ class mybase:
 1. **只读属性**
 
 某个值是计算出来的，不想让用户直接修改
-![379](images/Pasted%20image%2020260517115122.png)
+![379](../images/Pasted%20image%2020260517115122.png)
 
 这样可以实现一个只读属性
 
@@ -308,7 +308,7 @@ class mybase:
 语法糖（Syntactic Sugar），就是「让代码写起来更甜、更舒服，但功能上没有任何变化的语法」。
 
 它本质上是语言给你提供的「便捷写法」，底层会自动帮你转换成等价的、更繁琐的代码，让你少写重复、难看的代码。
-![480](images/Pasted%20image%2020260517120306.png)
+![480](../images/Pasted%20image%2020260517120306.png)
 
 ---
 
@@ -414,7 +414,7 @@ if __name__ == "__main__":
     restored_obj.file_handle.close()
 ```
 
-![](images/Pasted%20image%2020260517140210.png)
+![](../images/Pasted%20image%2020260517140210.png)
 
 其实说白了，就是特地指定哪些能打包序列化，哪些不用打包序列化
 
@@ -456,7 +456,7 @@ if __name__ == "__main__":
     print(p2.name, p2.age)  # 输出：小明 18
 ```
 
-![](images/Pasted%20image%2020260517140646.png)
+![](../images/Pasted%20image%2020260517140646.png)
 
 
 ## 枚举类
@@ -473,7 +473,7 @@ current_status = status.STATUS_A
 print(status.STATUS_A)
 ```
 
-![599](images/Pasted%20image%2020260517141036.png)
+![599](../images/Pasted%20image%2020260517141036.png)
 
 Enum是枚举类的基类，auto是一个函数估计，提供自动计数，防止重复
 
@@ -549,7 +549,7 @@ Enum是枚举类的基类，auto是一个函数估计，提供自动计数，防
 	1. d = deque(maxlen=10)
 		1. 满了之后，右边加一个，左边会被挤掉一个，用于处理**滑动窗口**或者**最近日志记录**
 
-![](images/Pasted%20image%2020260517142819.png)
+![](../images/Pasted%20image%2020260517142819.png)
 
 
 deque的初始化，
@@ -738,7 +738,7 @@ with open("data.pkl", 'rb') as f:
 
 print(loaded_data)
 ```
-![320](images/Pasted%20image%2020260517153505.png)
+![320](../images/Pasted%20image%2020260517153505.png)
 
 
 
@@ -759,7 +759,7 @@ print(loaded_data)
 | `*`  | 单星号 | 解包**位置参数**（列表 / 元组 / 可迭代对象） |
 | `**` | 双星号 | 解包**关键字参数**（字典）             |
 > 列表，元组/可迭代对象 + * 是拆分成多个对象
-![514](images/Pasted%20image%2020260517151011.png)、
+![514](../images/Pasted%20image%2020260517151011.png)、
 
 
 **双星号解包，<mark style="background:#fff88f">关键字参数《-》字典的类型转换</mark>
@@ -767,7 +767,7 @@ print(loaded_data)
 > 字典 + ** 拆分成关键字
 
 
-![](images/Pasted%20image%2020260517151304.png)
+![](../images/Pasted%20image%2020260517151304.png)
 ```python
 def func(*args, **kwargs):
     print(args) #(1, 2, 3)
@@ -877,7 +877,7 @@ if __name__ == "__main__":
 
 ```
 
-![](images/Pasted%20image%2020260518193310.png)
+![](../images/Pasted%20image%2020260518193310.png)
 
 ---
 
@@ -887,7 +887,7 @@ if __name__ == "__main__":
 - CUDA Graph
 - FlashAttention
 - **continuous batching**
-	- ![443](images/Pasted%20image%2020260518211421.png)
+	- ![443](../images/Pasted%20image%2020260518211421.png)
 - **张量并行**
 - **pagedattention**
 	- block_table作为页表，写入位置作为slot, blockmanager作为操作系统，kvcache是具体的物理内存，所以底层具体写入物理内存，用的是FlashAttention, 而页表管理则是靠blockmanager
