@@ -3,5 +3,6 @@
   "cssTheme": "",
   "enabledCssSnippets": [
     "code-contrast"
-  ]
+  ],
+  "baseFontSize": 13
 }

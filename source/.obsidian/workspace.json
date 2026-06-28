@@ -135,7 +135,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 358.5,
+    "width": 200,
     "collapsed": true
   },
   "right": {
@@ -228,7 +228,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 257.5
+    "width": 200
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -243,26 +243,30 @@
   },
   "active": "94fb281899687596",
   "lastOpenFiles": [
+    "images/Pasted image 20260628144842.png",
+    "images/Pasted image 20260628142343.png",
+    "_posts/buffer_allocator_design.md",
+    "_posts/基于cuda自制llama大模型推理框架.md",
+    "_posts/gtest_guide.md",
+    "_posts/cmake_advanced.md",
+    "_posts/cmake_guide.md",
+    "_posts/深度学习基础-pytorch+python.md",
+    "images/Pasted image 20260627084716.png",
+    "images/Pasted image 20260616121346.png",
+    "images/Pasted image 20260616121206.png",
+    "images/Pasted image 20260616121149.png",
     "images/Pasted image 20260602170757.png",
     "images/Pasted image 20260602170707.png",
     "images/Pasted image 20260602170553.png",
     "images/Pasted image 20260602170336.png",
     "images/Pasted image 20260602163334.png",
-    "images/Pasted image 20260602163315.png",
-    "images/Pasted image 20260602163306.png",
-    "images/Pasted image 20260602163212.png",
-    "images/Pasted image 20260602163152.png",
-    "images/Pasted image 20260602163138.png",
-    "images/Pasted image 20260602163115.png",
     "_posts/CUDA编程.md",
-    "_posts/基于cuda自制llama大模型推理框架.md",
     "_posts/nano-vllm 源码解读.md",
     "_posts/infra-面经.md",
     "_posts/未命名.md",
     "_posts/现代c++学习.md",
     "_data/templates/学习笔记-大模型算法.md",
     "_posts/Transformer 推理性能分析.md",
-    "_posts/深度学习基础-pytorch+python.md",
     "_posts/toc.md",
     "_posts/imx6ull-linux-阻塞与非阻塞.md",
     "_posts/imx6ull-按键输入实验.md",
@@ -281,10 +285,6 @@
     "_posts/xv6-lab4.md",
     "_posts/imx6ull-并发与竞争.md",
     "_posts/cache-学习笔记.md",
-    "_posts/vfs-磁盘-讨论笔记.md",
-    "_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
-    "_posts/测试.md",
-    "_posts/前面的多层反向传播对上了.md",
     "wait",
     "_data/whiteboards",
     "_posts/未命名 1.base",

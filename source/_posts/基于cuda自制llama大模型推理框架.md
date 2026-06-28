@@ -141,8 +141,220 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 	# `MinSizeRel`（最小体积）
 ```
 
+### 项目里的CMake构建速查
 
-## gdb使用
+一个项目从 `CMakeLists.txt` 到可执行文件，大概是这条线：
+
+```text
+include() / find_package()
+        ↓
+收集源文件
+        ↓
+add_executable() / add_library()
+        ↓
+target_include_directories()
+target_link_directories()
+target_link_libraries()
+```
+
+根 `CMakeLists.txt` 通常先做这些事：
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
+project(llama_infer CXX CUDA)
+include(cmake/cuda.cmake)
+```
+
+重点：
+
+- `CMAKE_EXPORT_COMPILE_COMMANDS ON`：生成 `compile_commands.json`，方便 IDE 跳转和补全。
+- `project(llama_infer CXX CUDA)`：启用 C++ 和 CUDA 两套语言支持。
+- `include(cmake/cuda.cmake)`：执行 CUDA 探测脚本，比如检查 toolkit、GPU 架构。
+
+几个容易混的点：
+
+- `include(xxx.cmake)`：执行 CMake 脚本，类似 bash 的 `source`，不是 C++ 的 `#include`。
+- `find_package(GTest REQUIRED)`：找的是库安装时附带的 CMake 描述文件，不是直接找 `.so/.a`。
+- `GTest::gtest`：CMake target，里面已经打包了头文件路径、库路径和依赖。
+- `PROJECT_SOURCE_DIR`：顶层 `CMakeLists.txt` 所在目录。
+- `REQUIRED`：找不到就直接报错停止。
+- `add_library(llama SHARED ...)`：`llama` 是 CMake 目标名，不是最终文件名。`SHARED` 表示生成动态库，Linux 下 CMake 会自动加 `lib` 前缀和 `.so` 后缀，所以产物是 `libllama.so`。
+
+顺序上，`target_include_directories / target_link_directories / target_link_libraries` 必须写在 `add_executable/add_library` 之后，因为它们要绑定到已经创建好的 target。
+
+如果有子目录：
+
+```cmake
+add_library(llama SHARED ...)
+add_subdirectory(test)
+add_subdirectory(demo)
+```
+
+`test/demo` 如果要链接 `llama`，就应该放在 `add_library(llama ...)` 之后。
+
+条件编译常用来控制模型支持：
+
+```cmake
+option(QWEN2_SUPPORT OFF)
+if (QWEN2_SUPPORT)
+    add_definitions(-DQWEN2_SUPPORT)
+endif()
+```
+
+命令行开启：
+
+```bash
+cmake .. -DQWEN2_SUPPORT=ON
+```
+
+用途：不同模型依赖不同，按需打开，避免强制安装暂时不用的库。
+
+第三方库安装后通常长这样：
+
+```text
+/usr/include/gtest/          # 头文件
+/usr/lib/libgtest.a          # 库本体
+/usr/lib/cmake/GTest/        # find_package 要找的描述文件
+```
+
+常用命令：
+
+```bash
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
+make llama
+make test_llm
+./test_llm --gtest_filter=test_buffer.*
+```
+
+`make test_llm` 时，如果 `test_llm` 写了：
+
+```cmake
+target_link_libraries(test_llm llama)
+```
+
+CMake 会自动先编 `llama`，再编 `test_llm`，不用手动分两步。
+
+常见目标：
+
+| 目标 | 产物 |
+|---|---|
+| `llama` | `lib/libllama.so` |
+| `test_llm` | `build/test/test_llm` |
+| `llama_infer` | `build/demo/llama_infer` |
+
+查看有哪些目标：
+
+```bash
+make help
+grep -rn "add_executable\|add_library" CMakeLists.txt test/ demo/
+```
+
+### 库链接怎么判断
+
+核心原则：
+
+> **只要代码用了某个库的头文件，一般就要把对应库写进 `target_link_libraries`。**
+
+```cmake
+target_link_libraries(llama
+    sentencepiece
+    glog::glog
+    gtest
+    gtest_main
+    pthread
+    cudart
+    armadillo
+)
+```
+
+可以<mark style="background:#fff88f">粗略分三类</mark>：
+
+| 类型        | 例子                                                  | 是否需要手动链接 |
+| --------- | --------------------------------------------------- | -------- |
+| 编译器默认库    | `libstdc++`、`libc`、`libm`、`libgcc`                  | 通常不用     |
+| 系统库但不默认链接 | `pthread`、`dl`、`rt`                                 | **需要**   |
+| 第三方库      | `glog`、`gtest`、`sentencepiece`、`cudart`、`armadillo` | **需要**   |
+
+`glog::glog` 这种带 `::` 的名字，一般是 CMake target，里面已经带了头文件路径、库路径和依赖。
+
+`sentencepiece`、`cudart` 这种裸库名，等价于让链接器去找：
+
+```text
+libsentencepiece.so / libsentencepiece.a
+libcudart.so / libcudart.a
+```
+
+一句话记忆：
+
+```text
+include 解决“编译时能不能看到声明”
+target_link_libraries 解决“链接时能不能找到实现”
+```
+
+# GTest单元测试速查
+
+基本写法：
+
+```cpp
+TEST(test_buffer, allocate) {
+    Buffer buffer(32, alloc);
+    ASSERT_NE(buffer.ptr(), nullptr);
+}
+```
+
+`TEST(suite, name)` 会自动生成测试类，并注册到 gtest 的全局用例列表。`RUN_ALL_TESTS()` 会统一执行这些测试。
+
+<mark style="background:#d6e4ff">suite 通常写模块名，name 写测试场景</mark>，比如 `test_buffer.allocate`。
+
+常用断言：
+
+| 断言 | 含义 |
+|---|---|
+| `ASSERT_EQ(a, b)` | `a == b` |
+| `ASSERT_NE(a, b)` | `a != b` |
+| `ASSERT_TRUE(cond)` | 条件为真 |
+| `ASSERT_FALSE(cond)` | 条件为假 |
+| `ASSERT_STREQ(a, b)` | C 字符串相等 |
+
+<mark style="background:#ffd6e7">`ASSERT_` 失败后立刻终止当前用例，`EXPECT_` 失败后记录错误但继续执行。</mark>
+
+运行命令：
+
+```bash
+make test_llm -j$(nproc)
+
+./build/test/test_llm
+./build/test/test_llm --gtest_list_tests
+./build/test/test_llm --gtest_filter=test_buffer.*
+./build/test/test_llm --gtest_filter=test_buffer.allocate
+./build/test/test_llm --gtest_filter=*allocate*
+```
+
+输出里重点看：
+
+```text
+[ RUN      ] test_buffer.allocate
+[       OK ] test_buffer.allocate
+[  PASSED  ] 1 test.
+```
+
+如果失败，会打印断言所在文件行号、期望值和实际值。
+
+CMake 集成：
+
+```cmake
+find_package(GTest REQUIRED)
+target_link_libraries(test_llm GTest::gtest)
+```
+
+`test_llm` 本质是一个测试可执行文件，里面链接了 `libllama.so`、gtest、glog 等依赖。
+
+
+# gdb使用
 gdb是调试工具，需要按照调试模式来编译程序
 ```bash
 # 构建
@@ -262,6 +474,75 @@ c++风格的强制类型转换， 比（）直接转换更安全。
 - `reinterpret_cast` — 不相关指针类型间的暴力转换
 - `const_cast` — 悄悄去掉 const
 
+1. `构造函数 xxx(const xxx& a) = delete`
+
+显式删除某个函数，让编译器禁止调用它。常用于禁止拷贝：
+
+```cpp
+class NoCopyable {
+protected:
+    NoCopyable() = default;
+    ~NoCopyable() = default;
+
+    NoCopyable(const NoCopyable&) = delete;
+    NoCopyable& operator=(const NoCopyable&) = delete;
+};
+```
+
+子类继承 `NoCopyable` 后，普通构造不会受影响：
+
+```cpp
+Buffer buf(128, alloc);   // 正常构造
+```
+
+但拷贝构造和拷贝赋值会被编译器拒绝：
+
+```cpp
+Buffer buf2(buf);     // 触发拷贝构造，编译报错
+Buffer buf3 = buf;    // 也是拷贝构造，编译报错
+buf2 = buf;           // 触发拷贝赋值，编译报错
+```
+
+<mark style="background:#ffd6e7">`= delete` 是编译期拦截，不是运行时报错。</mark>
+
+在 `Buffer` 这种管理大块内存的类里，禁止拷贝可以避免两个对象指向同一块 `ptr_`，析构时发生 double free。
+
+3. `enum` 和 `enum class`
+
+普通 `enum`：
+
+```cpp
+enum StatusCode : uint8_t {
+    kSuccess = 0,
+    kPathNotValid = 2
+};
+```
+
+枚举值可以直接使用，也容易隐式转成 `int`：
+
+```cpp
+int code = kSuccess;
+```
+
+`enum class`：
+
+```cpp
+enum class DeviceType : uint8_t {
+    kDeviceCPU = 1,
+    kDeviceCUDA = 2
+};
+```
+
+使用时必须带作用域：
+
+```cpp
+DeviceType type = DeviceType::kDeviceCUDA;
+```
+
+<mark style="background:#d6e4ff">`enum class` 更类型安全：不会隐式转成 `int`，不同枚举类型之间也不能随便比较。</mark>
+
+`: uint8_t` 表示指定底层存储类型，能减少内存占用。默认优先用 `enum class`，只有需要和 `int` 高频交互时再考虑普通 `enum`。
+
 
 
 
@@ -320,6 +601,115 @@ cudaDeviceSynchronize, 是cpu阻塞等待GPU所有流的任务完成。只要GPU
 	- 抽象存储空间
 - alloc
 	- 这个模块是对**内存分配管理器**的封装
+
+### Buffer层，DeviceAlloctor层，RALL动态管理设计
+
+我的原话问题：
+
+> 对了，我记得老师说，buffer类这里面有用智能指针+RALL，智能指针我看就一个shared_ptr, 用来对内存进行引用计数，自动进行释放回收。是吗？
+>
+> 那RALL呢？
+
+> shared_ptr 本身就是 RAII 的经典实现，这算什么？共享指针本质上就是一个带一个引用计数机制的特殊指针，我看buffer里面，主要就是用来指定DeviceAllocator类型的指针，是用来表示设备操作类对象的指针的。
+>
+> buffer类里面，包含的是一块内存的抽象信息（内存大小，内存指针，内存设备，是否是buffer类管理的内存，管理这块内存的DeviceAllocator类对象。）
+>
+> 而一个指向的具体的设备操作类对象，allocator_，（处理的设备类型，就这一个成员属性）
+>
+> 所以我们的用共享指针shared_ptr所实现的RALL思想，是什么意思？是指的buffer类包含的对DeviceAllocator类的动态包括关系吗？
+
+> 所以buffer类对象，只是内存块的抽象表示层，中间还有一层DeviceAllocator类的分配层，是吗？
+
+这里可以理解成三层：
+
+```text
+Buffer           # 内存块抽象：大小、指针、设备类型、是否外部内存
+    ↓ 委托
+DeviceAllocator  # 分配策略：CPU malloc/free 或 CUDA cudaMalloc/cudaFree
+    ↓ 调用
+OS / CUDA        # 真正执行物理内存分配
+```
+
+<mark style="background:#d6e4ff">Buffer 不直接关心底层是 CPU 还是 GPU，它只保存内存块信息，并把申请/释放委托给 allocator_。</mark>
+
+Buffer类 里的核心成员大概是：
+
+```cpp
+size_t byte_size_;
+void* ptr_;
+bool use_external_;
+DeviceType device_type_;
+std::shared_ptr<DeviceAllocator> allocator_;
+```
+
+- `byte_size_ + ptr_`：表示这块内存本身。
+- `device_type_`：标记内存在 CPU 还是 GPU。
+- `use_external_`：如果是外部传进来的指针，Buffer 不负责释放。
+- `allocator_`：指向具体分配器对象，负责实际的 `allocate/release/memcpy`。
+
+
+**RALL编程思想** = 
+**Resource Acquisition Is Initialization。**
+核心思想就一条：**把资源的生命周期绑到对象的生命周期上**——<mark style="background:#fff88f">对象构造时获取资源，对象析构时释放资源</mark>。编译器保证析构一定会跑，所以资源永远不会忘了释放。
+
+
+<mark style="background:#fff88f">RAII 的核心：资源在构造时获取，在析构时释放。</mark>
+
+
+在这里有两层 RAII：
+
+1. `Buffer` 自己管理 `ptr_` 指向的内存块：构造时申请，析构时释放。
+	1. **buffer层，每个buffer类对象，管理ptr_，是通过构造函数，析构函数，来实现RALL的**
+2. `shared_ptr<DeviceAllocator>` 管理分配器对象：多个 Buffer 共享同一个 allocator，最后一个引用消失时自动销毁。
+	1. **DeviceAllocator层，是通过共享指针来动态管理分配器对象，实现RALL的**
+
+```cpp
+auto alloc = CPUDeviceAllocatorFactory::get_instance();
+Buffer buf1(32, alloc);
+Buffer buf2(64, alloc);
+```
+
+这里 `buf1`、`buf2` 都保存了一份 `shared_ptr`，共同指向同一个 `DeviceAllocator`。引用计数归零时，分配器对象才会自动释放。
+
+<mark style="background:#ffd6e7">注意：shared_ptr 管的是 allocator 对象的生命周期；Buffer 析构释放的是 ptr_ 指向的那块数据内存。这两个资源不要混在一起。</mark>
+![](images/Pasted%20image%2020260628142343.png)
+
+### Cuda流层，kernel模块的RAII封装
+
+base 层里还有一个 `kernel` 模块，对 CUDA stream 做了一层轻量封装：
+
+```cpp
+namespace kernel {
+struct CudaConfig {
+    cudaStream_t stream = nullptr;
+
+    ~CudaConfig() {
+        if (stream) {
+            cudaStreamDestroy(stream);
+        }
+    }
+};
+}
+```
+
+这里的 `CudaConfig` 本质上是 <mark style="background:#d6e4ff">CUDA 流的 RAII 包装器</mark>。
+
+- `stream` 保存一条 CUDA 流。
+- kernel 函数通过 `config->stream` 拿到指定流，在这条流上启动 GPU 算子。
+- `CudaConfig` 析构时自动调用 `cudaStreamDestroy(stream)`，不用外部手动销毁。
+
+<mark style="background:#fff88f">RAII 思想：谁持有资源，谁在析构时负责释放。</mark>
+
+和 `Buffer` 类似：
+
+```text
+Buffer     管 ptr_ 指向的内存块
+CudaConfig 管 cudaStream_t 指向的 CUDA 流
+```
+
+区别只是资源类型不同，一个是内存，一个是 CUDA 执行流。
+
+![](images/Pasted%20image%2020260628144842.png)
 
 ## 2. op/算子层
 ## 3. tensor/张量层
@@ -438,5 +828,3 @@ cudaDeviceSynchronize, 是cpu阻塞等待GPU所有流的任务完成。只要GPU
    - KV Cache 使用率
    - 显存占用
 ```
-
-
