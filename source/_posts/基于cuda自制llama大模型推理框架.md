@@ -440,6 +440,76 @@ gdb ./build/bin/test
 		1. ![402](../images/Pasted%20image%2020260602170757.png)
 
 
+# CMake
+
+前面已经知道，cmake是帮助你编写Makefile的，我们可以利用CMake的方法，来自动生成整个项目的Makefile
+
+
+
+
+1. `include(../cmake/cuda.cmake)`
+CMakeLists里面的include，是针对同样的cmake来的，这不是引用库，而是**把 `cuda.cmake` 里的代码原样贴过来执行**
+
+`.cmake` 后缀只是约定，表明"这是个 CMake 脚本"，不是 `.so` 或 `.a` 库文件。
+
+> 这个.cmake说明书的作用：检查cuda工具链是否存在，探测显卡架构，把执行结果，保存到变量里面，后面的代码直接引用![](../images/Pasted%20image%2020260627172704.png)
+
+
+2. `find_package(GTest REQUIRED)`
+
+第三方库编译成.so后，安装到系统中(/usr/lib/archxxx/)，
+顺带会装上.cmake描述文件(可以理解为说明书 /usr/lib/archxxx/cmake)
+
+find_package靠.cmake找到库的物理位置
+![](../images/Pasted%20image%2020260627171929.png)
+![](../images/Pasted%20image%2020260627171941.png)
+找到库之后，会把检查结果记录到一些变量里面，就是后面的：
+- ${glog_INCLUDE_DIR}
+- ${GTest_INCLUDE_DIR}
+
+所以流程就是：`find_package` 探测库的位置 → 设置变量 → `target_include_directories` 用这些变量告诉编译器。
+
+
+3. set(link_ext_lib glog::glog GTest::gtest)
+![](../images/Pasted%20image%2020260627172026.png)
+![](../images/Pasted%20image%2020260627172039.png)
+
+4. aux_source_directory(目录 变量名)
+![](../images/Pasted%20image%2020260627172234.png)
+
+
+![](../images/Pasted%20image%2020260627172402.png)
+
+
+5. add_executable(名字 源文件列表)
+![](../images/Pasted%20image%2020260627172833.png)
+> 注意，这个add_executable还没有正式开始编译，只是注册目标，告诉CMake，要编译什么。
+> 
+> 真正开始构建，是你执行 cmake --build . --target test_llm
+> 或者make test_llm
+
+![](../images/Pasted%20image%2020260627173056.png)
+
+6. target_link_libraries(目标 链接库)
+这个的作用，就是g++里面的-l, 可以链接的库有：
+- 动态库（.so）（看到.so就只记引用，运行到这一块的时候，才加载）
+- 静态库（.a）(链接器看到.a就把代码拷贝到可执行文件中)
+
+
+> 这里纠正一个认识：
+> 给你一个库，so/a, 里面肯定是各种方法的实现，但是这个方法叫什么，你肯定在写代码的时候，就需要知道，所以库文件.so/.a， 还需要配合头文件，这样你才知道方法叫什么。
+
+
+7. target_include_directories(目标 PUBLIC 目录)
+指定头文件的目录
+
+8. target_link_directories(目标 PUBLIC 目录)
+![697](../images/Pasted%20image%2020260627174513.png)
+
+**总结**
+
+用CMakeLists，来利用cmake构建一个项目的make，流程是：
+![](../images/Pasted%20image%2020260627174925.png)
 
 # c++20的特性
 ## 命名空间
@@ -474,7 +544,7 @@ c++风格的强制类型转换， 比（）直接转换更安全。
 - `reinterpret_cast` — 不相关指针类型间的暴力转换
 - `const_cast` — 悄悄去掉 const
 
-1. `构造函数 xxx(const xxx& a) = delete`
+2. `构造函数 xxx(const xxx& a) = delete`
 
 显式删除某个函数，让编译器禁止调用它。常用于禁止拷贝：
 
@@ -546,6 +616,59 @@ DeviceType type = DeviceType::kDeviceCUDA;
 
 
 
+4. 右值引用和 `std::move`
+
+左值引用 `T&`，就是引用一个正常变量，有名字，能取地址。
+
+右值引用 `T&&`，可以理解成引用一个临时对象，或者一个后面基本不用的对象。
+
+<mark style="background:#d6e4ff">右值引用的核心作用：告诉编译器，这个对象里面的资源可以被转移走。</mark>
+
+`std::move` 这个名字有点迷惑，它本身不搬数据，也不申请内存，只是做了一次类型转换：
+
+```cpp
+std::move(x) = static_cast<T&&>(x)
+```
+
+<mark style="background:#fff88f">std::move 的本质：把一个左值，强行标记成“可以被移动的右值”。</mark>
+
+比如 `Tensor` 构造函数里面：
+
+```cpp
+Tensor::Tensor(base::DataType data_type, std::vector<int32_t> dims, ...)
+    : dims_(std::move(dims)) {}
+```
+
+这里的 `dims` 是形参，本身是一个局部变量，所以它其实是左值。
+
+但是构造函数结束之后，`dims` 就没用了，所以这里用 `std::move(dims)`，让成员变量 `dims_` 直接接管它内部的堆内存。
+
+```text
+拷贝 vector：重新申请内存，然后一个一个复制元素，O(n)
+移动 vector：直接转移 begin/end/cap 三个指针，O(1)
+```
+
+所以这个写法：
+
+```cpp
+Tensor(..., std::vector<int32_t> dims)
+    : dims_(std::move(dims)) {}
+```
+
+可以理解成：
+
+```text
+调用者传左值：先拷贝到形参 dims，再移动到成员变量 dims_
+调用者传右值：直接移动到形参 dims，再移动到成员变量 dims_
+```
+
+<mark style="background:#ffd6e7">注意：被 std::move 之后的对象还能析构，但是不要再依赖它原来的内容。</mark>
+
+几个容易混的点：
+- `dims_(std::move(dims))`：这是移动构造，在初始化列表里完成。
+- `dims_ = std::move(dims)`：这是移动赋值，成员变量已经存在了。
+- `return t;` 返回局部对象时，一般不用写 `std::move(t)`，编译器会做返回值优化或者自动移动。
+
 ## 智能指针
 1. **shared_ptr**, c11引入的智能指针之一，功能：**引用计数自动管理内存，没人用了就自动delete**。
 ![521](../images/Pasted%20image%2020260627084716.png)
@@ -555,8 +678,8 @@ DeviceType type = DeviceType::kDeviceCUDA;
 ```
 auto p1 = std::make_shared<Buffer>(128, allocator);
 
-std::make_shared<typename T>(...）
-
+std::make_shared<类名>(构造函数的参数）
+= new 类名（构造函数参数）
 = new Buffer(128, allocator)
 
 
@@ -672,7 +795,7 @@ Buffer buf2(64, alloc);
 这里 `buf1`、`buf2` 都保存了一份 `shared_ptr`，共同指向同一个 `DeviceAllocator`。引用计数归零时，分配器对象才会自动释放。
 
 <mark style="background:#ffd6e7">注意：shared_ptr 管的是 allocator 对象的生命周期；Buffer 析构释放的是 ptr_ 指向的那块数据内存。这两个资源不要混在一起。</mark>
-![](images/Pasted%20image%2020260628142343.png)
+![](../images/Pasted%20image%2020260628142343.png)
 
 ### Cuda流层，kernel模块的RAII封装
 
@@ -709,10 +832,38 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 
 区别只是资源类型不同，一个是内存，一个是 CUDA 执行流。
 
-![](images/Pasted%20image%2020260628144842.png)
+![](../images/Pasted%20image%2020260628144842.png)
 
 ## 2. op/算子层
 ## 3. tensor/张量层
+这一层就是在buffer层的基础上，定义tensor层，上下层之间也是共享指针来动态绑定来实现RALL
+
+![](../images/Pasted%20image%2020260630145735.png)
+
+这边主要仔细看了一下构造函数，张量转移函数。
+
+**构造函数**
+
+
+**张量转移函数**
+![](../images/Pasted%20image%2020260630155727.png)
+
+这里来解释一下，
+- 先判断当前tensor的设备类型，必须是cpu内存
+- 之后
+	- 获取内存大小
+	- 工厂函数获取GPU的内存分配器（实际干活的人）
+		- 工厂函数获取gpu内存分配器
+		- >![](../images/Pasted%20image%2020260630160056.png)
+		- 可以看到，工厂函数类对象，维护者一个静态的真实的gpu内存分配器指针，instance这个共享内存指针，永远指向一个gpu内存分配器。
+		- 之后所有申请gpu内存分配器，就是用auto cu_alloc来指向这个gpu内存分配器的对象，增加了引用计数。这也是RALL的思想。
+	- 分配器开辟gpu内存
+	- 分配器拷贝内存
+	- 绑定该内存
+
+
+
+
 ## 4. model/模型组装层
 
 

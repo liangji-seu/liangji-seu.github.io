@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 245.5
+    "width": 270.5
   },
   "right": {
     "id": "c028cbc65eb73c5b",
@@ -170,7 +170,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 457.5
+    "width": 425.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -185,24 +185,30 @@
   },
   "active": "a0063c70277e38c2",
   "lastOpenFiles": [
-    "blog_mac_compatible.sh",
-    "source/images/Pasted image 20260627084716.png",
-    "source/_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
+    "source/images/Pasted image 20260630160056.png",
+    "source/images/Pasted image 20260630155727.png",
+    "source/_posts/move_semantics.md",
+    "source/images/Pasted image 20260630145735.png",
+    "source/_posts/stm32-定时器.md",
+    "source/_posts/stm32-esp32s3-imx-存储架构讨论.md",
+    "source/_posts/基于cuda自制llama大模型推理框架.md",
     "source/_posts/深度学习基础-pytorch+python.md",
+    "source/_posts/imx6ull-基础复盘.md",
+    "source/_posts/imx6ull-按键输入实验.md",
+    "source/images/Pasted image 20260627174925.png",
+    "source/images/Pasted image 20260627174513.png",
+    "source/images/Pasted image 20260627173056.png",
+    "source/images/Pasted image 20260627172900.png",
+    "source/images/Pasted image 20260627172833.png",
+    "source/images/Pasted image 20260627172704.png",
+    "source/images/Pasted image 20260627172402.png",
+    "source/images/Pasted image 20260627172234.png",
+    "blog_mac_compatible.sh",
+    "source/_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
     "source/_posts/现代c++学习.md",
     "source/_posts/学习计划.md",
     "source/_posts/ACM模式输入输出.md",
     "source/_posts/未命名.md",
-    "source/_posts/基于cuda自制llama大模型推理框架.md",
-    "source/images/Pasted image 20260616121346.png",
-    "Pasted image 20260616120626.png",
-    "Pasted image 20260616120921.png",
-    "source/images/Pasted image 20260616121206.png",
-    "source/images/Pasted image 20260616121149.png",
-    "source/images/f7bc3d6120f7c1c7ec33e0014fdf4ca7.jpg",
-    "source/images/f576d2e5676490448b0043ede7a4cdc5.jpg",
-    "source/images/e1d7395b9404912c288220281a7501d0.jpg",
-    "source/images/d9f6a5e024e7d9a289289e44f43ed38f.jpg",
     "source/_posts/nano-vllm 源码解读.md",
     "source/_posts/infra-面经.md",
     "source/_posts/Transformer 推理性能分析.md",
