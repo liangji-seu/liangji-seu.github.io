@@ -537,14 +537,14 @@ STL标准库里面的有序键值对容器，`#include<map>`
 
 ## 语法
 
-1. static_cast<type*>xxx
+### static_cast / reinterpret_cast / const_cast
 c++风格的强制类型转换， 比（）直接转换更安全。
 （）转换等于：
 - `static_cast` — 相关类型间的转换（只做编译期可检查的转换）
 - `reinterpret_cast` — 不相关指针类型间的暴力转换
 - `const_cast` — 悄悄去掉 const
 
-2. `构造函数 xxx(const xxx& a) = delete`
+### `= delete` 禁止拷贝
 
 显式删除某个函数，让编译器禁止调用它。常用于禁止拷贝：
 
@@ -577,7 +577,7 @@ buf2 = buf;           // 触发拷贝赋值，编译报错
 
 在 `Buffer` 这种管理大块内存的类里，禁止拷贝可以避免两个对象指向同一块 `ptr_`，析构时发生 double free。
 
-3. `enum` 和 `enum class`
+### `enum` 和 `enum class`
 
 普通 `enum`：
 
@@ -613,10 +613,15 @@ DeviceType type = DeviceType::kDeviceCUDA;
 
 `: uint8_t` 表示指定底层存储类型，能减少内存占用。默认优先用 `enum class`，只有需要和 `int` 高频交互时再考虑普通 `enum`。
 
+### `virtual xxx = 0` 纯虚函数
 
+`= 0` 表示纯虚函数：基类只声明接口、不提供实现，子类必须重写；含纯虚函数的类不能直接实例化。
 
+```cpp
+virtual base::Status forward() = 0;
+```
 
-4. 右值引用和 `std::move`
+### 右值引用和 `std::move`
 
 左值引用 `T&`，就是引用一个正常变量，有名字，能取地址。
 
@@ -668,6 +673,28 @@ Tensor(..., std::vector<int32_t> dims)
 - `dims_(std::move(dims))`：这是移动构造，在初始化列表里完成。
 - `dims_ = std::move(dims)`：这是移动赋值，成员变量已经存在了。
 - `return t;` 返回局部对象时，一般不用写 `std::move(t)`，编译器会做返回值优化或者自动移动。
+
+### vector 常用方法
+
+`std::vector` 是动态数组，常用增删改查：
+
+| 操作 | 写法 | 说明 |
+|---|---|---|
+| 增 | `v.push_back(x)` | 尾部追加 |
+| 增 | `v.emplace_back(args...)` | 尾部原地构造对象 |
+| 增 | `v.insert(v.begin() + i, x)` | 指定位置插入 |
+| 删 | `v.pop_back()` | 删除最后一个元素 |
+| 删 | `v.erase(v.begin() + i)` | 删除指定位置 |
+| 删 | `v.clear()` | 清空元素 |
+| 改 | `v[i] = x` | 修改指定位置 |
+| 查 | `v[i]` | 直接访问，不做越界检查 |
+| 查 | `v.at(i)` | 带越界检查 |
+| 查 | `v.front()` / `v.back()` | 第一个 / 最后一个元素 |
+| 查 | `v.size()` / `v.empty()` | 元素个数 / 是否为空 |
+
+<mark style="background:#ffd6e7">`v[i]` 越界是未定义行为；`v.at(i)` 越界会抛异常，更适合防御性代码。</mark>
+
+项目里如果前面已经手动检查过范围，比如 `CHECK_LT(idx, weights_.size())`，后面再用 `weights_.at(idx)` 是双保险。
 
 ## 智能指针
 1. **shared_ptr**, c11引入的智能指针之一，功能：**引用计数自动管理内存，没人用了就自动delete**。
@@ -834,8 +861,8 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 
 ![](../images/Pasted%20image%2020260628144842.png)
 
-## 2. op/算子层
-## 3. tensor/张量层
+
+## 2. tensor/张量层
 这一层就是在buffer层的基础上，定义tensor层，上下层之间也是共享指针来动态绑定来实现RALL
 
 ![](../images/Pasted%20image%2020260630145735.png)
@@ -860,6 +887,295 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 	- 分配器开辟gpu内存
 	- 分配器拷贝内存
 	- 绑定该内存
+
+
+## 3. op/算子层
+
+### 层的概念复习
+
+前面我们已经构造好了整个框架层base/， 里面实现了：
+- 内存的分配，内存的抽象
+之后，我们又在tensor张量层，来基于buffer层，实现了张量。
+
+现在我们要开始实现深度学习里面最经常用到的组件：层，他表示一种运算，输入张量，得到另一个张量。
+![256](images/Pasted%20image%2020260701161755.png)
+![267](images/Pasted%20image%2020260701161819.png)
+
+所以我们就要实现一个层 类，来抽象这个针对张量的运算过程的概念。
+
+
+### 算子层op/的总体架构
+所以op/算子层，这里主要有这几个部分：
+- layer，层接口层
+	- 主要作为前端实现，确定好：
+		- 输入张量组
+		- 输出张量组
+		- 权重张量组
+- 后端接口层：kernel_interface
+	- 利用函数指针，重定向具体的后端实现
+- op， 后端实现forward(), 拿数据进行具体的计算
+	- `op/add.h .cpp`
+	- `op/linear.h .cpp`
+	- `op/matmul.h .cpp` 
+	- 各种具体的层的运算实现
+
+
+
+
+所以，至此，我们的大模型推理框架的整个结构是：
+![](images/Pasted%20image%2020260701173218.png)
+
+根据前面，我们得知了
+
+
+#### 层组件层 （y = f(x) 的前端结构）
+首先是层组件层：
+- <mark style="background:#fff88f">BaseLayer类（层的固有属性）</mark>
+	- ![](images/Pasted%20image%2020260701191035.png)
+
+	- <mark style="background:#fff88f"> Layer类，（层的固有属性+输入输出张量）</mark>
+		- ![](images/Pasted%20image%2020260701191253.png)
+	- <mark style="background:#fff88f">LayerParam类（层的固有属性+输入输出张量+权重张量）</mark>
+		- ![](images/Pasted%20image%2020260701191337.png)
+
+![394](images/Pasted%20image%2020260701194256.png)
+
+
+
+
+
+上面这个是第一部分，主要定义了一个**层组件层**，这样一个**中间层**，实现了张量-张量的层运算的抽象过程。
+> 内部的具体逻辑没有，只有形式, 就相当于实现了y = f(x) ，这样一个前端框架，但是f(x)的具体后端实现并没有定义，只是通过**forward()这个基类的虚函数**，在**子类（算子）中实现。
+
+在这个**中间层的基础上**，我们：
+- 在**上方构建算子层（实现各个算子）**
+	- 各个算子的后端实现，forward()，依赖后端算子内核接口层返回具体的内核方法
+		- cpu后端内核实现
+		- cuda后端内核实现
+- 在**下方依赖于Tensor层**
+
+#### 后端内核接口层（kernel_interface）
+
+这里就是前端连接后端的接口层。通过这一层的方法，自动判断使用哪个后端内核。
+
+1. 定义各种算子的**后端内核方法**的**函数指针接口**
+![](images/Pasted%20image%2020260701192154.png)
+
+
+2. 提供**返回函数指针的方法**， 提供自动索引后端内核
+![](images/Pasted%20image%2020260701192245.png)
+
+
+3. **具体返回的后端内核**，涉及了`cpu/add_kernel.h` 和 `cuda/add_kernel.cuh`
+![385](images/Pasted%20image%2020260701192448.png)
+
+#### 具体算子层( f()的真正实现 )
+这一层，就是基于前面两个层，创建各个算子的抽象类，继承Layer层，让不同算子类都是继承的层的概念。并重写各自的forward()
+
+因此，通过调用每个算子类对象的forward()，即可调用真正的后端算子内核实现。
+
+下面以add_kernel为例：
+
+1. **定义加法算子：**
+
+ ![339](images/Pasted%20image%2020260701192851.png)
+
+2. **算子方法实现：**
+	1. **设定算子的输入输出**
+![335](images/Pasted%20image%2020260701193108.png)
+	2. **实现前向传播forward**
+
+![474](images/Pasted%20image%2020260701193056.png)
+
+可以看到，f()的实现里面，调用了后端内核接口层的get_add_kernel方法，来返回一个根据设备类型而选择的后端内核
+
+`kernel::get_add_kernel(device_type_)` = `AddKernel`
+
+` kernel::get_add_kernel(device_type_)(input1, input2, output, cuda_config_ ? cuda_config_->stream : nullptr);` 
+= `Addkernel(......)`
+
+从而在forward()里面实现调用对应的内核接口
+
+##### cpu端内核
+
+- 首先进行一系列对输入输出的检查
+- 计算得出结果（利用armadillo库，这个是c++的线性代数库）
+
+![](images/Pasted%20image%2020260701193654.png)
+##### cuda端内核
+- 对输入输出进行检查
+- 实现后端主函数，调用核函数
+- 实现后端核函数
+
+![](images/Pasted%20image%2020260701193914.png)
+
+
+
+
+
+
+
+### 3.2 大模型算子内容介绍
+先复习一下我们的decoder-only的transoformer的整个架构
+
+![](images/b0e134623d6da1f889d335edef9df60c.jpg)
+
+
+下面逐个看一下各个算子的实现，看看各个算子实际的输入输出是什么
+
+#### embedding 词嵌入层
+这个的作用是吧token从单个整型值映射成向量
+从[B, T = 1, 1] -> [B, T=1, d]
+> T=1是表示每个序列样本就一个token，代表推理过程。
+> d表示的是词向量的维度。
+
+
+![331](images/Pasted%20image%2020260702094710.png)
+
+可以看到，embeding层，是有权重参数的层，且另外有参数：
+- dim_  = d（词向量的维度）
+- seq_len_ = T （样本序列的长度）
+- vocab_size_ (词袋大小)
+
+同时还有一个层的权重张量列表。这里的层的权重，主要的作用是
+![531](images/Pasted%20image%2020260702094914.png)
+
+
+
+所以，算子层里面，实现了一个embedding层，其主要实现的方法是：
+- **创建层**（构造函数里 `reset_weight_size(1)` 预留了 1 个权重槽位）、
+- **check**（验证第 0 号权重形状是 `[vocab_size, dim]`）、
+- **forward**（调 kernel 用 `get_weight(0)` 查表）。
+
+但是因为他是带权重参数的层，所以，设置权重这个步骤，并没有放在算子里面，而是直接利用基类的方法来设置，具体的设置是在后面的模型层来设置的（因为肯定是根据模型具体的参数来设置各层的权重，没必要在子类这里再包装一层。）
+
+下面看一下这个算子的后端实现：
+![482](images/Pasted%20image%2020260702095816.png)
+
+后端内核输入参数：
+- 输入张量
+- 层权重张量
+- 输出张量
+- 词袋大小
+- cuda工作流
+
+前面依然是对整个层输入的校验检查。
+
+之后对每个输入张量里的每个元素（一个token）
+- 判断是否在词袋里面
+- 定位对应的权重张量列表的词向量
+- dest_ptr是在输出张量里面找到写的位置
+- src_ptr，是在权重张量里面找到读取的词向量的位置
+- 然后拷贝
+![421](images/Pasted%20image%2020260702100627.png)
+
+
+#### RMSNorm层（有权重层）
+这个RMSNorm层，属于层归一化LayerNorm的优化版本
+
+原来LayerNorm，对每个token向量的处理:
+![209](images/Pasted%20image%2020260702101001.png)![357](images/Pasted%20image%2020260702101104.png)
+
+
+![484](images/Pasted%20image%2020260702101146.png)
+
+可以看到，RMSNorm层，本身也是带权重张量的。
+
+参数就一个：
+- token向量的维数d
+
+
+可以看到，层的输入是一个张量，输出是一个张量，权重是一个张量
+![](images/Pasted%20image%2020260702101246.png)
+
+
+下面我们来看一下kernel的具体实现：
+![489](images/Pasted%20image%2020260702101506.png)
+
+可以看到：
+- 先检查内核输入张量的正确
+- 进行RMS计算，做归一化
+
+RMSNorm的cuda算子的实现，涉及了cuda算子优化，这个后面讲
+
+
+这边说一下，**RMSNorm的权重张量**的作用，是用来当作**逐元素缩放因子**的。
+![532](images/Pasted%20image%2020260702105650.png)
+
+
+#### matmul算子（有权重层）
+![430](images/5028bee2a1327396c026e7e6f0a04352.jpg)
+
+![346](images/Pasted%20image%2020260702104115.png)![234](images/Pasted%20image%2020260702104128.png)
+
+
+可以看到，这个矩阵乘的算子层，也是有权重参数的。设置权重张量，是直接用父类的方法，设置偏执张量，就要由子类提供。
+![470](images/Pasted%20image%2020260702104246.png)
+
+![513](images/Pasted%20image%2020260702104429.png)
+这里可以看到，矩阵乘算子层的输入张量1个，输出张量1个，权重张量1个。
+
+后端实现，指向两个内核，一个是量化的内核
+![](images/Pasted%20image%2020260702104557.png)
+
+
+#### MHA多头注意力算子层（无权重）
+
+![474](images/Pasted%20image%2020260702111927.png)![471](images/Pasted%20image%2020260702111942.png)
+
+
+可以看到，多头注意力层，它本质上，是一个无权重的层算子。
+
+
+下面看一下他的输入输出张量
+![507](images/Pasted%20image%2020260702113253.png)
+
+可以看到这个层算子，他的输入设置了5个张量，输出一个张量。
+
+但是很奇怪的是，在推理过程中，我们就是一个张量进（[B,T=1,d]），一个张量出[B,T=1,d]
+
+但是这里，针对一个q, 我要计算得到一个注意力输出v_q,需要：
+- q查询输入张量
+- K cache （所有历史的k键张量）
+- V cache   (所有历史的v值张量)
+- q 与 所有K cache的注意力分数张量
+	- 这个注意力分数score，理论上是属于临时变量，用来计算注意力输出的。但是每次都需要重新分配显存，通讯延时太慢，所以，选择和kv cache的内存空间一样，预先分配，用空间换时间
+- **还有一个未用到**
+![](images/Pasted%20image%2020260702113714.png)
+
+
+
+下面看一下这个**多头注意力层的算子的前向传播**
+
+![](images/Pasted%20image%2020260702114618.png)
+
+所以，当我们设计架构的时候，我们可以<mark style="background:#fff88f">通过张量，把并行的需求，封装透传给底层的并行核心单元。中间的框架层，不需要处理这些并行的需求</mark>
+![578](images/Pasted%20image%2020260702114609.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
