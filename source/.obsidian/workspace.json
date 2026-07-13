@@ -270,6 +270,7 @@
   },
   "active": "836641809a9d8114",
   "lastOpenFiles": [
+    "_posts/infra-Nsight Compute学习笔记.md",
     "_posts/infra-单元测试库GTest+glog.md",
     "_posts/infra-基于cuda自制llama大模型推理框架.md",
     "images/Pasted image 20260703133530.png",
@@ -277,7 +278,6 @@
     "images/Pasted image 20260703133215.png",
     "images/Pasted image 20260703131733.png",
     "_posts/infra-现代c++学习.md",
-    "_posts/infra-Nsight Compute学习笔记.md",
     "_posts/leecode-ACM模式输入输出.md",
     "_posts/infra-Transformer 推理性能分析.md",
     "_posts/infra-CUDA编程.md",

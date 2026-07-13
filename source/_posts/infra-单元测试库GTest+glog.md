@@ -1,3 +1,9 @@
+---
+title: infra 单元测试库GTest+glog
+categories: [学习笔记, 大模型算法]
+tags: [GTest, glog, AI Infra]
+---
+
 
 
 这个文档主要用于记录学习如何使用GTest + glog来对我们一个系统里面各个模块的各个层类进行单元测试，现在发现如果手搓整个项目的话，不进行单元测试，比较麻烦。
@@ -219,5 +225,4 @@ static TestResult* current_test_result;
 - 一个测试里需要检查多个独立条件，想看所有失败项 → `EXPECT_*`
 
 项目中只用 `ASSERT_*`，因为每个测试都很短，一个断言失败后面的预期也没意义了。
-
 

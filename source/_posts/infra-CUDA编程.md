@@ -1,3 +1,8 @@
+---
+title: infra CUDA编程
+categories: [学习笔记, 大模型算法]
+tags: [CUDA, AI Infra]
+---
 
 
 # GPU内存模型

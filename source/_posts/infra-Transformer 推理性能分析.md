@@ -1,3 +1,9 @@
+---
+title: infra Transformer 推理性能分析
+categories: [学习笔记, 大模型算法]
+tags: [Transformer, AI Infra]
+---
+
 
 
 
@@ -268,7 +274,6 @@ kernel
 
 **Weight Tying（权重共享）**
 说的是，词嵌入和词返回的权重是共享的
-
 
 
 

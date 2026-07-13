@@ -1,3 +1,9 @@
+---
+title: infra 基于cuda自制llama大模型推理框架
+categories: [学习笔记, 大模型算法]
+tags: [CUDA, LLaMA, AI Infra]
+---
+
 
 # 环境安装
 gcc, g++
@@ -1010,6 +1016,114 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 ![](images/Pasted%20image%2020260701193914.png)
 
 
+#### 算子输入规划策略
+>我想知道，我们的这个cuda算子，我们的算子cu实现是肯定不知道，处理的输入数据是多大的，
+>
+>我看我目前的add算子，是固定设置好了block_size的大小，然后grid_size根据实际输入的数据大小来定的，但是我目前的add算子是朴素实现，一个thread处理一个元素输出。 
+>
+>但是如果后续优化的话，比如SGEMM，可能就会有thread_tile, warp_tile等优化策略，这就导致，我们一个thread处理多个元素。 那么这样的话，如果我写这样的优化算子的话，那么还是一样的吗？
+>
+>比如，我默认想好使用这种优化手段，所以一个thread对应x个元素，所以设置一个block_size = 256这样，然后我再根据输入的大小来动态计算grid_size吗？
+
+<mark style="background:#ff4d4f">对，核心逻辑完全一样</mark>，只是 grid_size 的计算公式里要多除一个系数。
+
+**朴素实现**（你现在的 add）：1 thread = 1 element
+
+```cpp
+grid_size = ceil(size / block_size);
+// kernel 里：
+int tid = blockIdx.x * blockDim.x + threadIdx.x;
+if (tid < size) out[tid] = in1[tid] + in2[tid];
+```
+
+**线程平铺优化**（比如 thread_tile = 4）：1 thread = 4 elements
+
+```cpp
+size_t block_size  = 256;             // 还是固定
+size_t thread_tile = 4;               // 每个线程处理 4 个元素
+size_t grid_size   = (size + block_size * thread_tile - 1) 
+                   / (block_size * thread_tile);
+
+// kernel 里：
+int tid   = blockIdx.x * blockDim.x + threadIdx.x;
+int start = tid * thread_tile;        // 这个线程负责的起始位置
+#pragma unroll
+for (int k = 0; k < thread_tile; k++) {
+    int idx = start + k;
+    if (idx < size) out[idx] = in1[idx] + in2[idx];
+}
+```
+
+**SGEMM 那种更复杂的**（有 warp_tile），也是同样模式，只是分得更细：
+
+```
+total_tiles = (M * N) / (thread_tile * warp_tile)
+grid_size   = ceil(total_tiles / block_size)
+```
+
+本质上就是：
+
+> **block_size 永远是固定的（硬件友好常量），grid_size 永远是根据数据量动态算出来的，只是"一个 thread block 能做多少工作"的计算公式变了。**
+
+你用固定 block_size + 动态 grid_size 这个模式是对的，不管怎么优化都适用。
+
+
+---
+
+
+><mark style="background:#ff4d4f">那block_size，要怎么确定呢？</mark>是根据SM上的寄存器数量以及共享内存的大小，考虑到一个thread负责多少个数据，来推导出来的？一般是多少？
+
+
+对，block_size 的确定就是这几个因素互相制约：
+
+**核心公式（任何一个 SM 上）：**
+
+```
+MaxWarps × WarpSize = min(
+    MaxThreadsPerBlock,
+    RegisterFileSize / RegistersPerThread,
+    SharedMemPerBlock / SharedMemPerThread
+)
+```
+
+**具体推演，拿常见的架构举例：**
+
+>一个寄存器，4 字节。GPU 寄存器是 32 位的，正好装一个 `float` 或 `int32_t`
+
+| 架构          | SM 寄存器数 | 最大线程/block | 共享内存/SM |
+| ----------- | ------- | ---------- | ------- |
+| V100 (SM70) | 65536   | 1024       | 96KB    |
+| A100 (SM80) | 65536   | 1024       | 164KB   |
+
+假设你的 kernel 每个线程用 32 个寄存器：
+
+```
+RegistersPerBlock  = max(65536 / 32, 1024) = 1024 threads  // 寄存器够用，卡在硬件上限
+```
+
+假设用了 48KB 共享内存/block：
+
+```
+SharedMemPerBlock  = max(164KB / 48KB, ...) = 3 blocks/SM   // 共享内存卡住并行
+```
+
+**实际情况中最常见的 block_size：**
+
+|block_size|原因|
+|---|---|
+|**256**|最常用，8 个 warp，寄存器/共享内存均衡，适用大多数 kernel|
+|**128**|寄存器用量高的时候（每个 thread 算得多），让更多 block 并行|
+|**512**|轻量 kernel（寄存器少，共享内存少），最大化 occupancy|
+|**1024**|几乎没寄存器压力的极轻 kernel，跑满硬件限制|
+
+**你的情况：** 你用的是 512，对朴素 add 完全合适——一个 thread 只做一次 load + add + store，寄存器压力极小，共享内存也没有，往大了设没问题。
+
+**建议：** 一般 128 或 256 作为默认值就够，具体调哪个可以在 kernel 测试的时候调一下看看哪个快，这东西理论推导只能给出范围，最终还是跑 profile 说话。
+
+
+
+
+---
 
 
 
@@ -1183,13 +1297,44 @@ RMSNorm的cuda算子的实现，涉及了cuda算子优化，这个后面讲
 ## 4. model/模型组装层
 
 
+这一层，就是用上面的各个算子层，来具体组合出一个大模型的类。
+
+我们先来介绍一下，我们下载下来的模型文件有哪些内容：
+### huggingface下载的模型文件
+包含：
+- config.json
+	- 模型的架构参数（层数，模型维数，头数，**词表大小**）
+- tokenizer.json
+	- **词袋**
+- tokenizer_config.json
+	- **存特殊 token 配置**
+	- 分词器元信息（bos, eos token = ？）
+	- 这个里面的tokenizer_class = Qwen2Tokenizer， 暗示BPE类分词器
 
 
+> 算法类型（BPE/SentencePiece）是"约定俗成"的 — Llama2 用 SentencePiece，Llama3/Qwen 用 BPE，你下载前就知道。
 
 
+### model的基类
 
 
-
+- model (基类)
+	- 模型的基础信息
+		- 推理设备
+		- 模型名称
+	- 模型的入口，出口
+		- 入口：分词器层算子
+		- 出口：采样层算子
+	- 模型的配置信息（config.json）
+		- 模型的配置架构：config.json
+		- 权重文件
+	- 分词器
+		- 词袋（tokenizer.json）
+		- 分词算法
+	- 提前申请的缓冲区
+		- 各层的输入输出张量缓冲区
+		- kvcache
+	- 量化标志
 
 
 

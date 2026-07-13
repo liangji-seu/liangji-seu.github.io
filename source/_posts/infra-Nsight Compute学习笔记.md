@@ -1,3 +1,8 @@
+---
+title: infra Nsight Compute学习笔记
+categories: [学习笔记, 大模型算法]
+tags: [CUDA, Nsight Compute, AI Infra]
+---
 
 这篇主要用来记录Nsight Compute的学习
 
