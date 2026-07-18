@@ -97,12 +97,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/infra-基于cuda自制llama大模型推理框架.md",
+                "file": "_posts/infra-Nsight Compute学习笔记.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "infra-基于cuda自制llama大模型推理框架"
+              "title": "infra-Nsight Compute学习笔记"
             }
           }
         ],
@@ -241,13 +241,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_posts/infra-基于cuda自制llama大模型推理框架.md",
+                "file": "_posts/infra-Nsight Compute学习笔记.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "infra-基于cuda自制llama大模型推理框架 的大纲"
+              "title": "infra-Nsight Compute学习笔记 的大纲"
             }
           }
         ],
@@ -270,9 +270,14 @@
   },
   "active": "836641809a9d8114",
   "lastOpenFiles": [
+    "_posts/infra-基于cuda自制llama大模型推理框架.md",
+    "images/Pasted image 20260718144300.png",
+    "images/Pasted image 20260718143926.png",
+    "images/9d445fd58c26dd5a3f08a987bb566f06.jpg",
+    "images/img_v3_0213l_01510ec1-1484-4151-8994-aa2a9a83b00g.jpg",
+    "images/Snipaste_2026-07-13_17-04-00.png",
     "_posts/infra-Nsight Compute学习笔记.md",
     "_posts/infra-单元测试库GTest+glog.md",
-    "_posts/infra-基于cuda自制llama大模型推理框架.md",
     "images/Pasted image 20260703133530.png",
     "images/Pasted image 20260703133354.png",
     "images/Pasted image 20260703133215.png",
@@ -285,11 +290,6 @@
     "_posts/infra-nano-vllm 源码解读.md",
     "_posts/infra-深度学习基础-pytorch+python.md",
     "images/Pasted image 20260702222944.png",
-    "images/Pasted image 20260702222902.png",
-    "images/Pasted image 20260702222819.png",
-    "images/Pasted image 20260702222804.png",
-    "images/Pasted image 20260702222648.png",
-    "images/Pasted image 20260702222441.png",
     "_posts/buffer_allocator_design.md",
     "_posts/gtest_guide.md",
     "_posts/cmake_advanced.md",
