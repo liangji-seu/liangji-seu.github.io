@@ -110,7 +110,7 @@ set_target_properties(test_llm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 所以这个test_llm就是我们的单元测试的主程序。
 
 单元测试的框架如下，主程序的main, 写在了test_main.cpp里面
-![157](images/Pasted%20image%2020260703131733.png)
+![157](../images/Pasted%20image%2020260703131733.png)
 
 
 ## 主程序
@@ -173,7 +173,7 @@ Note: Google Test filter = test_buffer.*
 >#include <gtest/gtest.h> 
 >所以，每个测试组，只要include这个头文件，就能注册TEST宏函数了？ 我记得宏函数不得#define TEST()这样来定义宏函数吗？他这个怎么这样就能实现注册？****
 
-![](images/Pasted%20image%2020260703133215.png)
+![](../images/Pasted%20image%2020260703133215.png)
 
 
 **那么每个注册的TEST测试单元，要如何来判断该用例是否通过？**
@@ -195,7 +195,7 @@ static TestResult* current_test_result;
 
 ```
 
-![594](images/Pasted%20image%2020260703133530.png)
+![594](../images/Pasted%20image%2020260703133530.png)
 
 ### 测试结果判断
 分两大类：

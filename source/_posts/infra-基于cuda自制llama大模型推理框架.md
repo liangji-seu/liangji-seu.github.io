@@ -904,8 +904,8 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 之后，我们又在tensor张量层，来基于buffer层，实现了张量。
 
 现在我们要开始实现深度学习里面最经常用到的组件：层，他表示一种运算，输入张量，得到另一个张量。
-![256](images/Pasted%20image%2020260701161755.png)
-![267](images/Pasted%20image%2020260701161819.png)
+![256](../images/Pasted%20image%2020260701161755.png)
+![267](../images/Pasted%20image%2020260701161819.png)
 
 所以我们就要实现一个层 类，来抽象这个针对张量的运算过程的概念。
 
@@ -929,7 +929,7 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 
 
 所以，至此，我们的大模型推理框架的整个结构是：
-![](images/Pasted%20image%2020260701173218.png)
+![](../images/Pasted%20image%2020260701173218.png)
 
 根据前面，我们得知了
 
@@ -937,14 +937,14 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 #### 层组件层 （y = f(x) 的前端结构）
 首先是层组件层：
 - <mark style="background:#fff88f">BaseLayer类（层的固有属性）</mark>
-	- ![](images/Pasted%20image%2020260701191035.png)
+	- ![](../images/Pasted%20image%2020260701191035.png)
 
 	- <mark style="background:#fff88f"> Layer类，（层的固有属性+输入输出张量）</mark>
-		- ![](images/Pasted%20image%2020260701191253.png)
+		- ![](../images/Pasted%20image%2020260701191253.png)
 	- <mark style="background:#fff88f">LayerParam类（层的固有属性+输入输出张量+权重张量）</mark>
-		- ![](images/Pasted%20image%2020260701191337.png)
+		- ![](../images/Pasted%20image%2020260701191337.png)
 
-![394](images/Pasted%20image%2020260701194256.png)
+![394](../images/Pasted%20image%2020260701194256.png)
 
 
 
@@ -965,15 +965,15 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 这里就是前端连接后端的接口层。通过这一层的方法，自动判断使用哪个后端内核。
 
 1. 定义各种算子的**后端内核方法**的**函数指针接口**
-![](images/Pasted%20image%2020260701192154.png)
+![](../images/Pasted%20image%2020260701192154.png)
 
 
 2. 提供**返回函数指针的方法**， 提供自动索引后端内核
-![](images/Pasted%20image%2020260701192245.png)
+![](../images/Pasted%20image%2020260701192245.png)
 
 
 3. **具体返回的后端内核**，涉及了`cpu/add_kernel.h` 和 `cuda/add_kernel.cuh`
-![385](images/Pasted%20image%2020260701192448.png)
+![385](../images/Pasted%20image%2020260701192448.png)
 
 #### 具体算子层( f()的真正实现 )
 这一层，就是基于前面两个层，创建各个算子的抽象类，继承Layer层，让不同算子类都是继承的层的概念。并重写各自的forward()
@@ -984,14 +984,14 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 
 1. **定义加法算子：**
 
- ![339](images/Pasted%20image%2020260701192851.png)
+ ![339](../images/Pasted%20image%2020260701192851.png)
 
 2. **算子方法实现：**
 	1. **设定算子的输入输出**
-![335](images/Pasted%20image%2020260701193108.png)
+![335](../images/Pasted%20image%2020260701193108.png)
 	2. **实现前向传播forward**
 
-![474](images/Pasted%20image%2020260701193056.png)
+![474](../images/Pasted%20image%2020260701193056.png)
 
 可以看到，f()的实现里面，调用了后端内核接口层的get_add_kernel方法，来返回一个根据设备类型而选择的后端内核
 
@@ -1007,13 +1007,13 @@ CudaConfig 管 cudaStream_t 指向的 CUDA 流
 - 首先进行一系列对输入输出的检查
 - 计算得出结果（利用armadillo库，这个是c++的线性代数库）
 
-![](images/Pasted%20image%2020260701193654.png)
+![](../images/Pasted%20image%2020260701193654.png)
 ##### cuda端内核
 - 对输入输出进行检查
 - 实现后端主函数，调用核函数
 - 实现后端核函数
 
-![](images/Pasted%20image%2020260701193914.png)
+![](../images/Pasted%20image%2020260701193914.png)
 
 
 #### 算子输入规划策略
@@ -1132,7 +1132,7 @@ SharedMemPerBlock  = max(164KB / 48KB, ...) = 3 blocks/SM   // 共享内存卡�
 ### 3.2 大模型算子内容介绍
 先复习一下我们的decoder-only的transoformer的整个架构
 
-![](images/b0e134623d6da1f889d335edef9df60c.jpg)
+![](../images/b0e134623d6da1f889d335edef9df60c.jpg)
 
 
 下面逐个看一下各个算子的实现，看看各个算子实际的输入输出是什么
@@ -1163,7 +1163,7 @@ SharedMemPerBlock  = max(164KB / 48KB, ...) = 3 blocks/SM   // 共享内存卡�
 
 由于one-hot编码的特性，本质上就变成了，对embedding层的权重矩阵的查表。
 
-![](images/img_v3_0213l_01510ec1-1484-4151-8994-aa2a9a83b00g.jpg)
+![](../images/img_v3_0213l_01510ec1-1484-4151-8994-aa2a9a83b00g.jpg)
 
 > 这个权重矩阵，也就是embedding层的参数，是训练出来的，模型在训练过程中，自己学会压缩token向量的维度
 
@@ -1242,7 +1242,7 @@ cls_logits:
 这个RMSNorm层，属于层归一化LayerNorm的优化版本
 
 原来LayerNorm，对每个token向量的处理:
-![209](images/Pasted%20image%2020260702101001.png)![357](images/Pasted%20image%2020260702101104.png)
+![209](../images/Pasted%20image%2020260702101001.png)![357](../images/Pasted%20image%2020260702101104.png)
 
 
 所以RMSNorm对一个向量的公式是：
@@ -1300,12 +1300,12 @@ W_Q 矩阵        (dim × dim 个参数) → 真正的语义变换
 经过embedding后得到的是token向量[4096]， 之后会复制3份，分别经过，Wq,Wk,Wv 矩阵乘的算子层，来计算得到我们的Q向量[4096]，K向量[1024]，V向量[1024]。
 
 
-![260](images/9d445fd58c26dd5a3f08a987bb566f06.jpg)![345](images/Pasted%20image%2020260718143926.png)
+![260](../images/9d445fd58c26dd5a3f08a987bb566f06.jpg)![345](../images/Pasted%20image%2020260718143926.png)
 
 
 <mark style="background:#affad1">那么既然embedding已经把token投影到语义空间了，qkv的投影矩阵的投影，又是什么意义呢？</mark>
 
-![](images/Pasted%20image%2020260718144300.png)
+![](../images/Pasted%20image%2020260718144300.png)
 
 ---
 
@@ -1319,7 +1319,7 @@ W_Q 矩阵        (dim × dim 个参数) → 真正的语义变换
 > 我的问题现在集中在，**为什么token向量是4096，q仍然是4096，而kv则是1024**，就是单纯的为了省kvcache吗？kv压缩了维度，不会对模型理解语义效果有什么影响吗
 
 
-![](images/Pasted%20image%2020260719093036.png)
+![](../images/Pasted%20image%2020260719093036.png)
 
 
 **所以原因就是k,v的各个头之间是冗余的，所以可以压缩，就投影到1024，而不是4096.**
@@ -1335,7 +1335,7 @@ W_Q 矩阵        (dim × dim 个参数) → 真正的语义变换
 - q，4096维度，切分32个头，每个头128维
 
 
-![](images/Pasted%20image%2020260719093608.png)
+![](../images/Pasted%20image%2020260719093608.png)
 
 
 > 在标准的transformer论文里面，W_Q/W_K/W_V 确实属于 Attention 的一部分。但**在这个项目里被拆开了**。
@@ -1351,26 +1351,26 @@ W_Q 矩阵        (dim × dim 个参数) → 真正的语义变换
 
 <mark style="background:#d3f8b6">MHA</mark>
 q,k,v都是一个维度，4096维度，切分32个头，每个头一一对应
-![547](images/img_v3_0213o_89ca8fba-41ce-44b4-a5d7-8b87b7f0f9fg.jpg)
+![547](../images/img_v3_0213o_89ca8fba-41ce-44b4-a5d7-8b87b7f0f9fg.jpg)
 
 
 
 
 <mark style="background:#affad1">MQA</mark>
 特点是，k,v向量，被极端压缩，就压成一个头的大小
-![574](images/img_v3_0213o_5c109d55-804b-41ee-9f7b-be554fb41d6g.jpg)
+![574](../images/img_v3_0213o_5c109d55-804b-41ee-9f7b-be554fb41d6g.jpg)
 
 
 
 <mark style="background:#affad1">GQA</mark>
 Q的几个头一组，共享KV的一个头
-![570](images/img_v3_0213o_32ca7599-3790-43b7-86fd-b377cf469fbg.jpg)
+![570](../images/img_v3_0213o_32ca7599-3790-43b7-86fd-b377cf469fbg.jpg)
 
 
 以上仅是分组的策略，本质上都是如何并行计算两个向量之间的相关程度。
 
 <mark style="background:#fff88f">效果对比</mark>
-![](images/Pasted%20image%2020260719095456.png)
+![](../images/Pasted%20image%2020260719095456.png)
 
 
 ---
@@ -1385,9 +1385,9 @@ Q的几个头一组，共享KV的一个头
 这里位置编码的处理，不是整个向量处理，而是**一次针对一个头128维来处理**的。
 
 
-![451](images/Pasted%20image%2020260719100127.png)
+![451](../images/Pasted%20image%2020260719100127.png)
 
-![609](images/Pasted%20image%2020260719100910.png)
+![609](../images/Pasted%20image%2020260719100910.png)
 
 
 ##### <mark style="background:#affad1">总结</mark>
@@ -1404,17 +1404,21 @@ Q的几个头一组，共享KV的一个头
 我们对一个token向量的Q，K向量做位置编码，**本质上是给这些向量一个数学上的绝对位置坐标**
 
 这样，该token的q和其他token的k计算的时候，**得到的相对位置关系，其实就是先后顺序关系**
-![](images/Pasted%20image%2020260719104759.png)
+![](../images/Pasted%20image%2020260719104759.png)
 
 
 所以，加入RoPE，是为注意力分数的相关性里面，增加了一层位置信息，这样注意力分数的相关性包含：
 - 位置先后顺序
 - 语义相关性
 
-![](images/Pasted%20image%2020260719105000.png)
+![](../images/Pasted%20image%2020260719105000.png)
 
 
 
+注意，在具体实现中，会提前将旋转运算用到的系数，计算好存在 sin cos cache里面，**相当于提前计算好了整个上下文窗口的位置编码的旋转系数**。
+
+
+![](../images/Pasted%20image%2020260720211704.png)
 
 
 
@@ -1425,7 +1429,7 @@ Q的几个头一组，共享KV的一个头
 
 mha这个算子层的实现，他就是，当前token的kv向量直接加入kvcache， q向量和历史token的k向量做相关性计算
 
-![](images/Pasted%20image%2020260719103015.png)
+![](../images/Pasted%20image%2020260719103015.png)
 
 
 
@@ -1433,16 +1437,16 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 
 所以实际进行相关分数计算的时候，是发生在里面的**头和头**之间的
 
-![](images/Pasted%20image%2020260719103527.png)
+![](../images/Pasted%20image%2020260719103527.png)
 
-![406](images/Pasted%20image%2020260719103856.png)
+![406](../images/Pasted%20image%2020260719103856.png)
 
 
 
 
 **一个q和所有的kcache进行注意力分数计算**
 
-![](images/img_v3_0213o_7da7076f-c02c-42ea-999a-af113f5a31ag.jpg)
+![](../images/img_v3_0213o_7da7076f-c02c-42ea-999a-af113f5a31ag.jpg)
 
 
 
@@ -1455,20 +1459,116 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 
 ###### 总结
 **最终还有一个W_O的矩阵乘算子层，把多头信息投影到语义空间**
-![](images/img_v3_0213o_c47507d5-7c42-4d59-8891-5cb4ad63b2fg.jpg)
+![](../images/img_v3_0213o_c47507d5-7c42-4d59-8891-5cb4ad63b2fg.jpg)
 
 
 
 
 #### 残差连接层 add
 
-![](images/img_v3_0213o_090cbb72-b0eb-48cb-8d09-d85eadcb699g.jpg)
+![](../images/img_v3_0213o_090cbb72-b0eb-48cb-8d09-d85eadcb699g.jpg)
 
 
 至此，就是decoder block的前半段。
 
 
 
+#### （补充）门控GLU
+![424](../images/Pasted%20image%2020260720093900.png)
+
+假设现在有一个输入x, 经过两个线性层linear算子，但是其中一个算子后面增加了sigmoid，
+
+![153](../images/Pasted%20image%2020260720094011.png)![286](../images/Pasted%20image%2020260720094043.png)
+
+![107](../images/Pasted%20image%2020260720094119.png)
+因此B这条linear层算子，因为加上了sigmoid，就会变成一个门控单元，之后和A的linear层进行逐元素相乘即可
+
+这就是我们最原始的GLU的思想
+
+![](../images/Pasted%20image%2020260720094304.png)
+
+#### SwiGLU
+而我们的decoder-block的后半段，是FFN部分，这里不是单纯的两个linear层，
+
+![412](../images/Pasted%20image%2020260720094654.png)
+
+
+
+![483](../images/Pasted%20image%2020260720095147.png)
+
+所以，可以看到，他这里把sigmoid函数换成了 x*sigmoid(x), 这样的好处是：
+- 原来激活函数用sigmoid，只能通过、抑制，不能放大信息
+- swish函数：-0.3-------+∞， 可以实现关闭，衰减，保留，放大，改变符号。
+
+
+
+所以，kuipa里面的SwiGLU算子层，就是把升维的向量，和门控的向量，做一个运算的无参层。
+
+真正的升维的都是矩阵乘matmul算子
+![253](../images/Pasted%20image%2020260720100128.png)
+
+经过SwiGLU之后，得到升维的token向量。
+![543](../images/Pasted%20image%2020260720100431.png)
+![](../images/Pasted%20image%2020260720100556.png)
+
+
+##### 总结
+
+之后这一块也有残差连接
+![466](../images/Pasted%20image%2020260720101015.png)
+
+
+![497](../images/Pasted%20image%2020260720100935.png)
+
+
+
+#### 分层算子 cls_layer（本质上matmul算子） (有参)
+至此，当我们经过了多个decoder block， 得到最后的一个输出token向量 4096，经过最后一个RMSNorm，归一化到0-1之间，之后，就可以开始解码了。我们解码，用的就是embedding的逆用。
+
+这里就需要再次深入的认识embedding这个算子层了。
+
+在一开始，embedding算子层的作用是把token_id -> token向量，本质上就是token id的one hot编码对embedding的巨大的权重矩阵（vocab_size x dim）的查表。
+
+在最后，我们用输出向量4096，也反向去embedding的权重矩阵里面去查表，得到最后的token id. 这就是我们的输出token的id。
+
+> 所以，embedding的权重矩阵，不是无意义的编码，而是每个token的语义坐标
+> ![](../images/Pasted%20image%2020260720102131.png)
+
+![](../images/Pasted%20image%2020260720102223.png)
+
+
+所以**末端的**cls_layer**层，通过语义坐标来查找匹配对应的tokenid， 并不是完全一致。而是匹配看看那个向量最接近**。
+
+
+![](../images/Pasted%20image%2020260720102735.png)
+
+所以，cls_layer层算子，本质上就是一个matmul算子，因为里面指定了特定的权重矩阵，所以，才单独封装一下。
+
+![](../images/Pasted%20image%2020260720103058.png)
+
+
+![](../images/Pasted%20image%2020260720103316.png)
+
+
+<mark style="background:#ff4d4f">cls_layer计算得到可能输出tokenid的整个分数表，下面就是解码策略了</mark>， 到底如何选择一个实际的token? 也就是**sampler，采样器**。
+
+- **argmax** — 直接选分数最大的那个 token
+	- 没做 temperature、top-k、top-p，就是贪心选
+- ![613](../images/Pasted%20image%2020260720103745.png)
+
+- Temperature — 控制"创造力"（**放大距离值**）
+	- ![538](../images/Pasted%20image%2020260720104356.png)
+- Softmax — 转成概率（**距离转成概率**）
+	- ![542](../images/Pasted%20image%2020260720104456.png)
+- Top-K / Top-P — 砍掉烂选择
+	- ![398](../images/Pasted%20image%2020260720104525.png)
+- 随机采样
+	- ![408](../images/Pasted%20image%2020260720104550.png)
+
+
+
+#### 推理框架部分结束
+![](../images/Pasted%20image%2020260720104711.png)
 
 
 
@@ -1477,32 +1577,32 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 
 
 
-#### ~~（旧）matmul算子（有权重层）~~
-![430](images/5028bee2a1327396c026e7e6f0a04352.jpg)
+##### ~~（旧）matmul算子（有权重层）~~
+![430](../images/5028bee2a1327396c026e7e6f0a04352.jpg)
 
-![346](images/Pasted%20image%2020260702104115.png)![234](images/Pasted%20image%2020260702104128.png)
+![346](../images/Pasted%20image%2020260702104115.png)![234](../images/Pasted%20image%2020260702104128.png)
 
 
 可以看到，这个矩阵乘的算子层，也是有权重参数的。设置权重张量，是直接用父类的方法，设置偏执张量，就要由子类提供。
-![470](images/Pasted%20image%2020260702104246.png)
+![470](../images/Pasted%20image%2020260702104246.png)
 
-![513](images/Pasted%20image%2020260702104429.png)
+![513](../images/Pasted%20image%2020260702104429.png)
 这里可以看到，矩阵乘算子层的输入张量1个，输出张量1个，权重张量1个。
 
 后端实现，指向两个内核，一个是量化的内核
-![](images/Pasted%20image%2020260702104557.png)
+![](../images/Pasted%20image%2020260702104557.png)
 
 
-#### ~~（旧）MHA多头注意力算子层（无权重）~~
+##### ~~（旧）MHA多头注意力算子层（无权重）~~
 
-![474](images/Pasted%20image%2020260702111927.png)![471](images/Pasted%20image%2020260702111942.png)
+![474](../images/Pasted%20image%2020260702111927.png)![471](../images/Pasted%20image%2020260702111942.png)
 
 
 可以看到，多头注意力层，它本质上，是一个无权重的层算子。
 
 
 下面看一下他的输入输出张量
-![507](images/Pasted%20image%2020260702113253.png)
+![507](../images/Pasted%20image%2020260702113253.png)
 
 可以看到这个层算子，他的输入设置了5个张量，输出一个张量。
 
@@ -1515,16 +1615,16 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 - q 与 所有K cache的注意力分数张量
 	- 这个注意力分数score，理论上是属于临时变量，用来计算注意力输出的。但是每次都需要重新分配显存，通讯延时太慢，所以，选择和kv cache的内存空间一样，预先分配，用空间换时间
 - **还有一个未用到**
-![](images/Pasted%20image%2020260702113714.png)
+![](../images/Pasted%20image%2020260702113714.png)
 
 
 
 下面看一下这个**多头注意力层的算子的前向传播**
 
-![](images/Pasted%20image%2020260702114618.png)
+![](../images/Pasted%20image%2020260702114618.png)
 
 所以，当我们设计架构的时候，我们可以<mark style="background:#fff88f">通过张量，把并行的需求，封装透传给底层的并行核心单元。中间的框架层，不需要处理这些并行的需求</mark>
-![578](images/Pasted%20image%2020260702114609.png)
+![578](../images/Pasted%20image%2020260702114609.png)
 
 
 
@@ -1562,17 +1662,169 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 我们先来介绍一下，我们下载下来的模型文件有哪些内容：
 ### huggingface下载的模型文件
 包含：
-- config.json
+```
+-rw-rw-r-- 1 liangji liangji        726 May 17 19:23 config.json
+-rw-rw-r-- 1 liangji liangji        239 May 17 19:23 generation_config.json
+-rw-rw-r-- 1 liangji liangji 1503300328 May 17 19:30 model.safetensors
+
+-rw-rw-r-- 1 liangji liangji       9732 May 17 19:23 tokenizer_config.json
+-rw-rw-r-- 1 liangji liangji   11422654 May 17 19:23 tokenizer.json
+-rw-rw-r-- 1 liangji liangji    2776833 May 17 19:23 vocab.json
+```
+
+
+- <mark style="background:#ff4d4f">config.json</mark>
 	- 模型的架构参数（层数，模型维数，头数，**词表大小**）
-- tokenizer.json
+- <mark style="background:#ff4d4f">generation_config.json</mark>
+	- 采样器的超参数
+- <mark style="background:#ff4d4f">model.safetensors</mark>
+	- 模型权重，有他的特定格式。
+
+
+- <mark style="background:#ff4d4f">tokenizer.json</mark>
 	- **词袋**
-- tokenizer_config.json
+	- <mark style="background:#fff88f">传给第三方的分词器类就行, 主要用这个</mark>
+	- ![](../images/Pasted%20image%2020260720192503.png)
+- <mark style="background:#ff4d4f">tokenizer_config.json</mark>
 	- **存特殊 token 配置**
 	- 分词器元信息（bos, eos token = ？）
 	- 这个里面的tokenizer_class = Qwen2Tokenizer， 暗示BPE类分词器
+	- 用来选择
+	- ![](../images/Pasted%20image%2020260720192420.png)
+
+- vocab.json
+	- 词表映射文件
+	- ![588](../images/Pasted%20image%2020260720192649.png)
+
 
 
 > 算法类型（BPE/SentencePiece）是"约定俗成"的 — Llama2 用 SentencePiece，Llama3/Qwen 用 BPE，你下载前就知道。
+
+
+
+#### 模型文件的格式处理
+- 架构文件，config.json
+	- 这个没多少，主要定义层数，模型维度这些，看一下，读取直接用就行
+- 权重文件，model.safetensors
+	- 这个很多，而且是safetensors的特定格式，我们自己的推理框架cpp无法直接使用，需要格式转换
+
+**转换方法**就是，
+1. 先用torch库，自己写一个model.py，里面实现我们的整个模型的类。
+2. export.py中，先读取config.json，import model, 实例化我们的模型类
+	1. 在这一步里面，我们把官方的权重变量名，和我们自己的权重变量名对应上
+	2. ![588](../images/Pasted%20image%2020260720185154.png)
+3. 按照我们想要的存储结构，导出模型的各个权重张量。
+	1. ![563](../images/Pasted%20image%2020260720185241.png)
+
+最终，<mark style="background:#fff88f">会产生一个新的model.bin</mark>, 里面包含
+- 模型的架构配置
+- 模型的权重
+之后，我们在自己的cpp的推理框架中，就可以直接用mmap+地址偏移，来直接读取
+
+```txt
+┌────────────────────────────────┐  offset 0
+│  dim          (int32, 4B)      │
+│  hidden_dim   (int32, 4B)      │
+│  layer_num    (int32, 4B)      │  ← ModelConfig header
+│  head_num     (int32, 4B)      │    7 × int32 = 28 bytes
+│  kv_head_num  (int32, 4B)      │
+│  vocab_size   (int32, 4B)      │
+│  seq_len      (int32, 4B)      │
+├────────────────────────────────┤  offset 28
+│  tok_embeddings.weight         │  ① embedding
+│  [vocab_size, dim]             │
+├────────────────────────────────┤
+│  layers[0].attention_norm      │
+│  [dim]                         │
+│  layers[1].attention_norm      │  ② attention_norm × layer_num
+│  [dim]                         │
+│  ...                           │
+│  layers[N-1].attention_norm    │
+│  [dim]                         │
+├────────────────────────────────┤
+│  layers[0].attention.wq        │
+│  [dim, dim]                    │
+│  layers[1].attention.wq        │  ③ Wq × layer_num
+│  [dim, dim]                    │
+│  ...                           │
+│  layers[N-1].attention.wq      │
+│  [dim, dim]                    │
+├────────────────────────────────┤
+│  layers[0].attention.wk        │
+│  [kv_dim, dim]                 │
+│  layers[1].attention.wk        │  ④ Wk × layer_num
+│  [kv_dim, dim]                 │
+│  ...                           │
+│  layers[N-1].attention.wk      │
+│  [kv_dim, dim]                 │
+├────────────────────────────────┤
+│  layers[0].attention.wv        │
+│  [kv_dim, dim]                 │
+│  layers[1].attention.wv        │  ⑤ Wv × layer_num
+│  [kv_dim, dim]                 │
+│  ...                           │
+│  layers[N-1].attention.wv      │
+│  [kv_dim, dim]                 │
+├────────────────────────────────┤
+│  layers[0].attention.wo        │
+│  [dim, dim]                    │
+│  layers[1].attention.wo        │  ⑥ Wo × layer_num
+│  [dim, dim]                    │
+│  ...                           │
+│  layers[N-1].attention.wo      │
+│  [dim, dim]                    │
+├────────────────────────────────┤
+│  layers[0].ffn_norm            │
+│  [dim]                         │
+│  layers[1].ffn_norm            │  ⑦ ffn_norm × layer_num
+│  [dim]                         │
+│  ...                           │
+│  layers[N-1].ffn_norm          │
+│  [dim]                         │
+├────────────────────────────────┤
+│  layers[0].feed_forward.w1     │
+│  [hidden_dim, dim]             │
+│  layers[1].feed_forward.w1     │  ⑧ W1 (gate) × layer_num
+│  [hidden_dim, dim]             │
+│  ...                           │
+│  layers[N-1].feed_forward.w1   │
+│  [hidden_dim, dim]             │
+├────────────────────────────────┤
+│  layers[0].feed_forward.w2     │
+│  [dim, hidden_dim]             │
+│  layers[1].feed_forward.w2     │  ⑨ W2 (down) × layer_num
+│  [dim, hidden_dim]             │
+│  ...                           │
+│  layers[N-1].feed_forward.w2   │
+│  [dim, hidden_dim]             │
+├────────────────────────────────┤
+│  layers[0].feed_forward.w3     │
+│  [hidden_dim, dim]             │
+│  layers[1].feed_forward.w3     │  ⑩ W3 (up) × layer_num
+│  [hidden_dim, dim]             │
+│  ...                           │
+│  layers[N-1].feed_forward.w3   │
+│  [hidden_dim, dim]             │
+├────────────────────────────────┤
+│  model.norm.weight             │  ⑪ final_norm
+│  [dim]                         │
+├────────────────────────────────┤
+│  freqs_cos                     │  ⑫ cos/sin 缓存
+│  [seq_len, head_size/2]        │     (freqs_cos + freqs_sin)
+│  freqs_sin                     │
+│  [seq_len, head_size/2]        │
+├────────────────────────────────┤
+│  model.output.weight           │  ⑬ CLS (仅 vocab_size > 0)
+│  [vocab_size, dim]             │     共享 embedding 时不写
+└────────────────────────────────┘
+
+```
+
+
+
+
+
+
 
 
 ### model的基类
@@ -1598,7 +1850,14 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 
 
 
-![](images/Snipaste_2026-07-13_17-04-00.png)
+![](../images/Snipaste_2026-07-13_17-04-00.png)
+
+
+
+
+
+
+
 
 
 
