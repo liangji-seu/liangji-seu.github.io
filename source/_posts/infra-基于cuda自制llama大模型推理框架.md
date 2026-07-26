@@ -1854,6 +1854,453 @@ mha这个算子层的实现，他就是，当前token的kv向量直接加入kvca
 
 
 
+## 5. demo构建
+
+## 6. profile性能分析
+
+### 性能指标
+首先，先给出我们分析一个推理框架系统的性能指标：
+- **端到端性能指标**（测结果，快不快）
+	- TTFT
+	- TPOT
+	- 端到端延时
+	- 吞吐量
+	- 显存占用
+- **阶段性指标**（找原因，为什么不快）
+		- prefill
+			- 各层的耗时
+		- decode
+			- 各层的耗时
+	- **Nsight System**
+		- 各个kernel的耗时，找出瓶颈kernel
+	- **Nsight Compute**
+		- 单独分析kernel性能
+
+
+---
+
+### 指标术语
+
+- **benchmark** = 基准测试
+	- **在固定条件下，正式测性能，统计端到端指标**
+	- Benchmark 用来得到一个可重复、可对比的性能结果。
+	- <mark style="background:#fff88f">Benchmark 告诉你“快不快”</mark>
+- **profile** = 性能剖析
+	- <mark style="background:#fff88f">时间到底花在哪里，为什么慢。</mark>
+	- ![128](../images/Pasted%20image%2020260722233352.png)
+	- <mark style="background:#fff88f">profile又分成两类</mark>：
+		- **Nsight Systems**：看整个 CPU、GPU、kernel、内存传输的时间线
+		- **Nsight Compute**：深入分析某个 kernel 的访存、计算、occupancy、stall
+
+
+
+所以，
+
+**Benchmark：测结果**
+**Profile：找原因**
+
+
+
+- **warmup** = 预热运行
+	- 正式计时前，先运行几次，但不记录结果
+	- ![241](../images/Pasted%20image%2020260722233650.png)
+	- ![452](../images/Pasted%20image%2020260722234018.png)
+
+
+- **NVTX** = 给 Nsight 时间线添加标签的工具
+	- ![309](../images/Pasted%20image%2020260722233831.png)
+	- ![356](../images/Pasted%20image%2020260722233918.png)
+
+```
+Warmup
+  ↓
+先跑几次，让环境稳定
+
+Benchmark
+  ↓
+测 TTFT、TPOT、tokens/s 等总体指标
+
+Profile
+  ↓
+分析时间花在哪里、为什么慢
+
+NVTX
+  ↓
+给 Profile 时间线添加模块名称
+```
+
+
+
+**ITL：每个 token 之间的间隔统计**
+![397](../images/Pasted%20image%2020260723000404.png)
+
+
+
+
+---
+
+### 实现
+#### 1. nsight system的打标基础工具，nvtx3
+他先搓了一点基础工具
+![357](../images/Pasted%20image%2020260722234550.png)
+他自己写了一个打标的类，构造一个对象，然后把自己注册到nvtxRangePushEx里面来打标
+
+![](../images/Pasted%20image%2020260722234658.png)
+![665](../images/Pasted%20image%2020260722234749.png)
+
+![](../images/Pasted%20image%2020260722234801.png)
+
+![](../images/Pasted%20image%2020260722234838.png)
+
+回到我们的代码
+
+```cpp
+// 开启 ENABLE_NVTX 时：
+class NvtxRange {
+public:
+  explicit NvtxRange(const std::string& name) {
+    nvtxEventAttributes_t attr = {};          // 构造属性
+    attr.version = NVTX_VERSION;
+    attr.size = NVTX_EVENT_ATTRIBUTES_STRUCT_SIZE;
+    attr.messageType = NVTX_MESSAGE_TYPE_ASCII;
+    attr.message.ascii = name.c_str();        // 把名字填进去
+    nvtxRangePushEx(&attr);                   // 告诉驱动：开始一段叫 name 的 range
+  }
+  ~NvtxRange() { nvtxRangePop(); }            // 告诉驱动：这个 range 结束
+};
+
+// 没开 ENABLE_NVTX 时：
+class NvtxRange {
+public:
+  explicit NvtxRange(const char*) {}           // 空构造，什么都不做
+};
+// NVTX_RANGE("xxx") → do { (void)("xxx"); } while(0)   // 完全编译掉
+```
+
+**所以整体的数据流是**：
+
+```
+NVTX_RANGE("prefill")   // 你的代码
+  → nvtxRangePushEx()   // nvtx3 库
+    → cupti 接口         // CUDA 驱动内部
+      → trace buffer     // GPU 驱动环形缓存
+        → nsys profile   // 采集时写入 .nsys-rep 文件
+          → Nsight Systems GUI  // Windows 上打开看到 timeline
+```
+
+
+![](../images/Pasted%20image%2020260722235256.png)
+
+
+下面介绍他是如何具体实现nvtx打标，然后在nsight system上看到打标的![](../images/Pasted%20image%2020260723163420.png)
+
+这边定义了两个宏，用来构造创建nvtx标签的实例。
+```cpp
+#define NVTX_RANGE(name)       profile::NvtxRange _nvtx_ ## __LINE__(name, 0)
+#define NVTX_RANGE_C(name, c)  profile::NvtxRange _nvtx_ ## __LINE__(name, c)
+```
+
+后面在构造函数中，往cuda驱动的缓冲区打标签，析构函数中弹出标签。
+![341](../images/Pasted%20image%2020260723163535.png)
+所以，计时开始就是push的cpu时间，弹出时间就是计时结束。
+
+**以rmsnorm为例**
+
+![445](../images/Pasted%20image%2020260723163656.png)
+在llama3.cpp中，attention_rms这个调用算子的过程，NVTX_RANGE_C开始打标。这个实例对象的生命周期，和最近的{}绑定，结束后pop析构，计时结束。因此就可以**实现对一个生命周期的追踪**。
+
+我们实际上要统计的，就是从NVTX_RANGE_C开始，到rmsnorm_layer->forward结束。
+
+但是这个forward一直追踪到调用核函数
+![412](../images/Pasted%20image%2020260723163916.png)
+
+cpu调用核函数之后，没有阻塞等待直接返回。所以我们的nvtx打的标签记录的时间，本质上是cpu时间，因此，我们的kernel的实际运行时间，是会有可能右端超出标签弹出时间的。
+![](../images/Pasted%20image%2020260723164115.png)
+
+
+#### 2. gpu计时器（cudaEvent）
+定义了cudaTimer的类
+```cpp
+// ============================================================
+// CUDA Event RAII wrapper — start/stop a named timer on a stream
+// ============================================================
+class CudaTimer {
+ public:
+  explicit CudaTimer(const std::string& name);
+  ~CudaTimer();
+
+  CudaTimer(const CudaTimer&) = delete;
+  CudaTimer& operator=(const CudaTimer&) = delete;
+  CudaTimer(CudaTimer&& other) noexcept;
+  CudaTimer& operator=(CudaTimer&& other) noexcept;
+
+  // Record start on the given stream (nullptr = default stream / synchronize).
+  void record_start(cudaStream_t stream = nullptr);
+  // Record stop on the given stream.
+  void record_stop(cudaStream_t stream = nullptr);
+  // Synchronize and return elapsed time in milliseconds.
+  float elapsed_ms(bool sync = true);
+  // Return name for reporting.
+  const std::string& name() const { return name_; }
+  // Check if events are created and valid.
+  bool is_valid() const { return created_; }
+
+ private:
+  std::string name_;
+  cudaEvent_t start_event_ = nullptr;
+  cudaEvent_t stop_event_ = nullptr;
+  bool started_ = false;
+  bool stopped_ = false;
+  bool created_ = false;
+};
+```
+![](../images/Pasted%20image%2020260722235602.png)
+
+![](../images/Pasted%20image%2020260722235820.png)
+
+#### 3. 定义汇总结果 结构体
+![](../images/Pasted%20image%2020260722235951.png)
+
+
+#### 4. Profiler 类（统计总管）
+![](../images/Pasted%20image%2020260723110736.png)
+
+
+profiler相当于MemoryAllocator，用来创建/读取我们的timer类对象
+
+```cpp
+class Profiler {
+ public:
+  Profiler();
+
+  // 显存统计
+  void record_memory_before_model();//这3个是对cudaMemGetInfo的包装
+  void record_memory_after_model();
+  void record_peak_memory();
+  size_t memory_before_mb() const { return mem_before_mb_; }
+  size_t memory_after_mb() const { return mem_after_mb_; }
+  size_t memory_peak_mb() const { return mem_peak_mb_; }
+
+  //CPU时间计时打点
+  // ---- CPU-wall-clock timing (for phases where GPU isn't involved) ----
+  void set_cpu_start();
+  float cpu_elapsed_ms() const;
+
+  //GPU时间计时打点
+  // ---- GPU cudaEvent timers ----
+  // Create/get a named timer that lives for the profiler's lifetime.
+  CudaTimer* get_timer(const std::string& name);
+
+  // ---- Layer profiling ----
+  // Record a layer module timing. Called by the model during forward() when
+  // layer profiling is enabled.
+  // 一个层跑完了，记录数据
+  void add_layer_record(const std::string& module, const std::string& stage,
+                        int32_t layer_idx, float elapsed_ms);
+
+  // ---- Stage profiling (lightweight, no per-layer sync) ----
+  void set_stage(const std::string& stage_name);
+  void record_stage_time(const std::string& stage_name, float elapsed_ms);
+
+  // ---- Benchmark result generation ----
+  void add_run(const RunRecord& run);//一次完整的推理结束，记录数据
+
+
+  //计算平均的benchmark
+  BenchmarkResult compute_result(const std::string& model_path,
+                                 int32_t prompt_tokens, int32_t max_new_tokens,
+                                 int32_t warmup_iterations, int32_t repeat_iterations,
+                                 bool greedy, int32_t seed);
+
+  // 查询相关信息
+  const std::vector<RunRecord>& runs() const { return runs_; }
+  void clear_runs() { runs_.clear(); }
+  const std::vector<LayerModuleRecord>& layer_records() const { return layer_records_; }
+  const std::vector<StageRecord>& stage_records() const { return stage_records_; }
+
+  // ---- Streaming control ----
+  bool stream_output_enabled() const { return stream_output_; }
+  void set_stream_output(bool v) { stream_output_ = v; }
+
+  bool layer_profile_enabled() const { return layer_profile_enabled_; }
+  void set_layer_profile_enabled(bool v) { layer_profile_enabled_ = v; }
+
+ private:
+ //三次 cudaMemGetInfo 的快照
+  size_t mem_before_mb_ = 0;
+  size_t mem_after_mb_ = 0;
+  size_t mem_peak_mb_ = 0;
+
+  //chrono 起点，给 tokenizer 等纯 CPU 工作计时
+  std::chrono::steady_clock::time_point cpu_start_;
+
+  //	map<string, CudaTimer>，按名字缓存 GPU 计时器
+  std::map<std::string, std::unique_ptr<CudaTimer>> timers_;
+
+  //每次单次推理的原始数据：
+  //一次完整 prompt → 最后一个 token 输出，包含 prefill + 全部 decode step
+  std::vector<RunRecord> runs_;
+  std::vector<LayerModuleRecord> layer_records_;//每层耗时汇总
+  std::vector<StageRecord> stage_records_;//每个阶段性耗时汇总
+
+  bool stream_output_ = true;//是否是流式输出
+  bool layer_profile_enabled_ = false;//是否开启每层同步计时
+
+  // Helper for percentiles
+  static float percentile(const std::vector<float>& sorted, float p);
+};
+
+```
+
+
+
+
+#### 5. 模型集成
+在class model类里面新增了一个成员属性：  `profile::Profiler* profiler_ = nullptr`;
+
+在调用cuda算子层之前，前后加入两个event
+![424](../images/Pasted%20image%2020260723112330.png)
+
+
+#### 6. 开始测量
+![](../images/Pasted%20image%2020260723112543.png)
+
+
+
+
+
+
+
+#### 总结
+- **benchmark**
+	- ![624](../images/Pasted%20image%2020260723113015.png)
+	- 可得：
+		- <mark style="background:#fff88f">TTFT， prefill throughput</mark>
+		- <mark style="background:#fff88f">itl(每token耗时), TPOT, p50， p95</mark>
+		- <mark style="background:#fff88f">e2e 端到端延迟</mark>
+	- 这一步仅在prefill, decode之后，加入sync, 数量不多，因此对性能影响不大
+
+- **layer profiler**
+	- ![600](../images/Pasted%20image%2020260723113052.png)
+	- 这一步，需要你自己针对每个layer，让cpu来sync等待gpu的算子结束运算，来粗略的统计每个layer的运行时间。<mark style="background:#ff4d4f">但是注意，由于sync次数很多，所以对整体性能影响大，只能用来统计每个layer的占比</mark>
+
+
+- **Nsight system**
+	- 这一步就是查看时间具体花在哪一个kernel上。
+	- ![544](../images/Pasted%20image%2020260723164525.png)
+
+- **Nsight compute**
+	- 具体分析kernel的设计
+
+
+
+所以整个**profile的性能分析流程**应该是
+
+![](../images/Pasted%20image%2020260723164540.png)
+
+![](../images/Pasted%20image%2020260723164557.png)
+
+
+
+
+##### 整个demo流程分析
+我们目前在demo的单prompt推理中，规定：
+- prompt: 6个token
+	- prefill输入是5个（无需采样）
+	- 第六个token开始属于decode阶段
+- 最大产生长度16个token
+![621](../images/img_v3_0213s_df0decb7-11df-4b33-9b0c-38e0820c073g.jpg)
+
+
+
+**完成一次推理的过程如下**：
+
+![444](../images/Pasted%20image%2020260723192555.png)![243](../images/img_v3_0213s_e80e559c-15bf-44d0-a14f-1680d6d928ag.jpg)
+
+
+
+##### profile流程分析
+![](../images/Pasted%20image%2020260723203357.png)
+
+
+
+
+
+![](../images/Pasted%20image%2020260723203344.png)
+
+
+
+**下面是性能分析报告**
+
+
+分析结论：
+- **decode阶段**
+![](../images/Pasted%20image%2020260723205252.png)
+可以看到，输出单个token耗时4.46ms，对比**benchmark**
+![405](../images/Pasted%20image%2020260723205624.png)
+
+![](../images/Pasted%20image%2020260723205732.png)
+
+实际我用gputimer测量下来发现，TPOT是4.6ms, cls_logits下的matmul也就500us，占比不大。不算特别瓶颈。
+
+
+##### 128长度profile分析
+
+**baseline 的朴素实现的benchmark**
+![](../images/Pasted%20image%2020260723222634.png)
+
+**nsys分析**
+
+**![](../images/Pasted%20image%2020260723222722.png)**
+可以看到，两个阶段
+- prefill
+- decode
+
+###### 优化matmul算子，mha算子
+![](../images/Pasted%20image%2020260723223938.png)
+可以看到matmul算子耗时，以及mha算子的耗时最多，先优化一版本两个算子
+
+目前先把老师的两个算子移植过来。
+
+可以看到**性能暴涨**
+![](../images/Pasted%20image%2020260724133332.png)
+
+
+benchmark对比：
+（前）
+![386](../images/Pasted%20image%2020260724133447.png)
+
+（后）
+![350](../images/Pasted%20image%2020260724133757.png)
+
+
+
+
+（前，可以看到cls_logits长时间，是由于matmul引起的，导致cudaFree一直在同步等待）
+![](../images/Pasted%20image%2020260724133843.png)
+
+（后，可以看到，decoder阶段和cls，post阶段基本差不多）
+![](../images/Pasted%20image%2020260724133930.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 简历描述
+![697](../images/Pasted%20image%2020260725144720.png)
+
+
+
 
 
 
