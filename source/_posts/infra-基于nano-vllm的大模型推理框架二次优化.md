@@ -480,6 +480,10 @@ if __name__ == "__main__":
 
 ```
 
+## PUSH/PULL 通信模式
+这个通信模式，是无回复的，上面的REQ-REP模式是有回复的。
+
+这个单向传输模式，适合EngineCore把decode的输出，push给LLMEngine，无需前端回复
 
 
 
