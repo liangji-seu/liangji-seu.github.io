@@ -56,7 +56,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "文件列表"
@@ -177,7 +179,7 @@
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "infra-基于nano-vllm的大模型推理框架二次优化 的大纲"
+              "title": "大纲"
             }
           }
         ],
@@ -200,20 +202,21 @@
   },
   "active": "a4569f42ab6c4ca9",
   "lastOpenFiles": [
-    "source/images/Pasted image 20260728212634.png",
-    "source/images/Pasted image 20260728200457.png",
-    "source/images/Pasted image 20260728200401.png",
-    "source/images/Pasted image 20260728200351.png",
-    "source/images/Pasted image 20260728200344.png",
-    "source/_posts/infra-基于cuda自制llama大模型推理框架.md",
+    "source/_posts/imx6ull-并发与竞争.md",
+    "source/_posts/imx6ull-linux-阻塞与非阻塞.md",
     "source/_posts/infra-基于nano-vllm的大模型推理框架二次优化.md",
-    "source/images/Pasted image 20260728193926.png",
-    "source/images/Pasted image 20260728193031.png",
-    "source/images/Pasted image 20260728192930.png",
-    "source/images/Pasted image 20260728192137.png",
-    "source/images/Pasted image 20260728192125.png",
+    "source/images/Pasted image 20260801155828.png",
+    "source/images/Pasted image 20260801155819.png",
+    "source/images/Pasted image 20260801155807.png",
+    "source/images/Pasted image 20260801155746.png",
+    "source/images/Pasted image 20260801154531.png",
+    "source/images/Pasted image 20260801154445.png",
+    "source/images/Pasted image 20260801154433.png",
+    "source/_posts/infra-基于cuda自制llama大模型推理框架.md",
+    "source/images/Pasted image 20260801135330.png",
+    "source/images/Pasted image 20260801134016.png",
+    "source/images/Pasted image 20260801134001.png",
     "source/_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
-    "source/images/Pasted image 20260725144720.png",
     "source/_posts/cpp-基础复盘.md",
     "source/_posts/cache-学习笔记.md",
     "source/_posts/基于cuda自制llama大模型推理框架.md",
@@ -235,7 +238,6 @@
     "blog_mac_compatible.sh",
     "source/_posts/现代c++学习.md",
     "source/_posts/学习计划.md",
-    "source/_posts/ACM模式输入输出.md",
-    "source/_posts/nano-vllm 源码解读.md"
+    "source/_posts/ACM模式输入输出.md"
   ]
 }
