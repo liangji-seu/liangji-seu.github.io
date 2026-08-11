@@ -13,26 +13,26 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "source/_posts/infra-基于cuda自制llama大模型推理框架.md",
-                "mode": "preview",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "infra-基于cuda自制llama大模型推理框架"
-            }
-          },
-          {
-            "id": "a4569f42ab6c4ca9",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "source/_posts/infra-基于nano-vllm的大模型推理框架二次优化.md",
+                "file": "source/_posts/infra-基于vllm的my-vllm大模型推理框架二次优化.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "infra-基于nano-vllm的大模型推理框架二次优化"
+              "title": "infra-基于vllm的my-vllm大模型推理框架二次优化"
+            }
+          },
+          {
+            "id": "9337e71a50418909",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "source/_posts/infra-基于vllm的my-vllm大模型推理框架二次优化.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "infra-基于vllm的my-vllm大模型推理框架二次优化"
             }
           }
         ],
@@ -55,10 +55,8 @@
             "state": {
               "type": "file-explorer",
               "state": {
-                "sortOrder": "alphabetical",
-                "autoReveal": false,
-                "showSearch": false,
-                "searchQuery": ""
+                "sortOrder": "byCreatedTime",
+                "autoReveal": false
               },
               "icon": "lucide-folder-closed",
               "title": "文件列表"
@@ -95,7 +93,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 344.5
+    "width": 427.5,
+    "collapsed": true
   },
   "right": {
     "id": "c028cbc65eb73c5b",
@@ -173,13 +172,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "source/_posts/infra-基于nano-vllm的大模型推理框架二次优化.md",
+                "file": "source/_posts/infra-基于vllm的my-vllm大模型推理框架二次优化.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "大纲"
+              "title": "infra-基于vllm的my-vllm大模型推理框架二次优化 的大纲"
             }
           }
         ],
@@ -187,7 +186,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 384.5
+    "width": 381.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -200,25 +199,27 @@
       "bases:新建数据库": false
     }
   },
-  "active": "a4569f42ab6c4ca9",
+  "active": "9337e71a50418909",
   "lastOpenFiles": [
-    "source/_posts/imx6ull-并发与竞争.md",
-    "source/_posts/imx6ull-linux-阻塞与非阻塞.md",
-    "source/_posts/infra-基于nano-vllm的大模型推理框架二次优化.md",
-    "source/images/Pasted image 20260801155828.png",
-    "source/images/Pasted image 20260801155819.png",
-    "source/images/Pasted image 20260801155807.png",
-    "source/images/Pasted image 20260801155746.png",
-    "source/images/Pasted image 20260801154531.png",
-    "source/images/Pasted image 20260801154445.png",
-    "source/images/Pasted image 20260801154433.png",
+    "source/images/Pasted image 20260811155310.png",
+    "source/images/Pasted image 20260811154858.png",
+    "source/images/Pasted image 20260811154728.png",
+    "source/images/Pasted image 20260811153122.png",
+    "source/images/Pasted image 20260811151628.png",
+    "source/images/Pasted image 20260811151302.png",
+    "source/images/Pasted image 20260811145339.png",
+    "source/images/Pasted image 20260811145259.png",
+    "source/images/Pasted image 20260811145200.png",
+    "source/images/Pasted image 20260811145112.png",
+    "source/images/Pasted image 20260811145032.png",
+    "source/images/IMG_9252.heic",
+    "source/_posts/infra-流畅的python-学习.md",
+    "source/_posts/infra-基于vllm的my-vllm大模型推理框架二次优化.md",
     "source/_posts/infra-基于cuda自制llama大模型推理框架.md",
-    "source/images/Pasted image 20260801135330.png",
-    "source/images/Pasted image 20260801134016.png",
-    "source/images/Pasted image 20260801134001.png",
-    "source/_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
+    "source/_posts/学习计划.md",
     "source/_posts/cpp-基础复盘.md",
     "source/_posts/cache-学习笔记.md",
+    "source/_posts/大模型学习项目1-7B模型QLoRA指令微调-SFT.md",
     "source/_posts/基于cuda自制llama大模型推理框架.md",
     "source/_posts/leecode-ACM模式输入输出.md",
     "source/_posts/infra-面经整理.md",
@@ -237,7 +238,6 @@
     "source/_posts/imx6ull-按键输入实验.md",
     "blog_mac_compatible.sh",
     "source/_posts/现代c++学习.md",
-    "source/_posts/学习计划.md",
     "source/_posts/ACM模式输入输出.md"
   ]
 }
