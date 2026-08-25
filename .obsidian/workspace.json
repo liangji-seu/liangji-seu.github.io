@@ -8,20 +8,6 @@
         "type": "tabs",
         "children": [
           {
-            "id": "a0063c70277e38c2",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "source/_posts/infra-基于vllm的my-vllm大模型推理框架二次优化.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "infra-基于vllm的my-vllm大模型推理框架二次优化"
-            }
-          },
-          {
             "id": "9337e71a50418909",
             "type": "leaf",
             "state": {
@@ -35,8 +21,7 @@
               "title": "infra-基于vllm的my-vllm大模型推理框架二次优化"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -201,21 +186,23 @@
   },
   "active": "9337e71a50418909",
   "lastOpenFiles": [
-    "source/images/Pasted image 20260811155310.png",
-    "source/images/Pasted image 20260811154858.png",
-    "source/images/Pasted image 20260811154728.png",
-    "source/images/Pasted image 20260811153122.png",
-    "source/images/Pasted image 20260811151628.png",
-    "source/images/Pasted image 20260811151302.png",
-    "source/images/Pasted image 20260811145339.png",
-    "source/images/Pasted image 20260811145259.png",
-    "source/images/Pasted image 20260811145200.png",
-    "source/images/Pasted image 20260811145112.png",
-    "source/images/Pasted image 20260811145032.png",
-    "source/images/IMG_9252.heic",
-    "source/_posts/infra-流畅的python-学习.md",
+    "source/images/Pasted image 20260823233835.png",
+    "source/images/Pasted image 20260823233704.png",
+    "source/images/Pasted image 20260823214754.png",
+    "source/images/Pasted image 20260823214003.png",
+    "source/images/Pasted image 20260823174030.png",
+    "source/images/Pasted image 20260823173554.png",
+    "source/images/Pasted image 20260823173528.png",
+    "source/images/Pasted image 20260823173500.png",
+    "source/images/Pasted image 20260823173446.png",
+    "source/images/Pasted image 20260823173429.png",
+    "source/images/Pasted image 20260823171208.png",
+    "source/_posts/infra-FlashAttention学习.md",
     "source/_posts/infra-基于vllm的my-vllm大模型推理框架二次优化.md",
     "source/_posts/infra-基于cuda自制llama大模型推理框架.md",
+    "source/flashattention-online-softmax-animation.html",
+    "source/images/IMG_9252.heic",
+    "source/_posts/infra-流畅的python-学习.md",
     "source/_posts/学习计划.md",
     "source/_posts/cpp-基础复盘.md",
     "source/_posts/cache-学习笔记.md",
@@ -237,7 +224,6 @@
     "source/_posts/imx6ull-基础复盘.md",
     "source/_posts/imx6ull-按键输入实验.md",
     "blog_mac_compatible.sh",
-    "source/_posts/现代c++学习.md",
-    "source/_posts/ACM模式输入输出.md"
+    "source/_posts/现代c++学习.md"
   ]
 }
