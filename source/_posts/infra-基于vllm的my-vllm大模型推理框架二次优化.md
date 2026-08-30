@@ -5867,19 +5867,1397 @@ class CUDAGraphWrapper:
 
 
 ## 4_并行优化策略
-### 4.1_模型不并行
-#### DP
-##### EP
-### 4.2_模型并行
-#### TP
-##### SP
-#### PP
+### DP
+
+这边先展示一下DP，数据并行的一个架构图
+
+![](../images/Pasted%20image%2020260825145817.png)
+可以看到，主要是增加了多个引擎后端（每个对应一个模型副本）
+中间有一个协调器，
+
+#### wave的理解
+wave这里就是引擎前端发过来的多个请求了，**让多个模型副本，对当前处于第几轮协同执行保持一致，避免分布式场景下，由于请求到达时序不同造成的状态错位**。
+
+**在需要 wave 协调的场景下，多个`Engine Core` 虽然不一定处理完全相同的请求集合，但需要在同一个 wave 上协同推进**
+
+可以将wave理解成一轮**需要各个相关Engine core的模型副本，保持同步节奏**的执行周期
+
+> wave可以理解为是一次批量处理的周期，表示一次集体考试（每个dp模型副本在一个wave期间处理多个req）
+
+
+#### 前端-协调器-后端
+
+##### 首次唤醒过程
+![](../images/Pasted%20image%2020260825151153.png)
+
+所以协调器是用来管理wave的
+
+所以，wave数，进一步理解就是：
+> wave数 就是所有 Engine 从运行状态 切换到暂停状态的次数。用于所有Engine的
+> **暂停-启动-运行-完成-暂停** 
+> 所以，每个引擎后端进程，接收到来自协调器中的 <mark style="background:#fff88f">START_DP_WAVE</mark>后，将 <mark style="background:#fff88f">engines_running</mark> 状态设置为True
+
+下面看一下，引擎后端进程，是如何被协调器的指令唤醒的
+![](../images/Pasted%20image%2020260825151712.png)
+
+![](../images/Pasted%20image%2020260825151739.png)
+
+---
+除了上面的引擎前端->协调器， 发送唤醒启动指令，还有反向的通路
+
+协调器 -> 引擎前端
+
+在这里，协调器向引擎前端发送后端引擎的负载情况。前端订阅这个地址，获取负载信息和request wave变化。
+
+![](../images/Pasted%20image%2020260825152049.png)
+
+协调器向前端发送 三个信息：
+- current_wave
+	- 当前全局DP request wave编号。每当所有engines 从running 转为 paused 完成一轮后，该编号会推进，用于标记系统当前
+- engine_req_consts_list
+	- 各个引擎后端当前处理中的req负载信息，每个元素是一个(waiting, running)对，
+- engines_running
+	- 全局引擎后端的运行状态，为True表示当前的所有引擎后端整体处于running阶段。
+
+##### 前端-协调器
+
+<mark style="background:#d3f8b6">协调器</mark>
+设置了一个超时时间，每间隔一定时间 / 有状态改变stats_changed, 就向引擎前端发送信息，来刷新引擎前端的3个状态
+
+![](../images/Pasted%20image%2020260825153110.png)
+
+
+
+##### 协调器-引擎后端
+> 这里有一点需要注意： 请求的req推理，是不需要经过协调器的
+
+![504](../images/Pasted%20image%2020260825153305.png)
+
+
+下面来看一下，引擎前端发送给协调器，让他启动所有引擎后端的时机
+
+- <mark style="background:#fff88f">标准唤醒时机</mark>
+	- 引擎前端AsyncLLM 发送 **FIRST_REQ** , chosen_engine，给协调器，协调器接收到后，直接定向发送给这个后端进程 START_DP_WAVE
+- <mark style="background:#fff88f">异常情况处理时机</mark>
+	- 引擎后端在暂停状态下 收到过期wave的请求。就会上报给协调器，说发现一个过期的请求，但是我现在引擎关掉了，是否需要重启所有的engine来处理迟到的req
+
+
+##### engine间的同步
+![](../images/Pasted%20image%2020260825153736.png)
+
+
+在各个引擎后端进程中，他们处于run_busy_loop中，通过执行：
+`torch.distributed.all_reduce()`
+<mark style="background:#fff88f">来同步全局是否本wave还有未完成的req状态</mark>， 目的是为了**让不同的引擎后端进程执行的步调一致**。
+
+所以这个就是进程间通信（涉及节点内，节点间）
+
+
+<mark style="background:#fff88f">一旦所有 Engine 都执行完了各自的请求，它们同时进入暂停状态，wave 号递增，等待下一批 FIRST_REQ 启动</mark>
+
+
+![](../images/Pasted%20image%2020260825154055.png)
+所以这里的重点就是各个引擎后端进程的run_busy_loop中，需要通过进程间all reduce聚合，来同步整个全局引擎后端中，是否一起已经处理完了这一wave的所有req，都结束了，通知协调器，我们都做完了。
+
+![](../images/Pasted%20image%2020260825155158.png)
+
+
+下面有几个零碎的概念点：
+
+1. 内部负载均衡模式
+
+就是协调器接受了所有引擎后端的负载状态后，会转发给前端。如果我们启用了内部负载均衡模式，意思就是<mark style="background:#fff88f">前端根据这个负载情况，计算分数</mark>。然后选择分数最低的Engine, 选中后，前端还会临时增加本地的等待计数waiting count, 以缓解统计更新间隔带来的请求倾斜。
+
+
+
+2. 关于DPEngineCoreProc和EngineCoreProc的使用区别
+
+![](../images/Pasted%20image%2020260825155710.png)
+
+
+总结一下，相比于普通的无并行的引擎后端，DP多了
+- 每个引擎后端，按需上报负载
+- 判断本地未完成请求，all-reduce 判断全局未完成请求
+- wave结束后，dp_rank为0的引擎后端，负责发送wave_complete 给协调器
+
+
+#### 同步场景的处理
+
+涉及3个方面：
+- 引擎前端
+	- 发生请求时，携带自己当前记录的 current_wave
+- 协调器
+- 引擎后端
+	- 收到请求后，将request_wave与本地的current_wave进行比较
+
+
+所以存在两类同步场景：
+- 正常同步
+	- 当前wave结束，Engine通知协调器，推进wave
+	- 前面主要描述的是这个情况
+- 补偿同步
+	- 请求携带的wave 和 Engine当前的wave不一致，需要通过协调器补发启动信号，使其他Engine跟上
+
+
+在系统运行过程中，可能存在一种典型但复杂的情况：前端（AsyncLLM）发出请求的速度与 Engine 的状态推进存在不一致，从而引入潜在的时序冲突。
+
+![](../images/Pasted%20image%2020260825160630.png)
+![](../images/Pasted%20image%2020260825161022.png)
+
+
+
+#### DP如何部署？
+##### 单机多卡
+![](../images/Pasted%20image%2020260825161335.png)
+
+单机多卡下：
+每个引擎后端进程，表示一个模型副本，data_parallel_size表示模型副本数，<mark style="background:#fff88f">分别处理不同子集的输入请求</mark>
+
+请求分配方面，vLLM 将**输入批次切分为若干部分**，逐一交给各个进程（或 GPU）处理；通过 NVIDIA NCCL 库广播或分发输入，确保每个 GPU 得到正确的请求子集
+
+
+
+##### DP=4，TP=2
+说明有4个模型副本，每个副本，由2张GPU的卡完成
+
+![](../images/Pasted%20image%2020260825161711.png)
+
+
+
+##### 多机多卡，分布式场景下的数据并行
+![](../images/Pasted%20image%2020260825161903.png)
+
+这里的情况就是，
+- 节点0
+	- 告知，我们DP=4，一共有4个模型副本，然后本地节点有2个副本（说明还有2个副本在其他节点）（0，1副本），然后这个0节点作为头结点。并且指定这个头结点的通信URL
+- 节点1
+	- 告知，我们是DP=4，这个节点上运行两个副本，且开始的dp分支rank是2开头（2，3），并指定我们这个节点是无头模式，说明是从别的节点的前端进程和协调器来接受指令。并指明<mark style="background:#fff88f">DP master 节点的 IP 地址</mark>
+
+##### 多机多卡下的两层通信
+- 控制面通信
+	- data-parallel-address, data-parallel-rpc-port
+	- 负责DP rank分配，EngineCore的注册，请求的路由，状态同步
+	- 这里主要是用于RPC通信的
+	- ![108](../images/Pasted%20image%2020260825162525.png)
+- GPU计算通信
+	- TP中的，GPU0-NCCL-GPU1
+	- PP中的
+	- 这里主要涉及的是：NCCL，RDMA，NVLink, PCIe
+
+
+
+
+##### 总结
+
+**DP 推理服务流程总结：多进程加载模型副本 -> 划分请求 -> 并行生成 -> 汇总结果**
+
+
+##### TP+DP
+张量并行 + 数据并行， 两者是正交的，可以同时来用
+
+下面看一个TP +DP的例子
+
+TP=8, DP=64
+表示，模型副本64个，每个副本由8张卡一起跑。所以一共启动了512个GPU
+
+> 张量并行：
+> 	同一个TP组内的多个卡，共同承载一份模型副本，vllm称为 TP组，组内通信包括all-reduce, all-gather, reduce-scatter 等。具体取决于算子实现（列并行，行并行，vocab并行Embedding，并不是每层仅有all-reduce）。
+
+
+> 数据并行：
+> 	同一个TP组内处于相同TP位置的GPU形成我们的DP组，这些rank各自持有参数相同的完整模型副本。在vllm中，DP组之间的all-reduce, 主要用于调度协同(全局未完成请求，Wave状态等)。而且，MOE与dense的模型，DP的行为也不同
+
+
+> 通信底层：
+> 	通过pytorch的 `torch.distributed` 发起，默认是NCCL backend, 同一个节点的TP还可能走custom all-reduce等优化路径
+
+
+所以下面展示一下**DP=64 + TP =8**的一个工作情况 + Moe在DP时候也要涉及all-reduce
+
+![](../images/Pasted%20image%2020260825163720.png)
+
+![](../images/Pasted%20image%2020260825163931.png)
+![](../images/Pasted%20image%2020260825164157.png)
+
+![](../images/Pasted%20image%2020260825164239.png)
+
+##### 启动流程分析
+
+
+
+### TP，PP
+
+下面来开始正式进行需要计算通信的两个并行方案：
+- 张量并行
+- 流水线并行
+
+他们的核心思路，就是把单个模型部分，拆分到多个GPU共同完成计算。这样就可以降低单张GPU的显存压力：
+> prefill是计算密集型，decode是访存密集型
+
+<mark style="background:#fff88f">当我们的计算量足够大，因此通信开销就可以被摊薄了，从而提升forward吞吐</mark>。
+
+
+在vllm中，借鉴了Megatron风格的TP， 常见的切分位置有3类：
+- **Embedding层**（这个就是个大权重矩阵，查表）
+	- <mark style="background:#d3f8b6">VocabParallelEmbedding层，就是按照vocab维度，切分embedding权重，每张卡只负责一部分的token， forward之后，通过all-reduce 汇总完整的embedding</mark>
+- 线性层（就是个巨大的Matmul）
+	- MergedColumnParallelLinear, RowParallelLinear，QKVParallelLinear这些层定义
+	- <mark style="background:#d3f8b6">Column Parallel 切输出维度</mark>
+	- <mark style="background:#d3f8b6">Row Parallel 切输入维度</mark>
+- Attention
+	- Q,K,V向量，按照head维，分到不同的GPU上，每个卡，<mark style="background:#d3f8b6">负责计算自己负责的几个头的attention</mark>，最后的O通过<mark style="background:#d3f8b6">Row Parallel 和 All-Reduce 合并结果</mark>。
+
+后面我们就按 `VocabParallelEmbedding`、`Column Parallel`、`Row Parallel` 和 `LM Head` 这几类层，分别看它们在 forward 中什么时候触发 **`All-Reduce`**、**`All-Gather`** 或 **gather**。
+
+
+
+#### AllReduce原理
+
+<mark style="background:#fff88f">All-Reduce的目标，是将所有进程上的数据，通过特定的操作（求和，取max）聚合后，把结果同步到每一个进程。</mark>
+
+所以，**把All-Reduce看成一个方法**
+
+常见的底层实现包括：
+- Ring AllReduce
+- Tree AllReduce
+
+<mark style="background:#fff88f">其最终目标，就是让每块 GPU 上的数据都变成汇总/归约后的同一个结果</mark>
+
+
+##### Ring-AllReduce 算子原理
+
+Ring-AllReduce 的 实现，其实分为两个过程 **Reduce-Scatter** 和 **All-Gather**
+
+
+1. **分块传输**
+		假设有N个进程，每个进程有一份数据（待规约）。Ring-AllReduce 会先把这份数据 切分成N个chunk。
+		
+		然后，把这些进程在逻辑上，组成一个环。
+2. **Reduce-Scatter阶段**
+		在每一轮中，每个进程，都会把一个chunk发给环上的下一个进程。同时从上一个进程接受一个chunk。
+		
+		收到chunk后，进程会把它和本地对应位置的chunk 做 逐元素规约（求和）。经过N-1轮后，每个进程，就会得到一块已完成全局规约的结果分片。此时每个进程只保存完整结果的一部分。
+
+
+这里简单说，就是，N个进程，每个进程i，在N-1次循环中，将上一次接受到的j位置的数据发给下一个进程的同样位置，然后接受到前面一个进程的他的位置的数据，然后加在自己的位置上。
+
+这样就是类似，N个进程，每次都分配到不同的位置进行加法计算。
+
+![410](../images/Pasted%20image%2020260825173506.png)
+
+![422](../images/Pasted%20image%2020260825173516.png)
+![405](../images/Pasted%20image%2020260825173527.png)
+![400](../images/Pasted%20image%2020260825173540.png)
+
+最终，分片规约，导致，N个进程，每个都拥有独立的一个chunk，里面已经Ring规约好了全局的结果。
+
+所以下面的需求就是要把这些chunk，通知到所有人（N个进程）
+
+	
+3. **All-Gather阶段**
+		各个进程，继续沿着环传播这些已经规约完成的结果分片。每一轮发送当前持有的结果分片，同时接受其他进程传来的结果分片。
+		
+		经过N-1轮后， 所有进程都能收集到全部规约分片，并把这些分片拼接成完整的AllReduce结果。
+
+依然遵循上面的相邻GPU的对应位置互换通信原则。只是这一轮不再做相加。而是将已经规约好的分块拷贝到下一跳的对应位置上。
+
+![](../images/Pasted%20image%2020260825174000.png)
+
+#####  Ring-AllReduce的通信成本
+- N个进程
+- 每个进程K份chunk数据
+
+一次AllReduce中
+- N-1次reduce-scatter
+	- 每次ring, 传递K/N个数据
+- N-1次Allgather
+	- 每次ring, 传递K/N个数据
+
+所以，整个AllReduce的传输数据大小为$$2(N-1) * K/N$$
+**随着**N **的增大，Ring AllReduce 通信算子的通信量可以近似为** $$2K$$![](../images/Pasted%20image%2020260825174720.png)
+
+Ring All-Reduce的吞吐，每次传输的数据量是K/N, 当N增大的时候，一次Ring的数据就变少了，所以对于K很大，就容易形成流水线并行，通信效率很高(每次传输K/N个数据，N-1次完成，效率很高)
+
+但是对于小张量的情况，固定调度开销和协议开销的占比会明显上升，导致实际的带宽利用率下降。
+
+另外，Ring All-Reduce需要完成2(N-1)次通信，所以如果小张量的话，多轮通信次数不变，所以多轮通信带来的延迟累计会成为瓶颈
+
+因此，`Ring AllReduce` 一般不适合小张量频繁同步、且对延迟要求很高的场景
+（就是规约并行节点特别多，每个节点的数据又不算多。）
+
+![](../images/Pasted%20image%2020260825175426.png)
+
+
+<mark style="background:#fff88f">vllm里面使用的低延时 All-Reduce的核心思想</mark>，是:
+
+<mark style="background:#fff88f">各GPU通过预先建立的通信资源，访问其他rank的数据，并完成逐元素求和，似的每个GPU最终得到与AllReduce(sum)等价的全局规约结果（就是直接K=1）</mark>
+![562](../images/Pasted%20image%2020260825175900.png)
+
+从逻辑效果上看，每个 GPU 都会执行一次等价的规约过程，并得到与 `AllReduce(sum)` 相同的输出。和 `Ring AllReduce` 相比，这类低延迟路径<mark style="background:#fff88f">不强调多轮分块传递</mark>，而是<mark style="background:#d3f8b6">利用预先建立的通信资源</mark>、<mark style="background:#d3f8b6">共享缓冲区等资源</mark>，**尽量减少通信轮次和 kernel 调度次数**，**从而降低小张量频繁同步时的总延迟**。
+
+
+
+
+
+### Transformer的TP
+
+#### 输入维度，输出维度
+首先要建立一个规范，假设一个GEMV的向量乘矩阵：
+X（1，4）x   W (4, 2) = O（1，2）
+
+所以输入向量X，输入维度=input_size = 4
+
+所以按照这种写法的W的输入维度就是4（作为axis0第一个维度）， 输出维度就是2（axis1第二个维度）。
+
+
+**我们后面说的列并行，行并行，都是基于这个矩阵形式来理解的**。
+
+
+
+#### 矩阵的列并行，行并行
+
+所谓TP，张量并行（模型并行），本质就是把原本交给Matmul算子做并行的工作，由于算力的原因，先行一步，在输入算子前，就先行拆分到不同的gpu上去。本质还是分块矩阵的应用
+
+下面看一下在定义好了矩阵的输入，输出维度后，列并行和行并行的区别。
+
+![](../images/Pasted%20image%2020260825211842.png)
+可以看到：
+-  <mark style="background:#d3f8b6">列并行</mark>
+	- 就是切分输出维度+拼接
+- <mark style="background:#d3f8b6">行并行</mark>
+	- 就是切分输入维度+逐元素求和
+
+
+图示为：
+
+![](../images/Pasted%20image%2020260826201005.png)
+
+上面展示了并行计算的matmul，所以这种张量并行，会出现在MLP，MHA，Embedding层的算子中
+##### MLP层的张量并行
+
+一层MLP主要有两个部分，矩阵乘GEMM + 激活函数GeLU(SiLU)
+
+![321](../images/Pasted%20image%2020260826202030.png)
+
+下面展示了列并行， 行并行的各自的优点
+![](../images/Pasted%20image%2020260826202859.png)
+
+![](../images/Pasted%20image%2020260826202954.png)
+
+![](../images/Pasted%20image%2020260826203003.png)
+
+
+这里就有一个使用时的连续技巧：
+先列切分，再行切分，可以直接自然的接上 
+
+![411](../images/Pasted%20image%2020260826203332.png)
+
+![](../images/Pasted%20image%2020260826203344.png)
+
+
+<mark style="background:#affad1">因此，transformer块中的MLP层的TP并行拆分步骤，可以简单总结为</mark>：
+![](../images/Pasted%20image%2020260826203634.png)
+
+
+###### 带有SwiGLU的MLP
+我们真实的大模型里面的FNN，不是就单纯的两个线性层，而是带有SwiGLU的门控的，所以先复习一下门控相关的知识
+
+![](../images/Pasted%20image%2020260826210230.png)
+
+所以，我们的目的是每个GPU分别持有每个权重矩阵的一部分，然后利用先列后行来减少GPU之间的通信。
+
+所以下面展示一下，具体是如何切分，并行的。
+> 由于MLP层是对batch的形状不敏感的，所以是逐token向量计算
+
+- 假设输入token 是 h维度的
+- up后的高维度是i
+
+![](../images/Pasted%20image%2020260826213802.png)
+
+可以看到，<mark style="background:#fff88f">由于SwiGLU的SiuAndMul，由于是对应元素乘，所以在列并行的情况下可以直接本地做</mark>
+而我们的原始的如果一个GPU持有Wgate, 一个GPU持有Wup，则需要一次all-reduce通信。
+
+
+非常的巧妙。
+
+所以，<mark style="background:#fff88f">ColumnParallelLinear</mark>，就是指的这个层算子底层持有的张量是列并行切分后的张量
+<mark style="background:#fff88f">MergedColumnParallelLinear</mark> 就是指的他持有的是Wgate,Wup两个部分的切分张量
+<mark style="background:#fff88f">RowParallelLinear</mark>层算子底层持有的张量是行并行切分后的张量。
+
+通过参数：
+- gather_output=False
+	- 表示输出的结果无需all-reduce
+- input_is_parallel=True
+	- 表示输入是并行输入，是接的别的并行输出。
+
+![514](../images/Pasted%20image%2020260826214651.png)
+
+所以每个层的前向，定义的都是一个GPU的行为。
+
+
+
+关于推理的时候，TP并行数的规约的通信量的计算
+
+![](../images/Pasted%20image%2020260826214857.png)
+
+
+
+
+##### MHA层的张量并行
+
+这个就更简单了，因为TP是在权重张量上的并行划分，所以，MHA层里面，受到TP影响的只有QKV投影矩阵，以及O输出矩阵，每个GPU各持有QKVO的一部分权重，分别计算各自的头，然后每个GPU上的flashattention分别计算负责的头的注意力输出即可。
+
+![](../images/Pasted%20image%2020260826231503.png)
+
+![](../images/Pasted%20image%2020260826231646.png)
+
+每个头在每个GPU上是独立计算的，所以，就是把每个头的参数，放到一块GPU上，最后将子结果concat后，得到最终的张量
+
+当然，实际使用中，一个GPU肯定会负责多个头，<mark style="background:#fff88f">所以我们要尽量保证heads总数能够被GPU个数整除。</mark>
+
+当我们每张卡，计算完各自的头的注意力输出头后，我们就可以很自然的进行 行并行O的切分。
+
+![](../images/Pasted%20image%2020260826232137.png)
+
+
+![](../images/Pasted%20image%2020260826232155.png)
+
+
+![](../images/Pasted%20image%2020260826232223.png)
+
+
+##### Embedding层的张量并行
+LM head的权重张量是(vocab_size, hidden_size)
+![235](../images/Pasted%20image%2020260826233006.png)
+
+因为这个张量权重，vocab_size是很大的。所以，一般可以在这个输入维度上做<mark style="background:#fff88f">行切分</mark>，就可以减少单张GPU上的计算量，显存占用
+
+<mark style="background:#fff88f">在vllm中，输入Embedding和输出lm head， 都是采用按照词表维度切分的方式。但是两者的通信方式不一样</mark>。
+
+- Embedding, 在各个GPU内得到局部结果，通过all-reduce把结果相加（虽然都是0）
+	- ![338](../images/Pasted%20image%2020260827090509.png)
+- lm head, 每个GPU先计算各自负责的vocab词表分片的logits， 然后在logits处理阶段执行all-gather， 得到完整vocab的logits（因为要统计所有的vocab的打分，才能输出一个公平的全局打分）
+	- ![477](../images/Pasted%20image%2020260827091145.png)
+
+
+
+#### vllm中的张量并行
+
+先来理解一下分布式通信的一个概念：
+- All-Reduce:
+	- 每张卡都有一个同形状张量，各卡对应位置做规约，通常是<mark style="background:#fff88f">求和</mark>
+- All-Gather:
+	- 每张卡持有结果的一部分，<mark style="background:#fff88f">concat拼接</mark>
+
+
+##### vllm的并行线性层
+
+
+###### ColumnParallelLinear
+- LinearBase 基类
+	- ColumnParallelLinear 列并行子类，包装实现列并行，每个子类持有的权重仅为列维度的某一块。
+###### RowParallelLinear
+- LInearBase 基类
+	- RowParallelLinear 行并行子类，包装实现行并行，每个子类持有的权重仅为输入维度（行维度）的一部分，所以输入就是一个并行切片输入
+		- 一般输出默认会all-reduce 求和
+###### QKVParallelLinear
+
+- ColumnParallelLinear 列并行类，表示这个类持有一部分列维度
+	- QKVParallelLinear 子类，
+		- 将原本的W_q, W_k, W_v 3个线性层，合并成一个W_qkv 矩阵，沿着输出维度拼接。
+		- **朴素实现中**，这一个子类持有W_q,W_k,W_v的全部权重。一个hidden_state， 进行一次线性计算，就可以得到q_k_v的一个大的拼接向量。后续模型按照这个维度，切分层qkv，分别输入到不同的地方。
+		- 但是在**张量并行下**，这个子类，持有的是W_q,W_k,W_v的列切片，所以算出来的q_k_v仅是部分qkv头的concat
+
+![](../images/Pasted%20image%2020260827095856.png)
+
+
+
+##### vllm里面的流水线并行
+
+**关于PP中的bubble问题**
+
+![](../images/Pasted%20image%2020260827102540.png)
+
+![567](../images/Pasted%20image%2020260827102609.png)
+
+
+![](../images/Pasted%20image%2020260827102627.png)
+
+
+![](../images/Pasted%20image%2020260827102652.png)
+![](../images/Pasted%20image%2020260827102714.png)
+
+<mark style="background:#fff88f">解决办法就是</mark>
+
+![](../images/Pasted%20image%2020260827102742.png)
+![](../images/Pasted%20image%2020260827102802.png)
+![](../images/Pasted%20image%2020260827102819.png)
+
+##### vllm里面这一块的实现梳理
+
+
+因为这边遇到了很多不同优化方案的交回，所以，我这里先做一些概念的梳理
+
+###### 1. 异步调度，采样token留在gpu，异步回传的逻辑
+
+这里要区分：异步、同步调度，GPU-CPU拷贝，流式输出 这几个概念的关联
+
+输入通道：
+	同步调度，异步调度
+	是说，你每次发过来的batch，是否需要execute_model阻塞等待worker返回，是enginecore的行为
+
+GPU-CPU拷贝（同步拷贝，异步拷贝）
+	是说这个GPU内采样出来的token id，拷贝到CPU，单纯指拷贝D2H，H2D的拷贝开销，这里分同步拷贝和异步拷贝。是worker进程的行为
+
+流式输出
+	这个仅仅只是输出链路的要求，每个采样的tokenid, 都必须发出去，要求必须从GPU拷贝到CPU（worker），然后返回给enginecore, 然后被线程发出去。
+
+所以，拷贝是必须的。
+
+原来我们的同步调度，每次发一个batch，就必须等待worker的execute_model执行tokenid采样，同步拷贝到CPU，发出给enginecore输出线程，然后才能继续发下一个batch
+
+现在我们的异步调度，发送一个batch后， execute_model直接返回，enginecore进程开始准备发送下一个batch（占位+1，所以上一个batch的req decode即便还没有结束，仍然可以继续发射）。
+
+在worker进程里面，他会收到前后多个batch的任务（这些batch任务，里面req很多都是连续decode），所以worker进程不需要同步阻塞拷贝d2h，来打断这些batch的req 连续decode, 上一个batch的decode结束后，挂一个异步拷贝prev_sampler_token_id的任务，然后直接开始下一个batch里面req的下一个decode的计算。
+
+> 前一个batch的采样结果出来后，加入到下一次的input_ids占位里面，worker进程直接挂一个异步拷贝的任务拷贝这个原来的任务，然后直接开始下一个batch，开始接着这个采样任务的结果输入进行
+
+所以这样，也不会打断流式输出，也能让一个req的连续decode，不会被GPU-CPU拷贝打断。
+
+
+
+
+###### 2. 异步调度的空批
+所谓空batch, 就是 调度器的has_request() = True, 说明还有req没跑完，但是这一轮的调度出来的batch，<mark style="background:#fff88f">total_num_scheduled_tokens == 0</mark>
+
+这种异步调度的时候，调度出空批的现象，是如何出现的呢？
+
+- PP decode的节流
+	- 在异步调度下，调度器里面，当一个req在decode阶段，增加了一个调度的判断逻辑：
+	- 
+	- `if self.current_step < request.next_decode_eligible_step: continue`
+	- 
+	- 就是说，这个req，上一个batch刚发出一个decode，接下来的pp_size次调度，都不能再发req了，(**因为上一个req的decode还没出流水线，stage0如果接到这个req的下一个decode，placeholder是空的，计算不了**)
+- prefill限流
+	- 这个下面分析，这个有个defer_prefills时prefill chunk被延后的概念
+
+所以，就是说，这一轮的调度：
+running队列里面的所有req，都处在上面的两个节流期，
+waiting队列里面又没新请求可进
+
+**那么本轮的scheduled_running_reqs就是空的。从而就是空批**
+
+> **用你的 Qwen + PP=4 举例**：
+> 某个请求第 3 步做了 decode，`next_decode_eligible_step = 3 + 4 = 7`，第 4/5/6 步都不能再调它。如果当前只有这一个请求、且没有新请求 prefill，那第 4/5/6 步就是空批。
+
+
+虽然是空批，但是调度器依然会提交给execute_model (因为只要有has_requests()，调度器就会调度)，但是model_executed=False(本轮没有要计算的token)，所以不走采样分支。
+
+
+###### 3. defer_prefills 
+
+这个是DP数据并行 prefill均衡机制。
+
+他决定这一轮要不要延后prefill的计算，把算力让给decode，所以defer_prefills就是个标志位。
+![399](../images/Pasted%20image%2020260827204734.png)
+
+![448](../images/Pasted%20image%2020260827204803.png)
+
+所以，我在跑PP的时候，defer_prefills 永远是False.
+
+
+###### 4. pooling
+
+pooling在原始含义中，是池化（CNN里面），把一组值聚合成一个值，做下采样
+
+而在vllm的语境中，pooling模型 = **把序列隐藏态， 聚合成一个向量**
+
+所以pooling模型，和生成式模型，两者是同等地位的概念
+
+![](../images/Pasted%20image%2020260827205201.png)
+
+![](../images/Pasted%20image%2020260827205408.png)
+![](../images/Pasted%20image%2020260827205424.png)
+
+![](../images/Pasted%20image%2020260827205514.png)
+
+所以这里的embedding，和我们llm里面的embedding层，不是一个东西，两个的区别如下：
+
+![](../images/Pasted%20image%2020260827205651.png)
+
+文本embedding = transformer + pooling
+![](../images/Pasted%20image%2020260827205732.png)
+
+
+###### 6. ec consumer 编码器缓存
+
+ec = encoder cache,指的是多模态的编码器的输出缓存
+
+多模态模型，LLaVA, Qwen-VL等，由两部分组成：
+
+![](../images/Pasted%20image%2020260827210308.png)
+
+`encoder_cache` 就是 **vision encoder 输出的缓存**
+
+![](../images/Pasted%20image%2020260827210405.png)
+
+> 这里的有点像是prefix cache的感觉，图像前缀缓存
+
+EC分离，就是把编码图像，和跑LLM拆到不同的卡上
+
+
+![](../images/Pasted%20image%2020260827210508.png)
+
+
+所以，ec consumer， 就是图像编码器输出的消耗者（使用者），所以，就是说，如果我们是多模态模型，那么这个主推理llm，就是要用到这个图像编码器的输出图像。
+
+![](../images/Pasted%20image%2020260827210744.png)
+很显然，我们这里，因为不是多模态，也不是特别用来处理图像的，所以默认是true，表示是消费者，只不过我们跑的是llm，不需要消费图像。
+
+###### 7. 调度器输出的.pending_structured_output_tokens
+
+这个要拆成两部分理解，
+- structured output = 结构化输出
+	- 就是约束llm按照固定格式生成，比如生成json格式语法，直接生成被程序直接解析的东西，而不是自由文本。
+	- vllm里面使用grammar bitmask实现。采样的时候，用一个位掩码标记vocab里哪些token是当前语法允许的。非法token的logits = -inf, 所以模型只能采样到合法token， 从而保证输出始终符合grammar.
+	- 所以，<mark style="background:#fff88f">grammar bitmask本质上是一个状态机</mark>
+
+- pending = 缺token在等
+	- 说的是，上一轮tokne还没回来。
+	- 我们这个**pending_structured_output_tokens，本质还是个标志位**。
+	- ![](../images/Pasted%20image%2020260827211346.png)
+	- 两个条件同时满足；
+		- 这个req，要求使用结构化输出
+		- num_output_placeholders > 0,  说明还有token在途（调度出去了，但是采样结果还没回传CPU，所以仍是占位符）
+
+![](../images/Pasted%20image%2020260827211707.png)
+
+这里的延迟采样，就涉及到一个<mark style="background:#fff88f">采样操作的触发时机</mark>了
+
+我们调度器调度出一个batch, 给worker的model_runner进行执行，推理出logits，到这一步就结束了，
+
+sampler的采样操作，是需要执行器显式发出第二次RPC = sample_tokens 。前向和采样，是两个独立的RPC，严格交替调用。
+
+![](../images/Pasted%20image%2020260827212952.png)
+
+
+所以，当搞清楚了前向-采样的时机后，再看一下，异步情况下，这个placeholders的占位出现的情况。
+
+也就是placeholder 占位符的完整生命周期。
+**placeholder 是 scheduler侧的赊账**， 调度的时候+1， 声明这个token在途，输出回来的时候-1核销。
+
+```txt
+时间轴 ───────────────────────────────────────────────────────────────────────→
+
+        ┌────────────── step N ──────────────┐
+Scheduler │ schedule()                        │
+(CPU)     │  计算 num_new_tokens = 1          │
+          │  _update_after_schedule:          │
+          │    placeholder +1  →  占位=1      │
+          └──────┬───────────────────────────┘
+                 ↓ RPC1 execute_model
+Worker          │  forward → compute_logits
+(GPU)           │    logits 留 GPU
+                 ↓ RPC2 sample_tokens
+                │  _sample(logits) → token "好"
+                │  token 留 GPU(prev_sampled_token_ids)
+                │  ←── 不回 CPU！占位=1 不核销
+                │
+        ┌────────────── step N+1 ────────────┐
+Scheduler │ schedule()                        │
+(CPU)     │  num_new_tokens =                │
+          │   num_tokens_with_spec(旧)       │
+          │   + placeholder(1)               │ ← 靠占位补差额
+          │   - num_computed_tokens          │
+          │  _update_after_schedule:          │
+          │    placeholder +1  →  占位=2      │
+          └──────┬───────────────────────────┘
+                 ↓ RPC1 + RPC2 (同 step N)
+                │  token "好" 仍在 GPU
+                │
+        ┌─────── step N 的输出终于回来了 ─────┐
+Scheduler │ update_from_output()              │
+(CPU)     │  收到 step N 的采样 token "好"     │
+          │  _update_request_with_output:     │
+          │    placeholder -1  →  占位=1      │
+          │    num_tokens_with_spec 更新      │
+          └───────────────────────────────────┘
+
+```
+
+![](../images/Pasted%20image%2020260827213736.png)
+
+这里复习一下：
+- num_tokens_with_spec
+	- 表示这个req的seq已知token id 的数量(不管有没有kvcache，反正已知token id了)
+- num_computed_tokens
+	- 表示这个req的seq, 已经算出kv的token id的数据
+	- 所以我们调度的逻辑就是让num_computed_tokens 去 追赶num_tokens_with_spec
+- num_output_placeholders
+	- 表示调度出去，还没有真正返回收到token id的这个虚token id的数量
+
+所以，我们调度计算num_new_tokens (表示本batch中这个req需要计算的token kvcache的token数)
+
+`num_new_tokens = num_tokens_with_spec + num_output_placeholders - num_computed_tokens`
+
+- 同步调度的时候
+	- 没有placeholder, 因为不需要占位
+	- 所以num_new_tokens = 已经知道id 的token数  - 已经计算出kvcache的token数
+- 异步调度的时候
+	- 假设连续发送两次调度。每次都需要记账。
+	- num_new_tokens 需要额外考虑在途的，这个也算是已知未知的。
+![](../images/Pasted%20image%2020260827214443.png)
+
+
+---
+
+所以这里再梳理一下，调度器的账单：
+![](../images/Pasted%20image%2020260827215105.png)
+
+下面这个表还是很清晰的，
+- **placeholder就表示本轮的预计采样的个数**
+- with_spec表示目前已知id的token数
+- computed表示已经知道kv + 已经发出计算kv的 token个数
+- num_new_tokens 表示本轮需要计算的token数
+![](../images/Pasted%20image%2020260827215418.png)
+
+---
+所以，这个时候，再回头看看，原来pending_structure_output_token的标志位表示的意思
+
+`pending_structured_output_tokens` 是**异步调度 + 结构化输出（grammar 约束解码）** 之间冲突的产物
+
+关键：**算 bitmask 必须知道"已经生成到哪了"的输出 token**，这个语法状态机是 CPU 端逐 token 推进的（`structured_output_manager.grammar_bitmask`）
+
+![](../images/Pasted%20image%2020260827215851.png)
+
+enginecore, 调度N步，发出batch N 的前向 RPC后，想要立刻发出采样RPC，但是这个时候，如果batch N-1的placeholder的那个token id还不知道（就是batch N 的placeholder = 2, 因为batchN-1还没采样完），所以batchN这一轮的采样RPC无法发出。因为依赖bitmask，但是没有更新呢。
+
+所以，pending_structured_output_tokens = True的意思，表示：
+本轮（batchN）是结构化输出，所以有bitmask要采样RPC发送，但是batchN-1的placeholder还没有核销，所以bitmask未更新，所以推迟采样。
+
+![](../images/Pasted%20image%2020260827220542.png)
+
+我懂了，这里因为我们有了bitmask的结构化输出的需要，所以必须后一步的采样，必须依赖前一步采样的回传更新bitmask才行。
+
+如果不使用bitmask, 后一步的采样RPC直接发出即可，因为只需要上一步的token已经在GPU侧被计算出且已经被本轮计算成logits，不需要回传再采样。
+
+所以bitmask的本质，就是把采样，从纯GPU操作，变成了CPU-GPU串行链
+
+![](../images/Pasted%20image%2020260827221151.png)
+
+
+
+###### step_with_batch_queue 异步调度的step总结
+这个是异步调度的总结
+
+
+好的，我现在已经trace完了step_with_batch_queue, 简单总结一下，就是，
+- `step_with_batch_queue` 一次调用只做**其中一件事**：
+	- **push 型 step**：调度一个新 batch，发前向+采样 RPC，塞进 queue，直接 return（不碰结果）。
+	- **pop 型 step**：不调度新 batch，pop 队首，阻塞等采样结果，核销。
+
+它是"**填队列**"和"**掏队列**"交替的循环，不是每次都跑前向。
+
+
+
+> 这个step_with_batch_queue, 里面的状态有两个约束条件:
+一个是batch_queue, 一个是调度器has_requests() 所以每次进入这个step_with_batch_queue, 主要处于两个过程： 一种是batch_queue还没满，这个时候，就是当前batch发出前向RPC，然后直接发出采样RPC。然后把这个batch加入batch_queue后直接返回 另一种是batch_queue已经满了，这个时候，就是最后一个batch被加入batch_queue后，不返回，开始处理batch_queue的最老的batch，pop弹出阻塞等待这个batch的采样RPC结果返回。然后核销调度器的账单。
+
+
+
+
+**分支1（填队列）** 的 return 条件不是"队列没满"这么简单，而是（core.py:1032）：
+
+```python
+if len(batch_queue) < self.batch_queue_size and (
+    model_executed or self.scheduler.has_requests()
+):
+    return None, model_executed
+```
+
+两个条件缺一不可：
+
+1. 队列没满 **且**
+2. 还有活可干（本批真算了，或调度器还有 req）
+
+如果"队列没满但调度器已经空了"，就**不会 return**，而是掉下去 pop 掏队列——因为该收尾了。
 
 
 
 
 
 
+**分支2（掏队列）** 的触发，不只是"队列满了"，而是"**没有提前 return**"的所有情况，包括：
+
+- 队列 append 后满了（`len == size`）
+- 队列没满，但调度器空了（没有新活可填）
+- 唯一例外：`elif not batch_queue` → 调度器空且队列也空 → return None（纯空转）
+
+
+**还有一个你已经知道的第三路径：deferred**
+
+结构化输出 pending 时，这步**不 append、不 return**，直接掉下去 pop 队首（等上一批 token 回来），核销完再补采样 deferred batch。这打破了你"填/掏二选一"的框架——它是"**既填了前向、又掏了队列**"的混合。
+
+![](../images/Pasted%20image%2020260827225153.png)
+
+
+###### step 和 调度器对应关系
+
+vllm里面，step_fn的选择，以及调度器的选择，是两个独立的配置选项
+
+- <mark style="background:#fff88f">调度器的选择，根据：async_scheduling决定</mark>
+	- Scheduler
+	- AsyncScheduler
+- <mark style="background:#fff88f">step_fn的选择，根据max_concurrent_batches 的最大并行batch数选择</mark>
+	- 无batch_queue, step(), 表示一次只有一个batch在运行
+	- 有batch_queue, step_with_batch_queue()， 表示一次有多个batch在运行
+
+
+![](../images/Pasted%20image%2020260827230247.png)
+
+
+是因为为了利用好PP的流水线并行的好处，我们肯定要好几个batch一起在运行才能显示出PP的好处，不然一次就一个batch在同时运行，PP开了和没开一样
+
+![](../images/Pasted%20image%2020260827230434.png)
+
+![](../images/Pasted%20image%2020260827230445.png)
+
+###### AsyncScheduler 和 Scheduler的区别
+
+**AsyncScheduler 只 override 了两个"钩子方法"，核心调度决策完全继承、一字未改**。区别全在这两个钩子做的"在途记账"上
+
+![](../images/Pasted%20image%2020260827230802.png)
+
+所以区别就在于，有没有维护placeholder的项
+
+![](../images/Pasted%20image%2020260827230940.png)
+
+PP 要的是**执行层**（多 batch 填流水线），它**不强制要求**记账层（token 留 GPU）。所以：
+
+- **纯 PP（组合②）** = 开执行层、不开记账层 = `普通 Scheduler + step_with_batch_queue`。placeholder 恒 0，token 照旧回 CPU，但多个 batch 同时在 GPU 上不同阶段跑，流水线照样填满。
+    
+- **Async（组合③④）** = 执行层 + 记账层全开 = `AsyncScheduler + step_with_batch_queue`。token 也不落 CPU 了，把 CPU 回传的延迟也省掉。
+
+
+**一句话总结**
+
+**普通 Scheduler 和 AsyncScheduler 是"同一个调度器 + 一个可选的在途记账插件"**。它们共用同一套 `schedule()` 决策，唯一区别是 AsyncScheduler 会维护 `num_output_placeholders`（在途 token 账）。而"记账"和"执行（batch_queue）"是两件独立的事，所以能各自开关、自由组合——PP 只要执行层，async 才两个都要。
+
+
+<mark style="background:#fff88f">所以就是Scheduler调度器，是同步记账，他还在死等这个req返回，不然不会调度（因为num_with_spec = num_computed了）， 但是AsyncScheduler调度器，是异步记账，他会记录下在途的placeholder，这样，下一次这个req，虽然还是num_with_spec = num_computed， 但是由于有placeholder，这个req还是可以调度的。</mark>
+
+![](../images/Pasted%20image%2020260827231453.png)
+![](../images/Pasted%20image%2020260827232627.png)
+
+可以看到，他这里就是仅仅多了维护placeholder的在途记账+回收销账的部分。
+
+<mark style="background:#fff88f">所以，我们的PP流水线并行优化，就要使用AsyncScheduler + step_with_batch_queue, 才能发挥PP的优势</mark>
+
+![](../images/Pasted%20image%2020260827233052.png)
+
+![](../images/Pasted%20image%2020260827233418.png)
+
+![](../images/Pasted%20image%2020260827233445.png)
+
+![](../images/Pasted%20image%2020260827233505.png)
+
+
+
+###### 8. 调度器-model_runner vx - pp decode节流
+
+这几个是不同层的独立的选择
+
+<mark style="background:#fff88f">3个独立的配置：</mark>
+
+![](../images/Pasted%20image%2020260827234223.png)
+
+**这三层是"各自开关、自由组合"的**，不要一对一绑定。你之前纠结的"调度器 vs step"就是层1和层2的混淆——它们正交。
+
+
+下面有**两个节流**（这两个节流，都在Scheduler里面），**本质就是xxx条件下req不调度的条件**
+
+![](../images/Pasted%20image%2020260827234423.png)
+
+![](../images/Pasted%20image%2020260827234531.png)
+
+
+这里就要区分一下model runner v1, v2的区别了
+
+
+model_runner v1, 和 v2的区别，主要在于NCCL广播的发送接受时机不同。
+- v1
+	- 主要是内联广播：同步collective
+- v2
+	- 异步广播
+
+![](../images/Pasted%20image%2020260828104005.png)
+
+**节流是 V2 异步广播的"对价"**：V2 用旁路流把广播藏进计算里（省 bubble），但代价是 token 要 pp_size 步后才就位，所以必须用 `next_decode_eligible_step` 约束调度器"别排太快"。V1 的广播是同步的、token 立刻到位，反而不用节流——但它那个同步点本身就是 bubble。
+
+
+---
+<mark style="background:#ff4d4f">这里我让codex也来总结了一下：</mark>
+
+先给结论：
+
+1. 同一个 decode request 能否连续进入两个 batch，取决于 Scheduler/ModelRunner 组合。
+    - **同步 Scheduler**：一般不能连续 decode；必须等前一批 token 回到 Scheduler。
+    - AsyncScheduler + ModelRunner V1：可以连续发射，没有 PP decode throttle。
+    - **AsyncScheduler + ModelRunner V2 + PP**：不能连续；同一 request 两次 decode 至少间隔 `pp_size` 个 scheduler step。
+2. EngineCore 能发很多 RPC，不代表一个 ModelRunner 并发执行很多 batch。RPC 只是排进 worker 的 FIFO 队列；<mark style="background:#fff88f">每个 worker 的 ModelRunner 依旧串行执行</mark>。
+3. PP 的并行是不同 PP stage 同时处理不同 batch，而不是单卡同时跑多个 forward。
+4. <mark style="background:#fff88f">V1+PP 的完整流水主要适用于同步 Scheduler</mark>。V1+PP+AsyncScheduler 虽然能跑，但 sampled-token broadcast 会阻塞前级，因此代码明确说“**不完整支持**”。
+
+
+下面来具体解释一下：
+
+###### 8.1 同步调度器：不能同一个req连续发射两个decode batch
+
+Scheduler 发射一个 decode token 后，会立刻乐观增加：
+
+```
+request.num_computed_tokens += num_scheduled_token
+```
+
+见 [scheduler.py (line 2358)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/core/sched/scheduler.py:2358)。
+
+假设 request 当前：
+
+```
+num_tokens = 101
+num_computed_tokens = 100
+```
+
+第一次 decode 调度 1 token：
+
+```
+num_computed_tokens = 101
+num_tokens = 101
+```
+
+在采样结果回来并追加到 `num_tokens` 之前：
+
+```
+num_new_tokens = num_tokens - num_computed_tokens = 0
+```
+
+因此下一次 `schedule()` 不会再次 decode 它。
+
+所以同步调度时：
+
+```
+batch A: decode(req0)
+batch B: 不能再次 decode(req0)
+output A 返回
+batch C: decode(req0)
+```
+
+但 prefill chunk 是例外。因为 prompt 后面还有未计算 token，所以同一个 request 可以连续进入多个 prefill batch。测试里也明确验证了这一点：[test_engine_core.py (line 300)](/Users/liangji/Master/project/2_infra/vllm/tests/v1/engine/test_engine_core.py:300)。
+
+
+
+###### 8.2 异步调度器+model_runner v1(可以连续发射，但是不完整适配)
+
+异步调度器支持在途记账，所以可以连续发射req，但是由于里面这个节流标志指定v2的引擎，所以，没有节流，**因此真的能做到连续发射req了**
+
+AsyncScheduler 在发射 decode 后增加：
+
+```
+request.num_output_placeholders += 1
+```
+
+见 [async_scheduler.py (line 19)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/core/sched/async_scheduler.py:19)。
+
+于是下一次调度计算的是：
+
+```
+num_new_tokens = (
+    request.num_tokens_with_spec
+    + request.num_output_placeholders
+    - request.num_computed_tokens
+)
+```
+
+placeholder 代表“虽然真实 token 还没有回来，但先假设它将存在”。因此同一个 request 可以这样：
+
+```
+batch A: decode(req0) -> placeholder +1
+batch B: decode(req0) -> 再增加一个 placeholder
+```
+
+本地测试直接覆盖了这个行为：
+
+```
+output = scheduler.schedule()
+assert req.request_id in output.num_scheduled_tokens
+```
+
+见 [test_scheduler.py (line 226)](/Users/liangji/Master/project/2_infra/vllm/tests/v1/core/test_scheduler.py:226)。
+
+V1 没有设置 `next_decode_eligible_step`，所以没有 PP cadence throttle。
+
+
+###### 8.3 异步调度器 + model_runner v2 + pp
+
+因为指定了v2，所以打开了pp decode节流
+
+V2 每次发射 decode 后会设置：
+
+```
+request.next_decode_eligible_step =
+    self.current_step + self.pp_size
+```
+
+见 [async_scheduler.py (line 57)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/core/sched/async_scheduler.py:57)。
+
+Scheduler 在后面的 step 中检查：
+
+```
+if self.current_step < request.next_decode_eligible_step:
+    continue
+```
+
+见 [scheduler.py (line 864)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/core/sched/scheduler.py:864)。
+
+例如 PP=2：
+
+```
+step T:     decode(req0)
+step T+1:   req0 被 throttle
+step T+2:   req0 才能再次 decode
+```
+
+准确总结：
+
+|模式|同 req 连续 decode|
+|---|---|
+|Sync Scheduler|否|
+|Async + V1|是|
+|Async + V2, PP=1|可以每步|
+|Async + V2, PP=P|至少间隔 P 步|
+
+
+###### 8.4 modelrunner只能跑一个batch, enginecore可以发很多RPC
+
+`step_with_batch_queue()` 会按 batch 发两条 RPC：
+
+```
+execute_model(batch A)
+sample_tokens(batch A)
+
+execute_model(batch B)
+sample_tokens(batch B)
+```
+
+代码位置：
+
+- 发 execute：[core.py (line 958)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/engine/core.py:958)
+- 发 sample：[core.py (line 1001)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/engine/core.py:1001)
+- 放入 batch queue：[core.py (line 1022)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/engine/core.py:1022)
+- 队列满后等待最老结果：[core.py (line 1065)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/engine/core.py:1065)
+
+但 MultiprocExecutor 的 `non_block=True` 只做了两件事：
+
+1. 把 RPC 放进广播 MessageQueue。
+2. 返回一个 Future。
+
+见 [multiproc_executor.py (line 587)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/executor/multiproc_executor.py:587)。
+
+Future 甚至没有后台线程主动帮你执行 `get_response()`。调用 `future.result()` 时，才按 FIFO drain 之前的响应：
+
+```
+while not self.done():
+    future = self.futures_queue.pop()
+    future._wait_for_response()
+```
+
+
+
+
+![546](../images/Pasted%20image%2020260828145048.png)
+
+**RPC 可以大量 pending，但 ModelRunner 调用仍是串行的**。
+
+
+
+###### 8.5 v1 model_runner 的 PP流水线是怎么跑起来的
+
+先以 `PP=2, TP=1, sync scheduler` 为例。
+
+每次 RPC 会广播给所有 worker，所以两个 stage 都收到完全相同的 RPC 序列：
+
+```
+execute(A), sample(A), execute(B), sample(B)
+```
+
+但它们在 `execute(A)` 中做的事情不同。
+
+<mark style="background:#fdbfff">PP stage 0</mark>
+
+Stage 0：
+
+1. 准备 input ids、position、KV slot。
+2. 执行前半部分 transformer layers。
+3. 返回 `IntermediateTensors`。
+4. GPUWorker 用 `isend_tensor_dict()` 非阻塞发送给 stage 1。
+5. 不计算 logits，不采样。
+
+模型层切分可参考 Llama：
+
+- 只有 first PP rank 有 embedding。
+- 每个 rank 只执行 `[start_layer, end_layer)`。
+- 非 last rank 返回 `hidden_states + residual`。
+- 只有 last rank 执行 norm/logits。
+
+见 [llama.py (line 370)](/Users/liangji/Master/project/2_infra/vllm/vllm/model_executor/models/llama.py:370) 和 [llama.py (line 400)](/Users/liangji/Master/project/2_infra/vllm/vllm/model_executor/models/llama.py:400)。
+
+GPUWorker 收到中间张量后进行非阻塞发送：
+
+```
+self._pp_send_work = get_pp_group().isend_tensor_dict(...)
+```
+
+见 [gpu_worker.py (line 1430)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/worker/gpu_worker.py:1430)。
+
+<mark style="background:#fdbfff">PP stage 1</mark>
+
+Stage 1：
+
+1. `irecv_tensor_dict()` 接收 stage 0 中间张量。
+2. 执行后半部分 layers。
+3. 计算 logits。
+4. 把 logits 放入 `execute_model_state`。
+5. 下一条 `sample(A)` RPC 消费状态并采样。
+
+只有最后一个 PP stage 的 TP rank 0 把 `ModelRunnerOutput` 返回 EngineCore。这个 rank 的计算见 [multiproc_executor.py (line 766)](/Users/liangji/Master/project/2_infra/vllm/vllm/v1/executor/multiproc_executor.py:766)。
+
+ 
+ sync + V1 + PP=2 时间线
+
+```
+时间 ─────────────────────────────────────────────>
+
+PP0:  forward A ──send A── forward B ──send B── forward C
+                         ↑
+PP1:              recv A──forward A/sample A
+                                      recv B──forward B/sample B
+
+EngineCore:
+      enqueue A
+      enqueue B
+      wait output A
+      enqueue C
+```
+
+关键是同步模式下，非 last PP rank 的 `sample(A)` 基本只是空操作：
+
+- stage 0 在 execute 时已经返回 `IntermediateTensors`；
+- 没有建立 `execute_model_state`；
+- `sample_tokens()` 看到 state 为 None 后直接返回。
+
+所以 stage 0 可以迅速继续执行 `execute(B)`，与此同时 stage 1 正在执行 A。这才形成真正的 PP overlap。
+
+---
+###### 总结
+
+目前我们这里有3个方面的东西
+
+- <mark style="background:#fdbfff">step_with_batch_queue</mark>
+	- 这是异步调度下，batch_queue的步进方法。
+	- 他的作用就是始终维护worker们，在处理一个batch_queue的任务队列。
+
+- <mark style="background:#fdbfff">调度器</mark>
+	- 同步调度器
+		- 规则：必须接收到worker返回的采样token，同一个req才会被再次调度。
+			- 所以，他保证batch_queue里面，同一个req，绝对不可能同时出现在queue里面的两个batch
+	- 异步调度器
+		- 支持在途记账 + PP decode 节流（仅限V2 model_runner）
+		- 搭配v1 model_runner 使用，无节流功能：
+			- 所以可以连续发送req，batch_queue里面，可以出现两个batch，拥有同一个req。
+				- <mark style="background:#fff88f">但是由于是model runner v1, 所以，每个pp stage 的rank 执行完对应的batch后，会阻塞等待尾部rank广播返回采样token后，才会开始执行下一个batch的前向</mark>
+		- 搭配v2 model_runner 使用，开启节流功能：
+			- 保证了可以连续发送同一个req，但是在batch_queue里面，拥有同一个req的batch不会同时出现在PP的pipeline里面
+
+
+- model_runner
+	- v1
+		- ![316](../images/Pasted%20image%2020260828162213.png)
+		- ![332](../images/Pasted%20image%2020260828162239.png)
+	- v2
+		- ![](../images/Pasted%20image%2020260828162350.png)
+
+
+
+###### 9. ppx stage之间的卡间通信机制
+
+<mark style="background:#ff4d4f">1. p2p通信</mark>
+当pp0 算完batchA 后，需要把batchA的hidden_state 发送给 pp1处理，pp0自己则开始处理batchB
+
+发送hidden_state的方法是isend, irecv.
+
+- **pp0发送：isend:**
+	- 先发送metadata，后发送tensor数据，非阻塞，直接返回发送句柄handle
+	- 等pp0开始处理batchB的时候，发送句柄handle.wait()阻塞。
+- **pp1接受：irecv:**
+	- 先接受metadata, 然后自己创建好张量空间。
+	- 创建接受句柄handle, 包装成一个异步张量AsyncIntermediate Tensors。 直接开始forward batchA
+	- 当真的开始访问这个张量了，开始handle.wait阻塞等待。
+
+![400](../images/Pasted%20image%2020260828194607.png)
+![362](../images/Pasted%20image%2020260828194630.png)
+
+而我们的TP，就是isend的时候不需要先合并发送完整的，可以直接发送各个tp组的切片即可
+
+
+![](../images/Pasted%20image%2020260828195715.png)
+
+
+
+<mark style="background:#ff4d4f">2. model_runner v1 里面的 尾rank 采样token广播</mark>
+
+![206](../images/Pasted%20image%2020260828194808.png)
+
+为什么需要广播，因为在搭配异步调度器AsyncScheduler的时候，连续两个batch，是可以包含同一个req的。
+
+假设batchA, batchB包含同一个request
+
+![272](../images/Pasted%20image%2020260828195005.png)
+
+负责处理batchB的pp0不知道，但是尾rank只是把这个采样token传回了EngineCore来更新调度器，但是batchB已经发出去了。
+![314](../images/Pasted%20image%2020260828195108.png)
+
+所以，<mark style="background:#fff88f">model_runner v1 额外添加GPU直接广播</mark>
+
+尾rank 直接广播给所有非尾rank, 这些非尾rank收到后，就把这个sampled_token给记录在他们要处理的batch的input_batch.prev_sampled_token_ids里面
+
+> 这里其实尾rank 单独发给 pp0就可以了，但是vllm广播给所有rank，是为了让每个pp worker的各自维护的inputbatch状态副本保持一致。<mark style="background:#fff88f">相当于修改全局</mark>
+
+![](../images/Pasted%20image%2020260828200357.png)
+
+
+- 尾rank 广播：
+	- 默认stream上：forward A -> torch.distributed.broadcast - > forward B操作（等非尾传过来）
+- 非尾rank 接受广播：
+	- 默认stream上，在forward A ->sample A(torch.distributed.broadcast 阻塞等待) - > forward B 
+
+所以v1的广播，导致的是cuda流上的阻塞，你cpu可能没有阻塞（看你广播发送接受的async_op指定是否cpu也同步阻塞）， 但是不管cpu阻不阻塞，cuda流肯定是阻塞住了，导致v1容易出现很多的bubble
+
+![583](../images/Pasted%20image%2020260828200813.png)
+
+而且 v1的broadcast 和 irecv, isend 的 p2p 是共用 pp.device_group 的。所以是同一个PP NCCL communicator.
+
+<mark style="background:#fff88f">所以一个PP组里面的通信，广播还会和p2p争抢，又会出现阻塞</mark>。
+
+所以model_runner里面，**出现两个地方阻塞，导致bubble的出现**。
+
+> 不仅可能在同一 main stream 上排序，还共享 communicator 的操作顺序，更难独立推进
+
+
+
+
+<mark style="background:#ff4d4f">3. model_runner v2 的旁路流broadcast</mark>
+
+model_runner v2 为了解决这些冲突，做了三个改动：
+- 独立的CUDA stream
+- 独立的NCCL communicator
+- pp decode 节流
+
+<mark style="background:#d3f8b6">改变1：独立cuda stream</mark>
+- main_stream
+	- 给计算forward用的
+- broadcast_stream
+	- 给广播专用
+
+![472](../images/Pasted%20image%2020260828201411.png)
+
+**在发送broadcast A 的stream任务前，先让这个stream阻塞等待main_stream的采样结果出来**
+![426](../images/Pasted%20image%2020260828201602.png)
+
+依赖方向只有：
+
+```
+main sample A
+    → broadcast stream send A
+```
+
+没有反向要求 main stream 立即等 broadcast：
+
+```
+broadcast A
+    ↛ main stream 立即等待
+```
+
+所以尾 stage 可以在提交 broadcast 后，让 main stream 继续处理后面的 forward。
+
+
+<mark style="background:#fff88f">关于非尾接受</mark>
+
+![404](../images/Pasted%20image%2020260828201706.png)
+
+此时 token A 可能还没到，但没关系：
+
+```
+main stream 可以继续 forward 不依赖 token A 的 batch
+```
+
+
+
+<mark style="background:#d3f8b6">改变二： 独立NCCL communicator</mark>
+
+![493](../images/Pasted%20image%2020260828202122.png)
+
+为广播的发送调度通路，再创建一个相同成员的调度网络
+
+所以 V2 有两条独立 NCCL 通道：
+
+```
+PP device_group:
+    activation isend/irecv
+
+PP broadcast_group:
+    sampled-token broadcast
+```
+
+这很重要。只有独立 CUDA stream 但还共用同一个 communicator，collective/P2P 仍可能受到 communicator 操作顺序影响。
+
+> 所以，到目前位置， **model_runner v2做了 不同stream + 不同 communicator**
+> 
+> 才能真正允许 activation P2P 和 sampled-token broadcast 并行推进。
+
+
+<mark style="background:#affad1">v2改变三：decode 节流 = 延迟 pp_size 步消费</mark>
+
+![479](../images/Pasted%20image%2020260828202337.png)
+
+这边是调度节流
+
+model_runner里面其实还有 非尾rank旁路记账接受采样token + event标签， 这样在main_stream里如果碰上了节流后的同一个req，才阻塞等待之前记账的event标签，等到了说明旁路记账的采样token真的被广播接收到了。
+
+
+所以每次execute_model的前向开头，会
+```
+先把 T 的真实采样结果写入本地 request state
+再处理 T+P 的调度增量
+最后准备 T+P 的 input ids
+```
+否则同一个 request 在 T+P 再次 decode 时，非尾 stage 仍然只有 placeholder，不知道真实 token。先更新，在前向同一个req
+
+
+Scheduler throttle 和 PPHandler FIFO 是严格配套的：
+
+![513](../images/Pasted%20image%2020260828204118.png)
+![483](../images/Pasted%20image%2020260828204325.png)
+
+> 注意，<mark style="background:#fff88f">这边有一个小巧思</mark>，他设计一个旁路记账当前batch的一个采样结果接受，然后把他保存到FIFO里面，我们调度器的节流，保证相同的req最早第二次出现是在pp_size步之后，而每次execute_model，开头就先做一次FIFO弹出，目的是定时回收更新inputbatch持久化状态批。但是他只要保证这个包含后面重复req的batch的采样结果，一定在这个同样req出现之前被更新到inputbatch就行了。
+> 
+> <mark style="background:#fff88f">所以FIFO步，其实也是配合节流节奏的延迟更新。他反正只要比相同req早就行了</mark>
+
+<mark style="background:#d2cbff">我彻底理解了，节流 + 旁路记账采样结果接受</mark>
+
+<mark style="background:#fff88f">所以他这里，main_stream里面，不是永远不阻塞等待之前batch的采样结果，而是保证在T+ pp_size步（一定会在同样req出现前）时，加入wait_event，main_stream阻塞住等待结果。</mark>
+
+<mark style="background:#fff88f">所以这里还是有阻塞等待的，但是不是像v1里面，每个batch 的 foward都在阻塞等待当前的batch的结果。
+这里是阻塞等待pp_size步前的batch的采样结果，这样的好处就是把等待采样结果的实际和实际推进前向的时间重叠了pp_size步</mark>
 
 
 
