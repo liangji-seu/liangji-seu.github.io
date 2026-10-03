@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://liangji-seu.github.io/sitemap.xml

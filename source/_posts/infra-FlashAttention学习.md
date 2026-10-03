@@ -1,3 +1,7 @@
+---
+title: infra FlashAttention学习
+---
+
 这篇是我在学习triton算子的时候，开始正式学习flashattention的原理，发现有很多版本，所以单独写一篇来记录：
 
 # 先验知识

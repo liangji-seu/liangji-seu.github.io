@@ -5,15 +5,15 @@
 # Site
 title: ji的博客
 subtitle: ''
-description: 'welcome to my blog'
-keywords:
+description: 'liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。'
+keywords: 研究,工程,机器学习,嵌入式,科研工具
 author: liangji
 language: zh-CN
 timezone: ''
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: http://example.com
+url: https://liangji-seu.github.io
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
@@ -29,6 +29,8 @@ category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
+  - software/**
+  - '**/software/**'
 
 
 #gemini css
