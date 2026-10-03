@@ -1,7 +1,9 @@
 ---
 title: infra 面经
 date: 2026-05-12 22:49:55
-tags:
+categories: [学习笔记, 大模型算法, 面试复盘]
+tags: [AI Infra, C++, CUDA, LLM]
+excerpt: "以图片整理 AI Infra 与大模型方向面试题，作为后续复盘与查漏补缺的入口。"
 ---
 ![](../images/Snipaste_2026-05-12_22-28-58.png)
 

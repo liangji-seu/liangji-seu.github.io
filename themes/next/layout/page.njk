@@ -33,6 +33,9 @@
         {%- if page.type === 'tags' %}
           {%- include '_partials/page/tags.njk' -%}
         {% elif page.type === 'categories' %}
+          {%- if page.content %}
+            {{ page.content }}
+          {%- endif %}
           {%- include '_partials/page/categories.njk' -%}
         {% elif page.type === 'schedule' %}
           {%- include '_partials/page/schedule.njk' -%}

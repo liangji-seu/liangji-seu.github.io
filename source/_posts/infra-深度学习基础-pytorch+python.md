@@ -4,10 +4,12 @@ date: 2026-04-28 14:21
 categories:
   - 学习笔记
   - 大模型算法
+  - 基础与训练
 tags:
-  - "#深度学习"
-  - "#python"
-  - "#pytorch"
+  - 深度学习
+  - Python
+  - PyTorch
+excerpt: "从 Python 与 PyTorch 基础出发，记录自动微分、数据集、模型训练和常见网络结构的学习笔记。"
 ---
 
 # python概念扫盲

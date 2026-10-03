@@ -1,7 +1,9 @@
 ---
 title: infra 单元测试库GTest+glog
-categories: [学习笔记, 大模型算法]
+date: 2026-07-04 09:21:52
+categories: [学习笔记, 大模型算法, 工程基础]
 tags: [GTest, glog, AI Infra]
+excerpt: "以 CUDA 推理项目为背景，记录 GTest 与 glog 的接入、测试组织、断言和日志使用。"
 ---
 
 
@@ -225,4 +227,3 @@ static TestResult* current_test_result;
 - 一个测试里需要检查多个独立条件，想看所有失败项 → `EXPECT_*`
 
 项目中只用 `ASSERT_*`，因为每个测试都很短，一个断言失败后面的预期也没意义了。
-

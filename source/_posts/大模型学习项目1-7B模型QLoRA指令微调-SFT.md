@@ -4,8 +4,13 @@ date: 2026-04-12 17:30:57
 categories:
   - 学习笔记
   - 大模型算法
+  - 基础与训练
 tags:
   - 大模型
+  - QLoRA
+  - LoRA
+  - SFT
+excerpt: "以 7B 模型为例，记录 QLoRA 指令微调（SFT）的数据格式、量化、LoRA 与训练依赖。"
 ---
 
 # 项目1：7B模型QLoRA 指令微调(SFT)

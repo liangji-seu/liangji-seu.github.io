@@ -1,7 +1,9 @@
 ---
 title: infra 现代c++学习
-categories: [学习笔记, 大模型算法]
+date: 2026-06-14 23:51:25
+categories: [学习笔记, 大模型算法, 工程基础]
 tags: [C++, AI Infra]
+excerpt: "围绕类型推导、auto、智能指针、右值引用与现代 C++ 特性，配合 nanovllm 重构记录工程实践。"
 ---
 
 
@@ -671,7 +673,6 @@ C++11 引入了 `<type_traits>` 头文件，用来操作类型（比如移除引
 ![](../images/Pasted%20image%2020260518163559.png)
 
 相当于给你省略了创建别名的方法，
-
 
 
 

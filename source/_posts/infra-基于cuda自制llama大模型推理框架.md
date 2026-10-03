@@ -1,7 +1,9 @@
 ---
 title: infra 基于cuda自制llama大模型推理框架
-categories: [学习笔记, 大模型算法]
-tags: [CUDA, LLaMA, AI Infra]
+date: 2026-06-14 23:51:25
+categories: [学习笔记, 大模型算法, 推理系统]
+tags: [CUDA, LLaMA, C++, CMake, GTest, AI Infra]
+excerpt: "从 CMake、C++ 与 CUDA 基础组件入手，记录手写 LLaMA 推理框架的 tensor、算子和 kernel 设计。"
 ---
 
 

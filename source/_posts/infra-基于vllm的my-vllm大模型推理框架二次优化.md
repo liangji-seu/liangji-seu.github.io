@@ -1,7 +1,10 @@
-
-
 ---
 title: infra 基于vllm的my-vllm大模型推理框架二次优化
+date: 2026-08-11 19:35:38
+updated: 2026-10-03
+categories: [学习笔记, 大模型算法, 推理系统]
+tags: [vLLM, AsyncLLM, EngineCore, KV Cache, TP, PP, DP, EP, 专家并行, MoE, CUDA, AI Infra]
+excerpt: "围绕 vLLM 的 AsyncLLM 与 EngineCore，记录 KV Cache、调度器以及 TP/PP/DP/EP、MoE 并行实现的 my-vLLM 学习笔记。"
 ---
 
 本项目主要基于对vllm的源码的理解，来实现一个AsyncLLM + EngineCore的 my-vllm项目

@@ -1,5 +1,11 @@
 ---
-title: categories
+title: 笔记分类
 date: 2025-12-03 12:25:38
 type: "categories"
 ---
+
+这里按主题整理大模型算法、嵌入式和项目实践笔记。可以按分类查找，也可以从笔记导航开始阅读。
+
+- [笔记导航](/notes/)：按深度学习、算子性能与推理系统串起大模型学习路线。
+- [大模型算法](/categories/学习笔记/大模型算法/)：Transformer、QLoRA/SFT、CUDA 算子和推理框架。
+- [嵌入式](/categories/学习笔记/嵌入式/)：STM32、Linux 驱动、操作系统与平台实践。

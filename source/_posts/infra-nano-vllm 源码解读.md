@@ -1,7 +1,9 @@
 ---
 title: infra nano-vllm 源码解读
-categories: [学习笔记, 大模型算法]
-tags: [vLLM, AI Infra]
+date: 2026-06-14 23:51:25
+categories: [学习笔记, 大模型算法, 推理系统]
+tags: [nano-vllm, vLLM, PyTorch, FlashAttention, KV Cache, TP, AI Infra]
+excerpt: "通过 nano-vllm 源码理解 API、Engine、模型算子与 KV Cache 管理，补充推理引擎中的 Python 与 PyTorch 用法。"
 ---
 
 

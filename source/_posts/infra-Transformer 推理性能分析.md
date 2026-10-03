@@ -1,7 +1,9 @@
 ---
 title: infra Transformer 推理性能分析
-categories: [学习笔记, 大模型算法]
-tags: [Transformer, AI Infra]
+date: 2026-06-14 23:51:25
+categories: [学习笔记, 大模型算法, 基础与训练]
+tags: [Transformer, KV Cache, FlashAttention, 并行计算, AI Infra]
+excerpt: "梳理 Decoder-only Transformer 的结构、KV Cache、注意力与 FFN，并连接 CUDA 算子和模型并行等推理优化。"
 ---
 
 
@@ -274,6 +276,5 @@ kernel
 
 **Weight Tying（权重共享）**
 说的是，词嵌入和词返回的权重是共享的
-
 
 

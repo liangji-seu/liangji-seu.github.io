@@ -1,7 +1,9 @@
 ---
 title: infra Nsight Compute学习笔记
-categories: [学习笔记, 大模型算法]
+date: 2026-07-04 09:21:52
+categories: [学习笔记, 大模型算法, 算子与性能]
 tags: [CUDA, Nsight Compute, AI Infra]
+excerpt: "以矩阵乘法 CUDA kernel 为例，记录 Nsight Compute 各项性能指标、瓶颈判断与 kernel 优化分析。"
 ---
 
 这篇主要用来记录Nsight Compute的学习

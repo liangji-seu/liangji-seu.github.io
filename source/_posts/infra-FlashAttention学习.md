@@ -1,5 +1,9 @@
 ---
 title: infra FlashAttention学习
+date: 2026-08-25 14:54:57
+categories: [学习笔记, 大模型算法, 算子与性能]
+tags: [FlashAttention, Attention, CUDA, vLLM, AI Infra]
+excerpt: "从朴素注意力与 online softmax 出发，记录 FlashAttention、PagedAttention 及 vLLM 注意力实现的学习过程。"
 ---
 
 这篇是我在学习triton算子的时候，开始正式学习flashattention的原理，发现有很多版本，所以单独写一篇来记录：

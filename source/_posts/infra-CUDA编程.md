@@ -1,7 +1,9 @@
 ---
 title: infra CUDA编程
-categories: [学习笔记, 大模型算法]
-tags: [CUDA, AI Infra]
+date: 2026-06-14 23:51:25
+categories: [学习笔记, 大模型算法, 算子与性能]
+tags: [CUDA, Kernel, GPU, AI Infra]
+excerpt: "从 CUDA 线程层级、内存模型与同步机制出发，记录 softmax、reduce、matmul 等基础算子的实现与优化。"
 ---
 
 
