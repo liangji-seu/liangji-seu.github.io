@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1118">
+  <meta name="description" content="paper2zh：Windows 文献翻译与双语阅读软件。尽量保留论文版式、公式与图形，支持原译对照、批注、本地文献库与自配兼容 API。">
+  <link rel="canonical" href="https://liangji-seu.github.io/software/paper2zh/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="paper2zh · 文献翻译与双语阅读软件">
+  <meta property="og:description" content="在本地工作区里阅读原文、译文与批注，按自己的 API 配置完成论文翻译。">
+  <meta property="og:url" content="https://liangji-seu.github.io/software/paper2zh/">
+  <link rel="icon" type="image/svg+xml" href="/software/assets/paper2zh-icon.svg">
+  <link rel="stylesheet" href="/software/assets/software.css">
+  <title>paper2zh · 文献翻译与双语阅读软件</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "paper2zh",
+    "description": "面向科研阅读的 Windows 文献翻译与双语阅读软件。",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Windows 10, Windows 11 (64-bit)",
+    "softwareVersion": "1.1.0",
+    "url": "https://liangji-seu.github.io/software/paper2zh/",
+    "downloadUrl": "https://github.com/liangji-seu/paper2zh/releases/latest",
+    "codeRepository": "https://github.com/liangji-seu/paper2zh"
+  }
+  </script>
+</head>
+<body class="sw-page sw-paper2zh-page">
+  <header class="sw-nav" aria-label="paper2zh 导航">
+    <a class="sw-brand" href="/software/" aria-label="返回开源软件专区"><img class="sw-brand-icon" src="/software/assets/paper2zh-icon.svg" alt=""><span>paper2zh</span></a>
+    <nav class="sw-nav-links" aria-label="页面导航"><a href="#features">功能</a><a href="#start">使用</a><a href="https://github.com/liangji-seu/paper2zh" rel="noopener">GitHub ↗</a><a class="sw-nav-cta" href="https://github.com/liangji-seu/paper2zh/releases/latest" rel="noopener">下载</a></nav>
+  </header>
+  <main>
+    <section class="sw-hero">
+      <div class="sw-shell sw-hero-inner">
+        <span class="sw-eyebrow">PAPER2ZH　/　v1.1.0</span>
+        <h1><span class="sw-hero-product">paper2zh</span><span class="sw-hero-tagline">让文献翻译，回到阅读。</span></h1>
+        <p class="sw-hero-copy">导入 PDF，左右对照原文与中文译文。公式、图形和页面结构尽量留在原位；论文、阅读记录和本地文献库由你在自己的设备上管理。</p>
+        <div class="sw-actions"><a class="sw-button sw-button-primary" href="https://github.com/liangji-seu/paper2zh/releases/latest" rel="noopener"><span class="sw-download-icon" aria-hidden="true">↓</span>下载 Windows 版</a><a class="sw-text-link" href="https://github.com/liangji-seu/paper2zh" rel="noopener">查看源码　↗</a></div>
+        <div class="sw-note">Windows 64 位 · 需要 WebView2 · 需自行配置兼容 API</div>
+      </div>
+      <div class="sw-shell">
+        <div class="sw-reader-window" aria-label="paper2zh 阅读器界面示意">
+          <div class="sw-window-bar"><span class="sw-window-title">paper2zh / reader</span><span class="sw-window-hint">本地阅读工作区</span></div>
+          <div class="sw-window-body">
+            <aside class="sw-workspace"><div class="sw-workspace-brand"><img src="/software/assets/paper2zh-icon.svg" alt=""><strong>paper2zh</strong></div><div class="sw-side-label">文献库</div><span class="sw-side-item active">Recent papers</span><span class="sw-side-item">待复读</span><span class="sw-side-item">已翻译</span><div class="sw-side-label sw-side-label-lower">工作区</div><span class="sw-side-item">设置</span></aside>
+            <div class="sw-paper-stage"><div class="sw-paper-toolbar"><span>Research notes.pdf</span><span>原文　|　中英对照　⌕</span></div><div class="sw-paper-pair"><article class="sw-paper"><span class="sw-paper-kicker">ORIGINAL　·　ABSTRACT</span><h2>Efficient reading with local context</h2><p>We study a simple reading workflow that keeps source paragraphs, figures and notes within one workspace.</p><p>The method reduces context switching while preserving the structure of the original document.</p><div class="sw-paper-rule"></div><span class="sw-paper-foot">1　/　12</span></article><article class="sw-paper sw-paper-zh"><span class="sw-paper-kicker">中文　·　摘要</span><h2>在本地上下文中高效阅读</h2><p>我们研究一种简洁的阅读流程，让原文段落、图形与笔记留在同一个工作区。</p><p>这种方式减少了窗口切换，同时尽量保留原始文档的结构。</p><div class="sw-paper-rule"></div><span class="sw-paper-foot">1　/　12</span></article></div></div>
+          </div>
+          <p class="sw-preview-label">界面示意</p>
+        </div>
+      </div>
+    </section>
+    <section class="sw-section sw-section-line" id="features">
+      <div class="sw-shell"><span class="sw-kicker">BUILT FOR READING</span><h2>把翻译放回阅读路径。</h2><p class="sw-lead">先阅读原文，再按需要翻译指定页或全文。翻译完成后继续用同一个工作区整理和标记，减少在多个窗口之间来回切换。</p>
+        <div class="sw-feature-grid">
+          <article class="sw-feature"><span class="sw-feature-index">01</span><h3>尽量保留版式</h3><p>公式、图形与页面结构尽量保留，适合在上下文中理解论文。复杂页面的换行和局部排版仍可能变化。</p></article>
+          <article class="sw-feature"><span class="sw-feature-index">02</span><h3>原译对照连续阅读</h3><p>原文与中文译文在同一阅读路径中切换。支持缩放、翻页和抓手移动，阅读节奏由你掌握。</p></article>
+          <article class="sw-feature"><span class="sw-feature-index">03</span><h3>缩放与批注</h3><p>选中文字添加高亮或下划线，批注保存在本机，便于之后复读。</p></article>
+          <article class="sw-feature"><span class="sw-feature-index">04</span><h3>本地文献库</h3><p>用嵌套文件夹整理论文，内容去重，建立属于自己的本地阅读库。</p></article>
+          <article class="sw-feature"><span class="sw-feature-index">05</span><h3>原文、中文 MD 与索引</h3><p>翻译后自动整理原文与中文 Markdown，并生成 agent 索引，方便继续检索、总结和接入自己的工作流。</p></article>
+          <article class="sw-feature"><span class="sw-feature-index">06</span><h3>自配 API，查看用量</h3><p>支持配置 DeepSeek 或兼容 API 的服务商、地址、模型和 Key；界面显示翻译进度及服务返回的 Token 用量。</p></article>
+        </div>
+      </div>
+    </section>
+    <section class="sw-section sw-reader-section">
+      <div class="sw-shell sw-reader-note"><div><span class="sw-kicker">THE READER</span><h2>熟悉的论文，<br>更顺手的读法。</h2></div><p>左侧整理文献和文件夹，右侧阅读原文、译文或对照。翻页与缩放同步，文字可选、可高亮、可下划线。</p><span class="sw-reader-callout">阅读界面示意</span></div>
+    </section>
+    <section class="sw-section sw-section-line" id="start">
+      <div class="sw-shell"><span class="sw-kicker">GET STARTED</span><h2>安装后，三步开始阅读。</h2><div class="sw-step-grid"><article class="sw-step"><div class="sw-step-num">01 / 安装</div><h3>下载 Windows 安装包</h3><p>从 GitHub Releases 获取 Windows 64 位版本。首次启动需要 WebView2 运行时。</p></article><article class="sw-step"><div class="sw-step-num">02 / 设置</div><h3>配置翻译服务</h3><p>在应用中保存兼容 API 的服务商、地址、模型和 Key，并用“测试连接”确认配置。</p></article><article class="sw-step"><div class="sw-step-num">03 / 阅读</div><h3>选择本机 PDF</h3><p>通过系统文件窗口导入论文，可先读原文，再选择试译页码或翻译全文。</p></article></div><div class="sw-fine">论文、批注和 API 设置保存在本机；实际翻译时，论文文字会发送至你配置的 API 服务。翻译可能产生服务商费用。中文文字长度、字体和换行会影响局部排版。</div></div>
+    </section>
+    <section class="sw-section sw-faq-section" id="faq"><div class="sw-shell"><span class="sw-kicker">FAQ</span><h2>你可能想了解的。</h2><div class="sw-faq-list"><details><summary>扫描 PDF 可以翻译吗？</summary><p>主要面向包含文本层的 PDF。扫描件需要先经过 OCR，识别质量会影响后续翻译。</p></details><details><summary>复杂表格能导出成 Markdown 吗？</summary><p>复杂表格、跨页布局和特殊字体可能需要手动整理，Markdown 不能完整表达所有 PDF 排版。</p></details><details><summary>模型调用会产生费用吗？</summary><p>paper2zh 不替你提供模型额度。费用和限额由你配置的 DeepSeek 或兼容 API 服务商决定。</p></details><details><summary>论文内容会发到哪里？</summary><p>实际翻译的文字会发送给你配置的 API 服务；请阅读对应服务商的条款并自行判断适用性。API Key 在本地保护，但仍应妥善管理设备与密钥。</p></details><details><summary>它是完全离线软件吗？</summary><p>不是。阅读和本地管理可在设备上完成，但翻译需要访问你配置的 API，首次安装也可能需要网络。</p></details><details><summary>从哪里查看源码和版本？</summary><p>可前往 <a href="https://github.com/liangji-seu/paper2zh" rel="noopener">GitHub 源码仓库</a>，或直接查看 <a href="https://github.com/liangji-seu/paper2zh/releases/latest" rel="noopener">最新发行版</a>。</p></details></div></div></section>
+    <section class="sw-bottom" id="download"><div class="sw-shell sw-bottom-inner"><div><span class="sw-kicker">NEXT PAPER</span><h2>下一篇论文，从这里打开。</h2><p>paper2zh 为 Windows 64 位提供本地桌面阅读体验。下载安装包后，建立你的论文工作区。</p></div><a class="sw-button sw-button-primary" href="https://github.com/liangji-seu/paper2zh/releases/latest" rel="noopener"><span class="sw-download-icon" aria-hidden="true">↓</span>前往 GitHub 下载</a></div></section>
+  </main>
+  <footer class="sw-shell sw-footer"><span>© 2026 paper2zh · <a href="/software/">开源软件</a></span><span><a href="https://github.com/liangji-seu/paper2zh" rel="noopener">查看源代码 ↗</a>　·　<a href="/">返回博客 ↗</a></span></footer>
+</body>
+</html>
