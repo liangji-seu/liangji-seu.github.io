@@ -19,58 +19,58 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="uboot Makefile编译分析 文件目录结构 arch&#x2F; board&#x2F; configs&#x2F; .u-boot.xxx_cmd文件 Makefile文件 u-boot.xxx文件 .config文件   Makefile分析 版本号 MAKEFLAGS 变量 命令输出 静默输出 设置编译结果输出目录 代码检查 模块编译 获取主机架构&#x2F;系统 设置目标架构，交">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull uboot 启动分析*">
-<meta property="og:url" content="http://example.com/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="uboot Makefile编译分析 文件目录结构 arch&#x2F; board&#x2F; configs&#x2F; .u-boot.xxx_cmd文件 Makefile文件 u-boot.xxx文件 .config文件   Makefile分析 版本号 MAKEFLAGS 变量 命令输出 静默输出 设置编译结果输出目录 代码检查 模块编译 获取主机架构&#x2F;系统 设置目标架构，交">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/33.1.png">
-<meta property="og:image" content="http://example.com/images/33.2.png">
-<meta property="og:image" content="http://example.com/images/33.3.png">
-<meta property="og:image" content="http://example.com/images/33.4.png">
-<meta property="og:image" content="http://example.com/images/33.5.png">
-<meta property="og:image" content="http://example.com/images/33.6.png">
-<meta property="og:image" content="http://example.com/images/33.7.png">
-<meta property="og:image" content="http://example.com/images/33.8.png">
-<meta property="og:image" content="http://example.com/images/33.9.png">
-<meta property="og:image" content="http://example.com/images/33.10.png">
-<meta property="og:image" content="http://example.com/images/33.11.png">
-<meta property="og:image" content="http://example.com/images/33.12.png">
-<meta property="og:image" content="http://example.com/images/33.13.png">
-<meta property="og:image" content="http://example.com/images/33.14.png">
-<meta property="og:image" content="http://example.com/images/33.15.png">
-<meta property="og:image" content="http://example.com/images/33.16.png">
-<meta property="og:image" content="http://example.com/images/33.17.png">
-<meta property="og:image" content="http://example.com/images/33.18.png">
-<meta property="og:image" content="http://example.com/images/33.19.png">
-<meta property="og:image" content="http://example.com/images/33.20.png">
-<meta property="og:image" content="http://example.com/images/33.21.png">
-<meta property="og:image" content="http://example.com/images/33.22.png">
-<meta property="og:image" content="http://example.com/images/33.23.png">
-<meta property="og:image" content="http://example.com/images/33.24.png">
-<meta property="og:image" content="http://example.com/images/33.25.png">
-<meta property="og:image" content="http://example.com/images/33.26.png">
-<meta property="og:image" content="http://example.com/images/33.27.png">
-<meta property="og:image" content="http://example.com/images/33.28.png">
-<meta property="og:image" content="http://example.com/images/33.29.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.1.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.2.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.3.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.4.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.5.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.6.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.7.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.8.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.9.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.10.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.11.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.12.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.13.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.14.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.15.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.16.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.17.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.18.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.19.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.20.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.21.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.22.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.23.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.24.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.25.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.26.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.27.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.28.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/33.29.png">
 <meta property="article:published_time" content="2026-02-26T02:17:47.000Z">
-<meta property="article:modified_time" content="2026-02-26T13:29:18.758Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.970Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
 <meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/33.1.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/33.1.png">
 
 
-<link rel="canonical" href="http://example.com/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/","path":"2026/02/26/imx6ull-uboot-启动分析/","title":"imx6ull uboot 启动分析*"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/","path":"2026/02/26/imx6ull-uboot-启动分析/","title":"imx6ull uboot 启动分析*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>imx6ull uboot 启动分析* | ji的博客</title>
@@ -101,6 +101,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -140,7 +144,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -174,24 +178,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -229,7 +233,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -238,7 +242,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -257,9 +261,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-02-26 10:17:47 / 修改时间：21:29:18" itemprop="dateCreated datePublished" datetime="2026-02-26T10:17:47+08:00">2026-02-26</time>
+      <time title="创建时间：2026-02-26 10:17:47" itemprop="dateCreated datePublished" datetime="2026-02-26T10:17:47+08:00">2026-02-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -376,7 +386,7 @@
 </ul>
 <h1 id="uboot"><a href="#uboot" class="headerlink" title="uboot"></a>uboot</h1><p>这章来分析一下uboot这个bootloader程序，包括他的代码结构，编译流程，启动流程</p>
 <h2 id="Makefile编译分析"><a href="#Makefile编译分析" class="headerlink" title="Makefile编译分析"></a>Makefile编译分析</h2><h3 id="文件目录结构"><a href="#文件目录结构" class="headerlink" title="文件目录结构"></a>文件目录结构</h3><blockquote>
-<p>完整文件目录结构如下<br><img src="/../images/33.1.png" alt="alt text"><br><img src="/../images/33.2.png" alt="alt text"></p>
+<p>完整文件目录结构如下<br><img src="/images/33.1.png" alt="alt text"><br><img src="/images/33.2.png" alt="alt text"></p>
 </blockquote>
 <p>但是我们实际关心的只有极个别的文件夹。</p>
 <h4 id="arch"><a href="#arch" class="headerlink" title="arch&#x2F;"></a>arch&#x2F;</h4><p>存放着和架构有关的文件</p>
@@ -403,7 +413,7 @@
 <h4 id="config文件"><a href="#config文件" class="headerlink" title=".config文件"></a>.config文件</h4><p>这个是使用<code>make xxx_defconfig</code>配置uboot之后会自动生成的。</p>
 <p>这里面的变量都是各层的Makefile的变量。</p>
 <blockquote>
-<p>顶层Makefile, 子Makefile都会调用这些变量值。<br><img src="/../images/33.3.png" alt="alt text"></p>
+<p>顶层Makefile, 子Makefile都会调用这些变量值。<br><img src="/images/33.3.png" alt="alt text"></p>
 </blockquote>
 <h3 id="Makefile分析"><a href="#Makefile分析" class="headerlink" title="Makefile分析"></a>Makefile分析</h3><h4 id="版本号"><a href="#版本号" class="headerlink" title="版本号"></a>版本号</h4><p>这边是用来设置uboot的版本号的</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">VERSION = <span class="number">2016</span></span><br><span class="line">PATCHLEVEL = <span class="number">03</span></span><br><span class="line">SUBLEVEL =</span><br><span class="line">EXTRAVERSION =</span><br><span class="line">NAME =</span><br></pre></td></tr></table></figure>
@@ -426,14 +436,14 @@
 <h4 id="设置编译结果输出目录"><a href="#设置编译结果输出目录" class="headerlink" title="设置编译结果输出目录"></a>设置编译结果输出目录</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make O=out      <span class="comment">//指定目标文件输出到out目录中</span></span><br></pre></td></tr></table></figure>
 <h4 id="代码检查"><a href="#代码检查" class="headerlink" title="代码检查"></a>代码检查</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make C=<span class="number">1</span>        <span class="comment">//使能代码检查，检查那些需要重新编译的文件</span></span><br><span class="line">make C=<span class="number">2</span>        <span class="comment">//检查所有的源码文件</span></span><br></pre></td></tr></table></figure>
 <h4 id="模块编译"><a href="#模块编译" class="headerlink" title="模块编译"></a>模块编译</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//uboot中允许单独编译某个模块</span></span><br><span class="line">make M=dir      <span class="comment">//编译单独的模块</span></span><br></pre></td></tr></table></figure>
-<h4 id="获取主机架构-系统"><a href="#获取主机架构-系统" class="headerlink" title="获取主机架构&#x2F;系统"></a>获取主机架构&#x2F;系统</h4><p><img src="/../images/33.4.png" alt="alt text"></p>
+<h4 id="获取主机架构-系统"><a href="#获取主机架构-系统" class="headerlink" title="获取主机架构&#x2F;系统"></a>获取主机架构&#x2F;系统</h4><p><img src="/images/33.4.png" alt="alt text"></p>
 <blockquote>
 <p>Makefile里面，会通过一些指令工具，获取本机的架构和系统版本名称</p>
 </blockquote>
-<h4 id="设置目标架构，交叉编译工具，配置文件"><a href="#设置目标架构，交叉编译工具，配置文件" class="headerlink" title="设置目标架构，交叉编译工具，配置文件"></a>设置目标架构，交叉编译工具，配置文件</h4><p><img src="/../images/33.5.png" alt="alt text"><br>这里来设置目标架构和交叉编译工具链：</p>
+<h4 id="设置目标架构，交叉编译工具，配置文件"><a href="#设置目标架构，交叉编译工具，配置文件" class="headerlink" title="设置目标架构，交叉编译工具，配置文件"></a>设置目标架构，交叉编译工具，配置文件</h4><p><img src="/images/33.5.png" alt="alt text"><br>这里来设置目标架构和交叉编译工具链：</p>
 <ul>
 <li>ARCH&#x3D;arm</li>
-<li>CROSS_COMPILE&#x3D;arm-linux-gnueabihf-<br><img src="/../images/33.6.png" alt="alt text"><blockquote>
+<li>CROSS_COMPILE&#x3D;arm-linux-gnueabihf-<br><img src="/images/33.6.png" alt="alt text"><blockquote>
 <p>你可以修改Makefile，然后指定好，这样就无需执行make指令时指定ARCH和CROSS_COMPILE这些环境变量。</p>
 </blockquote>
 </li>
@@ -443,7 +453,7 @@
 <p><code>.config</code>需要使用<code>make xxx_defconfig</code>来进行配置生成<br>默认情况下，<code>.config</code>里面就是从<code>xxx_defconfig</code>里面复制过来的。</p>
 </blockquote>
 <h4 id="调用scripts-Kbuild-include"><a href="#调用scripts-Kbuild-include" class="headerlink" title="调用scripts&#x2F;Kbuild.include"></a>调用scripts&#x2F;Kbuild.include</h4><blockquote>
-<p>这里就是引入了一个头文件，导入一些新的变量。<br><img src="/../images/33.7.png" alt="alt text"></p>
+<p>这里就是引入了一个头文件，导入一些新的变量。<br><img src="/images/33.7.png" alt="alt text"></p>
 </blockquote>
 <h4 id="交叉编译工具变量设置"><a href="#交叉编译工具变量设置" class="headerlink" title="交叉编译工具变量设置"></a>交叉编译工具变量设置</h4><p>这边就是准备好交叉编译工具链：</p>
 <ul>
@@ -451,13 +461,13 @@
 <li>LD</li>
 <li>……</li>
 </ul>
-<h4 id="导出其他变量-依赖config-mk"><a href="#导出其他变量-依赖config-mk" class="headerlink" title="导出其他变量(依赖config.mk)"></a>导出其他变量(依赖config.mk)</h4><p><img src="/../images/33.8.png" alt="alt text"></p>
+<h4 id="导出其他变量-依赖config-mk"><a href="#导出其他变量-依赖config-mk" class="headerlink" title="导出其他变量(依赖config.mk)"></a>导出其他变量(依赖config.mk)</h4><p><img src="/images/33.8.png" alt="alt text"></p>
 <p>这里就是导出变量，我们重点看下面几个变量</p>
 <blockquote>
 <p><code>ARCH</code> <code>CPU</code> <code>BOARD</code> <code>VENDOR</code> <code>SOC</code> <code>CPUDIR</code> <code>BOARDDIR</code></p>
 </blockquote>
 <p>我通过新增一个mytest: 的make目标，执行make mytest, 把这些变量打印出来：</p>
-<p><img src="/../images/33.9.png" alt="alt text"></p>
+<p><img src="/images/33.9.png" alt="alt text"></p>
 <p>可以看到，就是前面的</p>
 <ul>
 <li>架构arch相关</li>
@@ -476,8 +486,8 @@
 </ul>
 </blockquote>
 <h4 id="make-xxx-defconfig过程"><a href="#make-xxx-defconfig过程" class="headerlink" title="make xxx_defconfig过程"></a><strong>make xxx_defconfig过程</strong></h4><p>在执行make编译uboot前， 需要<code>make xxx_defconfig</code>来配置uboot, 下面来分析这个配置过程, (<strong>具体细节，这里我们不深究</strong>)</p>
-<p><img src="/../images/33.10.png" alt="alt text"></p>
-<h4 id="make过程"><a href="#make过程" class="headerlink" title="make过程"></a>make过程</h4><p><img src="/../images/33.11.png" alt="alt text"></p>
+<p><img src="/images/33.10.png" alt="alt text"></p>
+<h4 id="make过程"><a href="#make过程" class="headerlink" title="make过程"></a>make过程</h4><p><img src="/images/33.11.png" alt="alt text"></p>
 <blockquote>
 <p>可以看到，uboot和裸机程序一样，依赖start.S, lds链接脚本。</p>
 </blockquote>
@@ -523,7 +533,7 @@
 <blockquote>
 <p>具体的地址，可以通过查看根目录的uboot.map，查看uboot镜像的内存映射文件</p>
 </blockquote>
-<p><img src="/../images/33.12.png" alt="alt text"><br><img src="/../images/33.13.png" alt="alt text"><br>以上的“变量”值可以在 <code>u-boot.map</code> 文件中查找，除了<code>__image_copy_start</code><br>以外，<strong>其他的变量值每次编译的时候可能会变化</strong>，</p>
+<p><img src="/images/33.12.png" alt="alt text"><br><img src="/images/33.13.png" alt="alt text"><br>以上的“变量”值可以在 <code>u-boot.map</code> 文件中查找，除了<code>__image_copy_start</code><br>以外，<strong>其他的变量值每次编译的时候可能会变化</strong>，</p>
 <p>如果<strong>修改了 uboot 代码</strong>、<strong>修改了 uboot 配置</strong>、<strong>选用不同的优化等级</strong>等等<strong>都会影响到这些值</strong>。所以，一切以实际值为准！</p>
 <h3 id="uboot启动流程详解"><a href="#uboot启动流程详解" class="headerlink" title="uboot启动流程详解"></a>uboot启动流程详解</h3><p>下面就是按照连接脚本里面指定的顺序执行，先看看中断向量表</p>
 <p><code>arch/arm/lib/vector.S</code></p>
@@ -576,7 +586,7 @@
 </blockquote>
 </li>
 <li><blockquote>
-<p><img src="/../images/33.14.png" alt="alt text"></p>
+<p><img src="/images/33.14.png" alt="alt text"></p>
 </blockquote>
 </li>
 <li><blockquote>
@@ -589,7 +599,7 @@
 <li>sp - GD_SIZE(248)</li>
 <li>sp 8字节对齐<ul>
 <li><blockquote>
-<p><img src="/../images/33.15.png" alt="alt text"></p>
+<p><img src="/images/33.15.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
@@ -612,7 +622,7 @@
 </ul>
 </li>
 </ul>
-<p><img src="/../images/33.16.png" alt="alt text"></p>
+<p><img src="/images/33.16.png" alt="alt text"></p>
 <p>所以接下来就进入_main函数， 定义在<code>arch/arm/lib/crt0.S</code>中。</p>
 <ul>
 <li>_main<ul>
@@ -620,7 +630,7 @@
 <li>SP 8字节对齐</li>
 <li>bl board_init_f_alloc_reserve, (参数就是SP的栈顶地址)<ul>
 <li>内部RAM中留出早期的<strong>malloc内存区域</strong>（0x400）和<strong>gd内存区域</strong>(248)</li>
-<li><img src="/../images/33.17.png" alt="alt text"></li>
+<li><img src="/images/33.17.png" alt="alt text"></li>
 <li>返回top指针&#x3D;0X0091FA00 (gd区域的起始地址，从低-&gt;高增长)</li>
 </ul>
 </li>
@@ -639,7 +649,7 @@
 </blockquote>
 </li>
 <li><blockquote>
-<p><img src="/../images/33.18.png" alt="alt text"></p>
+<p><img src="/images/33.18.png" alt="alt text"></p>
 </blockquote>
 </li>
 <li><blockquote>
@@ -724,7 +734,7 @@
 </ol>
 </li>
 </ol>
-<p>具体细节，我们不过多关注，看一下拷贝前，该函数对ddr的内存分配的安排<br><img src="/../images/33.19.png" alt="alt text"></p>
+<p>具体细节，我们不过多关注，看一下拷贝前，该函数对ddr的内存分配的安排<br><img src="/images/33.19.png" alt="alt text"></p>
 <h5 id="relocate-code"><a href="#relocate-code" class="headerlink" title="relocate_code"></a>relocate_code</h5><p>这个就是用于uboot的代码拷贝的</p>
 <ul>
 <li><strong>R1</strong> &#x3D; __image_copy_start &#x3D; <code>0x8780 0000</code></li>
@@ -809,7 +819,7 @@
 </ul>
 </li>
 </ul>
-<h4 id="bootz启动linux内核过程分析"><a href="#bootz启动linux内核过程分析" class="headerlink" title="bootz启动linux内核过程分析"></a>bootz启动linux内核过程分析</h4><p><img src="/../images/33.20.png" alt="alt text"><br>以上是uboot里面对linux内核的启动流程，下面详细分析：</p>
+<h4 id="bootz启动linux内核过程分析"><a href="#bootz启动linux内核过程分析" class="headerlink" title="bootz启动linux内核过程分析"></a>bootz启动linux内核过程分析</h4><p><img src="/images/33.20.png" alt="alt text"><br>以上是uboot里面对linux内核的启动流程，下面详细分析：</p>
 <h5 id="images全局变量"><a href="#images全局变量" class="headerlink" title="images全局变量"></a>images全局变量</h5><p>uboot使用bootz, bootm，在启动linux内核时，都会使用一个重要的全局变量：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//include/image.h</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">bootm_headers</span> &#123;</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Legacy os image header, if it is a multi component image</span></span><br><span class="line"><span class="comment">	 * then boot_get_ramdisk() and get_fdt() will attempt to get</span></span><br><span class="line"><span class="comment">	 * data from second and third component accordingly.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">image_header_t</span>	*legacy_hdr_os;		<span class="comment">/* image header pointer */</span></span><br><span class="line">	<span class="type">image_header_t</span>	legacy_hdr_os_copy;	<span class="comment">/* header copy */</span></span><br><span class="line">	ulong		legacy_hdr_valid;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">if</span> defined(CONFIG_FIT)</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>	*fit_uname_cfg;	<span class="comment">/* configuration node unit name */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>		*fit_hdr_os;	<span class="comment">/* os FIT image header */</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>	*fit_uname_os;	<span class="comment">/* os subimage node unit name */</span></span><br><span class="line">	<span class="type">int</span>		fit_noffset_os;	<span class="comment">/* os subimage node offset */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>		*fit_hdr_rd;	<span class="comment">/* init ramdisk FIT image header */</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>	*fit_uname_rd;	<span class="comment">/* init ramdisk subimage node unit name */</span></span><br><span class="line">	<span class="type">int</span>		fit_noffset_rd;	<span class="comment">/* init ramdisk subimage node offset */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>		*fit_hdr_fdt;	<span class="comment">/* FDT blob FIT image header */</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>	*fit_uname_fdt;	<span class="comment">/* FDT blob subimage node unit name */</span></span><br><span class="line">	<span class="type">int</span>		fit_noffset_fdt;<span class="comment">/* FDT blob subimage node offset */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>		*fit_hdr_setup;	<span class="comment">/* x86 setup FIT image header */</span></span><br><span class="line">	<span class="type">const</span> <span class="type">char</span>	*fit_uname_setup; <span class="comment">/* x86 setup subimage node name */</span></span><br><span class="line">	<span class="type">int</span>		fit_noffset_setup;<span class="comment">/* x86 setup subimage node offset */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifndef</span> USE_HOSTCC</span></span><br><span class="line">	<span class="type">image_info_t</span>	os;		<span class="comment">/* 系统镜像信息 */</span></span><br><span class="line">	ulong		ep;		<span class="comment">/* entry point of OS */</span></span><br><span class="line"></span><br><span class="line">	ulong		rd_start, rd_end;<span class="comment">/* ramdisk start/end */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">char</span>		*ft_addr;	<span class="comment">/* flat dev tree address */</span></span><br><span class="line">	ulong		ft_len;		<span class="comment">/* length of flat device tree */</span></span><br><span class="line"></span><br><span class="line">	ulong		initrd_start;</span><br><span class="line">	ulong		initrd_end;</span><br><span class="line">	ulong		cmdline_start;</span><br><span class="line">	ulong		cmdline_end;</span><br><span class="line">	<span class="type">bd_t</span>		*kbd;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="type">int</span>		verify;		<span class="comment">/* getenv(&quot;verify&quot;)[0] != &#x27;n&#x27; */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 这些宏代表BOOT的不同阶段</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_START	(0x00000001)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_FINDOS	(0x00000002)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_FINDOTHER	(0x00000004)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_LOADOS	(0x00000008)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_RAMDISK	(0x00000010)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_FDT		(0x00000020)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_OS_CMDLINE	(0x00000040)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_OS_BD_T	(0x00000080)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_OS_PREP	(0x00000100)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_OS_FAKE_GO	(0x00000200)	<span class="comment">/* &#x27;Almost&#x27; run the OS */</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span>	BOOTM_STATE_OS_GO	(0x00000400)</span></span><br><span class="line">	<span class="type">int</span>		state;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_LMB</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">lmb</span>	<span class="title">lmb</span>;</span>		<span class="comment">/* for memory mgmt */</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125; <span class="type">bootm_headers_t</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">extern</span> <span class="type">bootm_headers_t</span> images;</span><br></pre></td></tr></table></figure>
 <p>我们先来看看<code>image_info_t</code>, 系统镜像信息结构体的定义</p>
@@ -969,7 +979,7 @@
 </li>
 <li><code>announce_and_cleanup</code><ul>
 <li>打印信息<code>Starting kernel ..</code>，做点清理工作</li>
-<li><img src="/../images/33.21.png" alt="alt text"></li>
+<li><img src="/images/33.21.png" alt="alt text"></li>
 <li><code>cleanup_before_linux</code>, 做点清理工作</li>
 </ul>
 </li>
@@ -1023,7 +1033,7 @@
 <p>说明不支持这个LCD，<strong>NXP 官方 I.MX6ULL 开发板</strong>的屏幕就是 <code>4.3 寸 480x272</code> 分辨率<br>的，所以 uboot 默认 <strong>LCD 驱动</strong>是 <code>4.3 寸 480x272</code> 分辨率的</p>
 <p>这里我们先不修改</p>
 <h2 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mmc0 is current device</span><br><span class="line">Net:   Board Net Initialization Failed</span><br><span class="line">No ethernet found.</span><br><span class="line">Normal Boot</span><br></pre></td></tr></table></figure>
-<p>说明网络驱动也有问题<br><img src="/../images/33.22.png" alt="alt text"></p>
+<p>说明网络驱动也有问题<br><img src="/images/33.22.png" alt="alt text"></p>
 <p>这是因为正点原子开发板的<strong>网络芯片复位引脚</strong>和 NXP 官方开发板不一样，因此需要修改驱动</p>
 <h2 id="添加我们自己的板卡"><a href="#添加我们自己的板卡" class="headerlink" title="添加我们自己的板卡"></a>添加我们自己的板卡</h2><p>为了学习，我们不要在evk的板卡上修改，而是添加我们自己的板卡<br>主要添加的部分有3块：</p>
 <ul>
@@ -1079,7 +1089,7 @@
 <p><strong>3. Kconfig</strong></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> TARGET_MX6ULL_ALIENTEK_EMMC    <span class="comment">//指定条件编译目标</span></span><br><span class="line"></span><br><span class="line">config SYS_BOARD</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;mx6ull_alientek_emmc&quot;</span>    <span class="comment">//板卡默认值</span></span><br><span class="line"> </span><br><span class="line">config SYS_VENDOR</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;freescale&quot;</span></span><br><span class="line"></span><br><span class="line">config SYS_SOC</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;mx6&quot;</span>                     <span class="comment">//新增了SOC的名称参数</span></span><br><span class="line"></span><br><span class="line">config SYS_CONFIG_NAME</span><br><span class="line"><span class="keyword">default</span> <span class="string">&quot;mx6ull_alientek_emmc&quot;</span>    <span class="comment">//新增SYS_CONFIG_NAME配置名</span></span><br><span class="line"></span><br><span class="line">endif</span><br></pre></td></tr></table></figure>
 
-<p><strong>4.MAINTAINERS</strong><br><img src="/../images/33.23.png" alt="alt text"></p>
+<p><strong>4.MAINTAINERS</strong><br><img src="/images/33.23.png" alt="alt text"></p>
 <blockquote>
 <p>看这里似乎也只是指定自己的.h， .c文件进行关联</p>
 </blockquote>
@@ -1103,7 +1113,7 @@
 <h2 id="网络驱动修改"><a href="#网络驱动修改" class="headerlink" title="网络驱动修改"></a>网络驱动修改</h2><p>IMX6ULL采用的内部MAC+外部phy芯片的方案</p>
 <p>但是正点原子和NXP的evk开发板的区别在于，我们的板子<strong>更换了phy芯片</strong>，<strong>那么网络驱动怎么办</strong>？</p>
 <p>这里就涉及到，<strong>更换了PHY芯片以后，如何调整网络驱动</strong>。</p>
-<p><img src="/../images/33.24.png" alt="alt text"><br><img src="/../images/33.25.png" alt="alt text"><br><img src="/../images/33.26.png" alt="alt text"></p>
+<p><img src="/images/33.24.png" alt="alt text"><br><img src="/images/33.25.png" alt="alt text"><br><img src="/images/33.26.png" alt="alt text"></p>
 <p><strong>所以不同点：</strong></p>
 <ol>
 <li>复位引脚不同</li>
@@ -1124,7 +1134,7 @@
 <h1 id="bootcmd和bootargs环境变量"><a href="#bootcmd和bootargs环境变量" class="headerlink" title="bootcmd和bootargs环境变量"></a>bootcmd和bootargs环境变量</h1><p>uboot里面的两个重要的环境变量 bootcmd, bootargs</p>
 <p>在<code>include/configs/xxx.h</code>的<code>CONFIG_EXTRA_ENV_SETTINGS</code>中保存</p>
 <h2 id="bootcmd"><a href="#bootcmd" class="headerlink" title="bootcmd"></a>bootcmd</h2><p>这个就是倒计时完成后的自动启动命令。</p>
-<p>他的默认值在<code>CONFIG_BOOTCOMMAND</code>中定义，根据条件编译来进行覆盖<br><img src="/../images/33.27.png" alt="alt text"></p>
+<p>他的默认值在<code>CONFIG_BOOTCOMMAND</code>中定义，根据条件编译来进行覆盖<br><img src="/images/33.27.png" alt="alt text"></p>
 <ul>
 <li>findfdt, 是查找dtb文件<ul>
 <li>里面具体根据board name, 这些来找到对应的dtb</li>
@@ -1150,7 +1160,7 @@
 </ul>
 </li>
 </ul>
-<p> <strong>至此，linux内核启动</strong><br> <img src="/../images/33.28.png" alt="alt text"></p>
+<p> <strong>至此，linux内核启动</strong><br> <img src="/images/33.28.png" alt="alt text"></p>
 <p> NXP的uboot写的这么复杂，原因是为了兼容多个板子</p>
 <h2 id="bootargs"><a href="#bootargs" class="headerlink" title="bootargs"></a>bootargs</h2><p>默认值是<code>CONFIG_BOOTARGS</code>， bootargs环境变量，保存着uboot传递给LINUX内核的参数。</p>
 <p><code>bootargs</code>是由<code>mmcargs</code>设置的，</p>
@@ -1180,7 +1190,7 @@
 <p>emmc 分区1里面，zImage，还有适配正点原子的dtb已经存放好了，分区2里面是rootfs.</p>
 <p><code>include/configs/xxx.h</code>中已经指定好了rootfs所在的位置为<code>mmcblk1p2</code></p>
 </blockquote>
-<p>最后执行<code>run bootcmd</code>, 就可以进入我们的linux系统了<br><img src="/../images/33.29.png" alt="alt text"></p>
+<p>最后执行<code>run bootcmd</code>, 就可以进入我们的linux系统了<br><img src="/images/33.29.png" alt="alt text"></p>
 <h3 id="网络下载启动"><a href="#网络下载启动" class="headerlink" title="网络下载启动"></a>网络下载启动</h3><p>从网络启动 linux 系统的唯一目的就是为了调试！</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">setenv bootargs <span class="string">&#x27;console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw&#x27;</span></span><br><span class="line">setenv bootcmd <span class="string">&#x27;tftp 80800000 zImage; tftp 83000000 imx6ull-alientek-emmc.dtb; bootz </span></span><br><span class="line"><span class="string">80800000 - 83000000&#x27;</span></span><br><span class="line">saveenv</span><br></pre></td></tr></table></figure>
 
@@ -1237,16 +1247,52 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>

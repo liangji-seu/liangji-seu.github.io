@@ -19,40 +19,40 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="并发与竞争现象 linux处理竞争的机制 原子操作 介绍   内核原子操作底层原理 x86架构 arm架构   原子操作的api函数 整形int原子操作 位操作原子操作   锁机制 介绍 自旋锁 读写自旋锁 顺序锁   信号量 介绍 api   互斥体   总结 关于自旋锁的底层    并发与竞争现象经常会出现以下几种情况：  多核访问同一块共享数据 多个进程抢占式访问同一块共享数据 多个线程访">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull 并发与竞争*">
-<meta property="og:url" content="http://example.com/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="并发与竞争现象 linux处理竞争的机制 原子操作 介绍   内核原子操作底层原理 x86架构 arm架构   原子操作的api函数 整形int原子操作 位操作原子操作   锁机制 介绍 自旋锁 读写自旋锁 顺序锁   信号量 介绍 api   互斥体   总结 关于自旋锁的底层    并发与竞争现象经常会出现以下几种情况：  多核访问同一块共享数据 多个进程抢占式访问同一块共享数据 多个线程访">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-01.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-02.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-03.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-04.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-05.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-06.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-07.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-08.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-09.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-10.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-11.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-12.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-13.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-14.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-15.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-16.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-17.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-18.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-19.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-20.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-21.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-22.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-23.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-01.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-02.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-03.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-04.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-05.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-06.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-07.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-08.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-09.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-10.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-11.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-12.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-13.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-14.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-15.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-16.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-17.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-18.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-19.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-20.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-21.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-22.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-23.png">
 <meta property="article:published_time" content="2026-03-04T10:55:00.000Z">
-<meta property="article:modified_time" content="2026-04-28T06:49:38.195Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.971Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="互斥锁">
@@ -65,13 +65,13 @@
 <meta property="article:tag" content="锁">
 <meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-01.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-01.png">
 
 
-<link rel="canonical" href="http://example.com/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/","path":"2026/03/04/imx6ull-并发与竞争/","title":"imx6ull 并发与竞争*"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/","path":"2026/03/04/imx6ull-并发与竞争/","title":"imx6ull 并发与竞争*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>imx6ull 并发与竞争* | ji的博客</title>
@@ -102,6 +102,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -141,7 +145,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -175,24 +179,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -230,7 +234,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -239,7 +243,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -266,7 +270,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-28 14:49:38" itemprop="dateModified" datetime="2026-04-28T14:49:38+08:00">2026-04-28</time>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -377,7 +381,7 @@
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//c语言中一句赋值语句</span></span><br><span class="line">a=<span class="number">3</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//cpu的对应执行指令</span></span><br><span class="line">ldr r0, =<span class="number">0X30000000</span>         <span class="comment">/* 变量 a 地址 */</span></span><br><span class="line">ldr r1, = <span class="number">3</span>                 <span class="comment">/* 要写入的值 */</span></span><br><span class="line">str r1, [r0]                <span class="comment">/* 将 3 写入到 a 变量中 */</span></span><br></pre></td></tr></table></figure>
 <blockquote>
 <p>可以看到上面的一句普通的赋值语句来说，cpu实际上是执行3条指令。</p>
-<p>当有多个进程，都进行访问a这个共享数据变量时，会出现如下现象。<br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-01.png" alt="alt text"><br><strong>最终会导致A进程的计算出现错误</strong></p>
+<p>当有多个进程，都进行访问a这个共享数据变量时，会出现如下现象。<br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-01.png" alt="alt text"><br><strong>最终会导致A进程的计算出现错误</strong></p>
 </blockquote>
 <p>为了解决这类<strong>并发竞争</strong>的错误，Linux 内核提供了一组<strong>原子操作 API 函数</strong>来完成此功能</p>
 <h2 id="内核原子操作底层原理"><a href="#内核原子操作底层原理" class="headerlink" title="内核原子操作底层原理"></a>内核原子操作底层原理</h2><p>普通的 C 语言代码 i++ 在<strong>汇编层面通常分为三步</strong>：</p>
@@ -390,13 +394,13 @@
 <p>在多核（SMP）环境下，两个 CPU 同时<strong>执行这三步就会导致覆盖</strong>。</p>
 </blockquote>
 <h3 id="x86架构"><a href="#x86架构" class="headerlink" title="x86架构"></a>x86架构</h3><blockquote>
-<p>x86架构，使用总线锁和缓存锁<br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-02.png" alt="alt text"></p>
+<p>x86架构，使用总线锁和缓存锁<br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-02.png" alt="alt text"></p>
 </blockquote>
 <h3 id="arm架构"><a href="#arm架构" class="headerlink" title="arm架构"></a>arm架构</h3><blockquote>
-<p>arm架构，依靠指令来监视，独占访问<br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-03.png" alt="alt text"></p>
+<p>arm架构，依靠指令来监视，独占访问<br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-03.png" alt="alt text"></p>
 </blockquote>
 <blockquote>
-<p><strong>内存屏障</strong><br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-04.png" alt="alt text"></p>
+<p><strong>内存屏障</strong><br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-04.png" alt="alt text"></p>
 </blockquote>
 <h2 id="原子操作的api函数"><a href="#原子操作的api函数" class="headerlink" title="原子操作的api函数"></a>原子操作的api函数</h2><p>总之，linux内核已经为我们提供了原子操作的机制，目前原子操作支持：</p>
 <ul>
@@ -418,7 +422,7 @@
 <hr>
 <blockquote>
 <p><strong>linux提供的32位系统的api如下：</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-05.png" alt="alt text"><br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-06.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-05.png" alt="alt text"><br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-06.png" alt="alt text"></p>
 </blockquote>
 <h3 id="位操作原子操作"><a href="#位操作原子操作" class="headerlink" title="位操作原子操作"></a>位操作原子操作</h3><p>Linux 内核也提供了一系列的原子位操作 API 函数，只不过<strong>原子位操作不像原子整形变量那样有个 atomic_t 的数据结构</strong>，<strong>原子位操作是直接对内存进行操作</strong></p>
 <blockquote>
@@ -426,7 +430,7 @@
 </blockquote>
 <blockquote>
 <p><strong>原子位操作api如下：</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-07.png" alt="alt text"><br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-08.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-07.png" alt="alt text"><br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-08.png" alt="alt text"></p>
 </blockquote>
 <h2 id="锁机制"><a href="#锁机制" class="headerlink" title="锁机制"></a>锁机制</h2><h3 id="介绍-1"><a href="#介绍-1" class="headerlink" title="介绍"></a>介绍</h3><p>前面原子操作，有两个不足：</p>
 <ul>
@@ -470,30 +474,30 @@
 <hr>
 <blockquote>
 <p>注意：<strong>自旋锁不能再临界区内阻塞，因为底层关闭了CPU抢占</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-09.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-09.png" alt="alt text"></p>
 </blockquote>
 <hr>
 <p><strong>内核api：</strong></p>
 <p><code>include/linux/type.h</code>中定义自旋锁结构体变量：<code>spinlock_t</code></p>
 <blockquote>
 <p><strong>基本api</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-10.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-10.png" alt="alt text"></p>
 <p>以上这些自旋锁API 函数适用于<strong>SMP</strong>或支持抢占的单CPU下线程之间的<strong>并发访问</strong>，也就是<strong>用于线程与线程之间</strong>，被自旋锁保护的临界区一定不能调用任何能够引起睡眠和阻塞的API 函数，否则的话会可能会<strong>导致死锁现象</strong>的发生：<br>（<strong><code>A上锁，A阻塞，B空转</code></strong>）</p>
 <p><strong>中断抢占进程也是一样</strong>，容易导致死锁，所以使用自旋锁，必须关闭本核心中断<br><strong>（<code>A核任务上锁，A核进入中断，中断空转，死锁</code>）</strong></p>
 </blockquote>
 <blockquote>
 <p><strong>自动保存中断状态的api：</strong></p>
 <p><strong>使用自旋锁的<code>最好方法</code>，就是上锁前，关闭中断</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-11.png" alt="alt text"><br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-12.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-11.png" alt="alt text"><br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-12.png" alt="alt text"></p>
 <p><strong>中断状态的本质</strong>：<strong>CPU 的中断使能位</strong>，不能盲目的全部禁用，全部打开</p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-13.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-13.png" alt="alt text"></p>
 <p>硬件机制：当硬件中断触发并进入 irq() 时，<strong>ARM 处理器会自动切换状态并关闭全局中断响应（IRQ屏蔽）。</strong></p>
 <p>内核行为：Linux 的中断处理机制确保在执行 ISR 期间，<strong>当前 CPU 不会再接收新的同级硬件中断</strong>。</p>
 <p><strong>逻辑结果</strong>：既然当前 CPU 不会再进入另一个中断，也就不会出现“中断 A 拿到锁 -&gt; 被中断 B 打断 -&gt; 中断 B 申请同一个锁”的情况。所以，在单核视角下，它是安全的。</p>
 </blockquote>
 <blockquote>
 <p><strong>下半部的自旋锁api</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-14.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-14.png" alt="alt text"></p>
 </blockquote>
 <h3 id="读写自旋锁"><a href="#读写自旋锁" class="headerlink" title="读写自旋锁"></a>读写自旋锁</h3><p>读写自旋锁为读和写操作提供了不同的锁，</p>
 <ul>
@@ -537,15 +541,15 @@
 <li><strong>没有用户专属</strong><ul>
 <li>A-1信号量，B+1信号量</li>
 <li>（<strong>对比互斥体，有用户专属</strong>）</li>
-<li><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-15.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-15.png" alt="alt text"></li>
 </ul>
 </li>
 </ul>
 <h3 id="api"><a href="#api" class="headerlink" title="api"></a>api</h3><p><code>include/linux/semaphore.h</code>中定义</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">semaphore</span> &#123;</span></span><br><span class="line">        <span class="type">raw_spinlock_t</span> lock;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> count;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">wait_list</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p><strong>api</strong><br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-16.png" alt="alt text"></p>
-<p>注意<code>down_interruptible</code>和<code>down</code>的区别：<br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-17.png" alt="alt text"></p>
+<p><strong>api</strong><br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-16.png" alt="alt text"></p>
+<p>注意<code>down_interruptible</code>和<code>down</code>的区别：<br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-17.png" alt="alt text"></p>
 </blockquote>
 <h2 id="互斥体"><a href="#互斥体" class="headerlink" title="互斥体"></a>互斥体</h2><p>类似二值信号量，同样实现互斥。</p>
 <blockquote>
@@ -565,11 +569,11 @@
 </ul>
 <blockquote>
 <p><strong>api</strong></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-18.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-18.png" alt="alt text"></p>
 </blockquote>
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>选择哪种互斥方法，就看3件事情：</p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-19.png" alt="alt text"></p>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-20.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-19.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-20.png" alt="alt text"></p>
 <blockquote>
 <p>在 Linux 内核中，<strong>阻塞（Blocking）<strong>的本质是</strong>进程主动调用调度器（schedule()）</strong>，放弃 CPU 并进入休眠状态。而能否允许这种行为，完全取决于你当前持有的“锁”的性质。</p>
 <p><strong>临界区调用阻塞api，相当于主动放弃cpu</strong>, 如果你在持有自旋锁时休眠（切走 CPU），而另一个进程尝试获取这个锁，它会死命自旋，但持有锁的你已经“睡着了”，没法回来放锁</p>
@@ -578,8 +582,8 @@
 <blockquote>
 <p>这里总结一下关于<strong>底层调度和抢占相关的</strong>，前面针对锁的底层实现没提到</p>
 </blockquote>
-<p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-21.png" alt="alt text"></p>
-<h2 id="关于自旋锁的底层"><a href="#关于自旋锁的底层" class="headerlink" title="关于自旋锁的底层"></a>关于自旋锁的底层</h2><p><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-22.png" alt="alt text"><br><img src="/../images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-23.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-21.png" alt="alt text"></p>
+<h2 id="关于自旋锁的底层"><a href="#关于自旋锁的底层" class="headerlink" title="关于自旋锁的底层"></a>关于自旋锁的底层</h2><p><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-22.png" alt="alt text"><br><img src="/images/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89-23.png" alt="alt text"></p>
 <p>所以我们做实验的时候，我们的imx是单核，本身就先当于抢占CPU了，就不会出现自旋的情况，而且我们自旋锁保护的是写变量的操作，本身就非常快。所以如果是在多核中，也很难碰到自旋的情况。</p>
 
     </div>
@@ -626,16 +630,52 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>

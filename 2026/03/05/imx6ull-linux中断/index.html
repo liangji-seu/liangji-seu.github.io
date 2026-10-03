@@ -19,57 +19,57 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="内核中断 裸机的中断 linux内核中断 中断API 中断号 request_irq free_irq 中断处理函数 中断使能&#x2F;禁止函数   上半部 下半部 下半部的实现机制 软中断 tasklet tasklet流程图解   工作队列 概念梳理 工作队列流程图解 api 使用注意       dts中断拓破关系梳理 节点中断属性 实验    内核中断裸机的中断之前我们在裸机中，要想使">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull linux中断*">
-<meta property="og:url" content="http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="内核中断 裸机的中断 linux内核中断 中断API 中断号 request_irq free_irq 中断处理函数 中断使能&#x2F;禁止函数   上半部 下半部 下半部的实现机制 软中断 tasklet tasklet流程图解   工作队列 概念梳理 工作队列流程图解 api 使用注意       dts中断拓破关系梳理 节点中断属性 实验    内核中断裸机的中断之前我们在裸机中，要想使">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-02-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-03-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-04-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-05-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-06-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-07-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-08-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-09-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-10-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-11-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-12-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-13-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-14-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-15-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-16-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-17-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-18-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-19-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-20-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-21-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-22-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-23-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-24-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-25-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-26-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-27-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-28-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-29-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-30-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-31-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-32-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-33-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-34-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-35-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-36-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-37-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-38-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-39-0306210532.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-40-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-02-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-03-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-04-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-05-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-06-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-07-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-08-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-09-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-10-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-11-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-12-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-13-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-14-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-15-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-16-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-17-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-18-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-19-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-20-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-21-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-22-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-23-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-24-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-25-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-26-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-27-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-28-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-29-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-30-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-31-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-32-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-33-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-34-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-35-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-36-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-37-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-38-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-39-0306210532.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-40-0306210532.png">
 <meta property="article:published_time" content="2026-03-05T13:54:28.000Z">
-<meta property="article:modified_time" content="2026-04-28T06:49:38.665Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.969Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="dts中断节点依赖关系">
 <meta property="article:tag" content="linux">
@@ -81,13 +81,13 @@
 <meta property="article:tag" content="软中断">
 <meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png">
 
 
-<link rel="canonical" href="http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/","path":"2026/03/05/imx6ull-linux中断/","title":"imx6ull linux中断*"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/","path":"2026/03/05/imx6ull-linux中断/","title":"imx6ull linux中断*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>imx6ull linux中断* | ji的博客</title>
@@ -118,6 +118,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -157,7 +161,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -191,24 +195,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -246,7 +250,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -255,7 +259,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -282,7 +286,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-28 14:49:38" itemprop="dateModified" datetime="2026-04-28T14:49:38+08:00">2026-04-28</time>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -389,14 +393,14 @@
 <li>实际作用：<ul>
 <li><strong>使能中断</strong></li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-01-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
 </li>
 <li>使用：<ul>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-02-0306210532.png" alt="alt text"></li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-03-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-02-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-03-0306210532.png" alt="alt text"></li>
 <li><blockquote>
 <p>GPIO1_IO18, 按下低电平，可以设置下降沿触发中断，多个标志可以用 <code>|</code> 来组合</p>
 </blockquote>
@@ -410,7 +414,7 @@
 <li>删除中断处理函数</li>
 <li>禁止中断</li>
 </ul>
-<p>使用如下：<br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-04-0306210532.png" alt="alt text"></p>
+<p>使用如下：<br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-04-0306210532.png" alt="alt text"></p>
 <h3 id="中断处理函数"><a href="#中断处理函数" class="headerlink" title="中断处理函数"></a>中断处理函数</h3><p>使用request_irq函数<strong>申请中断的时候</strong>，就需要设置<strong>中断处理函数</strong>。</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">irqreturn_t</span> (*<span class="type">irq_handler_t</span>) (<span class="type">int</span>, <span class="type">void</span> *)</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">第一个参数int, 是相应的中断号</span></span><br><span class="line"><span class="comment">第二个参数是通用指针，需要和request_irq的dev参数保持一致，指向设备数据结构</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//返回值类型定义</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">irqreturn</span> &#123;</span></span><br><span class="line">        IRQ_NONE = (<span class="number">0</span> &lt;&lt; <span class="number">0</span>),</span><br><span class="line">        IRQ_HANDLED = (<span class="number">1</span> &lt;&lt; <span class="number">0</span>),</span><br><span class="line">        IRQ_WAKE_THREAD = (<span class="number">1</span> &lt;&lt; <span class="number">1</span>),</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">enum</span> <span class="title">irqreturn</span> <span class="title">irqreturn_t</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//一般中断服务函数返回值使用如下形式：</span></span><br><span class="line"><span class="keyword">return</span> IRQ_RETVAL(IRQ_HANDLED)</span><br></pre></td></tr></table></figure>
 
@@ -473,26 +477,26 @@
 <p>所以各个CPU（多核）所执行的软件中断服务函数都是相同的（和中断向量表一样嘛）。</p>
 <p>要使用软中断，必须要<code>open_softirq</code>函数<strong>注册对应的软中断处理函数</strong></p>
 <ul>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-05-0306210532.png" alt="alt text"></li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-06-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-05-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-06-0306210532.png" alt="alt text"></li>
 </ul>
 <hr>
 <p>注册好软中断后，需要通过<code>raise_softirq</code>函数来软件触发</p>
 <ul>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-07-0306210532.png" alt="alt text"><blockquote>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-07-0306210532.png" alt="alt text"><blockquote>
 <p><strong>软中断</strong>必须在编译的时候，<strong>静态注册</strong></p>
 </blockquote>
 </li>
 </ul>
 <hr>
-<p>内核使用<code>softirq_init</code>来<strong>初始化软中断</strong>， 定义在<code>kernel/softirq.c</code>中<br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-08-0306210532.png" alt="alt text"></p>
+<p>内核使用<code>softirq_init</code>来<strong>初始化软中断</strong>， 定义在<code>kernel/softirq.c</code>中<br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-08-0306210532.png" alt="alt text"></p>
 <blockquote>
 <p>这里具体不是很明白，但是更常用的是tasklet</p>
 </blockquote>
 <h4 id="tasklet"><a href="#tasklet" class="headerlink" title="tasklet"></a>tasklet</h4><p>软中断是底层框架，而 Tasklet 是基于软中断实现的更易用的“高级封装”。</p>
 <blockquote>
 <p><strong>区别和联系：</strong></p>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-09-0306210532.png" alt="alt text"><br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-10-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-09-0306210532.png" alt="alt text"><br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-10-0306210532.png" alt="alt text"></p>
 </blockquote>
 <p>linux内核使用<code>tasklet_struct</code><strong>结构体</strong>表示tasklet</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tasklet_struct</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tasklet_struct</span> *<span class="title">next</span>;</span>        <span class="comment">/* 下一个 tasklet */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> state;                <span class="comment">/* tasklet 状态 */</span></span><br><span class="line">    <span class="type">atomic_t</span> count;                     <span class="comment">/* 计数器，记录对 tasklet 的引用数 */</span></span><br><span class="line">    <span class="type">void</span> (*func)(<span class="type">unsigned</span> <span class="type">long</span>);        <span class="comment">/* tasklet 执行的函数 */</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> data;                 <span class="comment">/* 函数 func 的参数 */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
@@ -503,13 +507,13 @@
 <p><strong>使用：</strong></p>
 <p>先定义一个<code>tasklet</code>, 然后<code>tasklet_init</code><strong>初始化tasklet</strong></p>
 <blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-11-0306210532.png" alt="alt text"><br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-12-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-11-0306210532.png" alt="alt text"><br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-12-0306210532.png" alt="alt text"></p>
 <hr>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-13-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-13-0306210532.png" alt="alt text"></p>
 </blockquote>
 <p>在<strong>上半部</strong>（我们实际的中断处理函数）中，调用<code>tasklet_schedule</code>就能使tasklet在<strong>合适的时间运行</strong></p>
 <blockquote>
-<p>就相当于自己开了一个软件上的可调度的任务处理链表，类似rtos<br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-14-0306210532.png" alt="alt text"></p>
+<p>就相当于自己开了一个软件上的可调度的任务处理链表，类似rtos<br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-14-0306210532.png" alt="alt text"></p>
 </blockquote>
 <p>tasklet示例：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 定义 taselet */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tasklet_struct</span> <span class="title">testtasklet</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* tasklet 处理函数 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">testtasklet_func</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> data)</span></span><br><span class="line">&#123;</span><br><span class="line">        <span class="comment">/* tasklet 具体处理内容 */</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* 中断处理函数 */</span></span><br><span class="line"><span class="type">irqreturn_t</span> <span class="title function_">test_handler</span><span class="params">(<span class="type">int</span> irq, <span class="type">void</span> *dev_id)</span></span><br><span class="line">&#123;</span><br><span class="line">        ......</span><br><span class="line">        <span class="comment">/* 调度 tasklet */</span></span><br><span class="line">        tasklet_schedule(&amp;testtasklet);</span><br><span class="line">        ......</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* 驱动入口函数 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">xxxx_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">        ......</span><br><span class="line">        <span class="comment">/* 初始化 tasklet */</span></span><br><span class="line">        tasklet_init(&amp;testtasklet, testtasklet_func, data);</span><br><span class="line">        <span class="comment">/* 注册中断处理函数 */</span></span><br><span class="line">        request_irq(xxx_irq, test_handler, <span class="number">0</span>, <span class="string">&quot;xxx&quot;</span>, &amp;xxx_dev);</span><br><span class="line">        ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -534,7 +538,7 @@
 <li><strong>内核线程</strong><ul>
 <li><strong>跑在内核态的特殊进程</strong>，归内核管理，没有用户态的地址空间的轻量化进程</li>
 <li>和<strong>普通用户进程</strong>对比：</li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-15-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-15-0306210532.png" alt="alt text"></li>
 <li>内核线程的典型例子，<code>ps -ef |grep k</code>, <strong>k开头</strong>的进程<ul>
 <li><code>kthreadd</code>：所有内核线程的 “父线程”，负责创建其他内核线程；</li>
 <li><code>kswapd0</code>：内存交换守护线程，负责内存页的换入换出；</li>
@@ -551,8 +555,8 @@
 </ul>
 <blockquote>
 <p><strong>内核线程和中断下半部，tasklet和工作队列对比的关系</strong></p>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-16-0306210532.png" alt="alt text"></p>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-17-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-16-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-17-0306210532.png" alt="alt text"></p>
 </blockquote>
 <h5 id="工作队列流程图解"><a href="#工作队列流程图解" class="headerlink" title="工作队列流程图解"></a>工作队列流程图解</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│ 【硬件中断】CPU触发中断 → 关本地中断 │</span><br><span class="line">└─────────────────────────────────────┘</span><br><span class="line">         ↓</span><br><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│ 【内核态-上半部】执行硬中断处理函数 │</span><br><span class="line">│  <span class="number">1.</span> 快速处理：清中断标志、保存硬件状态 │</span><br><span class="line">│  <span class="number">2.</span> 调用queue_work(my_workqueue, &amp;my_work) │</span><br><span class="line">│     → 把work任务挂到工作队列        │</span><br><span class="line">│     → 唤醒对应的kworker内核线程      │</span><br><span class="line">│  <span class="number">3.</span> 上半部执行完毕                  │</span><br><span class="line">└─────────────────────────────────────┘</span><br><span class="line">         ↓</span><br><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│ 【内核态-中断退出】直接返回用户态！  │</span><br><span class="line">│  （关键：不立即执行任务，硬中断退出后直接回用户态） │</span><br><span class="line">└─────────────────────────────────────┘</span><br><span class="line">         ↓</span><br><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│ 【用户态】进程P继续执行原代码        │</span><br><span class="line">└─────────────────────────────────────┘</span><br><span class="line"></span><br><span class="line"># 与此同时，内核调度器并行处理：</span><br><span class="line">┌─────────────────────────────────────┐</span><br><span class="line">│ 【内核态-内核线程】kworker被唤醒     │</span><br><span class="line">│  <span class="number">1.</span> 调度器发现kworker就绪 → 择机调度 │</span><br><span class="line">│     （可能是立刻，也可能等进程P时间片用完） │</span><br><span class="line">│  <span class="number">2.</span> kworker执行my_work的处理函数     │</span><br><span class="line">│     → 可睡眠（比如调用msleep()）      │</span><br><span class="line">│     → 可调用阻塞式函数（比如copy_to_user） │</span><br><span class="line">│  <span class="number">3.</span> 执行完毕，kworker回到睡眠状态    │</span><br><span class="line">└─────────────────────────────────────┘</span><br></pre></td></tr></table></figure>
 
@@ -569,14 +573,14 @@
 <hr>
 <p><strong>创建工作</strong>：</p>
 <blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-18-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-18-0306210532.png" alt="alt text"></p>
 </blockquote>
 <p><strong>调度任务</strong>（开始让worker工作者线程执行他的工作队列）</p>
 <blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-19-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-19-0306210532.png" alt="alt text"></p>
 </blockquote>
 <blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-20-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-20-0306210532.png" alt="alt text"></p>
 </blockquote>
 <p>示例：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/* 定义工作(work) */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">work_struct</span> <span class="title">testwork</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* work 处理函数 */</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">testwork_func_t</span><span class="params">(<span class="keyword">struct</span> work_struct *work)</span>;</span><br><span class="line">&#123;</span><br><span class="line"> <span class="comment">/* work 具体处理内容 */</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 中断处理函数 */</span></span><br><span class="line"><span class="type">irqreturn_t</span> <span class="title function_">test_handler</span><span class="params">(<span class="type">int</span> irq, <span class="type">void</span> *dev_id)</span></span><br><span class="line">&#123;</span><br><span class="line"> ......</span><br><span class="line"> <span class="comment">/* 调度 work */</span></span><br><span class="line"> schedule_work(&amp;testwork);</span><br><span class="line"> ......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 驱动入口函数 */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">xxxx_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line"> ......</span><br><span class="line"> <span class="comment">/* 初始化 work */</span></span><br><span class="line"> INIT_WORK(&amp;testwork, <span class="type">testwork_func_t</span>);</span><br><span class="line"> <span class="comment">/* 注册中断处理函数 */</span></span><br><span class="line"> request_irq(xxx_irq, test_handler, <span class="number">0</span>, <span class="string">&quot;xxx&quot;</span>, &amp;xxx_dev);</span><br><span class="line"> ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -588,7 +592,7 @@
 <li><strong>不是只有一个</strong>，而是按 <strong>CPU 核心</strong> &#x2F; <strong>工作队列类型</strong>，有多个 kworker 线程（甚至成百个），Linux 会<strong>动态创建 &#x2F; 销毁</strong>，核心目的是并行处理任务、避免单线程瓶颈<ul>
 <li><strong>CPU核心</strong>：<ul>
 <li>kworker&#x2F;0:0、kworker&#x2F;0:1 对应 CPU0，kworker&#x2F;1:0 对应 CPU1）</li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-21-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-21-0306210532.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong>工作队列类型</strong>：<ul>
@@ -604,7 +608,7 @@
 </li>
 <li><strong>为什么分类这么多</strong>：<ul>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-22-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-22-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
@@ -710,7 +714,7 @@
 </li>
 <li>使用专属队列的好处<ul>
 <li>有一个好处是可以定制优先级，这样你这个专属队列对应的<strong>worker线程有更高的优先级</strong>，可以进行<strong>抢占</strong>。</li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-23-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-23-0306210532.png" alt="alt text"></li>
 </ul>
 </li>
 </ul>
@@ -725,15 +729,15 @@
 <li><strong>工作队列（workqueue）</strong>：<ul>
 <li>内核预设了多个「<strong>默认队列</strong>」，驱动也可创建「<strong>专属队列</strong>」，是存放 <strong>work 的 “任务容器”</strong>；</li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-24-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-24-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-25-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-25-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-26-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-26-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 <li><blockquote>
@@ -741,7 +745,7 @@
 </blockquote>
 </li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-27-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-27-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
@@ -756,7 +760,7 @@
 </li>
 <li><strong>三者关系：</strong><ul>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-28-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-28-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
@@ -769,7 +773,7 @@
 <li><strong>创建专属队列</strong><ul>
 <li>调用<strong>队列创建函数</strong>，内核会自动为<strong>每个CPU核心</strong>创建对应的<strong>kworker线程</strong></li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-29-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-29-0306210532.png" alt="alt text"></p>
 </blockquote>
 </li>
 <li><pre><code class="language-c">#include &lt;linux/workqueue.h&gt;
@@ -804,26 +808,26 @@ void my_drv_exit(void) {
 </ul>
 <hr>
 <ul>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-30-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-30-0306210532.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong>怎么 “知道” 自己的 worker 是谁？</strong><ul>
 <li>方式1：看进程名<ul>
 <li>内核线程就是一个特殊进程，<code>ps -ef | grep kworker</code></li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-31-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-31-0306210532.png" alt="alt text"></li>
 </ul>
 </li>
 <li>方式2：用调试接口<ul>
 <li>查看 <code>/sys/kernel/debug/workqueue/workqueues</code> 文件，能看到<strong>队列</strong>和<strong>其线程池</strong>的对应关系：</li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-32-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-32-0306210532.png" alt="alt text"></li>
 </ul>
 </li>
 </ul>
 </li>
 <li><strong>怎么控制创建多少 worker？</strong><ul>
 <li>通过 <code>alloc_workqueue()</code> 的参数来精细控制<strong>线程数量</strong>和行为</li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-33-0306210532.png" alt="alt text"></li>
-<li><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-34-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-33-0306210532.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-34-0306210532.png" alt="alt text"></li>
 </ul>
 </li>
 </ul>
@@ -855,11 +859,11 @@ void my_drv_exit(void) {
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">     +---------------------------------------+</span><br><span class="line">     |       ARM Cortex-A7 CPU Core          |</span><br><span class="line">     |    (最终执行你的中断处理函数 Handler)      |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">                         ^</span><br><span class="line">                         | (信号最终到达)</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">     |        GIC (intc) 顶级控制器           |  &lt;-- 你的 dts 根节点下</span><br><span class="line">     |     (管理所有 SoC 级别的中断源)           |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">                         ^</span><br><span class="line">                         | interrupt-parent = &lt;&amp;intc&gt;</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">     |        GPC (电源与唤醒控制器)           |  &lt;-- soc 节点下的中转站</span><br><span class="line">     |  (负责低功耗唤醒，信号在这里做一次“安检”)    |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">                         ^</span><br><span class="line">                         | interrupt-parent = &lt;&amp;gpc&gt;</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">     |       GPIO5 控制器 (子控制器)          |  &lt;-- 声明了 interrupt-controller</span><br><span class="line">     |  (把一组 <span class="number">32</span> 个引脚的中断“汇总”给上级)     |</span><br><span class="line">     +---------------------------------------+</span><br><span class="line">           /      |      |      \</span><br><span class="line">    引脚 <span class="number">0</span>   引脚 <span class="number">1</span>   ...   引脚 <span class="number">31</span>  (硬件通道)</span><br><span class="line">      ^</span><br><span class="line">      | interrupts = &lt;<span class="number">0</span> <span class="number">8</span>&gt;</span><br><span class="line">+-----------+</span><br><span class="line">| fxls8471  |  &lt;-- 你的外设 (传感器)</span><br><span class="line">| (信号源头) |</span><br><span class="line">+-----------+</span><br></pre></td></tr></table></figure>
 <hr>
 <blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-35-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-35-0306210532.png" alt="alt text"></p>
 </blockquote>
 <p><strong>之前编写裸机gpio中断时，没有关心过gpc，原因是：</strong></p>
 <blockquote>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-36-0306210532.png" alt="alt text"><br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-37-0306210532.png" alt="alt text"><br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-38-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-36-0306210532.png" alt="alt text"><br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-37-0306210532.png" alt="alt text"><br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-38-0306210532.png" alt="alt text"></p>
 </blockquote>
 <h2 id="节点中断属性"><a href="#节点中断属性" class="headerlink" title="节点中断属性"></a>节点中断属性</h2><ul>
 <li><strong><code>#interrupt-cells</code></strong> &#x3D; &lt;3&gt;<ul>
@@ -886,8 +890,8 @@ void my_drv_exit(void) {
 </li>
 </ul>
 <p>在dts中设置好了我们的中断线连接之后，我们下一步就是要让linux内核的驱动们知道我们的中断pin，肯定是<strong>OF函数</strong>：<code>irq_of_parse_and_map</code></p>
-<p><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-39-0306210532.png" alt="alt text"></p>
-<p>如果我们的外设节点，他的中断引脚接到gpio上来上传中断信号，也可以使用<code>gpio_to_irq</code>来<strong>获取gpio对应的中断号</strong>（因为我们知道接在哪个gpio上，而每组gpio的中断号是固定的）<br><img src="/../images/imx6ull-linux%E4%B8%AD%E6%96%AD-40-0306210532.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-39-0306210532.png" alt="alt text"></p>
+<p>如果我们的外设节点，他的中断引脚接到gpio上来上传中断信号，也可以使用<code>gpio_to_irq</code>来<strong>获取gpio对应的中断号</strong>（因为我们知道接在哪个gpio上，而每组gpio的中断号是固定的）<br><img src="/images/imx6ull-linux%E4%B8%AD%E6%96%AD-40-0306210532.png" alt="alt text"></p>
 <h2 id="实验"><a href="#实验" class="headerlink" title="实验"></a>实验</h2><p><strong>实验设计</strong>：</p>
 <ul>
 <li>用户态程序（消费者）读取按键值（原子变量），并打印。<ul>
@@ -961,16 +965,52 @@ void my_drv_exit(void) {
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>

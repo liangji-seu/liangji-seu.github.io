@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="以矩阵乘法 CUDA kernel 为例，记录 Nsight Compute 各项性能指标、瓶颈判断与 kernel 优化分析。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="infra Nsight Compute学习笔记">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="以矩阵乘法 CUDA kernel 为例，记录 Nsight Compute 各项性能指标、瓶颈判断与 kernel 优化分析。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702192335.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702195620.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702195840.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702195857.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702195909.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200024.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200118.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200321.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200406.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200417.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200435.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200509.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200541.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200647.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702200735.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702202650.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702202800.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702203833.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702202946.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702203825.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702203846.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702203913.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702203932.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702204009.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702204525.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702204551.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702204649.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702210901.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702204727.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702204802.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702210929.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702205034.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702205858.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702211116.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702211129.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702211420.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702212054.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702212119.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702212810.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702213633.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702214309.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702214404.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702214506.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215523.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215655.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215722.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215800.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215808.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215903.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215914.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220018.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220032.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220115.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220157.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220238.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220450.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702215234.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220659.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220715.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220730.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220747.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702220821.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221056.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221143.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221114.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221128.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221159.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221213.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702221906.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222043.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222125.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222231.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222355.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222441.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222648.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222804.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222819.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222902.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702222944.png">
+<meta property="article:published_time" content="2026-07-04T01:21:52.000Z">
+<meta property="article:modified_time" content="2026-10-03T10:34:31.622Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="AI Infra">
+<meta property="article:tag" content="CUDA">
+<meta property="article:tag" content="Nsight Compute">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702192335.png">
+
+
+<link rel="canonical" href="https://liangji-seu.github.io/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/","path":"2026/07/04/infra-Nsight Compute学习笔记/","title":"infra Nsight Compute学习笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>infra Nsight Compute学习笔记 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">测试背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Nsight-compute%E6%8A%A5%E5%91%8A%E5%88%86%E6%9E%90-%E4%BB%A5v1%E6%9C%B4%E7%B4%A0%E5%AE%9E%E7%8E%B0%E7%9A%84%E5%88%86%E6%9E%90%E7%BB%93%E6%9E%9C%E4%B8%BA%E4%BE%8B"><span class="nav-number">2.</span> <span class="nav-text">Nsight compute报告分析(以v1朴素实现的分析结果为例)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">2.1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GPU-Speed-Of-Light-Throughput"><span class="nav-number">2.2.</span> <span class="nav-text">GPU Speed Of Light Throughput</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Compute-Workload-Analysis"><span class="nav-number">2.3.</span> <span class="nav-text">Compute Workload Analysis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">2.4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Memory-Workload-Analysis"><span class="nav-number">2.5.</span> <span class="nav-text">Memory Workload Analysis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#L2%E5%8E%8B%E7%BC%A9%E7%8E%87-0"><span class="nav-number">2.6.</span> <span class="nav-text">L2压缩率 0%</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-number">2.6.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#scheduler-statistics"><span class="nav-number">2.7.</span> <span class="nav-text">scheduler statistics</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Warp-state-statistics"><span class="nav-number">2.8.</span> <span class="nav-text">Warp state statistics</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Launch-Statistics"><span class="nav-number">2.9.</span> <span class="nav-text">Launch Statistics</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99-kernel-%E6%97%B6%E6%80%8E%E4%B9%88%E7%9F%A5%E9%81%93-SM-%E6%95%B0%E9%87%8F%EF%BC%9F"><span class="nav-number">2.9.1.</span> <span class="nav-text">写 kernel 时怎么知道 SM 数量？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E7%9F%A5%E9%81%93%E8%87%AA%E5%B7%B1%E7%9A%84-kernel-%E6%AF%8F%E4%B8%AA%E7%BA%BF%E7%A8%8B%E7%94%A8%E4%BA%86%E5%A4%9A%E5%B0%91%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">2.9.2.</span> <span class="nav-text">怎么知道自己的 kernel 每个线程用了多少寄存器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%8E%E4%B9%88%E7%9F%A5%E9%81%93%E4%B8%80%E4%B8%AA-SM-%E8%83%BD%E5%90%8C%E6%97%B6%E6%94%BE%E5%87%A0%E4%B8%AA-block%EF%BC%9F"><span class="nav-number">2.9.3.</span> <span class="nav-text">怎么知道一个 SM 能同时放几个 block？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98%E4%B8%AD%E5%86%99kernel%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">2.9.4.</span> <span class="nav-text">实战中写kernel的流程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Occupancy"><span class="nav-number">2.10.</span> <span class="nav-text">Occupancy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-2"><span class="nav-number">2.10.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Source-Counters"><span class="nav-number">2.11.</span> <span class="nav-text">Source Counters</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E5%AF%86%E9%9B%86%E5%9E%8B-%E6%98%BE%E5%AD%98%E5%AF%86%E9%9B%86%E5%9E%8B-%E8%AE%A1%E7%AE%97%E7%93%B6%E9%A2%88-%E6%98%BE%E5%AD%98%E7%93%B6%E9%A2%88"><span class="nav-number">3.</span> <span class="nav-text">计算密集型 - 显存密集型 &#x2F; 计算瓶颈 - 显存瓶颈</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%87%86%E7%A1%AE%E5%88%A4%E6%96%AD"><span class="nav-number">3.1.</span> <span class="nav-text">如何准确判断</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">72</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="infra Nsight Compute学习笔记 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          infra Nsight Compute学习笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-07-04 09:21:52" itemprop="dateCreated datePublished" datetime="2026-07-04T09:21:52+08:00">2026-07-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-03 18:34:31" itemprop="dateModified" datetime="2026-10-03T18:34:31+08:00">2026-10-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">大模型算法</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/%E7%AE%97%E5%AD%90%E4%B8%8E%E6%80%A7%E8%83%BD/" itemprop="url" rel="index"><span itemprop="name">算子与性能</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>这篇主要用来记录Nsight Compute的学习</p>
+<h1 id="测试背景"><a href="#测试背景" class="headerlink" title="测试背景"></a>测试背景</h1><p>我主要使用的是矩阵乘法这个cuda kernel的不同优化版本来进行测试</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">__global__ <span class="type">void</span> <span class="title">mysgemm_v1</span><span class="params">(<span class="type">int</span> M,<span class="comment">//A(M x K)   B(K x N)  C(M x N)</span></span></span></span><br><span class="line"><span class="params"><span class="function">						   <span class="type">int</span> N,</span></span></span><br><span class="line"><span class="params"><span class="function">						   <span class="type">int</span> K,</span></span></span><br><span class="line"><span class="params"><span class="function">						   <span class="type">float</span> alpha,<span class="comment">//放缩系数</span></span></span></span><br><span class="line"><span class="params"><span class="function">						   <span class="type">float</span> *A,</span></span></span><br><span class="line"><span class="params"><span class="function">                           <span class="type">float</span>* B,</span></span></span><br><span class="line"><span class="params"><span class="function">                           <span class="type">float</span> beta,<span class="comment">//放缩系数</span></span></span></span><br><span class="line"><span class="params"><span class="function">                           <span class="type">float</span> *C)</span></span></span><br></pre></td></tr></table></figure>
+
+
+<p>不同版本kernel核函数对比如下：</p>
+<ul>
+<li>v1 <strong>朴素实现</strong><ul>
+<li>每个thread，负责C的一个元素</li>
+</ul>
+</li>
+<li>v2 <strong>共享内存优化</strong><ul>
+<li>一个block，负责一个C_sub（搬运A_sub, B_sub 到 该block的shared_mem）</li>
+<li>一个thread负责C_sub里面的一个元素</li>
+<li>共享内存保存A_tile, B_tile</li>
+<li>寄存器保存每个A_tile，B_tile的计算结果</li>
+</ul>
+</li>
+<li>v3 <strong>thread_tile优化</strong><ul>
+<li>基于v2</li>
+<li>一个thread负责C_sub里多个元素 &#x3D; C_tile</li>
+<li>共享内存保存A_tile, B_tile</li>
+<li>寄存器保存每个A_tile，B_tile的计算结果</li>
+</ul>
+</li>
+<li>v4 <strong>向量预取指令</strong><ul>
+<li>基于v3</li>
+<li>写共享内存As直接写<strong>转置</strong>，<strong>读共享内存</strong>时，优化<strong>读取的效率</strong></li>
+</ul>
+</li>
+<li>v5 <strong>双缓冲+指令流水线重叠优化</strong></li>
+<li>v6 <strong>warp tiling优化</strong></li>
+</ul>
+<p>benchmard的测试条件为：</p>
+<ul>
+<li>M&#x3D;2048</li>
+<li>K&#x3D;2048</li>
+<li>N&#x3D;2048</li>
+</ul>
+<p>测试结果为<br><img src="/images/Pasted%20image%2020260702192335.png" alt="366"></p>
+<h1 id="Nsight-compute报告分析-以v1朴素实现的分析结果为例"><a href="#Nsight-compute报告分析-以v1朴素实现的分析结果为例" class="headerlink" title="Nsight compute报告分析(以v1朴素实现的分析结果为例)"></a>Nsight compute报告分析(以v1朴素实现的分析结果为例)</h1><h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><blockquote>
+<p>吞吐量：单位时间内统计数量：<br><strong>计算吞吐量</strong> compute throughput: <strong>单位时间内完成多少次计算</strong><br>	SM 所有运算单元（FMA&#x2F;ALU&#x2F;FP64&#x2F;Tensor 等）<strong>完成的运算操作总次数</strong><br><strong>内存吞吐量</strong> memory throughput: <strong>单位时间传输的数据字节总量</strong></p>
+</blockquote>
+<p>关于各种计算硬件单元，GPU里面有很多负责计算单元：</p>
+<ul>
+<li><strong>LSU</strong> 加载 &#x2F; 存储访存单元</li>
+<li><strong>FMA</strong> 浮点数乘加单元</li>
+<li><strong>ALU</strong> 整数运算单元</li>
+</ul>
+<p><strong>每个硬件单元，都有自己独立的指令流水线</strong>，每条流水线只处理对应类型指令<br><img src="/images/Pasted%20image%2020260702195620.png" alt="332"></p>
+<hr>
+<h2 id="GPU-Speed-Of-Light-Throughput"><a href="#GPU-Speed-Of-Light-Throughput" class="headerlink" title="GPU Speed Of Light Throughput"></a>GPU Speed Of Light Throughput</h2><p>GPU 理论峰值吞吐量分析面板</p>
+<p>本面板整体<strong>展示 GPU 计算单元</strong>与显存资源的吞吐量概况。<br>每项硬件单元指标会输出<strong>当前实际吞吐量</strong>相对理论峰值的利用率百分比</p>
+<p><img src="/images/Pasted%20image%2020260702195840.png"><img src="/images/Pasted%20image%2020260702195857.png" alt="319"><img src="/images/Pasted%20image%2020260702195909.png" alt="365"></p>
+<p>可以看到SM的计算单元指令吞吐量占满了，<br>显存访问吞吐量也占满了，其中主要是一级缓存在疯狂使用。</p>
+<blockquote>
+<p><strong>计算吞吐量</strong>只统计 FMA&#x2F;ALU 等运算操作，和 LSU 访存无关</p>
+<p>这里 98.29% 代表：<strong>只要 SM 处于活跃、没有阻塞等待的周期里，运算单元几乎跑满了理论算力上限</strong>。</p>
+</blockquote>
+<p><img src="/images/Pasted%20image%2020260702200024.png">1. 高吞吐量提示（High Throughput）</p>
+<p>当前内核程序<strong>占用设备 80% 以上的计算或显存峰值性能</strong> （<mark style="background:#fff88f">计算能力压榨的好像还不错</mark>）。若需进一步提升性能，建议将计算负载从当前高占用硬件单元迁移至其他模块。</p>
+<p>可先前往「计算负载分析」板块分析程序负载特征。</p>
+<p><img src="/images/Pasted%20image%2020260702200118.png">2. 屋顶线分析提示（Roofline Analysis）</p>
+<p>本 GPU 设备单精度浮点（FP32）与双精度浮点（FP64）理论峰值性能比值为 64:1。</p>
+<p>当前内核程序<strong>仅达到设备单精度峰值性能的 6%</strong>，双精度峰值性能利用率为 0%。<br>说明<mark style="background:#ff4d4f">计算能力仅到达峰值的6%</mark>， 差的很多</p>
+<h2 id="Compute-Workload-Analysis"><a href="#Compute-Workload-Analysis" class="headerlink" title="Compute Workload Analysis"></a>Compute Workload Analysis</h2><p>计算负载分析<br>本模块<strong>对流式多处理器（SM）的计算资源</strong>进行精细化分析，包含实际每周期执行指令数（IPC）与各类流水线的<strong>硬件利用率</strong>。流水线利用率过高时，会成为整体性能瓶颈<br><img src="/images/Pasted%20image%2020260702200321.png"><br><img src="/images/Pasted%20image%2020260702200406.png" alt="320"><img src="/images/Pasted%20image%2020260702200417.png" alt="285"></p>
+<p><img src="/images/Pasted%20image%2020260702200435.png">⚠️ 硬件利用率偏低<br>所有<mark style="background:#ff4d4f">计算流水线均未充分利用</mark>。出现该现象有两种可能性：当前 GPU 内核计算量过小；或是调度器未生成足够多的线程束（warp）。</p>
+<p><img src="/images/Pasted%20image%2020260702200509.png" alt="534"></p>
+<p>流水线利用率（占 SM 活跃周期百分比）<br><img src="/images/Pasted%20image%2020260702200541.png" alt="319"></p>
+<p>这个是反应的计算指令的类别占比，可以看出我们程序主要是进行什么计算，这里可以看出，主要是FMA计算。<br><img src="/images/Pasted%20image%2020260702200647.png" alt="497"></p>
+<p><img src="/images/Pasted%20image%2020260702200735.png">流水线利用率（占硬件峰值可执行指令总量百分比）</p>
+<p>这个主要反应的是，一段绝对时间内，SM主要在进行什么指令，这里可以看出，大部分实际都是LSU，也就是访存</p>
+<p>所有线程执行流程都被内存读写指令阻塞，<strong>硬件绝大多数周期用于加载、存储数据</strong>，没有空余周期执行浮点 &#x2F; 整数计算。</p>
+<p><strong>所以，总结下来：V1 的 matmul的朴素实现，是一个</strong></p>
+<p><strong>访存密集型</strong>：海量全局内存读写操作；<br><strong>仅基础单精度浮点 + 少量整数运算</strong>，无高精度、AI 张量、纹理采样、复杂分支逻辑；</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p><strong>计算吞吐量</strong> 是看100个时间点里面，最忙的子管道（指令）工作了多少时间</p>
+<p>这里 98.29% 代表：<strong>只要 SM 处于活跃、没有阻塞等待的周期里，运算单元几乎跑满了理论算力上限</strong>。我们可以查看breakdown细则，发现，最忙的是LSU指令。<br><img src="/images/Pasted%20image%2020260702202650.png" alt="362"></p>
+</blockquote>
+<blockquote>
+<p>结合前面流水线图表：<strong>活跃周期内 FMA 流水线占比 22%、ALU 占 7%</strong>，在仅有的少量能干活的时间里，算力硬件被充分利用。这里的占比，是指的FMA在他的所有时间内，只工作了22个时间<br><img src="/images/Pasted%20image%2020260702202800.png" alt="489"></p>
+</blockquote>
+<p>所以现在看这个SM的峰值利用率，可以看到在SM的活跃时期100个时间，LSU一直都在跑，<br><img src="/images/Pasted%20image%2020260702203833.png"><br><img src="/images/Pasted%20image%2020260702202946.png"></p>
+<p><img src="/images/Pasted%20image%2020260702203825.png"><br><img src="/images/Pasted%20image%2020260702203846.png" alt="620"></p>
+<p><img src="/images/Pasted%20image%2020260702203913.png" alt="556"><br><img src="/images/Pasted%20image%2020260702203932.png" alt="527"></p>
+<h2 id="Memory-Workload-Analysis"><a href="#Memory-Workload-Analysis" class="headerlink" title="Memory Workload Analysis"></a>Memory Workload Analysis</h2><p><img src="/images/Pasted%20image%2020260702204009.png"></p>
+<p>这里就是分析GPU的显存资源，</p>
+<ul>
+<li><strong>内存吞吐量</strong> 20.41 Gb&#x2F;s <mark style="background:#ff4d4f">低</mark><ul>
+<li><img src="/images/Pasted%20image%2020260702204525.png" alt="319"></li>
+</ul>
+</li>
+<li><strong>L1缓存命中率</strong> 94.96% <mark style="background:#ff4d4f">高</mark><ul>
+<li><img src="/images/Pasted%20image%2020260702204551.png" alt="279"></li>
+</ul>
+</li>
+<li>L2缓存命中率 97.73% <mark style="background:#ff4d4f">高</mark><ul>
+<li><img src="/images/Pasted%20image%2020260702204649.png" alt="233"></li>
+</ul>
+</li>
+<li>L2压缩成功率 0%<ul>
+<li><img src="/images/Pasted%20image%2020260702210901.png" alt="352"></li>
+</ul>
+</li>
+<li>内存繁忙率 49%  <strong>整体 memory 系统忙碌程度</strong></li>
+<li>最大带宽占满率 98.29% <mark style="background:#ff4d4f">极个别管线最忙</mark>  最忙 memory 子资源的带宽利用程度</li>
+<li>内存管道繁忙率 98.29%  <strong>memory 指令管线忙碌程度</strong><ul>
+<li><img src="/images/Pasted%20image%2020260702204727.png" alt="322"></li>
+<li><img src="/images/Pasted%20image%2020260702204802.png" alt="452"></li>
+</ul>
+</li>
+<li><h2 id="L2压缩率-0"><a href="#L2压缩率-0" class="headerlink" title="L2压缩率 0%"></a>L2压缩率 0%</h2><ul>
+<li><img src="/images/Pasted%20image%2020260702210929.png" alt="296"></li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260702205034.png"></p>
+<p><mark style="background:#ff4d4f">黄色警告提示：L2 Load Access Pattern</mark><br>从 <strong>L1 纹理缓存向 L2 缓存发起的读取访存模式未达到最优</strong>。</p>
+<p>L1 纹理缓存向 L2 发起一次请求的最小粒度为一条 128 字节缓存行，一条缓存行包含 4 段连续 32 字节扇区。</p>
+<p>但当前内核每次读取缓存行时，平均仅访问 4 个扇区中的 1.6 个，存在大量无效缓存行加载开销。</p>
+<p>前往「源码计数器」板块查看<strong>未合并离散读取</strong>相关指标，<strong>优化思路：尽可能减少单次内存请求需要加载的缓存行数量</strong>。<br><img src="/images/Pasted%20image%2020260702205858.png"></p>
+<p>接下来是分析<br><img src="/images/Pasted%20image%2020260702211116.png" alt="688"><br><img src="/images/Pasted%20image%2020260702211129.png"></p>
+<p>这个 <strong>Memory Chart</strong> 是把刚才表格里的 memory workload 画成一张“数据流图”</p>
+<blockquote>
+<p>你的 v1 naive SGEMM <strong>几乎只使用 global memory 路径</strong>，<br><strong>没有 shared memory</strong>；</p>
+<p>大量 global load&#x2F;store 请求进入 L1&#x2F;TEX，L1&#x2F;L2 命中率很高，真正到 DRAM 的数据不多，但 global→L1TEX 以及 L1TEX→L2 的请求模式存在 warning。</p>
+</blockquote>
+<p><img src="/images/Pasted%20image%2020260702211420.png" alt="249"><img src="/images/Pasted%20image%2020260702212054.png" alt="178"><img src="/images/Pasted%20image%2020260702212119.png" alt="257"></p>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p>所以，根据以上分析，可以看出几个问题</p>
+<ul>
+<li><mark style="background:#ff4d4f">显存带宽低</mark>，说明显存带宽<strong>不是瓶颈</strong></li>
+<li>L2-&gt;L1的访存请求粒度利用不充分<ul>
+<li>每次访存请求没有充分利用完整 cache line，<strong>访问的L2的cache line的利用率不够</strong>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="scheduler-statistics"><a href="#scheduler-statistics" class="headerlink" title="scheduler statistics"></a>scheduler statistics</h2><p><img src="/images/Pasted%20image%2020260702212810.png"></p>
+<p>warp 调度器有没有足够多的 warp 可以发射指令。</p>
+<p>SM 里的 warp scheduler 每个周期有没有活干？能不能连续发指令？</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">GPU Maximum Warps <span class="type">Per</span> <span class="variable">Scheduler</span>       <span class="operator">=</span> <span class="number">12</span>   <span class="comment">//硬件上限，每个 warp scheduler 理论最多能管理 12 个 warp。</span></span><br><span class="line">Theoretical Warps <span class="type">Per</span> <span class="variable">Scheduler</span>       <span class="operator">=</span> <span class="number">8</span>    <span class="comment">//根据你的 kernel 配置算出来的理论 occupancy</span></span><br><span class="line">									<span class="comment">//一个 SM 通常有 4 个 warp scheduler，所以平均到每个 scheduler</span></span><br><span class="line">									</span><br><span class="line">									</span><br><span class="line">Active Warps <span class="type">Per</span> <span class="variable">Scheduler</span>            <span class="operator">=</span> <span class="number">7.93</span></span><br><span class="line"><span class="comment">//每个 scheduler 平均有 7.93 个 active warp。它非常接近 theoretical 的 8，说明你的 kernel 基本达到了由 launch config 限制下的理论 occupancy。</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Eligible Warps <span class="type">Per</span> <span class="variable">Scheduler</span>          <span class="operator">=</span> <span class="number">1.10</span>  <span class="comment">//每个调度器的就绪 warp，当前已经准备好，可以发出下一条指令</span></span><br><span class="line"><span class="comment">//大部分 warp 虽然在 SM 上，但都卡住了，说明大部分的warp都在阻塞中，等待访存返回</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Issued Warp <span class="type">Per</span> <span class="variable">Scheduler</span>             <span class="operator">=</span> <span class="number">0.27</span> <span class="comment">//每个 scheduler 每个 cycle 平均真正发出了多少个 warp 指令</span></span><br><span class="line"><span class="comment">//理想值 ≈ 1.0， 这说明 issue slot 利用率很低，调度器经常空转。</span></span><br><span class="line"></span><br><span class="line"><span class="type">No</span> <span class="variable">Eligible</span>                           <span class="operator">=</span> <span class="number">72.94</span>% </span><br><span class="line"><span class="comment">// 有 72.94% 的周期，scheduler 找不到任何一个可以发指令的 warp。</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">One or <span class="type">More</span> <span class="variable">Eligible</span>                  <span class="operator">=</span> <span class="number">27.06</span>%</span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/images/Pasted%20image%2020260702213633.png"></p>
+<h2 id="Warp-state-statistics"><a href="#Warp-state-statistics" class="headerlink" title="Warp state statistics"></a>Warp state statistics</h2><p>warp 在两个连续指令之间，到底把时间花在了哪里</p>
+<p>前面的 <strong>Scheduler Statistics</strong> 告诉你：“调度器经常发不出指令”。<br>这个 <strong>Warp State Statistics</strong> 进一步告诉你：“为什么 warp 发不出指令”</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Warp Cycles Per <span class="type">Issued</span> <span class="variable">Instruction</span> <span class="operator">=</span> <span class="number">29.31</span>  <span class="comment">//平均每个 warp 发出一条指令，要隔大约 29.31 个 cycle。</span></span><br><span class="line"><span class="comment">//理想情况下，warp 应该比较频繁地发指令。你这里 29.31 cycle 才发一条，说明 warp 大部分时间都在 stall。</span></span><br><span class="line"><span class="comment">//对应：No Eligible = 72.94%</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Warp Cycles Per <span class="type">Executed</span> <span class="variable">Instruction</span> <span class="operator">=</span> <span class="number">29.31</span>   </span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Avg. Active Threads <span class="type">Per</span> <span class="variable">Warp</span> <span class="operator">=</span> <span class="number">32</span>   <span class="comment">//每个 warp 基本都是 32 个线程全活跃</span></span><br><span class="line"><span class="comment">//你这个 kernel 不是因为分支发散导致性能差。</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Avg. Not Predicated Off Threads/Warp = <span class="number">31.98</span>  <span class="comment">//绝大多数线程没有被谓词屏蔽，基本都在执行有效指令。</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/Pasted%20image%2020260702214309.png"><br>每个 warp <strong>平均有 20 个周期卡住</strong>，是因为 local&#x2F;global <strong>memory 指令要进入 L1TEX&#x2F;LSU 相关队列</strong>，但是这个<strong>队列满了</strong>，新的访存指令发不进去。</p>
+<p><img src="/images/Pasted%20image%2020260702214404.png" alt="331"></p>
+<p>warp的其他几个项：</p>
+<ul>
+<li>Stall Not Selected<ul>
+<li>这个 warp 已经 ready 了，但是调度器这一拍没有选它。</li>
+</ul>
+</li>
+<li>Stall Wait<ul>
+<li><img src="/images/Pasted%20image%2020260702214506.png" alt="246"></li>
+</ul>
+</li>
+<li>Stall Long Scoreboard<ul>
+<li>warp 在等一个<strong>较长延迟的数据依赖</strong>，常见是 global memory &#x2F; L2 &#x2F; DRAM load 的返回。</li>
+</ul>
+</li>
+<li>Stall Dispatch Stall<ul>
+<li>这个和指令分发&#x2F;执行资源有关，表示 warp 虽然有指令，但由于 dispatch 相关限制没能顺利发出去</li>
+</ul>
+</li>
+<li>Selected<ul>
+<li>warp 被 scheduler 选中并成功发出指令的周期。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Launch-Statistics"><a href="#Launch-Statistics" class="headerlink" title="Launch Statistics"></a>Launch Statistics</h2><p>kernel 是怎么启动的，以及这个启动配置会消耗多少 GPU 资源。</p>
+<figure class="highlight fortran"><table><tr><td class="code"><pre><span class="line">Grid <span class="built_in">Size</span>                         = <span class="number">4096</span></span><br><span class="line"><span class="keyword">Block</span> <span class="built_in">Size</span>                        = <span class="number">1024</span></span><br><span class="line">Threads                           = <span class="number">4</span>,<span class="number">194</span>,<span class="number">304</span></span><br><span class="line">Registers Per Thread              = <span class="number">40</span></span><br><span class="line">//一个寄存器 <span class="number">4</span>字节， 每个thread占用<span class="number">40</span>*<span class="number">4</span> = <span class="number">160</span>字节的寄存器资源</span><br><span class="line"></span><br><span class="line">//共享内存</span><br><span class="line">Static <span class="keyword">Shared</span> Memory Per <span class="keyword">Block</span>    = <span class="number">0</span></span><br><span class="line">Dynamic <span class="keyword">Shared</span> Memory Per <span class="keyword">Block</span>   = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">//这个不是我们主动申请的共享内存</span><br><span class="line">//CUDA driver / runtime / profiling / kernel 启动环境可能额外占用的一点 <span class="keyword">shared</span> memory 资源。</span><br><span class="line">Driver <span class="keyword">Shared</span> Memory Per <span class="keyword">Block</span>    = <span class="number">1.02</span> KB</span><br><span class="line"></span><br><span class="line">//表示当前 <span class="keyword">shared</span> memory 配置/分配粒度相关的容量显示</span><br><span class="line"><span class="keyword">Shared</span> Memory Configuration <span class="built_in">Size</span>  = <span class="number">8.19</span> KB</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//这个表示你没有显式设置 L1/<span class="keyword">shared</span> memory 偏好。</span><br><span class="line"><span class="function"><span class="keyword">Function</span></span> Cache Configuration      = CachePreferNone</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//所有 <span class="keyword">block</span> 分配到 SM 上执行时，大约要分 <span class="number">32</span> 波跑完。</span><br><span class="line">Waves Per SM                      = <span class="number">32</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/Pasted%20image%2020260702215523.png" alt="331"></p>
+<p><mark style="background:#fff88f">如果扑不满会怎么样</mark>，我在编写kernel的时候，怎么会知道GPU的SM数量，每个SM的寄存器大小呢？</p>
+<p><img src="/images/Pasted%20image%2020260702215655.png" alt="457"><br><img src="/images/Pasted%20image%2020260702215722.png" alt="523"></p>
+<p><img src="/images/Pasted%20image%2020260702215800.png"><br><img src="/images/Pasted%20image%2020260702215808.png"></p>
+<h3 id="写-kernel-时怎么知道-SM-数量？"><a href="#写-kernel-时怎么知道-SM-数量？" class="headerlink" title="写 kernel 时怎么知道 SM 数量？"></a><mark style="background:#fff88f"><strong>写 kernel 时怎么知道 SM 数量</strong>？</mark></h3><p>最标准方法是用 CUDA Runtime API 查询。</p>
+<p><img src="/images/Pasted%20image%2020260702215903.png" alt="494"><img src="/images/Pasted%20image%2020260702215914.png" alt="158"></p>
+<h3 id="怎么知道自己的-kernel-每个线程用了多少寄存器"><a href="#怎么知道自己的-kernel-每个线程用了多少寄存器" class="headerlink" title="怎么知道自己的 kernel 每个线程用了多少寄存器"></a>怎么知道自己的 kernel 每个线程用了多少寄存器</h3><ol>
+<li>Nsight Compute</li>
+<li><img src="/images/Pasted%20image%2020260702220018.png" alt="275"></li>
+<li><img src="/images/Pasted%20image%2020260702220032.png" alt="475"></li>
+</ol>
+<h3 id="怎么知道一个-SM-能同时放几个-block？"><a href="#怎么知道一个-SM-能同时放几个-block？" class="headerlink" title="怎么知道一个 SM 能同时放几个 block？"></a>怎么知道一个 SM 能同时放几个 block？</h3><p><img src="/images/Pasted%20image%2020260702220115.png" alt="332"></p>
+<p><img src="/images/Pasted%20image%2020260702220157.png" alt="324"></p>
+<p>这个函数会帮你根据 <strong>kernel 的寄存器</strong>、<strong>shared memory</strong>、<strong>block size</strong> 自动算出理论 <strong>occupancy</strong>。</p>
+<h3 id="实战中写kernel的流程"><a href="#实战中写kernel的流程" class="headerlink" title="实战中写kernel的流程"></a>实战中写kernel的流程</h3><p><img src="/images/Pasted%20image%2020260702220238.png"></p>
+<h2 id="Occupancy"><a href="#Occupancy" class="headerlink" title="Occupancy"></a>Occupancy</h2><p>一个 SM 上到底同时驻留了多少 warp，占硬件最大可驻留 warp 数的比例</p>
+<p><img src="/images/Pasted%20image%2020260702220450.png" alt="314"></p>
+<p><img src="/images/Pasted%20image%2020260702215234.png" alt="427"></p>
+<figure class="highlight mathematica"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="operator">//</span>一个 <span class="variable">SM</span> 最大 <span class="variable">active</span> <span class="variable">warps</span> 大约是<span class="number">48</span> <span class="variable">warps</span> <span class="operator">/</span> <span class="variable">SM</span> 在<span class="number">4090</span>上</span><br><span class="line"><span class="variable">Theoretical</span> <span class="variable">Occupancy</span>              <span class="operator">=</span> <span class="number">66.67</span><span class="operator">%</span></span><br><span class="line"><span class="variable">Theoretical</span> <span class="built_in">Active</span> <span class="variable">Warps</span> <span class="variable">per</span> <span class="variable">SM</span>    <span class="operator">=</span> <span class="number">32</span></span><br><span class="line"><span class="variable">Achieved</span> <span class="variable">Occupancy</span>                 <span class="operator">=</span> <span class="number">66.01</span><span class="operator">%</span></span><br><span class="line"><span class="variable">Achieved</span> <span class="built_in">Active</span> <span class="variable">Warps</span> <span class="variable">per</span> <span class="variable">SM</span>       <span class="operator">=</span> <span class="number">31.68</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">Block</span> <span class="built_in">Limit</span> <span class="variable">Registers</span>              <span class="operator">=</span> <span class="number">1</span></span><br><span class="line"><span class="built_in">Block</span> <span class="built_in">Limit</span> <span class="variable">Shared</span> <span class="variable">Mem</span>             <span class="operator">=</span> <span class="number">8</span></span><br><span class="line"><span class="built_in">Block</span> <span class="built_in">Limit</span> <span class="variable">Warps</span>                  <span class="operator">=</span> <span class="number">1</span></span><br><span class="line"><span class="built_in">Block</span> <span class="built_in">Limit</span> <span class="variable">SM</span>                     <span class="operator">=</span> <span class="number">24</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/Pasted%20image%2020260702220659.png" alt="177"><img src="/images/Pasted%20image%2020260702220715.png" alt="265"><img src="/images/Pasted%20image%2020260702220730.png" alt="363"></p>
+<h3 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h3><p><img src="/images/Pasted%20image%2020260702220747.png" alt="529"></p>
+<p><img src="/images/Pasted%20image%2020260702220821.png" alt="291"></p>
+<h2 id="Source-Counters"><a href="#Source-Counters" class="headerlink" title="Source Counters"></a>Source Counters</h2><p>把前面看到的 <strong>stall、分支、指令数量</strong> 对应回源码行。</p>
+<p><img src="/images/Pasted%20image%2020260702221056.png"></p>
+<p><img src="/images/Pasted%20image%2020260702221143.png" alt="228"><img src="/images/Pasted%20image%2020260702221114.png" alt="259"><img src="/images/Pasted%20image%2020260702221128.png" alt="274"></p>
+<p><img src="/images/Pasted%20image%2020260702221159.png" alt="355"><img src="/images/Pasted%20image%2020260702221213.png" alt="323"></p>
+<h1 id="计算密集型-显存密集型-计算瓶颈-显存瓶颈"><a href="#计算密集型-显存密集型-计算瓶颈-显存瓶颈" class="headerlink" title="计算密集型 - 显存密集型 &#x2F; 计算瓶颈 - 显存瓶颈"></a>计算密集型 - 显存密集型 &#x2F; 计算瓶颈 - 显存瓶颈</h1><p><img src="/images/Pasted%20image%2020260702221906.png" alt="691"></p>
+<p><strong>计算密集型</strong><br>每搬 1 byte 数据，可以做很多次计算。</p>
+<p>核心指标：<br>	<strong>算术强度</strong> &#x3D; 浮点运算<strong>次数</strong> &#x2F; 访存<strong>字节数</strong></p>
+<p><img src="/images/Pasted%20image%2020260702222043.png" alt="534"></p>
+<p><strong>显存密集型</strong>：<br>每搬 1 byte 数据，只做很少计算<br><img src="/images/Pasted%20image%2020260702222125.png" alt="454"></p>
+<p><mark style="background:#ff4d4f">计算瓶颈</mark><br>kernel 的<strong>速度主要受计算单元限制</strong>，比如 FMA &#x2F; Tensor Core &#x2F; SFU 等计算管线已经很忙，<strong>继续优化访存意义不大</strong>，应该优化计算组织。</p>
+<p><img src="/images/Pasted%20image%2020260702222231.png" alt="568"></p>
+<p><mark style="background:#ff4d4f">显存瓶颈</mark><br>显存瓶颈有<strong>两种</strong>，要分清</p>
+<p><img src="/images/Pasted%20image%2020260702222355.png" alt="453"></p>
+<p><img src="/images/Pasted%20image%2020260702222441.png" alt="484"></p>
+<h2 id="如何准确判断"><a href="#如何准确判断" class="headerlink" title="如何准确判断"></a>如何准确判断</h2><p><img src="/images/Pasted%20image%2020260702222648.png" alt="549"></p>
+<p><img src="/images/Pasted%20image%2020260702222804.png" alt="235"><img src="/images/Pasted%20image%2020260702222819.png" alt="206"></p>
+<p><img src="/images/Pasted%20image%2020260702222902.png" alt="456"></p>
+<p><img src="/images/Pasted%20image%2020260702222944.png"></p>
+<figure class="highlight nix"><table><tr><td class="code"><pre><span class="line">计算密集型算子：</span><br><span class="line">    特点：FLOPs<span class="symbol">/Byte</span> 高，每读入一点数据，可以做很多计算。</span><br><span class="line">    目标：让 FMA<span class="symbol">/Tensor</span> Core 尽量忙。</span><br><span class="line">    优化：</span><br><span class="line">        <span class="number">1</span>. shared memory tiling，提高 block 内复用</span><br><span class="line">        <span class="number">2</span>. register blocking，提高 thread 内复用</span><br><span class="line">        <span class="number">3</span>. 减少 global load</span><br><span class="line">        <span class="number">4</span>. 合理调度，让计算和访存重叠</span><br><span class="line">        <span class="number">5</span>. 提高 FMA<span class="symbol">/Tensor</span> Core 利用率</span><br><span class="line"></span><br><span class="line">显存密集型算子：</span><br><span class="line">    特点：FLOPs<span class="symbol">/Byte</span> 低，每搬很多数据，只做少量计算。</span><br><span class="line">    目标：让显存<span class="symbol">/L2/L1</span> 访问尽量高效。</span><br><span class="line">    优化：</span><br><span class="line">        <span class="number">1</span>. coalesced access</span><br><span class="line">        <span class="number">2</span>. vectorized load<span class="symbol">/store</span></span><br><span class="line">        <span class="number">3</span>. 减少无效访存</span><br><span class="line">        <span class="number">4</span>. 提高 cache line <span class="symbol">/</span> sector 利用率</span><br><span class="line">        <span class="number">5</span>. 尽量提高实际内存带宽</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AI-Infra/" rel="tag"># AI Infra</a>
+              <a href="/tags/CUDA/" rel="tag"># CUDA</a>
+              <a href="/tags/Nsight-Compute/" rel="tag"># Nsight Compute</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/" rel="prev" title="infra 单元测试库GTest+glog">
+                  <i class="fa fa-angle-left"></i> infra 单元测试库GTest+glog
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/" rel="next" title="infra 基于vllm的my-vllm大模型推理框架二次优化">
+                  infra 基于vllm的my-vllm大模型推理框架二次优化 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>infra Nsight Compute学习笔记</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">SDK中repo,git 笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

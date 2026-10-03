@@ -19,34 +19,34 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="说明 文档学习 进程和内存 IO和文件描述符 管道 文件系统 我的提问 gemini回答   最后   作业附件  说明本实验，主要了解内核，系统调用的关系，硬件主要基于risc v 架构（使用qemu代替），操作系统使用xv6教学操作系统。xv6资源汇总链接：https:&#x2F;&#x2F;csdiy.wiki&#x2F;%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F&#x2F;MIT6.S081&#x2F;#_">
 <meta property="og:type" content="article">
 <meta property="og:title" content="xv6 lab1">
-<meta property="og:url" content="http://example.com/2026/01/21/xv6-lab1/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/01/21/xv6-lab1/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="说明 文档学习 进程和内存 IO和文件描述符 管道 文件系统 我的提问 gemini回答   最后   作业附件  说明本实验，主要了解内核，系统调用的关系，硬件主要基于risc v 架构（使用qemu代替），操作系统使用xv6教学操作系统。xv6资源汇总链接：https:&#x2F;&#x2F;csdiy.wiki&#x2F;%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F&#x2F;MIT6.S081&#x2F;#_">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/17.1.png">
-<meta property="og:image" content="http://example.com/images/17.2.png">
-<meta property="og:image" content="http://example.com/images/17.3.png">
-<meta property="og:image" content="http://example.com/images/17.4.png">
-<meta property="og:image" content="http://example.com/images/17.5.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/17.1.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/17.2.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/17.3.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/17.4.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/17.5.png">
 <meta property="article:published_time" content="2026-01-21T09:27:07.000Z">
-<meta property="article:modified_time" content="2026-01-23T02:21:17.749Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.976Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="OS">
 <meta property="article:tag" content="XV6">
 <meta property="article:tag" content="嵌入式">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/17.1.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/17.1.png">
 
 
-<link rel="canonical" href="http://example.com/2026/01/21/xv6-lab1/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/01/21/xv6-lab1/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/01/21/xv6-lab1/","path":"2026/01/21/xv6-lab1/","title":"xv6 lab1"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/01/21/xv6-lab1/","path":"2026/01/21/xv6-lab1/","title":"xv6 lab1"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>xv6 lab1 | ji的博客</title>
@@ -77,6 +77,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -116,7 +120,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -150,24 +154,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -205,7 +209,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/01/21/xv6-lab1/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/01/21/xv6-lab1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -214,7 +218,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -241,7 +245,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-01-23 10:21:17" itemprop="dateModified" datetime="2026-01-23T10:21:17+08:00">2026-01-23</time>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -288,7 +292,7 @@
 </ul>
 <h1 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h1><p>本实验，主要了解内核，系统调用的关系，硬件主要基于risc v 架构（使用qemu代替），操作系统使用xv6教学操作系统。<br>xv6资源汇总链接：<a target="_blank" rel="noopener" href="https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6.S081/#_4">https://csdiy.wiki/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6.S081/#_4</a><br>课程网站：<br><a target="_blank" rel="noopener" href="https://pdos.csail.mit.edu/6.828/2021/schedule.html">https://pdos.csail.mit.edu/6.828/2021/schedule.html</a></p>
 <p>本实验是在WSL上安装的ubuntu20.04（2021版本的xv6操作系统实验要求是用的20.04，后面2025换成22.04了好像），以下是针对文档的学习，还有lab1 内每个习题的理解与记录。</p>
-<h1 id="文档学习"><a href="#文档学习" class="headerlink" title="文档学习"></a>文档学习</h1><p>第一章节，主要了解了操作系统的接口，内核和系统调用的关系，学习如何使用系统调用。操作系统分为内核空间和用户空间，<br><img src="/../images/17.1.png" alt="alt text"></p>
+<h1 id="文档学习"><a href="#文档学习" class="headerlink" title="文档学习"></a>文档学习</h1><p>第一章节，主要了解了操作系统的接口，内核和系统调用的关系，学习如何使用系统调用。操作系统分为内核空间和用户空间，<br><img src="/images/17.1.png" alt="alt text"></p>
 <p>我的理解就是，内核空间是真正的裸机，他能访问所有的硬件资源，并把底层的各种资源，封装成系统调用，供给用户空间使用，这样实现了软件和硬件的隔离。</p>
 <h2 id="进程和内存"><a href="#进程和内存" class="headerlink" title="进程和内存"></a>进程和内存</h2><p>xv6的进程是由用户空间内存（指令，数据，堆栈）和内核私有的每个进程状态组成。</p>
 <p>一些与进程相关的系统调用：<br><strong>fork</strong>()创建子进程，实际使用时需要注意</p>
@@ -297,7 +301,7 @@
 <p><strong>exit</strong>()结束进程执行，并释放内存和打开的文件资源。0表示成功，1表示失败。</p>
 <p>进程结束需要记得退出，不然会报错。</p>
 <p><strong>wait</strong>()返回当前进程已退出的子进程的PID，若子进程没有退出，一直等待。没有子进程则直接返回-1，如果父进程不关心子进程的退出状态，直接wait(0),表示仅等待。</p>
-<p>常用系统调用：<br><img src="/../images/17.2.png" alt="alt text"></p>
+<p>常用系统调用：<br><img src="/images/17.2.png" alt="alt text"></p>
 <p><strong>exec()</strong> 采用两个参数，包含：可执行文件的文件名， 字符串参数数组。会把当前调用exec的程序替换成参数列表里面的程序，实际上就是跳转执行了。<br>实际使用时，需注意：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">char</span>* arg[MAXLEN];</span><br><span class="line">arg[<span class="number">0</span>] = cmd; <span class="comment">// &quot;grep&quot;//参数列表的第一个是指令</span></span><br><span class="line">arg[<span class="number">1</span>] = argv[<span class="number">1</span>];</span><br><span class="line">arg[<span class="number">2</span>] = argv[<span class="number">2</span>];</span><br><span class="line">...</span><br><span class="line">arg[argc] = <span class="number">0</span>;   <span class="comment">//参数列表的最后一个一定要是0，这样exec才知道参数列表结束</span></span><br><span class="line"></span><br><span class="line">exec(arg[<span class="number">0</span>], arg)</span><br></pre></td></tr></table></figure>
 
@@ -317,7 +321,7 @@
 </blockquote>
 <p>简单来说，<strong>进程想要输入输出，必须要通过文件描述符</strong>，他把所有输入输出对象全部抽象成<strong>抽象文件</strong>，可以更方便的专注于内部逻辑。</p>
 <p>而想要从实际文件中<strong>创建fd</strong>，open，必须要依赖<strong>文件名</strong>（你总得知道是什么文件对吧），这个文件名就是底层索引单元的link了，详细介绍见<strong>文件系统</strong>。</p>
-<p><img src="/../images/17.3.png" alt="alt text"></p>
+<p><img src="/images/17.3.png" alt="alt text"></p>
 <p>因为<strong>每个进程都有一个进程表</strong>，xv6内核通过<strong>文件描述符</strong>作为每个进程表的<strong>索引</strong> ，每个进程都有从0开始的fd的私有空间</p>
 <p>一般来说，对于每个进程，约定</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">fd = <span class="number">0</span> <span class="comment">// 标准输入，对于进程来说，read(0, ...), 从shell终端读</span></span><br><span class="line">fd = <span class="number">1</span> <span class="comment">// 标准输出，对于进程来说，write(1, ...)，向shell终端写</span></span><br><span class="line">fd = <span class="number">2</span> <span class="comment">// 标准错误，错误信息输出到shell.</span></span><br></pre></td></tr></table></figure>
@@ -331,7 +335,7 @@
 <p>shell中实现管道 | 可以通过close(0), 关掉从shell中read, 然后dup复制p[0],就可以重新占用0, 相当于把标准读，替换成了管道读。</p>
 <h2 id="文件系统"><a href="#文件系统" class="headerlink" title="文件系统"></a>文件系统</h2><p>xv6的<strong>文件系统</strong>提供<strong>数据文件</strong>（包含未解释的字节数组）和<strong>目录</strong>（包含对数据文件和其他目录的命名引用）</p>
 <p>这些目录形成一颗树，从第一个文件（目录），称为root(&#x2F;)，</p>
-<p><img src="/../images/17.4.png" alt="alt text"></p>
+<p><img src="/images/17.4.png" alt="alt text"></p>
 <p><strong>chdir</strong>()系统调用：相当于cd，切换进程的当前目录<br><strong>mkdir</strong>()系统调用：创建新目录。<br><strong>open</strong>()系统调用：创建标志位 O_CREATE 表示创建一个新的数据文件。<br><strong>mknod</strong>()创建一个新的设备文件。这个文件是引用设备的特殊文件。与设备文件关联的是主设备号和次设备号。唯一标识一个内核设备。当进程稍后打开设备文件后，<strong>内核会转移read和write系统调用内核设备实现</strong>，而不是传递到文件系统做通用的读取字节。</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">mknod(<span class="string">&quot;/console&quot;</span>, <span class="number">1</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
 
@@ -390,7 +394,7 @@
 <p>当你对一个普通文件 read 时，你读到的是文件的内容（比如文本、代码）。</p>
 <p>当你对一个目录文件 read 时，你读到的是 struct dirent 结构体序列。</p>
 <p>这就是为什么 ls.c 里有一个 while(read(fd, &amp;de, sizeof(de)))。它在翻看这个目录的“档案柜”，把里面的每一条记录（文件名 + Inode号）都读出来。</p>
-<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p><img src="/../images/17.5.png" alt="alt text"></p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p><img src="/images/17.5.png" alt="alt text"></p>
 <h1 id="作业附件"><a href="#作业附件" class="headerlink" title="作业附件"></a>作业附件</h1>
     </div>
 
@@ -429,16 +433,52 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>

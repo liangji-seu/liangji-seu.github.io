@@ -19,41 +19,41 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="异步通知 介绍 信号 – 异步通知的核心 linux支持的信号 api 用户态api 总结：应用程序对异步通知的处理：   驱动层api 异步通知结构体（信号）定义 api demo          异步通知介绍前面我们学习了中断，这是处理器提供的一种异步机制   （cpu干自己的事情，突然来一个硬件中断）  后面又学习用户态用阻塞&#x2F;非阻塞的方式来访问设备驱动。  这里还是要求用户态">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull-异步通知*">
-<meta property="og:url" content="http://example.com/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="异步通知 介绍 信号 – 异步通知的核心 linux支持的信号 api 用户态api 总结：应用程序对异步通知的处理：   驱动层api 异步通知结构体（信号）定义 api demo          异步通知介绍前面我们学习了中断，这是处理器提供的一种异步机制   （cpu干自己的事情，突然来一个硬件中断）  后面又学习用户态用阻塞&#x2F;非阻塞的方式来访问设备驱动。  这里还是要求用户态">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-01-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-02-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-03-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-04-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-05-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-06-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-07-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-08-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-09-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-10-0307162615.png">
-<meta property="og:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-11-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-01-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-02-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-03-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-04-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-05-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-06-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-07-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-08-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-09-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-10-0307162615.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-11-0307162615.png">
 <meta property="article:published_time" content="2026-03-07T07:44:50.000Z">
-<meta property="article:modified_time" content="2026-04-28T06:49:37.819Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.971Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="信号">
 <meta property="article:tag" content="嵌入式">
 <meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-01-0307162615.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-01-0307162615.png">
 
 
-<link rel="canonical" href="http://example.com/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/","path":"2026/03/07/imx6ull-异步通知/","title":"imx6ull-异步通知*"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/","path":"2026/03/07/imx6ull-异步通知/","title":"imx6ull-异步通知*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>imx6ull-异步通知* | ji的博客</title>
@@ -84,6 +84,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -123,7 +127,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -157,24 +161,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -212,7 +216,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -221,7 +225,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -248,7 +252,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-28 14:49:37" itemprop="dateModified" datetime="2026-04-28T14:49:37+08:00">2026-04-28</time>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -338,36 +342,36 @@
 </blockquote>
 <h3 id="api"><a href="#api" class="headerlink" title="api"></a>api</h3><h4 id="用户态api"><a href="#用户态api" class="headerlink" title="用户态api"></a>用户态api</h4><ul>
 <li><strong><code>signal()</code></strong> : 设置<strong>指定信号的处理函数</strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-01-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-01-0307162615.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong><code>handler</code></strong>: <strong>信号(中断)处理函数</strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-02-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-02-0307162615.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong><code>fcntl系统调用</code></strong>： 调用驱动中提供的接口<code>.fasync</code> 来配置信号通道<ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-03-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-03-0307162615.png" alt="alt text"></li>
 </ul>
 </li>
 </ul>
 <hr>
 <h5 id="总结：应用程序对异步通知的处理："><a href="#总结：应用程序对异步通知的处理：" class="headerlink" title="总结：应用程序对异步通知的处理："></a><strong>总结</strong>：<strong>应用程序对异步通知的处理</strong>：</h5><ul>
 <li><strong>信号处理初始化（核心前提）</strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-04-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-04-0307162615.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong>指定信号接收进程（关键：告诉内核 “发给谁”）</strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-05-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-05-0307162615.png" alt="alt text"></li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-06-0307162615.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-06-0307162615.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
 </li>
 <li><strong>开启文件异步通知功能（关键：建立通知通道）</strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-07-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-07-0307162615.png" alt="alt text"></li>
 <li><blockquote>
-<p><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-08-0307162615.png" alt="alt text"></p>
+<p><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-08-0307162615.png" alt="alt text"></p>
 </blockquote>
 </li>
 </ul>
@@ -387,16 +391,16 @@
 <h5 id="api-1"><a href="#api-1" class="headerlink" title="api"></a>api</h5><ul>
 <li><strong><code>.fasync</code></strong>: 设备文件的操作方法之一<ul>
 <li>是<strong>提供给应用层来配置信号</strong>的接口。</li>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-09-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-09-0307162615.png" alt="alt text"></li>
 <li>内部调用<code>fasync_helper</code>来<strong>初始化</strong>设备结构体里面的<strong>信号功能结构体变量</strong></li>
 </ul>
 </li>
 <li><strong><code>fasync_helper()</code></strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-10-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-10-0307162615.png" alt="alt text"></li>
 </ul>
 </li>
 <li><strong><code>kill_fasync()</code></strong>: <strong>驱动向用户态程序发送指定信号</strong><ul>
-<li><img src="/../images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-11-0307162615.png" alt="alt text"></li>
+<li><img src="/images/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5-11-0307162615.png" alt="alt text"></li>
 </ul>
 </li>
 </ul>
@@ -439,16 +443,52 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>

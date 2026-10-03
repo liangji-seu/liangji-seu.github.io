@@ -19,35 +19,35 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="led 驱动开发 linux下驱动led的原理 硬件资源 地址映射 为什么驱动处于内核态，依然要mmu才能访问物理地址？ ioremap iounmap 一些底层映射细节   i&#x2F;o 内存访问函数 读操作 写操作     关于驱动程序开头的头文件    led 驱动开发之前我们创建一个虚拟的chrdevbase字符设备，然后基于这个，写了一个驱动。现在要开始做实际的点灯linux驱动">
 <meta property="og:type" content="article">
 <meta property="og:title" content="imx6ull led驱动">
-<meta property="og:url" content="http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="led 驱动开发 linux下驱动led的原理 硬件资源 地址映射 为什么驱动处于内核态，依然要mmu才能访问物理地址？ ioremap iounmap 一些底层映射细节   i&#x2F;o 内存访问函数 读操作 写操作     关于驱动程序开头的头文件    led 驱动开发之前我们创建一个虚拟的chrdevbase字符设备，然后基于这个，写了一个驱动。现在要开始做实际的点灯linux驱动">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/37.1.png">
-<meta property="og:image" content="http://example.com/images/37.2.png">
-<meta property="og:image" content="http://example.com/images/37.3.png">
-<meta property="og:image" content="http://example.com/images/37.4.png">
-<meta property="og:image" content="http://example.com/images/37.5.png">
-<meta property="og:image" content="http://example.com/images/37.6.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/37.1.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/37.2.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/37.3.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/37.4.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/37.5.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/37.6.png">
 <meta property="article:published_time" content="2026-03-01T02:30:16.000Z">
-<meta property="article:modified_time" content="2026-03-07T13:18:45.174Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.968Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="linux">
 <meta property="article:tag" content="嵌入式">
 <meta property="article:tag" content="驱动">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/37.1.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/37.1.png">
 
 
-<link rel="canonical" href="http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/","path":"2026/03/01/imx6ull-led驱动/","title":"imx6ull led驱动"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/","path":"2026/03/01/imx6ull-led驱动/","title":"imx6ull led驱动"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>imx6ull led驱动 | ji的博客</title>
@@ -78,6 +78,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -117,7 +121,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -151,24 +155,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -206,7 +210,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -215,7 +219,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -242,7 +246,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-03-07 21:18:45" itemprop="dateModified" datetime="2026-03-07T21:18:45+08:00">2026-03-07</time>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -331,11 +335,11 @@
 <p><strong>内核态的“权限”高</strong>，指的是它**有权“修改页表”**或者“<strong>访问受保护的页</strong>”，而不是它可以关掉 MMU 瞬间瞬移到物理地址去。</p>
 </blockquote>
 <hr>
-<p><img src="/../images/37.1.png" alt="alt text"></p>
+<p><img src="/images/37.1.png" alt="alt text"></p>
 <blockquote>
 <p>这里说的主要是用户态进程的虚拟地址空间 映射到物理地址的mmu应用。</p>
 </blockquote>
-<p><img src="/../images/37.2.png" alt="alt text"></p>
+<p><img src="/images/37.2.png" alt="alt text"></p>
 <blockquote>
 <p>这里就指出了linux内核在打开MMU，设置好内存映射之后。以后<strong>CPU访问的都是虚拟地址</strong>, 这就是上面说的第二点。</p>
 <p>因此如果要访问裸机的外设基地址的物理内存，本质上<strong>还需要再映射到内核的虚拟地址空间上来</strong>。</p>
@@ -374,7 +378,7 @@
 <p>实际使用</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">iounmap(SW_MUX_GPIO1_IO03);</span><br></pre></td></tr></table></figure>
 <hr>
-<h4 id="一些底层映射细节"><a href="#一些底层映射细节" class="headerlink" title="一些底层映射细节"></a>一些底层映射细节</h4><p><img src="/../images/37.3.png" alt="alt text"><br><img src="/../images/37.4.png" alt="alt text"><br><img src="/../images/37.5.png" alt="alt text"></p>
+<h4 id="一些底层映射细节"><a href="#一些底层映射细节" class="headerlink" title="一些底层映射细节"></a>一些底层映射细节</h4><p><img src="/images/37.3.png" alt="alt text"><br><img src="/images/37.4.png" alt="alt text"><br><img src="/images/37.5.png" alt="alt text"></p>
 <h3 id="i-o-内存访问函数"><a href="#i-o-内存访问函数" class="headerlink" title="i&#x2F;o 内存访问函数"></a>i&#x2F;o 内存访问函数</h3><p>前面我们已经在linux驱动（内核态）中，把实际的外设物理地址，加入了映射，这样我们的内核能够访问的虚拟地址空间里面，也能经过mmu访问到实际的那一块物理地址了。</p>
 <p>下面说说，I&#x2F;O内存访问，这里提到两个概念：</p>
 <ul>
@@ -396,7 +400,7 @@
 
 <h4 id="写操作"><a href="#写操作" class="headerlink" title="写操作"></a>写操作</h4><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">writeb</span><span class="params">(u8 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>      <span class="comment">//1字节写</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">writew</span><span class="params">(u16 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>     <span class="comment">//2字节写</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">writel</span><span class="params">(u32 value, <span class="keyword">volatile</span> <span class="type">void</span> __iomem *addr)</span>     <span class="comment">//4字节写</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="关于驱动程序开头的头文件"><a href="#关于驱动程序开头的头文件" class="headerlink" title="关于驱动程序开头的头文件"></a>关于驱动程序开头的头文件</h2><p>我们在编写驱动程序的时候，经常会发现包含了很多linux内核源码的一些头文件<br><img src="/../images/37.6.png" alt="alt text"></p>
+<h2 id="关于驱动程序开头的头文件"><a href="#关于驱动程序开头的头文件" class="headerlink" title="关于驱动程序开头的头文件"></a>关于驱动程序开头的头文件</h2><p>我们在编写驱动程序的时候，经常会发现包含了很多linux内核源码的一些头文件<br><img src="/images/37.6.png" alt="alt text"></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//基础头文件</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span>   <span class="comment">//module_init(),module_exit(),MODULE_LICENSE()</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span>     <span class="comment">//定义 __init, __exit宏，告诉内核哪些代码初始化后可回收掉</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/kernel.h&gt;</span>   <span class="comment">//提供内核最基础的函数，printk(), 数学宏等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/types.h&gt;</span>    <span class="comment">//常用数据类型 u8 u16 u32 dev_t</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//字符设备相关</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/fs.h&gt;</span>       <span class="comment">//核心，定义file_operations结构体， 设备号申请注册设备register_chrdev等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/cdev.h&gt;</span>     <span class="comment">//用现代的cdev结构体，不是旧的设备注册函数。</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">//内核空间-用户空间 数据搬运</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/uaccess.h&gt;</span>  <span class="comment">//旧版：asm/uaccess.h     copy_to_user(), copy_from_user()</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//硬件操作</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;asm/io.h&gt;</span>         <span class="comment">//ioremap(), readl()等</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/gpio.h&gt;</span>     <span class="comment">//提供gpio_set_value()等标准库函数</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/ide.h&gt;</span>      <span class="comment">//大杂烩，包含很多其他文件，现代正规驱动中，按需包含</span></span></span><br></pre></td></tr></table></figure>
 <blockquote>
 <p><code>asm/</code> 是指向特定架构，比如<code>arm的软链接</code></p>
@@ -463,16 +467,52 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>

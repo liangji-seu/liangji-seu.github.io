@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="建议从深度学习基础和 SFT 开始，经过 Transformer、CUDA 算子与性能分析，再进入 LLaMA、nano-vllm 和 my-vllm 推理系统。 深度学习与 SFT 深度学习基础：PyTorch + Python：从 Python、自动微分、数据集到模型训练，建立深度学习基础。 7B 模型 QLoRA 指令微调（SFT）：记录量化、LoRA、数据格式和 7B 模型指令微调项目。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="笔记导航">
+<meta property="og:url" content="https://liangji-seu.github.io/notes/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="建议从深度学习基础和 SFT 开始，经过 Transformer、CUDA 算子与性能分析，再进入 LLaMA、nano-vllm 和 my-vllm 推理系统。 深度学习与 SFT 深度学习基础：PyTorch + Python：从 Python、自动微分、数据集到模型训练，建立深度学习基础。 7B 模型 QLoRA 指令微调（SFT）：记录量化、LoRA、数据格式和 7B 模型指令微调项目。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-03T10:37:09.719Z">
+<meta property="article:modified_time" content="2026-10-03T10:37:09.719Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="研究,工程,机器学习,嵌入式,科研工具">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://liangji-seu.github.io/notes/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":false,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/notes/index.html","path":"notes/index.html","title":"笔记导航"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>笔记导航 | ji的博客
+</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E4%B8%8E-SFT"><span class="nav-number">1.</span> <span class="nav-text">深度学习与 SFT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Transformer"><span class="nav-number">2.</span> <span class="nav-text">Transformer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CUDA%E3%80%81FlashAttention-%E4%B8%8E-Nsight"><span class="nav-number">3.</span> <span class="nav-text">CUDA、FlashAttention 与 Nsight</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E7%A8%8B%E5%9F%BA%E7%A1%80"><span class="nav-number">4.</span> <span class="nav-text">工程基础</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LLaMA%E3%80%81nano-vllm-%E4%B8%8E-my-vllm"><span class="nav-number">5.</span> <span class="nav-text">LLaMA、nano-vllm 与 my-vllm</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%A2%E8%AF%95%E5%A4%8D%E7%9B%98"><span class="nav-number">6.</span> <span class="nav-text">面试复盘</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">72</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner page posts-expand">
+
+
+    
+    
+    
+    <div class="post-block" lang="zh-CN"><header class="post-header">
+
+<h1 class="post-title" itemprop="name headline">笔记导航
+</h1>
+
+<div class="post-meta-container">
+</div>
+
+</header>
+
+      
+      
+      
+      <div class="post-body">
+          <p>建议从深度学习基础和 SFT 开始，经过 Transformer、CUDA 算子与性能分析，再进入 LLaMA、nano-vllm 和 my-vllm 推理系统。</p>
+<h2 id="深度学习与-SFT"><a href="#深度学习与-SFT" class="headerlink" title="深度学习与 SFT"></a>深度学习与 SFT</h2><ul>
+<li><a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/" title="深度学习基础-pytorch+python">深度学习基础：PyTorch + Python</a>：从 Python、自动微分、数据集到模型训练，建立深度学习基础。</li>
+<li><a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/" title="大模型学习项目1: 7B模型QLoRA指令微调(SFT)">7B 模型 QLoRA 指令微调（SFT）</a>：记录量化、LoRA、数据格式和 7B 模型指令微调项目。</li>
+</ul>
+<h2 id="Transformer"><a href="#Transformer" class="headerlink" title="Transformer"></a>Transformer</h2><ul>
+<li><a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/" title="infra Transformer 推理性能分析">Transformer 推理性能分析</a>：梳理 Decoder-only 结构、注意力、FFN、KV Cache 与推理优化术语。</li>
+</ul>
+<h2 id="CUDA、FlashAttention-与-Nsight"><a href="#CUDA、FlashAttention-与-Nsight" class="headerlink" title="CUDA、FlashAttention 与 Nsight"></a>CUDA、FlashAttention 与 Nsight</h2><ul>
+<li><a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/" title="infra CUDA编程">CUDA 编程</a>：从线程层级和内存模型开始，学习 softmax、reduce、matmul 等 CUDA 算子。</li>
+<li><a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/" title="infra FlashAttention学习">FlashAttention 学习</a>：沿着 online softmax、分块计算和 PagedAttention 理解高效注意力。</li>
+<li><a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="infra Nsight Compute学习笔记">Nsight Compute 学习笔记</a>：以矩阵乘法 kernel 为例，记录性能指标和瓶颈分析方法。</li>
+</ul>
+<h2 id="工程基础"><a href="#工程基础" class="headerlink" title="工程基础"></a>工程基础</h2><ul>
+<li><a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/" title="infra 现代c++学习">现代 C++ 学习</a>：整理类型推导、auto、智能指针、右值引用等现代 C++ 用法。</li>
+<li><a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/" title="infra 单元测试库GTest+glog">GTest + glog 单元测试</a>：记录推理项目中的测试组织、断言和日志接入。</li>
+<li><a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/" title="infra 流畅的python 学习">流畅的 Python 学习</a>：从 vLLM 学习中遇到的 Python 高级用法起步，当前仍在起步中。</li>
+</ul>
+<h2 id="LLaMA、nano-vllm-与-my-vllm"><a href="#LLaMA、nano-vllm-与-my-vllm" class="headerlink" title="LLaMA、nano-vllm 与 my-vllm"></a>LLaMA、nano-vllm 与 my-vllm</h2><ul>
+<li><a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/" title="infra 基于cuda自制llama大模型推理框架">基于 CUDA 自制 LLaMA 推理框架</a>：从 CMake、C++、CUDA 基础组件走向 tensor、算子和 kernel 设计。</li>
+<li><a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" title="infra nano-vllm 源码解读">nano-vllm 源码解读</a>：通过 API、Engine、模型算子、TP 与 KV Cache 理解教学级推理引擎。</li>
+<li><a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/" title="infra 基于vllm的my-vllm大模型推理框架二次优化">my-vllm 二次优化</a>：围绕 AsyncLLM、EngineCore、KV Cache 与 TP/PP/DP/EP、MoE 并行梳理 vLLM。</li>
+</ul>
+<h2 id="面试复盘"><a href="#面试复盘" class="headerlink" title="面试复盘"></a>面试复盘</h2><ul>
+<li><a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/" title="infra 面经">AI Infra 面经</a>：以图片整理 AI Infra 与大模型方向面试题，作为复盘入口。</li>
+</ul>
+<p>嵌入式与操作系统笔记较多，可从现有分类树进入：<a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a> · <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/OS/">嵌入式 &#x2F; OS</a>。</p>
+
+      </div>
+      
+      
+      
+    </div>
+
+    
+    
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

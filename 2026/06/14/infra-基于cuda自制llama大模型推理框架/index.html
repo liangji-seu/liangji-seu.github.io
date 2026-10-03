@@ -1,0 +1,2069 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="从 CMake、C++ 与 CUDA 基础组件入手，记录手写 LLaMA 推理框架的 tensor、算子和 kernel 设计。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="infra 基于cuda自制llama大模型推理框架">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="从 CMake、C++ 与 CUDA 基础组件入手，记录手写 LLaMA 推理框架的 tensor、算子和 kernel 设计。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602162512.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602162604.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602162634.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602162707.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602162738.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163104.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163115.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163138.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163152.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163212.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163306.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163315.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602163334.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602170336.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602170553.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602170707.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602170757.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627172704.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627171929.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627171941.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627172026.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627172039.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627172234.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627172402.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627172833.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627173056.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627174513.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627174925.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260627084716.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260628142343.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260628144842.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260630145735.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260630155727.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260630160056.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701161755.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701161819.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701173218.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701191035.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701191253.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701191337.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701194256.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701192154.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701192245.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701192448.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701192851.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701193108.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701193056.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701193654.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260701193914.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/b0e134623d6da1f889d335edef9df60c.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213l_01510ec1-1484-4151-8994-aa2a9a83b00g.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702101001.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702101104.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/9d445fd58c26dd5a3f08a987bb566f06.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260718143926.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260718144300.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719093036.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719093608.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213o_89ca8fba-41ce-44b4-a5d7-8b87b7f0f9fg.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213o_5c109d55-804b-41ee-9f7b-be554fb41d6g.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213o_32ca7599-3790-43b7-86fd-b377cf469fbg.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719095456.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719100127.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719100910.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719104759.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719105000.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720211704.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719103015.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719103527.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260719103856.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213o_7da7076f-c02c-42ea-999a-af113f5a31ag.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213o_c47507d5-7c42-4d59-8891-5cb4ad63b2fg.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213o_090cbb72-b0eb-48cb-8d09-d85eadcb699g.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720093900.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720094011.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720094043.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720094119.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720094304.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720094654.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720095147.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720100128.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720100431.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720100556.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720101015.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720100935.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720102131.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720102223.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720102735.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720103058.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720103316.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720103745.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720104356.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720104456.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720104525.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720104550.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720104711.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/5028bee2a1327396c026e7e6f0a04352.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702104115.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702104128.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702104246.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702104429.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702104557.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702111927.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702111942.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702113253.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702113714.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702114618.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260702114609.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720192503.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720192420.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720192649.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720185154.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260720185241.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Snipaste_2026-07-13_17-04-00.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722233352.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722233650.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722234018.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722233831.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722233918.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723000404.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722234550.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722234658.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722234749.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722234801.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722234838.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722235256.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723163420.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723163535.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723163656.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723163916.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723164115.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722235602.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722235820.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260722235951.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723110736.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723112330.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723112543.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723113015.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723113052.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723164525.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723164540.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723164557.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213s_df0decb7-11df-4b33-9b0c-38e0820c073g.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723192555.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/img_v3_0213s_e80e559c-15bf-44d0-a14f-1680d6d928ag.jpg">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723203357.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723203344.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723205252.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723205624.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723205732.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723222634.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723222722.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260723223938.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260724133332.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260724133447.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260724133757.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260724133843.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260724133930.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260725144720.png">
+<meta property="article:published_time" content="2026-06-14T15:51:25.000Z">
+<meta property="article:modified_time" content="2026-10-03T10:34:31.625Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="AI Infra">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="CMake">
+<meta property="article:tag" content="CUDA">
+<meta property="article:tag" content="GTest">
+<meta property="article:tag" content="LLaMA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260602162512.png">
+
+
+<link rel="canonical" href="https://liangji-seu.github.io/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/","path":"2026/06/14/infra-基于cuda自制llama大模型推理框架/","title":"infra 基于cuda自制llama大模型推理框架"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>infra 基于cuda自制llama大模型推理框架 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">环境安装</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#cmake"><span class="nav-number">1.1.</span> <span class="nav-text">cmake</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cmake%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.1.1.</span> <span class="nav-text">cmake的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CMakeLists-txt"><span class="nav-number">1.1.2.</span> <span class="nav-text">CMakeLists.txt</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cmake%E7%9C%9F%E6%AD%A3%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="nav-number">1.1.3.</span> <span class="nav-text">cmake真正的好处</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cmake%E7%9A%84%E6%8C%87%E4%BB%A4%E5%8F%82%E6%95%B0"><span class="nav-number">1.1.4.</span> <span class="nav-text">cmake的指令参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E9%87%8C%E7%9A%84CMake%E6%9E%84%E5%BB%BA%E9%80%9F%E6%9F%A5"><span class="nav-number">1.1.5.</span> <span class="nav-text">项目里的CMake构建速查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%93%E9%93%BE%E6%8E%A5%E6%80%8E%E4%B9%88%E5%88%A4%E6%96%AD"><span class="nav-number">1.1.6.</span> <span class="nav-text">库链接怎么判断</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#GTest%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E9%80%9F%E6%9F%A5"><span class="nav-number">2.</span> <span class="nav-text">GTest单元测试速查</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gdb%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">gdb使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CMake"><span class="nav-number">4.</span> <span class="nav-text">CMake</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#c-20%E7%9A%84%E7%89%B9%E6%80%A7"><span class="nav-number">5.</span> <span class="nav-text">c++20的特性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4"><span class="nav-number">5.1.</span> <span class="nav-text">命名空间</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">5.2.</span> <span class="nav-text">关键字</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8"><span class="nav-number">5.3.</span> <span class="nav-text">容器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%AD%E6%B3%95"><span class="nav-number">5.4.</span> <span class="nav-text">语法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#static-cast-reinterpret-cast-const-cast"><span class="nav-number">5.4.1.</span> <span class="nav-text">static_cast &#x2F; reinterpret_cast &#x2F; const_cast</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#delete-%E7%A6%81%E6%AD%A2%E6%8B%B7%E8%B4%9D"><span class="nav-number">5.4.2.</span> <span class="nav-text">&#x3D; delete 禁止拷贝</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#enum-%E5%92%8C-enum-class"><span class="nav-number">5.4.3.</span> <span class="nav-text">enum 和 enum class</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#virtual-xxx-0-%E7%BA%AF%E8%99%9A%E5%87%BD%E6%95%B0"><span class="nav-number">5.4.4.</span> <span class="nav-text">virtual xxx &#x3D; 0 纯虚函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8%E5%92%8C-std-move"><span class="nav-number">5.4.5.</span> <span class="nav-text">右值引用和 std::move</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vector-%E5%B8%B8%E7%94%A8%E6%96%B9%E6%B3%95"><span class="nav-number">5.4.6.</span> <span class="nav-text">vector 常用方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88"><span class="nav-number">5.5.</span> <span class="nav-text">智能指针</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cuda%E7%9B%B8%E5%85%B3"><span class="nav-number">5.6.</span> <span class="nav-text">cuda相关</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E4%B8%80%EF%BC%9Acuda%E8%87%AA%E5%88%B6%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6"><span class="nav-number">6.</span> <span class="nav-text">项目一：cuda自制大模型推理框架</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-base-%E5%9F%BA%E7%A1%80%E7%BB%84%E4%BB%B6%E5%B1%82"><span class="nav-number">6.1.</span> <span class="nav-text">1. base&#x2F;基础组件层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Buffer%E5%B1%82%EF%BC%8CDeviceAlloctor%E5%B1%82%EF%BC%8CRALL%E5%8A%A8%E6%80%81%E7%AE%A1%E7%90%86%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.1.1.</span> <span class="nav-text">Buffer层，DeviceAlloctor层，RALL动态管理设计</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Cuda%E6%B5%81%E5%B1%82%EF%BC%8Ckernel%E6%A8%A1%E5%9D%97%E7%9A%84RAII%E5%B0%81%E8%A3%85"><span class="nav-number">6.1.2.</span> <span class="nav-text">Cuda流层，kernel模块的RAII封装</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-tensor-%E5%BC%A0%E9%87%8F%E5%B1%82"><span class="nav-number">6.2.</span> <span class="nav-text">2. tensor&#x2F;张量层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-op-%E7%AE%97%E5%AD%90%E5%B1%82"><span class="nav-number">6.3.</span> <span class="nav-text">3. op&#x2F;算子层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%82%E7%9A%84%E6%A6%82%E5%BF%B5%E5%A4%8D%E4%B9%A0"><span class="nav-number">6.3.1.</span> <span class="nav-text">层的概念复习</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%97%E5%AD%90%E5%B1%82op-%E7%9A%84%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">6.3.2.</span> <span class="nav-text">算子层op&#x2F;的总体架构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B1%82%E7%BB%84%E4%BB%B6%E5%B1%82-%EF%BC%88y-f-x-%E7%9A%84%E5%89%8D%E7%AB%AF%E7%BB%93%E6%9E%84%EF%BC%89"><span class="nav-number">6.3.2.1.</span> <span class="nav-text">层组件层 （y &#x3D; f(x) 的前端结构）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8E%E7%AB%AF%E5%86%85%E6%A0%B8%E6%8E%A5%E5%8F%A3%E5%B1%82%EF%BC%88kernel-interface%EF%BC%89"><span class="nav-number">6.3.2.2.</span> <span class="nav-text">后端内核接口层（kernel_interface）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E7%AE%97%E5%AD%90%E5%B1%82-f-%E7%9A%84%E7%9C%9F%E6%AD%A3%E5%AE%9E%E7%8E%B0"><span class="nav-number">6.3.2.3.</span> <span class="nav-text">具体算子层( f()的真正实现 )</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#cpu%E7%AB%AF%E5%86%85%E6%A0%B8"><span class="nav-number">6.3.2.3.1.</span> <span class="nav-text">cpu端内核</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#cuda%E7%AB%AF%E5%86%85%E6%A0%B8"><span class="nav-number">6.3.2.3.2.</span> <span class="nav-text">cuda端内核</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%97%E5%AD%90%E8%BE%93%E5%85%A5%E8%A7%84%E5%88%92%E7%AD%96%E7%95%A5"><span class="nav-number">6.3.2.4.</span> <span class="nav-text">算子输入规划策略</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E5%AD%90%E5%86%85%E5%AE%B9%E4%BB%8B%E7%BB%8D"><span class="nav-number">6.3.3.</span> <span class="nav-text">3.2 大模型算子内容介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#encode-%E5%88%86%E8%AF%8D%E7%BC%96%E7%A0%81%E5%99%A8%E5%B1%82"><span class="nav-number">6.3.3.1.</span> <span class="nav-text">encode 分词编码器层</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#embedding-%E8%AF%8D%E5%B5%8C%E5%85%A5%E5%B1%82-%EF%BC%88%E6%9C%89%E5%8F%82%EF%BC%89"><span class="nav-number">6.3.3.2.</span> <span class="nav-text">embedding 词嵌入层 （有参）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#rmsnorm-%E5%BD%92%E4%B8%80%E5%8C%96%E5%B1%82%EF%BC%88%E6%9C%89%E5%8F%82%EF%BC%89"><span class="nav-number">6.3.3.3.</span> <span class="nav-text">rmsnorm 归一化层（有参）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Matmul-%E7%9F%A9%E9%98%B5%E4%B9%98%E7%AE%97%E5%AD%90%E5%B1%82%EF%BC%88%E6%9C%89%E5%8F%82%EF%BC%89"><span class="nav-number">6.3.3.4.</span> <span class="nav-text">Matmul 矩阵乘算子层（有参）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%A4%9A%E5%A4%B4%E6%96%B9%E6%A1%88"><span class="nav-number">6.3.3.4.1.</span> <span class="nav-text">多头方案</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RoPE-%E6%97%8B%E8%BD%AC%E4%BD%8D%E7%BD%AE%E7%BC%96%E7%A0%81%E5%B1%82"><span class="nav-number">6.3.3.5.</span> <span class="nav-text">RoPE 旋转位置编码层</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">6.3.3.5.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mha%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%E7%AE%97%E5%AD%90%E5%B1%82"><span class="nav-number">6.3.3.6.</span> <span class="nav-text">mha多头注意力算子层</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-number">6.3.3.6.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AE%8B%E5%B7%AE%E8%BF%9E%E6%8E%A5%E5%B1%82-add"><span class="nav-number">6.3.3.7.</span> <span class="nav-text">残差连接层 add</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%EF%BC%88%E8%A1%A5%E5%85%85%EF%BC%89%E9%97%A8%E6%8E%A7GLU"><span class="nav-number">6.3.3.8.</span> <span class="nav-text">（补充）门控GLU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SwiGLU"><span class="nav-number">6.3.3.9.</span> <span class="nav-text">SwiGLU</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-2"><span class="nav-number">6.3.3.9.1.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%86%E5%B1%82%E7%AE%97%E5%AD%90-cls-layer%EF%BC%88%E6%9C%AC%E8%B4%A8%E4%B8%8Amatmul%E7%AE%97%E5%AD%90%EF%BC%89-%E6%9C%89%E5%8F%82"><span class="nav-number">6.3.3.10.</span> <span class="nav-text">分层算子 cls_layer（本质上matmul算子） (有参)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E9%83%A8%E5%88%86%E7%BB%93%E6%9D%9F"><span class="nav-number">6.3.3.11.</span> <span class="nav-text">推理框架部分结束</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%EF%BC%88%E6%97%A7%EF%BC%89matmul%E7%AE%97%E5%AD%90%EF%BC%88%E6%9C%89%E6%9D%83%E9%87%8D%E5%B1%82%EF%BC%89"><span class="nav-number">6.3.3.11.1.</span> <span class="nav-text">（旧）matmul算子（有权重层）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%EF%BC%88%E6%97%A7%EF%BC%89MHA%E5%A4%9A%E5%A4%B4%E6%B3%A8%E6%84%8F%E5%8A%9B%E7%AE%97%E5%AD%90%E5%B1%82%EF%BC%88%E6%97%A0%E6%9D%83%E9%87%8D%EF%BC%89"><span class="nav-number">6.3.3.11.2.</span> <span class="nav-text">（旧）MHA多头注意力算子层（无权重）</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-model-%E6%A8%A1%E5%9E%8B%E7%BB%84%E8%A3%85%E5%B1%82"><span class="nav-number">6.4.</span> <span class="nav-text">4. model&#x2F;模型组装层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#huggingface%E4%B8%8B%E8%BD%BD%E7%9A%84%E6%A8%A1%E5%9E%8B%E6%96%87%E4%BB%B6"><span class="nav-number">6.4.1.</span> <span class="nav-text">huggingface下载的模型文件</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E6%96%87%E4%BB%B6%E7%9A%84%E6%A0%BC%E5%BC%8F%E5%A4%84%E7%90%86"><span class="nav-number">6.4.1.1.</span> <span class="nav-text">模型文件的格式处理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#model%E7%9A%84%E5%9F%BA%E7%B1%BB"><span class="nav-number">6.4.2.</span> <span class="nav-text">model的基类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-demo%E6%9E%84%E5%BB%BA"><span class="nav-number">6.5.</span> <span class="nav-text">5. demo构建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-profile%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90"><span class="nav-number">6.6.</span> <span class="nav-text">6. profile性能分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87"><span class="nav-number">6.6.1.</span> <span class="nav-text">性能指标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E6%A0%87%E6%9C%AF%E8%AF%AD"><span class="nav-number">6.6.2.</span> <span class="nav-text">指标术语</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">6.6.3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-nsight-system%E7%9A%84%E6%89%93%E6%A0%87%E5%9F%BA%E7%A1%80%E5%B7%A5%E5%85%B7%EF%BC%8Cnvtx3"><span class="nav-number">6.6.3.1.</span> <span class="nav-text">1. nsight system的打标基础工具，nvtx3</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-gpu%E8%AE%A1%E6%97%B6%E5%99%A8%EF%BC%88cudaEvent%EF%BC%89"><span class="nav-number">6.6.3.2.</span> <span class="nav-text">2. gpu计时器（cudaEvent）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%AE%9A%E4%B9%89%E6%B1%87%E6%80%BB%E7%BB%93%E6%9E%9C-%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">6.6.3.3.</span> <span class="nav-text">3. 定义汇总结果 结构体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-Profiler-%E7%B1%BB%EF%BC%88%E7%BB%9F%E8%AE%A1%E6%80%BB%E7%AE%A1%EF%BC%89"><span class="nav-number">6.6.3.4.</span> <span class="nav-text">4. Profiler 类（统计总管）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%A8%A1%E5%9E%8B%E9%9B%86%E6%88%90"><span class="nav-number">6.6.3.5.</span> <span class="nav-text">5. 模型集成</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E5%BC%80%E5%A7%8B%E6%B5%8B%E9%87%8F"><span class="nav-number">6.6.3.6.</span> <span class="nav-text">6. 开始测量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-3"><span class="nav-number">6.6.3.7.</span> <span class="nav-text">总结</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%95%B4%E4%B8%AAdemo%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">6.6.3.7.1.</span> <span class="nav-text">整个demo流程分析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#profile%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">6.6.3.7.2.</span> <span class="nav-text">profile流程分析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#128%E9%95%BF%E5%BA%A6profile%E5%88%86%E6%9E%90"><span class="nav-number">6.6.3.7.3.</span> <span class="nav-text">128长度profile分析</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%BC%98%E5%8C%96matmul%E7%AE%97%E5%AD%90%EF%BC%8Cmha%E7%AE%97%E5%AD%90"><span class="nav-number">6.6.3.7.3.1.</span> <span class="nav-text">优化matmul算子，mha算子</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8E%86%E6%8F%8F%E8%BF%B0"><span class="nav-number">6.7.</span> <span class="nav-text">简历描述</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E6%B1%87%E6%80%BB"><span class="nav-number">7.</span> <span class="nav-text">项目汇总</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E4%B8%80%EF%BC%9AMini-CUDA-LLaMA-Inference-Engine"><span class="nav-number">7.1.</span> <span class="nav-text">项目一：Mini CUDA LLaMA Inference Engine</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E4%BA%8C%EF%BC%9AMini-vLLM-nano-vLLM-Optimization"><span class="nav-number">7.2.</span> <span class="nav-text">项目二：Mini-vLLM &#x2F; nano-vLLM Optimization</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">72</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="infra 基于cuda自制llama大模型推理框架 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          infra 基于cuda自制llama大模型推理框架
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-06-14 23:51:25" itemprop="dateCreated datePublished" datetime="2026-06-14T23:51:25+08:00">2026-06-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-03 18:34:31" itemprop="dateModified" datetime="2026-10-03T18:34:31+08:00">2026-10-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">大模型算法</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/%E6%8E%A8%E7%90%86%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">推理系统</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><h1 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h1><p>gcc, g++<br>nvcc编译器</p>
+<p>armadillo数学库</p>
+<h2 id="cmake"><a href="#cmake" class="headerlink" title="cmake"></a>cmake</h2><p>cmake帮你写Makefile, 然后你用make进行编译</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">CMakeLists.txt</span><br><span class="line">        ↓</span><br><span class="line">cmake ..</span><br><span class="line">        ↓</span><br><span class="line">生成 Makefile / CMakeCache.txt / CMakeFiles</span><br><span class="line">        ↓</span><br><span class="line">make 或 cmake --build .</span><br><span class="line">        ↓</span><br><span class="line">调用 g++ 编译 test.cpp</span><br><span class="line">        ↓</span><br><span class="line">生成可执行文件 test</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/Pasted%20image%2020260602162512.png" alt="510"></p>
+<h3 id="cmake的使用"><a href="#cmake的使用" class="headerlink" title="cmake的使用"></a>cmake的使用</h3><ul>
+<li><strong>第一阶段（构建编译文件）</strong></li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake ..</span><br></pre></td></tr></table></figure>
+<p><img src="/images/Pasted%20image%2020260602162604.png" alt="282"><img src="/images/Pasted%20image%2020260602162634.png" alt="255"></p>
+<ul>
+<li><strong>第二阶段(编译)</strong><br><img src="/images/Pasted%20image%2020260602162707.png" alt="131"><img src="/images/Pasted%20image%2020260602162738.png" alt="334"></li>
+</ul>
+<h3 id="CMakeLists-txt"><a href="#CMakeLists-txt" class="headerlink" title="CMakeLists.txt"></a>CMakeLists.txt</h3><figure class="highlight txt"><table><tr><td class="code"><pre><span class="line"># 表示这个项目最低需要的CMake的版本</span><br><span class="line">cmake_minimum_required(VERSION 3.10)</span><br><span class="line"></span><br><span class="line"># 指定项目名字</span><br><span class="line">project(test_cpp)</span><br><span class="line"></span><br><span class="line"># 使用C++17标准， 相当于在Makefile里面添加 -std=c++17</span><br><span class="line">set(CMAKE_CXX_STANDARD 17)</span><br><span class="line"></span><br><span class="line"># 用test.cpp 生成一个可执行文件test</span><br><span class="line">add_executable(test test.cpp)</span><br></pre></td></tr></table></figure>
+
+<p>最后生成的Makefile约等于：<code>/usr/bin/g++ -std=c++17 -o test test.cpp</code><br><img src="/images/Pasted%20image%2020260602163104.png" alt="193"><img src="/images/Pasted%20image%2020260602163115.png" alt="209"><img src="/images/Pasted%20image%2020260602163138.png" alt="223"><br><img src="/images/Pasted%20image%2020260602163152.png" alt="234"><img src="/images/Pasted%20image%2020260602163212.png" alt="320"></p>
+<h3 id="cmake真正的好处"><a href="#cmake真正的好处" class="headerlink" title="cmake真正的好处"></a>cmake真正的好处</h3><p><img src="/images/Pasted%20image%2020260602163306.png" alt="276"><img src="/images/Pasted%20image%2020260602163315.png" alt="365"></p>
+<p><img src="/images/Pasted%20image%2020260602163334.png" alt="428"></p>
+<p><code>CMakeLists.txt</code>：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.10</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">project</span>(test_cpp LANGUAGES CXX)</span><br><span class="line"></span><br><span class="line"><span class="keyword">add_executable</span>(<span class="keyword">test</span></span><br><span class="line">				main.cpp    </span><br><span class="line">				src/add.cpp)</span><br><span class="line"></span><br><span class="line"><span class="keyword">target_include_directories</span>(<span class="keyword">test</span> PRIVATE   </span><br><span class="line">					<span class="variable">$&#123;PROJECT_SOURCE_DIR&#125;</span>/<span class="keyword">include</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">target_compile_features</span>(<span class="keyword">test</span> PRIVATE </span><br><span class="line">					cxx_std_17)</span><br></pre></td></tr></table></figure>
+<p>这里：</p>
+<figure class="highlight gams"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">add_executable</span>(<span class="params">test ...</span>)</span></span><br></pre></td></tr></table></figure>
+<p><strong>创建一个目标</strong>，叫 <code>test</code>。</p>
+<figure class="highlight gams"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">target_include_directories</span>(<span class="params">test PRIVATE ...</span>)</span></span><br></pre></td></tr></table></figure>
+<p>给 <code>test</code> 这个目标<strong>添加头文件搜索路径</strong>。</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">target_compile_features</span><span class="params">(test PRIVATE cxx_std_17)</span></span></span><br></pre></td></tr></table></figure>
+<p>让 <code>test</code> 用 <strong>C++17 编译</strong>。</p>
+<p>这就是现代 CMake 的核心思想：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line">不要全局乱 <span class="keyword">set</span>尽量围绕 <span class="keyword">target</span> 配置</span><br></pre></td></tr></table></figure>
+
+<p>也就是围绕：</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">add_executable</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">add_library</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">target_include_directories</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">target_link_libraries</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">target_compile_options</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="title">target_compile_features</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<p>这些来写。</p>
+<h3 id="cmake的指令参数"><a href="#cmake的指令参数" class="headerlink" title="cmake的指令参数"></a>cmake的指令参数</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug</span><br><span class="line"></span><br><span class="line"><span class="comment"># -S .</span></span><br><span class="line"><span class="comment"># 指定当前目录为源码目录</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># -B build</span></span><br><span class="line"><span class="comment"># 指定构建目录</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># -DCMAKE_BUILD_TYPE=Debug</span></span><br><span class="line"><span class="comment"># -D 给CMake定义一个变量</span></span><br><span class="line"><span class="comment"># CMAKE_BUILD_TYPE CMake的内置变量，控制编译模式</span></span><br><span class="line"><span class="comment"># Debug 编译为调试模式</span></span><br><span class="line">	<span class="comment"># 保留**调试符号**（gdb / VS 调试可用）</span></span><br><span class="line">	<span class="comment"># 不开启优化（`-O0`）</span></span><br><span class="line">	<span class="comment"># 方便断点、查崩溃、看变量</span></span><br><span class="line"><span class="comment"># 对应还有：</span></span><br><span class="line">	<span class="comment">#`Release`（发布优化）、</span></span><br><span class="line">	<span class="comment"># `RelWithDebInfo`（带调试的发布）、</span></span><br><span class="line">	<span class="comment"># `MinSizeRel`（最小体积）</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="项目里的CMake构建速查"><a href="#项目里的CMake构建速查" class="headerlink" title="项目里的CMake构建速查"></a>项目里的CMake构建速查</h3><p>一个项目从 <code>CMakeLists.txt</code> 到可执行文件，大概是这条线：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">include() / find_package()</span><br><span class="line">        ↓</span><br><span class="line">收集源文件</span><br><span class="line">        ↓</span><br><span class="line">add_executable() / add_library()</span><br><span class="line">        ↓</span><br><span class="line">target_include_directories()</span><br><span class="line">target_link_directories()</span><br><span class="line">target_link_libraries()</span><br></pre></td></tr></table></figure>
+
+<p>根 <code>CMakeLists.txt</code> 通常先做这些事：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">cmake_minimum_required</span>(VERSION <span class="number">3.16</span>)</span><br><span class="line"><span class="keyword">set</span>(CMAKE_EXPORT_COMPILE_COMMANDS <span class="keyword">ON</span>)</span><br><span class="line"><span class="keyword">set</span>(CMAKE_CUDA_COMPILER <span class="string">&quot;/usr/local/cuda/bin/nvcc&quot;</span>)</span><br><span class="line"><span class="keyword">project</span>(llama_infer CXX CUDA)</span><br><span class="line"><span class="keyword">include</span>(cmake/cuda.cmake)</span><br></pre></td></tr></table></figure>
+
+<p>重点：</p>
+<ul>
+<li><code>CMAKE_EXPORT_COMPILE_COMMANDS ON</code>：生成 <code>compile_commands.json</code>，方便 IDE 跳转和补全。</li>
+<li><code>project(llama_infer CXX CUDA)</code>：启用 C++ 和 CUDA 两套语言支持。</li>
+<li><code>include(cmake/cuda.cmake)</code>：执行 CUDA 探测脚本，比如检查 toolkit、GPU 架构。</li>
+</ul>
+<p>几个容易混的点：</p>
+<ul>
+<li><code>include(xxx.cmake)</code>：执行 CMake 脚本，类似 bash 的 <code>source</code>，不是 C++ 的 <code>#include</code>。</li>
+<li><code>find_package(GTest REQUIRED)</code>：找的是库安装时附带的 CMake 描述文件，不是直接找 <code>.so/.a</code>。</li>
+<li><code>GTest::gtest</code>：CMake target，里面已经打包了头文件路径、库路径和依赖。</li>
+<li><code>PROJECT_SOURCE_DIR</code>：顶层 <code>CMakeLists.txt</code> 所在目录。</li>
+<li><code>REQUIRED</code>：找不到就直接报错停止。</li>
+<li><code>add_library(llama SHARED ...)</code>：<code>llama</code> 是 CMake 目标名，不是最终文件名。<code>SHARED</code> 表示生成动态库，Linux 下 CMake 会自动加 <code>lib</code> 前缀和 <code>.so</code> 后缀，所以产物是 <code>libllama.so</code>。</li>
+</ul>
+<p>顺序上，<code>target_include_directories / target_link_directories / target_link_libraries</code> 必须写在 <code>add_executable/add_library</code> 之后，因为它们要绑定到已经创建好的 target。</p>
+<p>如果有子目录：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">add_library</span>(llama SHARED ...)</span><br><span class="line"><span class="keyword">add_subdirectory</span>(<span class="keyword">test</span>)</span><br><span class="line"><span class="keyword">add_subdirectory</span>(demo)</span><br></pre></td></tr></table></figure>
+
+<p><code>test/demo</code> 如果要链接 <code>llama</code>，就应该放在 <code>add_library(llama ...)</code> 之后。</p>
+<p>条件编译常用来控制模型支持：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">option</span>(QWEN2_SUPPORT <span class="keyword">OFF</span>)</span><br><span class="line"><span class="keyword">if</span> (QWEN2_SUPPORT)</span><br><span class="line">    <span class="keyword">add_definitions</span>(-DQWEN2_SUPPORT)</span><br><span class="line"><span class="keyword">endif</span>()</span><br></pre></td></tr></table></figure>
+
+<p>命令行开启：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">cmake .. -DQWEN2_SUPPORT=ON</span><br></pre></td></tr></table></figure>
+
+<p>用途：不同模型依赖不同，按需打开，避免强制安装暂时不用的库。</p>
+<p>第三方库安装后通常长这样：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">/usr/include/gtest/          # 头文件</span><br><span class="line">/usr/lib/libgtest.a          # 库本体</span><br><span class="line">/usr/lib/cmake/GTest/        # find_package 要找的描述文件</span><br></pre></td></tr></table></figure>
+
+<p>常用命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p build &amp;&amp; <span class="built_in">cd</span> build</span><br><span class="line">cmake ..</span><br><span class="line">make -j$(<span class="built_in">nproc</span>)</span><br><span class="line">make llama</span><br><span class="line">make test_llm</span><br><span class="line">./test_llm --gtest_filter=test_buffer.*</span><br></pre></td></tr></table></figure>
+
+<p><code>make test_llm</code> 时，如果 <code>test_llm</code> 写了：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">target_link_libraries</span>(test_llm llama)</span><br></pre></td></tr></table></figure>
+
+<p>CMake 会自动先编 <code>llama</code>，再编 <code>test_llm</code>，不用手动分两步。</p>
+<p>常见目标：</p>
+<table>
+<thead>
+<tr>
+<th>目标</th>
+<th>产物</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>llama</code></td>
+<td><code>lib/libllama.so</code></td>
+</tr>
+<tr>
+<td><code>test_llm</code></td>
+<td><code>build/test/test_llm</code></td>
+</tr>
+<tr>
+<td><code>llama_infer</code></td>
+<td><code>build/demo/llama_infer</code></td>
+</tr>
+</tbody></table>
+<p>查看有哪些目标：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">make <span class="built_in">help</span></span><br><span class="line">grep -rn <span class="string">&quot;add_executable\|add_library&quot;</span> CMakeLists.txt <span class="built_in">test</span>/ demo/</span><br></pre></td></tr></table></figure>
+
+<h3 id="库链接怎么判断"><a href="#库链接怎么判断" class="headerlink" title="库链接怎么判断"></a>库链接怎么判断</h3><p>核心原则：</p>
+<blockquote>
+<p><strong>只要代码用了某个库的头文件，一般就要把对应库写进 <code>target_link_libraries</code>。</strong></p>
+</blockquote>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">target_link_libraries</span>(llama</span><br><span class="line">    sentencepiece</span><br><span class="line">    glog::glog</span><br><span class="line">    gtest</span><br><span class="line">    gtest_main</span><br><span class="line">    pthread</span><br><span class="line">    cudart</span><br><span class="line">    armadillo</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>可以<mark style="background:#fff88f">粗略分三类</mark>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>例子</th>
+<th>是否需要手动链接</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>编译器默认库</td>
+<td><code>libstdc++</code>、<code>libc</code>、<code>libm</code>、<code>libgcc</code></td>
+<td>通常不用</td>
+</tr>
+<tr>
+<td>系统库但不默认链接</td>
+<td><code>pthread</code>、<code>dl</code>、<code>rt</code></td>
+<td><strong>需要</strong></td>
+</tr>
+<tr>
+<td>第三方库</td>
+<td><code>glog</code>、<code>gtest</code>、<code>sentencepiece</code>、<code>cudart</code>、<code>armadillo</code></td>
+<td><strong>需要</strong></td>
+</tr>
+</tbody></table>
+<p><code>glog::glog</code> 这种带 <code>::</code> 的名字，一般是 CMake target，里面已经带了头文件路径、库路径和依赖。</p>
+<p><code>sentencepiece</code>、<code>cudart</code> 这种裸库名，等价于让链接器去找：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">libsentencepiece.so / libsentencepiece.a</span><br><span class="line">libcudart.so / libcudart.a</span><br></pre></td></tr></table></figure>
+
+<p>一句话记忆：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">include 解决“编译时能不能看到声明”</span><br><span class="line">target_link_libraries 解决“链接时能不能找到实现”</span><br></pre></td></tr></table></figure>
+
+<h1 id="GTest单元测试速查"><a href="#GTest单元测试速查" class="headerlink" title="GTest单元测试速查"></a>GTest单元测试速查</h1><p>基本写法：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">TEST</span>(test_buffer, allocate) &#123;</span><br><span class="line">    <span class="function">Buffer <span class="title">buffer</span><span class="params">(<span class="number">32</span>, alloc)</span></span>;</span><br><span class="line">    <span class="built_in">ASSERT_NE</span>(buffer.<span class="built_in">ptr</span>(), <span class="literal">nullptr</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>TEST(suite, name)</code> 会自动生成测试类，并注册到 gtest 的全局用例列表。<code>RUN_ALL_TESTS()</code> 会统一执行这些测试。</p>
+<p><mark style="background:#d6e4ff">suite 通常写模块名，name 写测试场景</mark>，比如 <code>test_buffer.allocate</code>。</p>
+<p>常用断言：</p>
+<table>
+<thead>
+<tr>
+<th>断言</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ASSERT_EQ(a, b)</code></td>
+<td><code>a == b</code></td>
+</tr>
+<tr>
+<td><code>ASSERT_NE(a, b)</code></td>
+<td><code>a != b</code></td>
+</tr>
+<tr>
+<td><code>ASSERT_TRUE(cond)</code></td>
+<td>条件为真</td>
+</tr>
+<tr>
+<td><code>ASSERT_FALSE(cond)</code></td>
+<td>条件为假</td>
+</tr>
+<tr>
+<td><code>ASSERT_STREQ(a, b)</code></td>
+<td>C 字符串相等</td>
+</tr>
+</tbody></table>
+<p><mark style="background:#ffd6e7"><code>ASSERT_</code> 失败后立刻终止当前用例，<code>EXPECT_</code> 失败后记录错误但继续执行。</mark></p>
+<p>运行命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">make test_llm -j$(<span class="built_in">nproc</span>)</span><br><span class="line"></span><br><span class="line">./build/test/test_llm</span><br><span class="line">./build/test/test_llm --gtest_list_tests</span><br><span class="line">./build/test/test_llm --gtest_filter=test_buffer.*</span><br><span class="line">./build/test/test_llm --gtest_filter=test_buffer.allocate</span><br><span class="line">./build/test/test_llm --gtest_filter=*allocate*</span><br></pre></td></tr></table></figure>
+
+<p>输出里重点看：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">[ RUN      ] test_buffer.allocate</span><br><span class="line">[       OK ] test_buffer.allocate</span><br><span class="line">[  PASSED  ] 1 test.</span><br></pre></td></tr></table></figure>
+
+<p>如果失败，会打印断言所在文件行号、期望值和实际值。</p>
+<p>CMake 集成：</p>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line"><span class="keyword">find_package</span>(GTest REQUIRED)</span><br><span class="line"><span class="keyword">target_link_libraries</span>(test_llm GTest::gtest)</span><br></pre></td></tr></table></figure>
+
+<p><code>test_llm</code> 本质是一个测试可执行文件，里面链接了 <code>libllama.so</code>、gtest、glog 等依赖。</p>
+<h1 id="gdb使用"><a href="#gdb使用" class="headerlink" title="gdb使用"></a>gdb使用</h1><p>gdb是调试工具，需要按照调试模式来编译程序</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 构建</span></span><br><span class="line">cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译</span></span><br><span class="line">cmake --build build</span><br></pre></td></tr></table></figure>
+<p>重点是我们指定按照Debug模式来编译程序</p>
+<p>之后我们就可以用gdb来进行调试了</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gdb ./build/bin/test</span><br></pre></td></tr></table></figure>
+
+
+<ol>
+<li>打断点<ol>
+<li>main<ol>
+<li><code>bread main</code> </li>
+<li><code>b main</code></li>
+</ol>
+</li>
+<li>行号<ol>
+<li><code>break test.cpp:6</code></li>
+<li><code>b test.cpp:6</code></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>开始运行程序<ol>
+<li><code>run</code></li>
+<li><code>r</code></li>
+</ol>
+</li>
+<li>执行<ol>
+<li>单步执行（不进入函数内部）<ol>
+<li><code>next</code></li>
+<li><code>n</code></li>
+</ol>
+</li>
+<li>单步执行（进入函数内部）<ol>
+<li><code>step</code></li>
+<li><code>s</code></li>
+</ol>
+</li>
+<li>执行到下一个断点<ol>
+<li><code>continue</code></li>
+<li><code>c</code></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>查看当前停在哪里<ol>
+<li><code>where</code></li>
+</ol>
+</li>
+<li>查看函数调用栈<ol>
+<li><code>bt</code>  &#x3D; backtrace</li>
+</ol>
+</li>
+<li>查看当前源码附近<ol>
+<li><code>list</code></li>
+<li><code>l</code></li>
+</ol>
+</li>
+<li>打印变量<ol>
+<li>直接打印变量值<ol>
+<li><code>p i</code>    <code>p name</code>   <code>p this-&gt;count</code></li>
+</ol>
+</li>
+<li>格式化打印<ol>
+<li><code>p/x 变量</code> 16进制打印</li>
+<li><code>p/d 变量</code> 10进制打印</li>
+<li>…</li>
+</ol>
+</li>
+<li>打印复杂类型<ol>
+<li>数组&#x2F;连续内存<ol>
+<li><code>p *arr@10</code> 打印arr数组的前10个元素</li>
+</ol>
+</li>
+<li>结构体&#x2F;类<ol>
+<li><code>p 结构体变量</code></li>
+</ol>
+</li>
+<li>漂亮打印(缩进打印结构体)<ol>
+<li><code>set print pretty on</code>  <code>p user</code></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>打印全局变量<ol>
+<li><code>p 变量名</code></li>
+<li><code>p ::count</code> 避免和局部变量重名</li>
+</ol>
+</li>
+<li>打印指针指向内容<ol>
+<li><code>p *ptr</code></li>
+</ol>
+</li>
+<li>连续自动打印(每次停下都显示)<ol>
+<li><code>display 变量</code></li>
+<li>取消自动打印<ol>
+<li><code>undisplay</code></li>
+</ol>
+</li>
+</ol>
+</li>
+<li>查看内存<ol>
+<li><code>x/格式 地址</code><ol>
+<li><code>x/10xw ptr</code>  打印10个32位（word），按16进制(x)</li>
+<li><code>x/20cb ptr</code> 打印20个字节（8位），按照char解析</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>查看所有局部变量<ol>
+<li><code>info locals</code>  一次性打印当前函数所有变量</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<p><img src="/images/Pasted%20image%2020260602170336.png" alt="222"></p>
+<ol start="8">
+<li>查看各种界面<ol>
+<li><code>layout src</code> 源码界面<ol>
+<li><img src="/images/Pasted%20image%2020260602170553.png" alt="322"></li>
+</ol>
+</li>
+<li><code>layout asm</code> 汇编界面<ol>
+<li><img src="/images/Pasted%20image%2020260602170707.png" alt="388"></li>
+</ol>
+</li>
+<li><code>layout regs</code> 寄存器界面<ol>
+<li><img src="/images/Pasted%20image%2020260602170757.png" alt="402"></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h1 id="CMake"><a href="#CMake" class="headerlink" title="CMake"></a>CMake</h1><p>前面已经知道，cmake是帮助你编写Makefile的，我们可以利用CMake的方法，来自动生成整个项目的Makefile</p>
+<ol>
+<li><code>include(../cmake/cuda.cmake)</code><br>CMakeLists里面的include，是针对同样的cmake来的，这不是引用库，而是<strong>把 <code>cuda.cmake</code> 里的代码原样贴过来执行</strong></li>
+</ol>
+<p><code>.cmake</code> 后缀只是约定，表明”这是个 CMake 脚本”，不是 <code>.so</code> 或 <code>.a</code> 库文件。</p>
+<blockquote>
+<p>这个.cmake说明书的作用：检查cuda工具链是否存在，探测显卡架构，把执行结果，保存到变量里面，后面的代码直接引用<img src="/images/Pasted%20image%2020260627172704.png"></p>
+</blockquote>
+<ol start="2">
+<li><code>find_package(GTest REQUIRED)</code></li>
+</ol>
+<p>第三方库编译成.so后，安装到系统中(&#x2F;usr&#x2F;lib&#x2F;archxxx&#x2F;)，<br>顺带会装上.cmake描述文件(可以理解为说明书 &#x2F;usr&#x2F;lib&#x2F;archxxx&#x2F;cmake)</p>
+<p>find_package靠.cmake找到库的物理位置<br><img src="/images/Pasted%20image%2020260627171929.png"><br><img src="/images/Pasted%20image%2020260627171941.png"><br>找到库之后，会把检查结果记录到一些变量里面，就是后面的：</p>
+<ul>
+<li>${glog_INCLUDE_DIR}</li>
+<li>${GTest_INCLUDE_DIR}</li>
+</ul>
+<p>所以流程就是：<code>find_package</code> 探测库的位置 → 设置变量 → <code>target_include_directories</code> 用这些变量告诉编译器。</p>
+<ol start="3">
+<li><p>set(link_ext_lib glog::glog GTest::gtest)<br><img src="/images/Pasted%20image%2020260627172026.png"><br><img src="/images/Pasted%20image%2020260627172039.png"></p>
+</li>
+<li><p>aux_source_directory(目录 变量名)<br><img src="/images/Pasted%20image%2020260627172234.png"></p>
+</li>
+</ol>
+<p><img src="/images/Pasted%20image%2020260627172402.png"></p>
+<ol start="5">
+<li>add_executable(名字 源文件列表)<br><img src="/images/Pasted%20image%2020260627172833.png"><blockquote>
+<p>注意，这个add_executable还没有正式开始编译，只是注册目标，告诉CMake，要编译什么。</p>
+<p>真正开始构建，是你执行 cmake –build . –target test_llm<br>或者make test_llm</p>
+</blockquote>
+</li>
+</ol>
+<p><img src="/images/Pasted%20image%2020260627173056.png"></p>
+<ol start="6">
+<li>target_link_libraries(目标 链接库)<br>这个的作用，就是g++里面的-l, 可以链接的库有：</li>
+</ol>
+<ul>
+<li>动态库（.so）（看到.so就只记引用，运行到这一块的时候，才加载）</li>
+<li>静态库（.a）(链接器看到.a就把代码拷贝到可执行文件中)</li>
+</ul>
+<blockquote>
+<p>这里纠正一个认识：<br>给你一个库，so&#x2F;a, 里面肯定是各种方法的实现，但是这个方法叫什么，你肯定在写代码的时候，就需要知道，所以库文件.so&#x2F;.a， 还需要配合头文件，这样你才知道方法叫什么。</p>
+</blockquote>
+<ol start="7">
+<li><p>target_include_directories(目标 PUBLIC 目录)<br>指定头文件的目录</p>
+</li>
+<li><p>target_link_directories(目标 PUBLIC 目录)<br><img src="/images/Pasted%20image%2020260627174513.png" alt="697"></p>
+</li>
+</ol>
+<p><strong>总结</strong></p>
+<p>用CMakeLists，来利用cmake构建一个项目的make，流程是：<br><img src="/images/Pasted%20image%2020260627174925.png"></p>
+<h1 id="c-20的特性"><a href="#c-20的特性" class="headerlink" title="c++20的特性"></a>c++20的特性</h1><h2 id="命名空间"><a href="#命名空间" class="headerlink" title="命名空间"></a>命名空间</h2><p>我的理解，就是相当于形象的理解成模块归属的机制就行。</p>
+<h2 id="关键字"><a href="#关键字" class="headerlink" title="关键字"></a>关键字</h2><ol>
+<li><p>explicit<br>静止编译器做隐式类型转换，强迫调用者显式写出构造动作，避免编译器帮你自动做类型转换。</p>
+</li>
+<li><p>override<br><code>void* allocate(size_t byte_size) const override;</code><br>用来告诉编译器，我在重写基类虚函数，帮我检查，如果这个不是基类的虚函数，就变成新函数。override的作用是把错误提前到编译阶段。</p>
+</li>
+</ol>
+<p>这个里面的const，是表示常函数，这个函数内部，不会修改这个对象内存的任何成员变量。</p>
+<ol start="3">
+<li>mutable<br>这个是const的后门，如果const修饰了成员函数，那么内部就不能改变变量，但是有一个例外，就是如果这个成员函数被标记了mutable。那么即便在常函数里面也能修改。</li>
+</ol>
+<h2 id="容器"><a href="#容器" class="headerlink" title="容器"></a>容器</h2><ol>
+<li>map<br>STL标准库里面的有序键值对容器，<code>#include&lt;map&gt;</code></li>
+</ol>
+<h2 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h2><h3 id="static-cast-reinterpret-cast-const-cast"><a href="#static-cast-reinterpret-cast-const-cast" class="headerlink" title="static_cast &#x2F; reinterpret_cast &#x2F; const_cast"></a>static_cast &#x2F; reinterpret_cast &#x2F; const_cast</h3><p>c++风格的强制类型转换， 比（）直接转换更安全。<br>（）转换等于：</p>
+<ul>
+<li><code>static_cast</code> — 相关类型间的转换（只做编译期可检查的转换）</li>
+<li><code>reinterpret_cast</code> — 不相关指针类型间的暴力转换</li>
+<li><code>const_cast</code> — 悄悄去掉 const</li>
+</ul>
+<h3 id="delete-禁止拷贝"><a href="#delete-禁止拷贝" class="headerlink" title="= delete 禁止拷贝"></a><code>= delete</code> 禁止拷贝</h3><p>显式删除某个函数，让编译器禁止调用它。常用于禁止拷贝：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">NoCopyable</span> &#123;</span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    <span class="built_in">NoCopyable</span>() = <span class="keyword">default</span>;</span><br><span class="line">    ~<span class="built_in">NoCopyable</span>() = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">NoCopyable</span>(<span class="type">const</span> NoCopyable&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">    NoCopyable&amp; <span class="keyword">operator</span>=(<span class="type">const</span> NoCopyable&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>子类继承 <code>NoCopyable</code> 后，普通构造不会受影响：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">Buffer <span class="title">buf</span><span class="params">(<span class="number">128</span>, alloc)</span></span>;   <span class="comment">// 正常构造</span></span><br></pre></td></tr></table></figure>
+
+<p>但拷贝构造和拷贝赋值会被编译器拒绝：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">Buffer <span class="title">buf2</span><span class="params">(buf)</span></span>;     <span class="comment">// 触发拷贝构造，编译报错</span></span><br><span class="line">Buffer buf3 = buf;    <span class="comment">// 也是拷贝构造，编译报错</span></span><br><span class="line">buf2 = buf;           <span class="comment">// 触发拷贝赋值，编译报错</span></span><br></pre></td></tr></table></figure>
+
+<p><mark style="background:#ffd6e7"><code>= delete</code> 是编译期拦截，不是运行时报错。</mark></p>
+<p>在 <code>Buffer</code> 这种管理大块内存的类里，禁止拷贝可以避免两个对象指向同一块 <code>ptr_</code>，析构时发生 double free。</p>
+<h3 id="enum-和-enum-class"><a href="#enum-和-enum-class" class="headerlink" title="enum 和 enum class"></a><code>enum</code> 和 <code>enum class</code></h3><p>普通 <code>enum</code>：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">enum</span> <span class="title class_">StatusCode</span> : <span class="type">uint8_t</span> &#123;</span><br><span class="line">    kSuccess = <span class="number">0</span>,</span><br><span class="line">    kPathNotValid = <span class="number">2</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>枚举值可以直接使用，也容易隐式转成 <code>int</code>：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="type">int</span> code = kSuccess;</span><br></pre></td></tr></table></figure>
+
+<p><code>enum class</code>：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">enum class</span> <span class="title class_">DeviceType</span> : <span class="type">uint8_t</span> &#123;</span><br><span class="line">    kDeviceCPU = <span class="number">1</span>,</span><br><span class="line">    kDeviceCUDA = <span class="number">2</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>使用时必须带作用域：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DeviceType type = DeviceType::kDeviceCUDA;</span><br></pre></td></tr></table></figure>
+
+<p><mark style="background:#d6e4ff"><code>enum class</code> 更类型安全：不会隐式转成 <code>int</code>，不同枚举类型之间也不能随便比较。</mark></p>
+<p><code>: uint8_t</code> 表示指定底层存储类型，能减少内存占用。默认优先用 <code>enum class</code>，只有需要和 <code>int</code> 高频交互时再考虑普通 <code>enum</code>。</p>
+<h3 id="virtual-xxx-0-纯虚函数"><a href="#virtual-xxx-0-纯虚函数" class="headerlink" title="virtual xxx = 0 纯虚函数"></a><code>virtual xxx = 0</code> 纯虚函数</h3><p><code>= 0</code> 表示纯虚函数：基类只声明接口、不提供实现，子类必须重写；含纯虚函数的类不能直接实例化。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> base::Status <span class="title">forward</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="右值引用和-std-move"><a href="#右值引用和-std-move" class="headerlink" title="右值引用和 std::move"></a>右值引用和 <code>std::move</code></h3><p>左值引用 <code>T&amp;</code>，就是引用一个正常变量，有名字，能取地址。</p>
+<p>右值引用 <code>T&amp;&amp;</code>，可以理解成引用一个临时对象，或者一个后面基本不用的对象。</p>
+<p><mark style="background:#d6e4ff">右值引用的核心作用：告诉编译器，这个对象里面的资源可以被转移走。</mark></p>
+<p><code>std::move</code> 这个名字有点迷惑，它本身不搬数据，也不申请内存，只是做了一次类型转换：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">std::<span class="built_in">move</span>(x) = <span class="built_in">static_cast</span>&lt;T&amp;&amp;&gt;(x)</span><br></pre></td></tr></table></figure>
+
+<p><mark style="background:#fff88f">std::move 的本质：把一个左值，强行标记成“可以被移动的右值”。</mark></p>
+<p>比如 <code>Tensor</code> 构造函数里面：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Tensor::<span class="built_in">Tensor</span>(base::DataType data_type, std::vector&lt;<span class="type">int32_t</span>&gt; dims, ...)</span><br><span class="line">    : <span class="built_in">dims_</span>(std::<span class="built_in">move</span>(dims)) &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>dims</code> 是形参，本身是一个局部变量，所以它其实是左值。</p>
+<p>但是构造函数结束之后，<code>dims</code> 就没用了，所以这里用 <code>std::move(dims)</code>，让成员变量 <code>dims_</code> 直接接管它内部的堆内存。</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">拷贝 vector：重新申请内存，然后一个一个复制元素，O(n)</span><br><span class="line">移动 vector：直接转移 begin/end/cap 三个指针，O(1)</span><br></pre></td></tr></table></figure>
+
+<p>所以这个写法：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Tensor</span>(..., std::vector&lt;<span class="type">int32_t</span>&gt; dims)</span><br><span class="line">    : <span class="built_in">dims_</span>(std::<span class="built_in">move</span>(dims)) &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以理解成：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">调用者传左值：先拷贝到形参 dims，再移动到成员变量 dims_</span><br><span class="line">调用者传右值：直接移动到形参 dims，再移动到成员变量 dims_</span><br></pre></td></tr></table></figure>
+
+<p><mark style="background:#ffd6e7">注意：被 std::move 之后的对象还能析构，但是不要再依赖它原来的内容。</mark></p>
+<p>几个容易混的点：</p>
+<ul>
+<li><code>dims_(std::move(dims))</code>：这是移动构造，在初始化列表里完成。</li>
+<li><code>dims_ = std::move(dims)</code>：这是移动赋值，成员变量已经存在了。</li>
+<li><code>return t;</code> 返回局部对象时，一般不用写 <code>std::move(t)</code>，编译器会做返回值优化或者自动移动。</li>
+</ul>
+<h3 id="vector-常用方法"><a href="#vector-常用方法" class="headerlink" title="vector 常用方法"></a>vector 常用方法</h3><p><code>std::vector</code> 是动态数组，常用增删改查：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>写法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>增</td>
+<td><code>v.push_back(x)</code></td>
+<td>尾部追加</td>
+</tr>
+<tr>
+<td>增</td>
+<td><code>v.emplace_back(args...)</code></td>
+<td>尾部原地构造对象</td>
+</tr>
+<tr>
+<td>增</td>
+<td><code>v.insert(v.begin() + i, x)</code></td>
+<td>指定位置插入</td>
+</tr>
+<tr>
+<td>删</td>
+<td><code>v.pop_back()</code></td>
+<td>删除最后一个元素</td>
+</tr>
+<tr>
+<td>删</td>
+<td><code>v.erase(v.begin() + i)</code></td>
+<td>删除指定位置</td>
+</tr>
+<tr>
+<td>删</td>
+<td><code>v.clear()</code></td>
+<td>清空元素</td>
+</tr>
+<tr>
+<td>改</td>
+<td><code>v[i] = x</code></td>
+<td>修改指定位置</td>
+</tr>
+<tr>
+<td>查</td>
+<td><code>v[i]</code></td>
+<td>直接访问，不做越界检查</td>
+</tr>
+<tr>
+<td>查</td>
+<td><code>v.at(i)</code></td>
+<td>带越界检查</td>
+</tr>
+<tr>
+<td>查</td>
+<td><code>v.front()</code> &#x2F; <code>v.back()</code></td>
+<td>第一个 &#x2F; 最后一个元素</td>
+</tr>
+<tr>
+<td>查</td>
+<td><code>v.size()</code> &#x2F; <code>v.empty()</code></td>
+<td>元素个数 &#x2F; 是否为空</td>
+</tr>
+</tbody></table>
+<p><mark style="background:#ffd6e7"><code>v[i]</code> 越界是未定义行为；<code>v.at(i)</code> 越界会抛异常，更适合防御性代码。</mark></p>
+<p>项目里如果前面已经手动检查过范围，比如 <code>CHECK_LT(idx, weights_.size())</code>，后面再用 <code>weights_.at(idx)</code> 是双保险。</p>
+<h2 id="智能指针"><a href="#智能指针" class="headerlink" title="智能指针"></a>智能指针</h2><ol>
+<li><strong>shared_ptr</strong>, c11引入的智能指针之一，功能：<strong>引用计数自动管理内存，没人用了就自动delete</strong>。<br><img src="/images/Pasted%20image%2020260627084716.png" alt="521"></li>
+</ol>
+<p>创建方法：</p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line">auto p1 = std::make_shared&lt;Buffer&gt;(128, allocator);</span><br><span class="line"></span><br><span class="line">std::make_shared&lt;类名&gt;(构造函数的参数）</span><br><span class="line"><span class="section">= new 类名（构造函数参数）</span></span><br><span class="line"><span class="section">= new Buffer(128, allocator)</span></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="cuda相关"><a href="#cuda相关" class="headerlink" title="cuda相关"></a>cuda相关</h2><ol>
+<li>异步拷贝，流<br><code>cudaMemcpyAsync</code> 的”异步”是指：<strong>函数调用本身立即返回给 CPU，不等待拷贝实际完成</strong>。对比 <code>cudaMemcpy</code>（同步），CPU 会卡在那行直到拷贝结束。</li>
+</ol>
+<p>至于流内的顺序：同一个流上，任务<strong>依然按挂上去的顺序执行</strong>，后面的任务仍要等前面的异步拷贝完成。异步只是说 CPU 调用那一刻不等。</p>
+<p>所以你这个文件里用 <code>cudaMemcpyAsync</code> 的好处是，CPU 可以快速跑完这段 <code>memcpy</code> 函数，去干别的事（比如准备下一层的输入）。</p>
+<p>cudaDeviceSynchronize, 是cpu阻塞等待GPU所有流的任务完成。只要GPU还在干活，就不返回。</p>
+<ul>
+<li><strong>异步</strong> &#x3D; CPU 不等 GPU 任务完成就继续往下执行。</li>
+<li><strong><code>cudaDeviceSynchronize</code></strong> &#x3D; CPU 死等 GPU 上全部任务干完。</li>
+</ul>
+<hr>
+<h1 id="项目一：cuda自制大模型推理框架"><a href="#项目一：cuda自制大模型推理框架" class="headerlink" title="项目一：cuda自制大模型推理框架"></a>项目一：cuda自制大模型推理框架</h1><h2 id="1-base-基础组件层"><a href="#1-base-基础组件层" class="headerlink" title="1. base&#x2F;基础组件层"></a>1. base&#x2F;基础组件层</h2><p>这边主要三个部分：</p>
+<ul>
+<li>base<ul>
+<li>这个模块主要定义整个推理框架的一些基本类<ul>
+<li>设备类型（枚举）</li>
+<li>数据类型（枚举）</li>
+<li>模型类型（枚举）</li>
+<li>属性类</li>
+<li>状态类</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>buffer<ul>
+<li>这个模块对不同设备的内存空间做了一层抽象封装</li>
+<li>抽象存储空间</li>
+</ul>
+</li>
+<li>alloc<ul>
+<li>这个模块是对<strong>内存分配管理器</strong>的封装</li>
+</ul>
+</li>
+</ul>
+<h3 id="Buffer层，DeviceAlloctor层，RALL动态管理设计"><a href="#Buffer层，DeviceAlloctor层，RALL动态管理设计" class="headerlink" title="Buffer层，DeviceAlloctor层，RALL动态管理设计"></a>Buffer层，DeviceAlloctor层，RALL动态管理设计</h3><p>我的原话问题：</p>
+<blockquote>
+<p>对了，我记得老师说，buffer类这里面有用智能指针+RALL，智能指针我看就一个shared_ptr, 用来对内存进行引用计数，自动进行释放回收。是吗？</p>
+<p>那RALL呢？</p>
+</blockquote>
+<blockquote>
+<p>shared_ptr 本身就是 RAII 的经典实现，这算什么？共享指针本质上就是一个带一个引用计数机制的特殊指针，我看buffer里面，主要就是用来指定DeviceAllocator类型的指针，是用来表示设备操作类对象的指针的。</p>
+<p>buffer类里面，包含的是一块内存的抽象信息（内存大小，内存指针，内存设备，是否是buffer类管理的内存，管理这块内存的DeviceAllocator类对象。）</p>
+<p>而一个指向的具体的设备操作类对象，allocator_，（处理的设备类型，就这一个成员属性）</p>
+<p>所以我们的用共享指针shared_ptr所实现的RALL思想，是什么意思？是指的buffer类包含的对DeviceAllocator类的动态包括关系吗？</p>
+</blockquote>
+<blockquote>
+<p>所以buffer类对象，只是内存块的抽象表示层，中间还有一层DeviceAllocator类的分配层，是吗？</p>
+</blockquote>
+<p>这里可以理解成三层：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Buffer           # 内存块抽象：大小、指针、设备类型、是否外部内存</span><br><span class="line">    ↓ 委托</span><br><span class="line">DeviceAllocator  # 分配策略：CPU malloc/free 或 CUDA cudaMalloc/cudaFree</span><br><span class="line">    ↓ 调用</span><br><span class="line">OS / CUDA        # 真正执行物理内存分配</span><br></pre></td></tr></table></figure>
+
+<p><mark style="background:#d6e4ff">Buffer 不直接关心底层是 CPU 还是 GPU，它只保存内存块信息，并把申请&#x2F;释放委托给 allocator_。</mark></p>
+<p>Buffer类 里的核心成员大概是：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="type">size_t</span> byte_size_;</span><br><span class="line"><span class="type">void</span>* ptr_;</span><br><span class="line"><span class="type">bool</span> use_external_;</span><br><span class="line">DeviceType device_type_;</span><br><span class="line">std::shared_ptr&lt;DeviceAllocator&gt; allocator_;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>byte_size_ + ptr_</code>：表示这块内存本身。</li>
+<li><code>device_type_</code>：标记内存在 CPU 还是 GPU。</li>
+<li><code>use_external_</code>：如果是外部传进来的指针，Buffer 不负责释放。</li>
+<li><code>allocator_</code>：指向具体分配器对象，负责实际的 <code>allocate/release/memcpy</code>。</li>
+</ul>
+<p><strong>RALL编程思想</strong> &#x3D;<br><strong>Resource Acquisition Is Initialization。</strong><br>核心思想就一条：<strong>把资源的生命周期绑到对象的生命周期上</strong>——<mark style="background:#fff88f">对象构造时获取资源，对象析构时释放资源</mark>。编译器保证析构一定会跑，所以资源永远不会忘了释放。</p>
+<p><mark style="background:#fff88f">RAII 的核心：资源在构造时获取，在析构时释放。</mark></p>
+<p>在这里有两层 RAII：</p>
+<ol>
+<li><code>Buffer</code> 自己管理 <code>ptr_</code> 指向的内存块：构造时申请，析构时释放。<ol>
+<li><strong>buffer层，每个buffer类对象，管理ptr_，是通过构造函数，析构函数，来实现RALL的</strong></li>
+</ol>
+</li>
+<li><code>shared_ptr&lt;DeviceAllocator&gt;</code> 管理分配器对象：多个 Buffer 共享同一个 allocator，最后一个引用消失时自动销毁。<ol>
+<li><strong>DeviceAllocator层，是通过共享指针来动态管理分配器对象，实现RALL的</strong></li>
+</ol>
+</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">auto</span> alloc = CPUDeviceAllocatorFactory::<span class="built_in">get_instance</span>();</span><br><span class="line"><span class="function">Buffer <span class="title">buf1</span><span class="params">(<span class="number">32</span>, alloc)</span></span>;</span><br><span class="line"><span class="function">Buffer <span class="title">buf2</span><span class="params">(<span class="number">64</span>, alloc)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>buf1</code>、<code>buf2</code> 都保存了一份 <code>shared_ptr</code>，共同指向同一个 <code>DeviceAllocator</code>。引用计数归零时，分配器对象才会自动释放。</p>
+<p><mark style="background:#ffd6e7">注意：shared_ptr 管的是 allocator 对象的生命周期；Buffer 析构释放的是 ptr_ 指向的那块数据内存。这两个资源不要混在一起。</mark><br><img src="/images/Pasted%20image%2020260628142343.png"></p>
+<h3 id="Cuda流层，kernel模块的RAII封装"><a href="#Cuda流层，kernel模块的RAII封装" class="headerlink" title="Cuda流层，kernel模块的RAII封装"></a>Cuda流层，kernel模块的RAII封装</h3><p>base 层里还有一个 <code>kernel</code> 模块，对 CUDA stream 做了一层轻量封装：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> kernel &#123;</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">CudaConfig</span> &#123;</span><br><span class="line">    cudaStream_t stream = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">    ~<span class="built_in">CudaConfig</span>() &#123;</span><br><span class="line">        <span class="keyword">if</span> (stream) &#123;</span><br><span class="line">            <span class="built_in">cudaStreamDestroy</span>(stream);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>CudaConfig</code> 本质上是 <mark style="background:#d6e4ff">CUDA 流的 RAII 包装器</mark>。</p>
+<ul>
+<li><code>stream</code> 保存一条 CUDA 流。</li>
+<li>kernel 函数通过 <code>config-&gt;stream</code> 拿到指定流，在这条流上启动 GPU 算子。</li>
+<li><code>CudaConfig</code> 析构时自动调用 <code>cudaStreamDestroy(stream)</code>，不用外部手动销毁。</li>
+</ul>
+<p><mark style="background:#fff88f">RAII 思想：谁持有资源，谁在析构时负责释放。</mark></p>
+<p>和 <code>Buffer</code> 类似：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">Buffer     管 ptr_ 指向的内存块</span><br><span class="line">CudaConfig 管 cudaStream_t 指向的 CUDA 流</span><br></pre></td></tr></table></figure>
+
+<p>区别只是资源类型不同，一个是内存，一个是 CUDA 执行流。</p>
+<p><img src="/images/Pasted%20image%2020260628144842.png"></p>
+<h2 id="2-tensor-张量层"><a href="#2-tensor-张量层" class="headerlink" title="2. tensor&#x2F;张量层"></a>2. tensor&#x2F;张量层</h2><p>这一层就是在buffer层的基础上，定义tensor层，上下层之间也是共享指针来动态绑定来实现RALL</p>
+<p><img src="/images/Pasted%20image%2020260630145735.png"></p>
+<p>这边主要仔细看了一下构造函数，张量转移函数。</p>
+<p><strong>构造函数</strong></p>
+<p><strong>张量转移函数</strong><br><img src="/images/Pasted%20image%2020260630155727.png"></p>
+<p>这里来解释一下，</p>
+<ul>
+<li>先判断当前tensor的设备类型，必须是cpu内存</li>
+<li>之后<ul>
+<li>获取内存大小</li>
+<li>工厂函数获取GPU的内存分配器（实际干活的人）<ul>
+<li>工厂函数获取gpu内存分配器</li>
+<li><blockquote>
+<p><img src="/images/Pasted%20image%2020260630160056.png"></p>
+</blockquote>
+</li>
+<li>可以看到，工厂函数类对象，维护者一个静态的真实的gpu内存分配器指针，instance这个共享内存指针，永远指向一个gpu内存分配器。</li>
+<li>之后所有申请gpu内存分配器，就是用auto cu_alloc来指向这个gpu内存分配器的对象，增加了引用计数。这也是RALL的思想。</li>
+</ul>
+</li>
+<li>分配器开辟gpu内存</li>
+<li>分配器拷贝内存</li>
+<li>绑定该内存</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-op-算子层"><a href="#3-op-算子层" class="headerlink" title="3. op&#x2F;算子层"></a>3. op&#x2F;算子层</h2><h3 id="层的概念复习"><a href="#层的概念复习" class="headerlink" title="层的概念复习"></a>层的概念复习</h3><p>前面我们已经构造好了整个框架层base&#x2F;， 里面实现了：</p>
+<ul>
+<li>内存的分配，内存的抽象<br>之后，我们又在tensor张量层，来基于buffer层，实现了张量。</li>
+</ul>
+<p>现在我们要开始实现深度学习里面最经常用到的组件：层，他表示一种运算，输入张量，得到另一个张量。<br><img src="/images/Pasted%20image%2020260701161755.png" alt="256"><br><img src="/images/Pasted%20image%2020260701161819.png" alt="267"></p>
+<p>所以我们就要实现一个层 类，来抽象这个针对张量的运算过程的概念。</p>
+<h3 id="算子层op-的总体架构"><a href="#算子层op-的总体架构" class="headerlink" title="算子层op&#x2F;的总体架构"></a>算子层op&#x2F;的总体架构</h3><p>所以op&#x2F;算子层，这里主要有这几个部分：</p>
+<ul>
+<li>layer，层接口层<ul>
+<li>主要作为前端实现，确定好：<ul>
+<li>输入张量组</li>
+<li>输出张量组</li>
+<li>权重张量组</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>后端接口层：kernel_interface<ul>
+<li>利用函数指针，重定向具体的后端实现</li>
+</ul>
+</li>
+<li>op， 后端实现forward(), 拿数据进行具体的计算<ul>
+<li><code>op/add.h .cpp</code></li>
+<li><code>op/linear.h .cpp</code></li>
+<li><code>op/matmul.h .cpp</code> </li>
+<li>各种具体的层的运算实现</li>
+</ul>
+</li>
+</ul>
+<p>所以，至此，我们的大模型推理框架的整个结构是：<br><img src="/images/Pasted%20image%2020260701173218.png"></p>
+<p>根据前面，我们得知了</p>
+<h4 id="层组件层-（y-f-x-的前端结构）"><a href="#层组件层-（y-f-x-的前端结构）" class="headerlink" title="层组件层 （y &#x3D; f(x) 的前端结构）"></a>层组件层 （y &#x3D; f(x) 的前端结构）</h4><p>首先是层组件层：</p>
+<ul>
+<li><mark style="background:#fff88f">BaseLayer类（层的固有属性）</mark><ul>
+<li><p><img src="/images/Pasted%20image%2020260701191035.png"></p>
+</li>
+<li><p><mark style="background:#fff88f"> Layer类，（层的固有属性+输入输出张量）</mark></p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260701191253.png"></li>
+</ul>
+</li>
+<li><p><mark style="background:#fff88f">LayerParam类（层的固有属性+输入输出张量+权重张量）</mark></p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260701191337.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260701194256.png" alt="394"></p>
+<p>上面这个是第一部分，主要定义了一个<strong>层组件层</strong>，这样一个<strong>中间层</strong>，实现了张量-张量的层运算的抽象过程。</p>
+<blockquote>
+<p>内部的具体逻辑没有，只有形式, 就相当于实现了y &#x3D; f(x) ，这样一个前端框架，但是f(x)的具体后端实现并没有定义，只是通过<strong>forward()这个基类的虚函数</strong>，在**子类（算子）中实现。</p>
+</blockquote>
+<p>在这个<strong>中间层的基础上</strong>，我们：</p>
+<ul>
+<li>在<strong>上方构建算子层（实现各个算子）</strong><ul>
+<li>各个算子的后端实现，forward()，依赖后端算子内核接口层返回具体的内核方法<ul>
+<li>cpu后端内核实现</li>
+<li>cuda后端内核实现</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>在<strong>下方依赖于Tensor层</strong></li>
+</ul>
+<h4 id="后端内核接口层（kernel-interface）"><a href="#后端内核接口层（kernel-interface）" class="headerlink" title="后端内核接口层（kernel_interface）"></a>后端内核接口层（kernel_interface）</h4><p>这里就是前端连接后端的接口层。通过这一层的方法，自动判断使用哪个后端内核。</p>
+<ol>
+<li><p>定义各种算子的<strong>后端内核方法</strong>的<strong>函数指针接口</strong><br><img src="/images/Pasted%20image%2020260701192154.png"></p>
+</li>
+<li><p>提供<strong>返回函数指针的方法</strong>， 提供自动索引后端内核<br><img src="/images/Pasted%20image%2020260701192245.png"></p>
+</li>
+<li><p><strong>具体返回的后端内核</strong>，涉及了<code>cpu/add_kernel.h</code> 和 <code>cuda/add_kernel.cuh</code><br><img src="/images/Pasted%20image%2020260701192448.png" alt="385"></p>
+</li>
+</ol>
+<h4 id="具体算子层-f-的真正实现"><a href="#具体算子层-f-的真正实现" class="headerlink" title="具体算子层( f()的真正实现 )"></a>具体算子层( f()的真正实现 )</h4><p>这一层，就是基于前面两个层，创建各个算子的抽象类，继承Layer层，让不同算子类都是继承的层的概念。并重写各自的forward()</p>
+<p>因此，通过调用每个算子类对象的forward()，即可调用真正的后端算子内核实现。</p>
+<p>下面以add_kernel为例：</p>
+<ol>
+<li><strong>定义加法算子：</strong></li>
+</ol>
+<p> <img src="/images/Pasted%20image%2020260701192851.png" alt="339"></p>
+<ol start="2">
+<li><strong>算子方法实现：</strong><ol>
+<li><strong>设定算子的输入输出</strong><br><img src="/images/Pasted%20image%2020260701193108.png" alt="335"></li>
+<li><strong>实现前向传播forward</strong></li>
+</ol>
+</li>
+</ol>
+<p><img src="/images/Pasted%20image%2020260701193056.png" alt="474"></p>
+<p>可以看到，f()的实现里面，调用了后端内核接口层的get_add_kernel方法，来返回一个根据设备类型而选择的后端内核</p>
+<p><code>kernel::get_add_kernel(device_type_)</code> &#x3D; <code>AddKernel</code></p>
+<p><code> kernel::get_add_kernel(device_type_)(input1, input2, output, cuda_config_ ? cuda_config_-&gt;stream : nullptr);</code><br>&#x3D; <code>Addkernel(......)</code></p>
+<p>从而在forward()里面实现调用对应的内核接口</p>
+<h5 id="cpu端内核"><a href="#cpu端内核" class="headerlink" title="cpu端内核"></a>cpu端内核</h5><ul>
+<li>首先进行一系列对输入输出的检查</li>
+<li>计算得出结果（利用armadillo库，这个是c++的线性代数库）</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260701193654.png"></p>
+<h5 id="cuda端内核"><a href="#cuda端内核" class="headerlink" title="cuda端内核"></a>cuda端内核</h5><ul>
+<li>对输入输出进行检查</li>
+<li>实现后端主函数，调用核函数</li>
+<li>实现后端核函数</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260701193914.png"></p>
+<h4 id="算子输入规划策略"><a href="#算子输入规划策略" class="headerlink" title="算子输入规划策略"></a>算子输入规划策略</h4><blockquote>
+<p>我想知道，我们的这个cuda算子，我们的算子cu实现是肯定不知道，处理的输入数据是多大的，</p>
+<p>我看我目前的add算子，是固定设置好了block_size的大小，然后grid_size根据实际输入的数据大小来定的，但是我目前的add算子是朴素实现，一个thread处理一个元素输出。 </p>
+<p>但是如果后续优化的话，比如SGEMM，可能就会有thread_tile, warp_tile等优化策略，这就导致，我们一个thread处理多个元素。 那么这样的话，如果我写这样的优化算子的话，那么还是一样的吗？</p>
+<p>比如，我默认想好使用这种优化手段，所以一个thread对应x个元素，所以设置一个block_size &#x3D; 256这样，然后我再根据输入的大小来动态计算grid_size吗？</p>
+</blockquote>
+<p><mark style="background:#ff4d4f">对，核心逻辑完全一样</mark>，只是 grid_size 的计算公式里要多除一个系数。</p>
+<p><strong>朴素实现</strong>（你现在的 add）：1 thread &#x3D; 1 element</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">grid_size = <span class="built_in">ceil</span>(size / block_size);</span><br><span class="line"><span class="comment">// kernel 里：</span></span><br><span class="line"><span class="type">int</span> tid = blockIdx.x * blockDim.x + threadIdx.x;</span><br><span class="line"><span class="keyword">if</span> (tid &lt; size) out[tid] = in1[tid] + in2[tid];</span><br></pre></td></tr></table></figure>
+
+<p><strong>线程平铺优化</strong>（比如 thread_tile &#x3D; 4）：1 thread &#x3D; 4 elements</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="type">size_t</span> block_size  = <span class="number">256</span>;             <span class="comment">// 还是固定</span></span><br><span class="line"><span class="type">size_t</span> thread_tile = <span class="number">4</span>;               <span class="comment">// 每个线程处理 4 个元素</span></span><br><span class="line"><span class="type">size_t</span> grid_size   = (size + block_size * thread_tile - <span class="number">1</span>) </span><br><span class="line">                   / (block_size * thread_tile);</span><br><span class="line"></span><br><span class="line"><span class="comment">// kernel 里：</span></span><br><span class="line"><span class="type">int</span> tid   = blockIdx.x * blockDim.x + threadIdx.x;</span><br><span class="line"><span class="type">int</span> start = tid * thread_tile;        <span class="comment">// 这个线程负责的起始位置</span></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> unroll</span></span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> k = <span class="number">0</span>; k &lt; thread_tile; k++) &#123;</span><br><span class="line">    <span class="type">int</span> idx = start + k;</span><br><span class="line">    <span class="keyword">if</span> (idx &lt; size) out[idx] = in1[idx] + in2[idx];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>SGEMM 那种更复杂的</strong>（有 warp_tile），也是同样模式，只是分得更细：</p>
+<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">total_tiles</span> = (M * N) / (thread_tile * warp_tile)</span><br><span class="line"><span class="attr">grid_size</span>   = ceil(total_tiles / block_size)</span><br></pre></td></tr></table></figure>
+
+<p>本质上就是：</p>
+<blockquote>
+<p><strong>block_size 永远是固定的（硬件友好常量），grid_size 永远是根据数据量动态算出来的，只是”一个 thread block 能做多少工作”的计算公式变了。</strong></p>
+</blockquote>
+<p>你用固定 block_size + 动态 grid_size 这个模式是对的，不管怎么优化都适用。</p>
+<hr>
+<blockquote>
+<p><mark style="background:#ff4d4f">那block_size，要怎么确定呢？</mark>是根据SM上的寄存器数量以及共享内存的大小，考虑到一个thread负责多少个数据，来推导出来的？一般是多少？</p>
+</blockquote>
+<p>对，block_size 的确定就是这几个因素互相制约：</p>
+<p><strong>核心公式（任何一个 SM 上）：</strong></p>
+<figure class="highlight nix"><table><tr><td class="code"><pre><span class="line">MaxWarps × WarpSize <span class="operator">=</span> min(</span><br><span class="line">    MaxThreadsPerBlock,</span><br><span class="line">    RegisterFileSize <span class="symbol">/</span> RegistersPerThread,</span><br><span class="line">    SharedMemPerBlock <span class="symbol">/</span> SharedMemPerThread</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p><strong>具体推演，拿常见的架构举例：</strong></p>
+<blockquote>
+<p>一个寄存器，4 字节。GPU 寄存器是 32 位的，正好装一个 <code>float</code> 或 <code>int32_t</code></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>架构</th>
+<th>SM 寄存器数</th>
+<th>最大线程&#x2F;block</th>
+<th>共享内存&#x2F;SM</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>V100 (SM70)</td>
+<td>65536</td>
+<td>1024</td>
+<td>96KB</td>
+</tr>
+<tr>
+<td>A100 (SM80)</td>
+<td>65536</td>
+<td>1024</td>
+<td>164KB</td>
+</tr>
+</tbody></table>
+<p>假设你的 kernel 每个线程用 32 个寄存器：</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">RegistersPerBlock</span>  = max(<span class="number">65536</span> / <span class="number">32</span>, <span class="number">1024</span>) = <span class="number">1024</span> threads  // 寄存器够用，卡在硬件上限</span><br></pre></td></tr></table></figure>
+
+<p>假设用了 48KB 共享内存&#x2F;block：</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">SharedMemPerBlock</span>  = max(<span class="number">164</span>KB / <span class="number">48</span>KB, ...) = <span class="number">3</span> blocks/SM   // 共享内存卡住并行</span><br></pre></td></tr></table></figure>
+
+<p><strong>实际情况中最常见的 block_size：</strong></p>
+<table>
+<thead>
+<tr>
+<th>block_size</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>256</strong></td>
+<td>最常用，8 个 warp，寄存器&#x2F;共享内存均衡，适用大多数 kernel</td>
+</tr>
+<tr>
+<td><strong>128</strong></td>
+<td>寄存器用量高的时候（每个 thread 算得多），让更多 block 并行</td>
+</tr>
+<tr>
+<td><strong>512</strong></td>
+<td>轻量 kernel（寄存器少，共享内存少），最大化 occupancy</td>
+</tr>
+<tr>
+<td><strong>1024</strong></td>
+<td>几乎没寄存器压力的极轻 kernel，跑满硬件限制</td>
+</tr>
+</tbody></table>
+<p><strong>你的情况：</strong> 你用的是 512，对朴素 add 完全合适——一个 thread 只做一次 load + add + store，寄存器压力极小，共享内存也没有，往大了设没问题。</p>
+<p><strong>建议：</strong> 一般 128 或 256 作为默认值就够，具体调哪个可以在 kernel 测试的时候调一下看看哪个快，这东西理论推导只能给出范围，最终还是跑 profile 说话。</p>
+<hr>
+<h3 id="3-2-大模型算子内容介绍"><a href="#3-2-大模型算子内容介绍" class="headerlink" title="3.2 大模型算子内容介绍"></a>3.2 大模型算子内容介绍</h3><p>先复习一下我们的decoder-only的transoformer的整个架构</p>
+<p><img src="/images/b0e134623d6da1f889d335edef9df60c.jpg"></p>
+<p>下面逐个看一下各个算子的实现，看看各个算子实际的输入输出是什么</p>
+<h4 id="encode-分词编码器层"><a href="#encode-分词编码器层" class="headerlink" title="encode 分词编码器层"></a>encode 分词编码器层</h4><p>这个就是一个单纯的无参翻译层算子，</p>
+<ul>
+<li>给一个词串，他就翻译成一个token id的数组</li>
+<li>给一个词，就翻译成单个token</li>
+</ul>
+<p>所以 <code>encode(&quot;hello world&quot;)</code> 的过程是：</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;hello world&quot;</span></span><br><span class="line">  → BPE 算法切分: [<span class="string">&quot;Ġhello&quot;</span>, <span class="string">&quot;Ġworld&quot;</span>]     (子词拆分)</span><br><span class="line">  → 查词袋:        Ġhello → token <span class="built_in">id</span> = <span class="number">2</span></span><br><span class="line">                   Ġworld → token <span class="built_in">id</span> = <span class="number">3</span></span><br><span class="line">  → 输出:                                 [<span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="embedding-词嵌入层-（有参）"><a href="#embedding-词嵌入层-（有参）" class="headerlink" title="embedding 词嵌入层 （有参）"></a>embedding 词嵌入层 （有参）</h4><p>我们一个token，经过encode层之后，获得的是这个token在vocab词袋中的索引id, 这样我们其实可以得到的是最原始的一个编码：one-hot编码</p>
+<p>比如token id &#x3D; 2， 用one-hot编码表示就是<br>[0,0,1,0,0,……………………………………………………………………………..,0]<br>但是用这样一个vocab_size( &#x3D; 36000)的维度的编码太长了，没必要，所以就需要embedding层，来把他映射压缩到一个较低维度的编码比如4096，这就是词嵌入</p>
+<p>由于one-hot编码的特性，本质上就变成了，对embedding层的权重矩阵的查表。</p>
+<p><img src="/images/img_v3_0213l_01510ec1-1484-4151-8994-aa2a9a83b00g.jpg"></p>
+<blockquote>
+<p>这个权重矩阵，也就是embedding层的参数，是训练出来的，模型在训练过程中，自己学会压缩token向量的维度</p>
+</blockquote>
+<figure class="highlight livecodeserver"><table><tr><td class="code"><pre><span class="line"><span class="literal">one</span>-hot: <span class="keyword">token</span> <span class="string">&quot;Ġhello&quot;</span> → [<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>,...,<span class="number">0</span>]   <span class="number">32000</span> 维稀疏向量（只有一个 <span class="number">1</span>）</span><br><span class="line">embedding: 同一个 <span class="keyword">token</span> → [<span class="number">0.04</span>, <span class="number">-0.02</span>, <span class="number">0.01</span>, ..., <span class="number">0.03</span>]  <span class="number">4096</span> 维稠密向量</span><br><span class="line"></span><br><span class="line">关系: <span class="literal">one</span>-hot @ W = W[id] = 稠密向量</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>本质就是<strong>降维 + 语义化</strong>：</p>
+<ul>
+<li>one-hot 只是编号，<code>id=2</code> 和 <code>id=3</code> 在向量空间里等距，没有意义</li>
+<li>embedding 让”语义相近的词在向量空间里也近” — “hello” 和 “hi” 的 embedding 向量很接近，这是训练过程中自己学出来的</li>
+</ul>
+<p>所以 embedding 层 &#x3D; 一个 <code>vocab_size × dim</code> 的大矩阵，训练帮每个 token 学到了一个”好的”低维表示。</p>
+<p>所以embedding层输出的一个token向量，是一个dim维度的向量，这个dim维度的向量空间V，就是一个<mark style="background:#fff88f">语义空间</mark>。</p>
+<p>我们这就实现了<mark style="background:#fff88f">从一个token词，到语义空间的投射</mark>。</p>
+<h4 id="rmsnorm-归一化层（有参）"><a href="#rmsnorm-归一化层（有参）" class="headerlink" title="rmsnorm 归一化层（有参）"></a>rmsnorm 归一化层（有参）</h4><p>这里先捋一下这部分的实际大模型用的一个顺序</p>
+<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">embedding 输出 (1×4096)</span><br><span class="line">  │</span><br><span class="line">  ▼  <span class="keyword">input</span></span><br><span class="line">┌─────────────────────────────────────────────────────────────────┐</span><br><span class="line">│  Decoder Block #i (重复 layer_num 次)                              │</span><br><span class="line">│                                                                   │</span><br><span class="line">│  ① attention_rms:                                                 │</span><br><span class="line">│     <span class="keyword">input</span> ──► RMSNorm ──► rmsnorm_out                             │</span><br><span class="line">│                              │                                    │</span><br><span class="line">│  ② attention_qkv:            │                                    │</span><br><span class="line">│                    ┌─ W_Q ─ Q ─ RoPE ─► kQuery                   │</span><br><span class="line">│     rmsnorm_out ──┼─ W_K ─ K ─ RoPE ─► KV Cache[i][pos]         │</span><br><span class="line">│                    └─ W_V ─ V ────────► KV Cache[i][pos]         │</span><br><span class="line">│                                                                   │</span><br><span class="line">│  ③ attention_mha:                                                 │</span><br><span class="line">│     <span class="built_in">Q</span>(kQuery) + K,V(KV Cache) ──► MHA ──► W_O ──► kAttnOutput   │</span><br><span class="line">│                                                                   │</span><br><span class="line">│  ④ feed_forward:                                                  │</span><br><span class="line">│     <span class="keyword">input</span> + kAttnOutput ────────────────────────────► <span class="keyword">input</span>&#x27;      │</span><br><span class="line">│     <span class="keyword">input</span>&#x27; ──► RMSNorm ──► ffn_norm_out                           │</span><br><span class="line">│                              │                                    │</span><br><span class="line">│                    ┌─ W1(gate) ─┐                                 │</span><br><span class="line">│     ffn_norm_out ─┼─ W3(up)   ─┼─► SwiGLU ──► W2(down) ──► <span class="keyword">out</span>  │</span><br><span class="line">│                    └───────────┘                                   │</span><br><span class="line">│     <span class="keyword">input</span>&#x27; + <span class="keyword">out</span> ─────────────────────────────────► <span class="keyword">input</span> (下一层)│</span><br><span class="line">│                                                                   │</span><br><span class="line">└─────────────────────────────────────────────────────────────────┘</span><br><span class="line">  │</span><br><span class="line">  ▼  (循环结束后)</span><br><span class="line">cls_logits:</span><br><span class="line">  <span class="keyword">input</span> ──► RMSNorm ──► lm_head ──► logits (1×vocab_size)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>所以，decode阶段，当来了一个新的token 从embedding层出来，是一个新的token 向量，</p>
+<p>然后进入decoder block的<mark style="background:#ff4d4f">第一个算子层是RMSNorm层，他是一个有参层</mark></p>
+<p>这个RMSNorm层，属于层归一化LayerNorm的优化版本</p>
+<p>原来LayerNorm，对每个token向量的处理:<br><img src="/images/Pasted%20image%2020260702101001.png" alt="209"><img src="/images/Pasted%20image%2020260702101104.png" alt="357"></p>
+<p>所以RMSNorm对一个向量的公式是：</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">RMSNorm</span><span class="params">(x_i)</span></span> = (x_i / <span class="built_in">RMS</span>(<span class="attribute">x</span>)) × γ_i</span><br><span class="line"></span><br><span class="line">其中:</span><br><span class="line">  <span class="built_in">RMS</span>(<span class="attribute">x</span>) = <span class="built_in">sqrt</span>( <span class="number">1</span>/dim × Σ(x_i²) )    ← 纯计算，不需要参数</span><br><span class="line">  γ      = <span class="selector-attr">[γ₁, γ₂, ..., γ_4096]</span>       ← 可训练参数，训练学到</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p><strong>γ 做的事就是”这个维度重要就放大，不重要就缩小”</strong></p>
+<figure class="highlight subunit"><table><tr><td class="code"><pre><span class="line">归一化后:  [0.01, <span class="string">-0</span>.5, 0.3, ..., <span class="string">-0</span>.02]   每个值都在 [<span class="string">-1</span>,1] 附近</span><br><span class="line">  × γ:     [0.01×1.2, <span class="string">-0</span>.5×0.8, 0.3×1.5, ..., <span class="string">-0</span>.02×0.9]</span><br><span class="line">  = 输出:  [0.012, <span class="string">-0</span>.4, 0.45, ..., <span class="string">-0</span>.018]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>让模型自己学会”哪些维度该放大、哪些该缩小”。</strong></p>
+<p>归一化把所有维度压到同一个量级，这很粗暴 — 有些语义特征可能需要更大的变化幅度。γ 就是给模型留下自由度：</p>
+<figure class="highlight abnf"><table><tr><td class="code"><pre><span class="line">假设 dim <span class="number">3</span> 编码<span class="string">&quot;名词/动词&quot;</span>信息  →  训练后 γ₃ <span class="operator">=</span> <span class="number">1.5</span>（放大，让这个特征更突出）</span><br><span class="line">假设 dim <span class="number">7</span> 编码<span class="string">&quot;标点符号&quot;</span>信息  →  训练后 γ₇ <span class="operator">=</span> <span class="number">0.2</span>（缩小，不太重要）</span><br></pre></td></tr></table></figure>
+
+<p>如果只有归一化没有 γ，相当于强制 γ &#x3D; [1, 1, 1, …, 1]，模型就失去了<strong>调节每个维度表达力的能力</strong>，这也是为什么纯归一化（无参）之后表现会显著下降。</p>
+<p>简单说：归一化负责稳定数值（别让梯度炸了），γ 负责保留表达能力（别把有用信息也压没了）</p>
+<p>但是，这里的RMSNorm，虽然也有微调每个token的维度的能力，但是本质上是为了稳定，而真正的表达，是依赖后续的matmul算子的权重张量来负责的。</p>
+<figure class="highlight autoit"><table><tr><td class="code"><pre><span class="line">RMSNorm × γ     (<span class="keyword">dim</span> 个参数)    → 纯缩放，调节数值范围</span><br><span class="line">W_Q 矩阵        (<span class="keyword">dim</span> × <span class="keyword">dim</span> 个参数) → 真正的语义变换</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>γ 就是个”量级微调”</strong>，给归一化留一点点灵活性。真正把向量从”被归一化压平的”变成”包含丰富语义的”，靠的是后面 <code>dim × dim</code> 的权重矩阵。</p>
+<p>换个角度看：RMSNorm 在每个 block 里出现两次，后面永远紧跟着至少一个 <code>dim × dim</code> 的矩阵乘法。如果你觉得某个维度被归一化后变弱了，那后面那个矩阵完全可以学出对应的补偿 —— 但 γ 可以让这个补偿更直接、训练更稳定。</p>
+<p>实际上有研究试过把 γ 固定为全 1（DynamicsNorm），性能差不太多。所以你说得对，它的调节能力确实有限，但这正是它的设计意图 — 别抢权重矩阵的活</p>
+<h4 id="Matmul-矩阵乘算子层（有参）"><a href="#Matmul-矩阵乘算子层（有参）" class="headerlink" title="Matmul 矩阵乘算子层（有参）"></a>Matmul 矩阵乘算子层（有参）</h4><p>经过embedding后得到的是token向量[4096]， 之后会复制3份，分别经过，Wq,Wk,Wv 矩阵乘的算子层，来计算得到我们的Q向量[4096]，K向量[1024]，V向量[1024]。</p>
+<p><img src="/images/9d445fd58c26dd5a3f08a987bb566f06.jpg" alt="260"><img src="/images/Pasted%20image%2020260718143926.png" alt="345"></p>
+<p><mark style="background:#affad1">那么既然embedding已经把token投影到语义空间了，qkv的投影矩阵的投影，又是什么意义呢？</mark></p>
+<p><img src="/images/Pasted%20image%2020260718144300.png"></p>
+<hr>
+<p><strong>以上解释了，我们矩阵乘Wq,Wk,Wv三个算子层的作用，下面来解释为什么</strong></p>
+<ul>
+<li>q是4096</li>
+<li>k是1024</li>
+<li>v是1024</li>
+</ul>
+<blockquote>
+<p>我的问题现在集中在，<strong>为什么token向量是4096，q仍然是4096，而kv则是1024</strong>，就是单纯的为了省kvcache吗？kv压缩了维度，不会对模型理解语义效果有什么影响吗</p>
+</blockquote>
+<p><img src="/images/Pasted%20image%2020260719093036.png"></p>
+<p><strong>所以原因就是k,v的各个头之间是冗余的，所以可以压缩，就投影到1024，而不是4096.</strong></p>
+<hr>
+<p>下面来解释多头的概念。</p>
+<p>所谓多头，其实就是去切分q,k,v的这么长的向量，不同分块sub就是一个头。</p>
+<p>以llama3为例，</p>
+<ul>
+<li>k,v  1024维度，切分8个头，每个头128维</li>
+<li>q，4096维度，切分32个头，每个头128维</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260719093608.png"></p>
+<blockquote>
+<p>在标准的transformer论文里面，W_Q&#x2F;W_K&#x2F;W_V 确实属于 Attention 的一部分。但<strong>在这个项目里被拆开了</strong>。</p>
+</blockquote>
+<hr>
+<h5 id="多头方案"><a href="#多头方案" class="headerlink" title="多头方案"></a>多头方案</h5><p>在接着往下之前，先分析几个<strong>多头方案</strong></p>
+<p>本质上解决的就是<strong>两个头数不同的向量怎么做点积</strong>：</p>
+<p><mark style="background:#d3f8b6">MHA</mark><br>q,k,v都是一个维度，4096维度，切分32个头，每个头一一对应<br><img src="/images/img_v3_0213o_89ca8fba-41ce-44b4-a5d7-8b87b7f0f9fg.jpg" alt="547"></p>
+<p><mark style="background:#affad1">MQA</mark><br>特点是，k,v向量，被极端压缩，就压成一个头的大小<br><img src="/images/img_v3_0213o_5c109d55-804b-41ee-9f7b-be554fb41d6g.jpg" alt="574"></p>
+<p><mark style="background:#affad1">GQA</mark><br>Q的几个头一组，共享KV的一个头<br><img src="/images/img_v3_0213o_32ca7599-3790-43b7-86fd-b377cf469fbg.jpg" alt="570"></p>
+<p>以上仅是分组的策略，本质上都是如何并行计算两个向量之间的相关程度。</p>
+<p><mark style="background:#fff88f">效果对比</mark><br><img src="/images/Pasted%20image%2020260719095456.png"></p>
+<hr>
+<h4 id="RoPE-旋转位置编码层"><a href="#RoPE-旋转位置编码层" class="headerlink" title="RoPE 旋转位置编码层"></a>RoPE 旋转位置编码层</h4><p>在进入mha层之前，会对，<strong>q,k两个向量进行位置编码</strong>，</p>
+<p>这里位置编码的处理，不是整个向量处理，而是<strong>一次针对一个头128维来处理</strong>的。</p>
+<p><img src="/images/Pasted%20image%2020260719100127.png" alt="451"></p>
+<p><img src="/images/Pasted%20image%2020260719100910.png" alt="609"></p>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a><mark style="background:#affad1">总结</mark></h5><p>所以，一个token向量，投影成QKV向量后，</p>
+<ul>
+<li>kv向量加入kvcache，作为这个token的键值缓存，用来被其他token向量计算相关性。</li>
+<li>Q向量则用来和历史token的KV向量计算相关性。</li>
+</ul>
+<p> 所以，因为<strong>每个向量的Q，K经过RoPE</strong>，这样，这个token和另一个token的QK进行<strong>计算相关性</strong>的时候，就带入了相对位置关系，是吧</p>
+<p>这里的位置关系，需要说明一下，</p>
+<p>我们对一个token向量的Q，K向量做位置编码，<strong>本质上是给这些向量一个数学上的绝对位置坐标</strong></p>
+<p>这样，该token的q和其他token的k计算的时候，<strong>得到的相对位置关系，其实就是先后顺序关系</strong><br><img src="/images/Pasted%20image%2020260719104759.png"></p>
+<p>所以，加入RoPE，是为注意力分数的相关性里面，增加了一层位置信息，这样注意力分数的相关性包含：</p>
+<ul>
+<li>位置先后顺序</li>
+<li>语义相关性</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260719105000.png"></p>
+<p>注意，在具体实现中，会提前将旋转运算用到的系数，计算好存在 sin cos cache里面，<strong>相当于提前计算好了整个上下文窗口的位置编码的旋转系数</strong>。</p>
+<p><img src="/images/Pasted%20image%2020260720211704.png"></p>
+<hr>
+<h4 id="mha多头注意力算子层"><a href="#mha多头注意力算子层" class="headerlink" title="mha多头注意力算子层"></a>mha多头注意力算子层</h4><p>mha这个算子层的实现，他就是，当前token的kv向量直接加入kvcache， q向量和历史token的k向量做相关性计算</p>
+<p><img src="/images/Pasted%20image%2020260719103015.png"></p>
+<p>可以看到，我们<strong>前面的多头策略，本质上就是定义两个不同维度的向量的点积运算</strong>。</p>
+<p>所以实际进行相关分数计算的时候，是发生在里面的<strong>头和头</strong>之间的</p>
+<p><img src="/images/Pasted%20image%2020260719103527.png"></p>
+<p><img src="/images/Pasted%20image%2020260719103856.png" alt="406"></p>
+<p><strong>一个q和所有的kcache进行注意力分数计算</strong></p>
+<p><img src="/images/img_v3_0213o_7da7076f-c02c-42ea-999a-af113f5a31ag.jpg"></p>
+<p>在输出注意力输出的时候，因为v是1024维度，只有8个头，所以，和k一样，GQA共享，也就是说，每组的q</p>
+<p>所以，i个kcache, i个vcache, 一个q 4096, 32个头，</p>
+<p><strong>最终产生的v_q, 就是4096维度的</strong>（32个头都有分数，分组加权vcache）</p>
+<h6 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h6><p><strong>最终还有一个W_O的矩阵乘算子层，把多头信息投影到语义空间</strong><br><img src="/images/img_v3_0213o_c47507d5-7c42-4d59-8891-5cb4ad63b2fg.jpg"></p>
+<h4 id="残差连接层-add"><a href="#残差连接层-add" class="headerlink" title="残差连接层 add"></a>残差连接层 add</h4><p><img src="/images/img_v3_0213o_090cbb72-b0eb-48cb-8d09-d85eadcb699g.jpg"></p>
+<p>至此，就是decoder block的前半段。</p>
+<h4 id="（补充）门控GLU"><a href="#（补充）门控GLU" class="headerlink" title="（补充）门控GLU"></a>（补充）门控GLU</h4><p><img src="/images/Pasted%20image%2020260720093900.png" alt="424"></p>
+<p>假设现在有一个输入x, 经过两个线性层linear算子，但是其中一个算子后面增加了sigmoid，</p>
+<p><img src="/images/Pasted%20image%2020260720094011.png" alt="153"><img src="/images/Pasted%20image%2020260720094043.png" alt="286"></p>
+<p><img src="/images/Pasted%20image%2020260720094119.png" alt="107"><br>因此B这条linear层算子，因为加上了sigmoid，就会变成一个门控单元，之后和A的linear层进行逐元素相乘即可</p>
+<p>这就是我们最原始的GLU的思想</p>
+<p><img src="/images/Pasted%20image%2020260720094304.png"></p>
+<h4 id="SwiGLU"><a href="#SwiGLU" class="headerlink" title="SwiGLU"></a>SwiGLU</h4><p>而我们的decoder-block的后半段，是FFN部分，这里不是单纯的两个linear层，</p>
+<p><img src="/images/Pasted%20image%2020260720094654.png" alt="412"></p>
+<p><img src="/images/Pasted%20image%2020260720095147.png" alt="483"></p>
+<p>所以，可以看到，他这里把sigmoid函数换成了 x*sigmoid(x), 这样的好处是：</p>
+<ul>
+<li>原来激活函数用sigmoid，只能通过、抑制，不能放大信息</li>
+<li>swish函数：-0.3——-+∞， 可以实现关闭，衰减，保留，放大，改变符号。</li>
+</ul>
+<p>所以，kuipa里面的SwiGLU算子层，就是把升维的向量，和门控的向量，做一个运算的无参层。</p>
+<p>真正的升维的都是矩阵乘matmul算子<br><img src="/images/Pasted%20image%2020260720100128.png" alt="253"></p>
+<p>经过SwiGLU之后，得到升维的token向量。<br><img src="/images/Pasted%20image%2020260720100431.png" alt="543"><br><img src="/images/Pasted%20image%2020260720100556.png"></p>
+<h5 id="总结-2"><a href="#总结-2" class="headerlink" title="总结"></a>总结</h5><p>之后这一块也有残差连接<br><img src="/images/Pasted%20image%2020260720101015.png" alt="466"></p>
+<p><img src="/images/Pasted%20image%2020260720100935.png" alt="497"></p>
+<h4 id="分层算子-cls-layer（本质上matmul算子）-有参"><a href="#分层算子-cls-layer（本质上matmul算子）-有参" class="headerlink" title="分层算子 cls_layer（本质上matmul算子） (有参)"></a>分层算子 cls_layer（本质上matmul算子） (有参)</h4><p>至此，当我们经过了多个decoder block， 得到最后的一个输出token向量 4096，经过最后一个RMSNorm，归一化到0-1之间，之后，就可以开始解码了。我们解码，用的就是embedding的逆用。</p>
+<p>这里就需要再次深入的认识embedding这个算子层了。</p>
+<p>在一开始，embedding算子层的作用是把token_id -&gt; token向量，本质上就是token id的one hot编码对embedding的巨大的权重矩阵（vocab_size x dim）的查表。</p>
+<p>在最后，我们用输出向量4096，也反向去embedding的权重矩阵里面去查表，得到最后的token id. 这就是我们的输出token的id。</p>
+<blockquote>
+<p>所以，embedding的权重矩阵，不是无意义的编码，而是每个token的语义坐标<br><img src="/images/Pasted%20image%2020260720102131.png"></p>
+</blockquote>
+<p><img src="/images/Pasted%20image%2020260720102223.png"></p>
+<p>所以<strong>末端的</strong>cls_layer<strong>层，通过语义坐标来查找匹配对应的tokenid， 并不是完全一致。而是匹配看看那个向量最接近</strong>。</p>
+<p><img src="/images/Pasted%20image%2020260720102735.png"></p>
+<p>所以，cls_layer层算子，本质上就是一个matmul算子，因为里面指定了特定的权重矩阵，所以，才单独封装一下。</p>
+<p><img src="/images/Pasted%20image%2020260720103058.png"></p>
+<p><img src="/images/Pasted%20image%2020260720103316.png"></p>
+<p><mark style="background:#ff4d4f">cls_layer计算得到可能输出tokenid的整个分数表，下面就是解码策略了</mark>， 到底如何选择一个实际的token? 也就是<strong>sampler，采样器</strong>。</p>
+<ul>
+<li><p><strong>argmax</strong> — 直接选分数最大的那个 token</p>
+<ul>
+<li>没做 temperature、top-k、top-p，就是贪心选</li>
+</ul>
+</li>
+<li><p><img src="/images/Pasted%20image%2020260720103745.png" alt="613"></p>
+</li>
+<li><p>Temperature — 控制”创造力”（<strong>放大距离值</strong>）</p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260720104356.png" alt="538"></li>
+</ul>
+</li>
+<li><p>Softmax — 转成概率（<strong>距离转成概率</strong>）</p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260720104456.png" alt="542"></li>
+</ul>
+</li>
+<li><p>Top-K &#x2F; Top-P — 砍掉烂选择</p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260720104525.png" alt="398"></li>
+</ul>
+</li>
+<li><p>随机采样</p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260720104550.png" alt="408"></li>
+</ul>
+</li>
+</ul>
+<h4 id="推理框架部分结束"><a href="#推理框架部分结束" class="headerlink" title="推理框架部分结束"></a>推理框架部分结束</h4><p><img src="/images/Pasted%20image%2020260720104711.png"></p>
+<h5 id="（旧）matmul算子（有权重层）"><a href="#（旧）matmul算子（有权重层）" class="headerlink" title="（旧）matmul算子（有权重层）"></a><del>（旧）matmul算子（有权重层）</del></h5><p><img src="/images/5028bee2a1327396c026e7e6f0a04352.jpg" alt="430"></p>
+<p><img src="/images/Pasted%20image%2020260702104115.png" alt="346"><img src="/images/Pasted%20image%2020260702104128.png" alt="234"></p>
+<p>可以看到，这个矩阵乘的算子层，也是有权重参数的。设置权重张量，是直接用父类的方法，设置偏执张量，就要由子类提供。<br><img src="/images/Pasted%20image%2020260702104246.png" alt="470"></p>
+<p><img src="/images/Pasted%20image%2020260702104429.png" alt="513"><br>这里可以看到，矩阵乘算子层的输入张量1个，输出张量1个，权重张量1个。</p>
+<p>后端实现，指向两个内核，一个是量化的内核<br><img src="/images/Pasted%20image%2020260702104557.png"></p>
+<h5 id="（旧）MHA多头注意力算子层（无权重）"><a href="#（旧）MHA多头注意力算子层（无权重）" class="headerlink" title="（旧）MHA多头注意力算子层（无权重）"></a><del>（旧）MHA多头注意力算子层（无权重）</del></h5><p><img src="/images/Pasted%20image%2020260702111927.png" alt="474"><img src="/images/Pasted%20image%2020260702111942.png" alt="471"></p>
+<p>可以看到，多头注意力层，它本质上，是一个无权重的层算子。</p>
+<p>下面看一下他的输入输出张量<br><img src="/images/Pasted%20image%2020260702113253.png" alt="507"></p>
+<p>可以看到这个层算子，他的输入设置了5个张量，输出一个张量。</p>
+<p>但是很奇怪的是，在推理过程中，我们就是一个张量进（[B,T&#x3D;1,d]），一个张量出[B,T&#x3D;1,d]</p>
+<p>但是这里，针对一个q, 我要计算得到一个注意力输出v_q,需要：</p>
+<ul>
+<li>q查询输入张量</li>
+<li>K cache （所有历史的k键张量）</li>
+<li>V cache   (所有历史的v值张量)</li>
+<li>q 与 所有K cache的注意力分数张量<ul>
+<li>这个注意力分数score，理论上是属于临时变量，用来计算注意力输出的。但是每次都需要重新分配显存，通讯延时太慢，所以，选择和kv cache的内存空间一样，预先分配，用空间换时间</li>
+</ul>
+</li>
+<li><strong>还有一个未用到</strong><br><img src="/images/Pasted%20image%2020260702113714.png"></li>
+</ul>
+<p>下面看一下这个<strong>多头注意力层的算子的前向传播</strong></p>
+<p><img src="/images/Pasted%20image%2020260702114618.png"></p>
+<p>所以，当我们设计架构的时候，我们可以<mark style="background:#fff88f">通过张量，把并行的需求，封装透传给底层的并行核心单元。中间的框架层，不需要处理这些并行的需求</mark><br><img src="/images/Pasted%20image%2020260702114609.png" alt="578"></p>
+<h2 id="4-model-模型组装层"><a href="#4-model-模型组装层" class="headerlink" title="4. model&#x2F;模型组装层"></a>4. model&#x2F;模型组装层</h2><p>这一层，就是用上面的各个算子层，来具体组合出一个大模型的类。</p>
+<p>我们先来介绍一下，我们下载下来的模型文件有哪些内容：</p>
+<h3 id="huggingface下载的模型文件"><a href="#huggingface下载的模型文件" class="headerlink" title="huggingface下载的模型文件"></a>huggingface下载的模型文件</h3><p>包含：</p>
+<figure class="highlight tap"><table><tr><td class="code"><pre><span class="line">-rw-rw-r--<span class="number"> 1 </span>liangji liangji       <span class="number"> 726 </span>May<span class="number"> 17 </span>19:23 config.json</span><br><span class="line">-rw-rw-r--<span class="number"> 1 </span>liangji liangji       <span class="number"> 239 </span>May<span class="number"> 17 </span>19:23 generation_config.json</span><br><span class="line">-rw-rw-r--<span class="number"> 1 </span>liangji liangji<span class="number"> 1503300328 </span>May<span class="number"> 17 </span>19:30 model.safetensors</span><br><span class="line"></span><br><span class="line">-rw-rw-r--<span class="number"> 1 </span>liangji liangji      <span class="number"> 9732 </span>May<span class="number"> 17 </span>19:23 tokenizer_config.json</span><br><span class="line">-rw-rw-r--<span class="number"> 1 </span>liangji liangji  <span class="number"> 11422654 </span>May<span class="number"> 17 </span>19:23 tokenizer.json</span><br><span class="line">-rw-rw-r--<span class="number"> 1 </span>liangji liangji   <span class="number"> 2776833 </span>May<span class="number"> 17 </span>19:23 vocab.json</span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li><p><mark style="background:#ff4d4f">config.json</mark></p>
+<ul>
+<li>模型的架构参数（层数，模型维数，头数，<strong>词表大小</strong>）</li>
+</ul>
+</li>
+<li><p><mark style="background:#ff4d4f">generation_config.json</mark></p>
+<ul>
+<li>采样器的超参数</li>
+</ul>
+</li>
+<li><p><mark style="background:#ff4d4f">model.safetensors</mark></p>
+<ul>
+<li>模型权重，有他的特定格式。</li>
+</ul>
+</li>
+<li><p><mark style="background:#ff4d4f">tokenizer.json</mark></p>
+<ul>
+<li><strong>词袋</strong></li>
+<li><mark style="background:#fff88f">传给第三方的分词器类就行, 主要用这个</mark></li>
+<li><img src="/images/Pasted%20image%2020260720192503.png"></li>
+</ul>
+</li>
+<li><p><mark style="background:#ff4d4f">tokenizer_config.json</mark></p>
+<ul>
+<li><strong>存特殊 token 配置</strong></li>
+<li>分词器元信息（bos, eos token &#x3D; ？）</li>
+<li>这个里面的tokenizer_class &#x3D; Qwen2Tokenizer， 暗示BPE类分词器</li>
+<li>用来选择</li>
+<li><img src="/images/Pasted%20image%2020260720192420.png"></li>
+</ul>
+</li>
+<li><p>vocab.json</p>
+<ul>
+<li>词表映射文件</li>
+<li><img src="/images/Pasted%20image%2020260720192649.png" alt="588"></li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>算法类型（BPE&#x2F;SentencePiece）是”约定俗成”的 — Llama2 用 SentencePiece，Llama3&#x2F;Qwen 用 BPE，你下载前就知道。</p>
+</blockquote>
+<h4 id="模型文件的格式处理"><a href="#模型文件的格式处理" class="headerlink" title="模型文件的格式处理"></a>模型文件的格式处理</h4><ul>
+<li>架构文件，config.json<ul>
+<li>这个没多少，主要定义层数，模型维度这些，看一下，读取直接用就行</li>
+</ul>
+</li>
+<li>权重文件，model.safetensors<ul>
+<li>这个很多，而且是safetensors的特定格式，我们自己的推理框架cpp无法直接使用，需要格式转换</li>
+</ul>
+</li>
+</ul>
+<p><strong>转换方法</strong>就是，</p>
+<ol>
+<li>先用torch库，自己写一个model.py，里面实现我们的整个模型的类。</li>
+<li>export.py中，先读取config.json，import model, 实例化我们的模型类<ol>
+<li>在这一步里面，我们把官方的权重变量名，和我们自己的权重变量名对应上</li>
+<li><img src="/images/Pasted%20image%2020260720185154.png" alt="588"></li>
+</ol>
+</li>
+<li>按照我们想要的存储结构，导出模型的各个权重张量。<ol>
+<li><img src="/images/Pasted%20image%2020260720185241.png" alt="563"></li>
+</ol>
+</li>
+</ol>
+<p>最终，<mark style="background:#fff88f">会产生一个新的model.bin</mark>, 里面包含</p>
+<ul>
+<li>模型的架构配置</li>
+<li>模型的权重<br>之后，我们在自己的cpp的推理框架中，就可以直接用mmap+地址偏移，来直接读取</li>
+</ul>
+<figure class="highlight txt"><table><tr><td class="code"><pre><span class="line">┌────────────────────────────────┐  offset 0</span><br><span class="line">│  dim          (int32, 4B)      │</span><br><span class="line">│  hidden_dim   (int32, 4B)      │</span><br><span class="line">│  layer_num    (int32, 4B)      │  ← ModelConfig header</span><br><span class="line">│  head_num     (int32, 4B)      │    7 × int32 = 28 bytes</span><br><span class="line">│  kv_head_num  (int32, 4B)      │</span><br><span class="line">│  vocab_size   (int32, 4B)      │</span><br><span class="line">│  seq_len      (int32, 4B)      │</span><br><span class="line">├────────────────────────────────┤  offset 28</span><br><span class="line">│  tok_embeddings.weight         │  ① embedding</span><br><span class="line">│  [vocab_size, dim]             │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].attention_norm      │</span><br><span class="line">│  [dim]                         │</span><br><span class="line">│  layers[1].attention_norm      │  ② attention_norm × layer_num</span><br><span class="line">│  [dim]                         │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].attention_norm    │</span><br><span class="line">│  [dim]                         │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].attention.wq        │</span><br><span class="line">│  [dim, dim]                    │</span><br><span class="line">│  layers[1].attention.wq        │  ③ Wq × layer_num</span><br><span class="line">│  [dim, dim]                    │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].attention.wq      │</span><br><span class="line">│  [dim, dim]                    │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].attention.wk        │</span><br><span class="line">│  [kv_dim, dim]                 │</span><br><span class="line">│  layers[1].attention.wk        │  ④ Wk × layer_num</span><br><span class="line">│  [kv_dim, dim]                 │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].attention.wk      │</span><br><span class="line">│  [kv_dim, dim]                 │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].attention.wv        │</span><br><span class="line">│  [kv_dim, dim]                 │</span><br><span class="line">│  layers[1].attention.wv        │  ⑤ Wv × layer_num</span><br><span class="line">│  [kv_dim, dim]                 │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].attention.wv      │</span><br><span class="line">│  [kv_dim, dim]                 │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].attention.wo        │</span><br><span class="line">│  [dim, dim]                    │</span><br><span class="line">│  layers[1].attention.wo        │  ⑥ Wo × layer_num</span><br><span class="line">│  [dim, dim]                    │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].attention.wo      │</span><br><span class="line">│  [dim, dim]                    │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].ffn_norm            │</span><br><span class="line">│  [dim]                         │</span><br><span class="line">│  layers[1].ffn_norm            │  ⑦ ffn_norm × layer_num</span><br><span class="line">│  [dim]                         │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].ffn_norm          │</span><br><span class="line">│  [dim]                         │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].feed_forward.w1     │</span><br><span class="line">│  [hidden_dim, dim]             │</span><br><span class="line">│  layers[1].feed_forward.w1     │  ⑧ W1 (gate) × layer_num</span><br><span class="line">│  [hidden_dim, dim]             │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].feed_forward.w1   │</span><br><span class="line">│  [hidden_dim, dim]             │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].feed_forward.w2     │</span><br><span class="line">│  [dim, hidden_dim]             │</span><br><span class="line">│  layers[1].feed_forward.w2     │  ⑨ W2 (down) × layer_num</span><br><span class="line">│  [dim, hidden_dim]             │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].feed_forward.w2   │</span><br><span class="line">│  [dim, hidden_dim]             │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  layers[0].feed_forward.w3     │</span><br><span class="line">│  [hidden_dim, dim]             │</span><br><span class="line">│  layers[1].feed_forward.w3     │  ⑩ W3 (up) × layer_num</span><br><span class="line">│  [hidden_dim, dim]             │</span><br><span class="line">│  ...                           │</span><br><span class="line">│  layers[N-1].feed_forward.w3   │</span><br><span class="line">│  [hidden_dim, dim]             │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  model.norm.weight             │  ⑪ final_norm</span><br><span class="line">│  [dim]                         │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  freqs_cos                     │  ⑫ cos/sin 缓存</span><br><span class="line">│  [seq_len, head_size/2]        │     (freqs_cos + freqs_sin)</span><br><span class="line">│  freqs_sin                     │</span><br><span class="line">│  [seq_len, head_size/2]        │</span><br><span class="line">├────────────────────────────────┤</span><br><span class="line">│  model.output.weight           │  ⑬ CLS (仅 vocab_size &gt; 0)</span><br><span class="line">│  [vocab_size, dim]             │     共享 embedding 时不写</span><br><span class="line">└────────────────────────────────┘</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+<h3 id="model的基类"><a href="#model的基类" class="headerlink" title="model的基类"></a>model的基类</h3><ul>
+<li>model (基类)<ul>
+<li>模型的基础信息<ul>
+<li>推理设备</li>
+<li>模型名称</li>
+</ul>
+</li>
+<li>模型的入口，出口<ul>
+<li>入口：分词器层算子</li>
+<li>出口：采样层算子</li>
+</ul>
+</li>
+<li>模型的配置信息（config.json）<ul>
+<li>模型的配置架构：config.json</li>
+<li>权重文件</li>
+</ul>
+</li>
+<li>分词器<ul>
+<li>词袋（tokenizer.json）</li>
+<li>分词算法</li>
+</ul>
+</li>
+<li>提前申请的缓冲区<ul>
+<li>各层的输入输出张量缓冲区</li>
+<li>kvcache</li>
+</ul>
+</li>
+<li>量化标志</li>
+</ul>
+</li>
+</ul>
+<p><img src="/images/Snipaste_2026-07-13_17-04-00.png"></p>
+<h2 id="5-demo构建"><a href="#5-demo构建" class="headerlink" title="5. demo构建"></a>5. demo构建</h2><h2 id="6-profile性能分析"><a href="#6-profile性能分析" class="headerlink" title="6. profile性能分析"></a>6. profile性能分析</h2><h3 id="性能指标"><a href="#性能指标" class="headerlink" title="性能指标"></a>性能指标</h3><p>首先，先给出我们分析一个推理框架系统的性能指标：</p>
+<ul>
+<li><strong>端到端性能指标</strong>（测结果，快不快）<ul>
+<li>TTFT</li>
+<li>TPOT</li>
+<li>端到端延时</li>
+<li>吞吐量</li>
+<li>显存占用</li>
+</ul>
+</li>
+<li><strong>阶段性指标</strong>（找原因，为什么不快）<br>  - prefill<br>      - 各层的耗时<br>  - decode<br>      - 各层的耗时<ul>
+<li><strong>Nsight System</strong><ul>
+<li>各个kernel的耗时，找出瓶颈kernel</li>
+</ul>
+</li>
+<li><strong>Nsight Compute</strong><ul>
+<li>单独分析kernel性能</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="指标术语"><a href="#指标术语" class="headerlink" title="指标术语"></a>指标术语</h3><ul>
+<li><strong>benchmark</strong> &#x3D; 基准测试<ul>
+<li><strong>在固定条件下，正式测性能，统计端到端指标</strong></li>
+<li>Benchmark 用来得到一个可重复、可对比的性能结果。</li>
+<li><mark style="background:#fff88f">Benchmark 告诉你“快不快”</mark></li>
+</ul>
+</li>
+<li><strong>profile</strong> &#x3D; 性能剖析<ul>
+<li><mark style="background:#fff88f">时间到底花在哪里，为什么慢。</mark></li>
+<li><img src="/images/Pasted%20image%2020260722233352.png" alt="128"></li>
+<li><mark style="background:#fff88f">profile又分成两类</mark>：<ul>
+<li><strong>Nsight Systems</strong>：看整个 CPU、GPU、kernel、内存传输的时间线</li>
+<li><strong>Nsight Compute</strong>：深入分析某个 kernel 的访存、计算、occupancy、stall</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>所以，</p>
+<p><strong>Benchmark：测结果</strong><br><strong>Profile：找原因</strong></p>
+<ul>
+<li><p><strong>warmup</strong> &#x3D; 预热运行</p>
+<ul>
+<li>正式计时前，先运行几次，但不记录结果</li>
+<li><img src="/images/Pasted%20image%2020260722233650.png" alt="241"></li>
+<li><img src="/images/Pasted%20image%2020260722234018.png" alt="452"></li>
+</ul>
+</li>
+<li><p><strong>NVTX</strong> &#x3D; 给 Nsight 时间线添加标签的工具</p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260722233831.png" alt="309"></li>
+<li><img src="/images/Pasted%20image%2020260722233918.png" alt="356"></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">Warmup</span><br><span class="line">  ↓</span><br><span class="line">先跑几次，让环境稳定</span><br><span class="line"></span><br><span class="line">Benchmark</span><br><span class="line">  ↓</span><br><span class="line">测 TTFT、TPOT、tokens/s 等总体指标</span><br><span class="line"><span class="built_in"></span></span><br><span class="line"><span class="built_in">Profile</span></span><br><span class="line"><span class="built_in"></span>  ↓</span><br><span class="line">分析时间花在哪里、为什么慢</span><br><span class="line"></span><br><span class="line">NVTX</span><br><span class="line">  ↓</span><br><span class="line">给<span class="built_in"> Profile </span>时间线添加模块名称</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>ITL：每个 token 之间的间隔统计</strong><br><img src="/images/Pasted%20image%2020260723000404.png" alt="397"></p>
+<hr>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><h4 id="1-nsight-system的打标基础工具，nvtx3"><a href="#1-nsight-system的打标基础工具，nvtx3" class="headerlink" title="1. nsight system的打标基础工具，nvtx3"></a>1. nsight system的打标基础工具，nvtx3</h4><p>他先搓了一点基础工具<br><img src="/images/Pasted%20image%2020260722234550.png" alt="357"><br>他自己写了一个打标的类，构造一个对象，然后把自己注册到nvtxRangePushEx里面来打标</p>
+<p><img src="/images/Pasted%20image%2020260722234658.png"><br><img src="/images/Pasted%20image%2020260722234749.png" alt="665"></p>
+<p><img src="/images/Pasted%20image%2020260722234801.png"></p>
+<p><img src="/images/Pasted%20image%2020260722234838.png"></p>
+<p>回到我们的代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 开启 ENABLE_NVTX 时：</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">NvtxRange</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">NvtxRange</span><span class="params">(<span class="type">const</span> std::string&amp; name)</span> </span>&#123;</span><br><span class="line">    nvtxEventAttributes_t attr = &#123;&#125;;          <span class="comment">// 构造属性</span></span><br><span class="line">    attr.version = NVTX_VERSION;</span><br><span class="line">    attr.size = NVTX_EVENT_ATTRIBUTES_STRUCT_SIZE;</span><br><span class="line">    attr.messageType = NVTX_MESSAGE_TYPE_ASCII;</span><br><span class="line">    attr.message.ascii = name.<span class="built_in">c_str</span>();        <span class="comment">// 把名字填进去</span></span><br><span class="line">    <span class="built_in">nvtxRangePushEx</span>(&amp;attr);                   <span class="comment">// 告诉驱动：开始一段叫 name 的 range</span></span><br><span class="line">  &#125;</span><br><span class="line">  ~<span class="built_in">NvtxRange</span>() &#123; <span class="built_in">nvtxRangePop</span>(); &#125;            <span class="comment">// 告诉驱动：这个 range 结束</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 没开 ENABLE_NVTX 时：</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">NvtxRange</span> &#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">NvtxRange</span><span class="params">(<span class="type">const</span> <span class="type">char</span>*)</span> </span>&#123;&#125;           <span class="comment">// 空构造，什么都不做</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// NVTX_RANGE(&quot;xxx&quot;) → do &#123; (void)(&quot;xxx&quot;); &#125; while(0)   // 完全编译掉</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>所以整体的数据流是</strong>：</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">NVTX_RANGE</span><span class="params">(<span class="string">&quot;prefill&quot;</span>)</span></span>   <span class="comment">// 你的代码</span></span><br><span class="line">  → <span class="built_in">nvtxRangePushEx</span>()   <span class="comment">// nvtx3 库</span></span><br><span class="line">    → cupti 接口         <span class="comment">// CUDA 驱动内部</span></span><br><span class="line">      → trace buffer     <span class="comment">// GPU 驱动环形缓存</span></span><br><span class="line">        → nsys profile   <span class="comment">// 采集时写入 .nsys-rep 文件</span></span><br><span class="line">          → Nsight Systems GUI  <span class="comment">// Windows 上打开看到 timeline</span></span><br></pre></td></tr></table></figure>
+
+
+<p><img src="/images/Pasted%20image%2020260722235256.png"></p>
+<p>下面介绍他是如何具体实现nvtx打标，然后在nsight system上看到打标的<img src="/images/Pasted%20image%2020260723163420.png"></p>
+<p>这边定义了两个宏，用来构造创建nvtx标签的实例。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> NVTX_RANGE(name)       profile::NvtxRange _nvtx_ ## __LINE__(name, 0)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NVTX_RANGE_C(name, c)  profile::NvtxRange _nvtx_ ## __LINE__(name, c)</span></span><br></pre></td></tr></table></figure>
+
+<p>后面在构造函数中，往cuda驱动的缓冲区打标签，析构函数中弹出标签。<br><img src="/images/Pasted%20image%2020260723163535.png" alt="341"><br>所以，计时开始就是push的cpu时间，弹出时间就是计时结束。</p>
+<p><strong>以rmsnorm为例</strong></p>
+<p><img src="/images/Pasted%20image%2020260723163656.png" alt="445"><br>在llama3.cpp中，attention_rms这个调用算子的过程，NVTX_RANGE_C开始打标。这个实例对象的生命周期，和最近的{}绑定，结束后pop析构，计时结束。因此就可以<strong>实现对一个生命周期的追踪</strong>。</p>
+<p>我们实际上要统计的，就是从NVTX_RANGE_C开始，到rmsnorm_layer-&gt;forward结束。</p>
+<p>但是这个forward一直追踪到调用核函数<br><img src="/images/Pasted%20image%2020260723163916.png" alt="412"></p>
+<p>cpu调用核函数之后，没有阻塞等待直接返回。所以我们的nvtx打的标签记录的时间，本质上是cpu时间，因此，我们的kernel的实际运行时间，是会有可能右端超出标签弹出时间的。<br><img src="/images/Pasted%20image%2020260723164115.png"></p>
+<h4 id="2-gpu计时器（cudaEvent）"><a href="#2-gpu计时器（cudaEvent）" class="headerlink" title="2. gpu计时器（cudaEvent）"></a>2. gpu计时器（cudaEvent）</h4><p>定义了cudaTimer的类</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ============================================================</span></span><br><span class="line"><span class="comment">// CUDA Event RAII wrapper — start/stop a named timer on a stream</span></span><br><span class="line"><span class="comment">// ============================================================</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">CudaTimer</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">explicit</span> <span class="title">CudaTimer</span><span class="params">(<span class="type">const</span> std::string&amp; name)</span></span>;</span><br><span class="line">  ~<span class="built_in">CudaTimer</span>();</span><br><span class="line"></span><br><span class="line">  <span class="built_in">CudaTimer</span>(<span class="type">const</span> CudaTimer&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">  CudaTimer&amp; <span class="keyword">operator</span>=(<span class="type">const</span> CudaTimer&amp;) = <span class="keyword">delete</span>;</span><br><span class="line">  <span class="built_in">CudaTimer</span>(CudaTimer&amp;&amp; other) <span class="keyword">noexcept</span>;</span><br><span class="line">  CudaTimer&amp; <span class="keyword">operator</span>=(CudaTimer&amp;&amp; other) <span class="keyword">noexcept</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Record start on the given stream (nullptr = default stream / synchronize).</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">record_start</span><span class="params">(cudaStream_t stream = <span class="literal">nullptr</span>)</span></span>;</span><br><span class="line">  <span class="comment">// Record stop on the given stream.</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">record_stop</span><span class="params">(cudaStream_t stream = <span class="literal">nullptr</span>)</span></span>;</span><br><span class="line">  <span class="comment">// Synchronize and return elapsed time in milliseconds.</span></span><br><span class="line">  <span class="function"><span class="type">float</span> <span class="title">elapsed_ms</span><span class="params">(<span class="type">bool</span> sync = <span class="literal">true</span>)</span></span>;</span><br><span class="line">  <span class="comment">// Return name for reporting.</span></span><br><span class="line">  <span class="function"><span class="type">const</span> std::string&amp; <span class="title">name</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> name_; &#125;</span><br><span class="line">  <span class="comment">// Check if events are created and valid.</span></span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">is_valid</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> created_; &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line">  std::string name_;</span><br><span class="line">  cudaEvent_t start_event_ = <span class="literal">nullptr</span>;</span><br><span class="line">  cudaEvent_t stop_event_ = <span class="literal">nullptr</span>;</span><br><span class="line">  <span class="type">bool</span> started_ = <span class="literal">false</span>;</span><br><span class="line">  <span class="type">bool</span> stopped_ = <span class="literal">false</span>;</span><br><span class="line">  <span class="type">bool</span> created_ = <span class="literal">false</span>;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/Pasted%20image%2020260722235602.png"></p>
+<p><img src="/images/Pasted%20image%2020260722235820.png"></p>
+<h4 id="3-定义汇总结果-结构体"><a href="#3-定义汇总结果-结构体" class="headerlink" title="3. 定义汇总结果 结构体"></a>3. 定义汇总结果 结构体</h4><p><img src="/images/Pasted%20image%2020260722235951.png"></p>
+<h4 id="4-Profiler-类（统计总管）"><a href="#4-Profiler-类（统计总管）" class="headerlink" title="4. Profiler 类（统计总管）"></a>4. Profiler 类（统计总管）</h4><p><img src="/images/Pasted%20image%2020260723110736.png"></p>
+<p>profiler相当于MemoryAllocator，用来创建&#x2F;读取我们的timer类对象</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Profiler</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">Profiler</span>();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 显存统计</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">record_memory_before_model</span><span class="params">()</span></span>;<span class="comment">//这3个是对cudaMemGetInfo的包装</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">record_memory_after_model</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">record_peak_memory</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="type">size_t</span> <span class="title">memory_before_mb</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> mem_before_mb_; &#125;</span><br><span class="line">  <span class="function"><span class="type">size_t</span> <span class="title">memory_after_mb</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> mem_after_mb_; &#125;</span><br><span class="line">  <span class="function"><span class="type">size_t</span> <span class="title">memory_peak_mb</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> mem_peak_mb_; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//CPU时间计时打点</span></span><br><span class="line">  <span class="comment">// ---- CPU-wall-clock timing (for phases where GPU isn&#x27;t involved) ----</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">set_cpu_start</span><span class="params">()</span></span>;</span><br><span class="line">  <span class="function"><span class="type">float</span> <span class="title">cpu_elapsed_ms</span><span class="params">()</span> <span class="type">const</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//GPU时间计时打点</span></span><br><span class="line">  <span class="comment">// ---- GPU cudaEvent timers ----</span></span><br><span class="line">  <span class="comment">// Create/get a named timer that lives for the profiler&#x27;s lifetime.</span></span><br><span class="line">  <span class="function">CudaTimer* <span class="title">get_timer</span><span class="params">(<span class="type">const</span> std::string&amp; name)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---- Layer profiling ----</span></span><br><span class="line">  <span class="comment">// Record a layer module timing. Called by the model during forward() when</span></span><br><span class="line">  <span class="comment">// layer profiling is enabled.</span></span><br><span class="line">  <span class="comment">// 一个层跑完了，记录数据</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">add_layer_record</span><span class="params">(<span class="type">const</span> std::string&amp; <span class="keyword">module</span>, <span class="type">const</span> std::string&amp; stage,</span></span></span><br><span class="line"><span class="params"><span class="function">                        <span class="type">int32_t</span> layer_idx, <span class="type">float</span> elapsed_ms)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---- Stage profiling (lightweight, no per-layer sync) ----</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">set_stage</span><span class="params">(<span class="type">const</span> std::string&amp; stage_name)</span></span>;</span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">record_stage_time</span><span class="params">(<span class="type">const</span> std::string&amp; stage_name, <span class="type">float</span> elapsed_ms)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---- Benchmark result generation ----</span></span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">add_run</span><span class="params">(<span class="type">const</span> RunRecord&amp; run)</span></span>;<span class="comment">//一次完整的推理结束，记录数据</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  <span class="comment">//计算平均的benchmark</span></span><br><span class="line">  <span class="function">BenchmarkResult <span class="title">compute_result</span><span class="params">(<span class="type">const</span> std::string&amp; model_path,</span></span></span><br><span class="line"><span class="params"><span class="function">                                 <span class="type">int32_t</span> prompt_tokens, <span class="type">int32_t</span> max_new_tokens,</span></span></span><br><span class="line"><span class="params"><span class="function">                                 <span class="type">int32_t</span> warmup_iterations, <span class="type">int32_t</span> repeat_iterations,</span></span></span><br><span class="line"><span class="params"><span class="function">                                 <span class="type">bool</span> greedy, <span class="type">int32_t</span> seed)</span></span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 查询相关信息</span></span><br><span class="line">  <span class="function"><span class="type">const</span> std::vector&lt;RunRecord&gt;&amp; <span class="title">runs</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> runs_; &#125;</span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">clear_runs</span><span class="params">()</span> </span>&#123; runs_.<span class="built_in">clear</span>(); &#125;</span><br><span class="line">  <span class="function"><span class="type">const</span> std::vector&lt;LayerModuleRecord&gt;&amp; <span class="title">layer_records</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> layer_records_; &#125;</span><br><span class="line">  <span class="function"><span class="type">const</span> std::vector&lt;StageRecord&gt;&amp; <span class="title">stage_records</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> stage_records_; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ---- Streaming control ----</span></span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">stream_output_enabled</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> stream_output_; &#125;</span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">set_stream_output</span><span class="params">(<span class="type">bool</span> v)</span> </span>&#123; stream_output_ = v; &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="type">bool</span> <span class="title">layer_profile_enabled</span><span class="params">()</span> <span class="type">const</span> </span>&#123; <span class="keyword">return</span> layer_profile_enabled_; &#125;</span><br><span class="line">  <span class="function"><span class="type">void</span> <span class="title">set_layer_profile_enabled</span><span class="params">(<span class="type">bool</span> v)</span> </span>&#123; layer_profile_enabled_ = v; &#125;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span>:</span><br><span class="line"> <span class="comment">//三次 cudaMemGetInfo 的快照</span></span><br><span class="line">  <span class="type">size_t</span> mem_before_mb_ = <span class="number">0</span>;</span><br><span class="line">  <span class="type">size_t</span> mem_after_mb_ = <span class="number">0</span>;</span><br><span class="line">  <span class="type">size_t</span> mem_peak_mb_ = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//chrono 起点，给 tokenizer 等纯 CPU 工作计时</span></span><br><span class="line">  std::chrono::steady_clock::time_point cpu_start_;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//	map&lt;string, CudaTimer&gt;，按名字缓存 GPU 计时器</span></span><br><span class="line">  std::map&lt;std::string, std::unique_ptr&lt;CudaTimer&gt;&gt; timers_;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//每次单次推理的原始数据：</span></span><br><span class="line">  <span class="comment">//一次完整 prompt → 最后一个 token 输出，包含 prefill + 全部 decode step</span></span><br><span class="line">  std::vector&lt;RunRecord&gt; runs_;</span><br><span class="line">  std::vector&lt;LayerModuleRecord&gt; layer_records_;<span class="comment">//每层耗时汇总</span></span><br><span class="line">  std::vector&lt;StageRecord&gt; stage_records_;<span class="comment">//每个阶段性耗时汇总</span></span><br><span class="line"></span><br><span class="line">  <span class="type">bool</span> stream_output_ = <span class="literal">true</span>;<span class="comment">//是否是流式输出</span></span><br><span class="line">  <span class="type">bool</span> layer_profile_enabled_ = <span class="literal">false</span>;<span class="comment">//是否开启每层同步计时</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// Helper for percentiles</span></span><br><span class="line">  <span class="function"><span class="type">static</span> <span class="type">float</span> <span class="title">percentile</span><span class="params">(<span class="type">const</span> std::vector&lt;<span class="type">float</span>&gt;&amp; sorted, <span class="type">float</span> p)</span></span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="5-模型集成"><a href="#5-模型集成" class="headerlink" title="5. 模型集成"></a>5. 模型集成</h4><p>在class model类里面新增了一个成员属性：  <code>profile::Profiler* profiler_ = nullptr</code>;</p>
+<p>在调用cuda算子层之前，前后加入两个event<br><img src="/images/Pasted%20image%2020260723112330.png" alt="424"></p>
+<h4 id="6-开始测量"><a href="#6-开始测量" class="headerlink" title="6. 开始测量"></a>6. 开始测量</h4><p><img src="/images/Pasted%20image%2020260723112543.png"></p>
+<h4 id="总结-3"><a href="#总结-3" class="headerlink" title="总结"></a>总结</h4><ul>
+<li><p><strong>benchmark</strong></p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260723113015.png" alt="624"></li>
+<li>可得：<ul>
+<li><mark style="background:#fff88f">TTFT， prefill throughput</mark></li>
+<li><mark style="background:#fff88f">itl(每token耗时), TPOT, p50， p95</mark></li>
+<li><mark style="background:#fff88f">e2e 端到端延迟</mark></li>
+</ul>
+</li>
+<li>这一步仅在prefill, decode之后，加入sync, 数量不多，因此对性能影响不大</li>
+</ul>
+</li>
+<li><p><strong>layer profiler</strong></p>
+<ul>
+<li><img src="/images/Pasted%20image%2020260723113052.png" alt="600"></li>
+<li>这一步，需要你自己针对每个layer，让cpu来sync等待gpu的算子结束运算，来粗略的统计每个layer的运行时间。<mark style="background:#ff4d4f">但是注意，由于sync次数很多，所以对整体性能影响大，只能用来统计每个layer的占比</mark></li>
+</ul>
+</li>
+<li><p><strong>Nsight system</strong></p>
+<ul>
+<li>这一步就是查看时间具体花在哪一个kernel上。</li>
+<li><img src="/images/Pasted%20image%2020260723164525.png" alt="544"></li>
+</ul>
+</li>
+<li><p><strong>Nsight compute</strong></p>
+<ul>
+<li>具体分析kernel的设计</li>
+</ul>
+</li>
+</ul>
+<p>所以整个<strong>profile的性能分析流程</strong>应该是</p>
+<p><img src="/images/Pasted%20image%2020260723164540.png"></p>
+<p><img src="/images/Pasted%20image%2020260723164557.png"></p>
+<h5 id="整个demo流程分析"><a href="#整个demo流程分析" class="headerlink" title="整个demo流程分析"></a>整个demo流程分析</h5><p>我们目前在demo的单prompt推理中，规定：</p>
+<ul>
+<li>prompt: 6个token<ul>
+<li>prefill输入是5个（无需采样）</li>
+<li>第六个token开始属于decode阶段</li>
+</ul>
+</li>
+<li>最大产生长度16个token<br><img src="/images/img_v3_0213s_df0decb7-11df-4b33-9b0c-38e0820c073g.jpg" alt="621"></li>
+</ul>
+<p><strong>完成一次推理的过程如下</strong>：</p>
+<p><img src="/images/Pasted%20image%2020260723192555.png" alt="444"><img src="/images/img_v3_0213s_e80e559c-15bf-44d0-a14f-1680d6d928ag.jpg" alt="243"></p>
+<h5 id="profile流程分析"><a href="#profile流程分析" class="headerlink" title="profile流程分析"></a>profile流程分析</h5><p><img src="/images/Pasted%20image%2020260723203357.png"></p>
+<p><img src="/images/Pasted%20image%2020260723203344.png"></p>
+<p><strong>下面是性能分析报告</strong></p>
+<p>分析结论：</p>
+<ul>
+<li><strong>decode阶段</strong><br><img src="/images/Pasted%20image%2020260723205252.png"><br>可以看到，输出单个token耗时4.46ms，对比<strong>benchmark</strong><br><img src="/images/Pasted%20image%2020260723205624.png" alt="405"></li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260723205732.png"></p>
+<p>实际我用gputimer测量下来发现，TPOT是4.6ms, cls_logits下的matmul也就500us，占比不大。不算特别瓶颈。</p>
+<h5 id="128长度profile分析"><a href="#128长度profile分析" class="headerlink" title="128长度profile分析"></a>128长度profile分析</h5><p><strong>baseline 的朴素实现的benchmark</strong><br><img src="/images/Pasted%20image%2020260723222634.png"></p>
+<p><strong>nsys分析</strong></p>
+<p><strong><img src="/images/Pasted%20image%2020260723222722.png"></strong><br>可以看到，两个阶段</p>
+<ul>
+<li>prefill</li>
+<li>decode</li>
+</ul>
+<h6 id="优化matmul算子，mha算子"><a href="#优化matmul算子，mha算子" class="headerlink" title="优化matmul算子，mha算子"></a>优化matmul算子，mha算子</h6><p><img src="/images/Pasted%20image%2020260723223938.png"><br>可以看到matmul算子耗时，以及mha算子的耗时最多，先优化一版本两个算子</p>
+<p>目前先把老师的两个算子移植过来。</p>
+<p>可以看到<strong>性能暴涨</strong><br><img src="/images/Pasted%20image%2020260724133332.png"></p>
+<p>benchmark对比：<br>（前）<br><img src="/images/Pasted%20image%2020260724133447.png" alt="386"></p>
+<p>（后）<br><img src="/images/Pasted%20image%2020260724133757.png" alt="350"></p>
+<p>（前，可以看到cls_logits长时间，是由于matmul引起的，导致cudaFree一直在同步等待）<br><img src="/images/Pasted%20image%2020260724133843.png"></p>
+<p>（后，可以看到，decoder阶段和cls，post阶段基本差不多）<br><img src="/images/Pasted%20image%2020260724133930.png"></p>
+<h2 id="简历描述"><a href="#简历描述" class="headerlink" title="简历描述"></a>简历描述</h2><p><img src="/images/Pasted%20image%2020260725144720.png" alt="697"></p>
+<h1 id="项目汇总"><a href="#项目汇总" class="headerlink" title="项目汇总"></a>项目汇总</h1><h2 id="项目一：Mini-CUDA-LLaMA-Inference-Engine"><a href="#项目一：Mini-CUDA-LLaMA-Inference-Engine" class="headerlink" title="项目一：Mini CUDA LLaMA Inference Engine"></a>项目一：Mini CUDA LLaMA Inference Engine</h2><p>目标：</p>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">从零实现一个支持 <span class="keyword">LLaMA/Qwen </span>小模型单机推理的 CUDA 推理框架</span><br></pre></td></tr></table></figure>
+
+<p>模块：</p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="bullet">1.</span> 工程基础</span><br><span class="line"><span class="bullet">   -</span> CMake</span><br><span class="line"><span class="bullet">   -</span> gdb / cuda-gdb</span><br><span class="line"><span class="bullet">   -</span> CUDA error check</span><br><span class="line"><span class="bullet">   -</span> Nsight Compute profiling</span><br><span class="line"></span><br><span class="line"><span class="bullet">2.</span> 基础框架</span><br><span class="line"><span class="bullet">   -</span> Tensor</span><br><span class="line"><span class="bullet">   -</span> DeviceBuffer</span><br><span class="line"><span class="bullet">   -</span> MemoryManager</span><br><span class="line"><span class="bullet">   -</span> Operator</span><br><span class="line"><span class="bullet">   -</span> Runtime</span><br><span class="line"><span class="bullet">   -</span> ModelConfig</span><br><span class="line"></span><br><span class="line"><span class="bullet">3.</span> 权重加载</span><br><span class="line"><span class="bullet">   -</span> mmap</span><br><span class="line"><span class="bullet">   -</span> 权重 shape 管理</span><br><span class="line"><span class="bullet">   -</span> CPU/GPU 权重加载</span><br><span class="line"><span class="bullet">   -</span> 算子与权重绑定</span><br><span class="line"></span><br><span class="line"><span class="bullet">4.</span> CUDA 算子</span><br><span class="line"><span class="bullet">   -</span> RMSNorm</span><br><span class="line"><span class="bullet">   -</span> RoPE</span><br><span class="line"><span class="bullet">   -</span> MatMul</span><br><span class="line"><span class="bullet">   -</span> Softmax</span><br><span class="line"><span class="bullet">   -</span> Attention</span><br><span class="line"><span class="bullet">   -</span> MLP</span><br><span class="line"><span class="bullet">   -</span> Sampling</span><br><span class="line"></span><br><span class="line"><span class="bullet">5.</span> LLaMA 推理</span><br><span class="line"><span class="bullet">   -</span> Tokenizer</span><br><span class="line"><span class="bullet">   -</span> Prefill</span><br><span class="line"><span class="bullet">   -</span> Decode</span><br><span class="line"><span class="bullet">   -</span> KV Cache</span><br><span class="line"><span class="bullet">   -</span> Generate Loop</span><br><span class="line"></span><br><span class="line"><span class="bullet">6.</span> 性能优化</span><br><span class="line"><span class="bullet">   -</span> 向量化访存</span><br><span class="line"><span class="bullet">   -</span> shared memory 优化</span><br><span class="line"><span class="bullet">   -</span> warp reduce</span><br><span class="line"><span class="bullet">   -</span> kernel fusion</span><br><span class="line"><span class="bullet">   -</span> 显存复用</span><br><span class="line"><span class="bullet">   -</span> Nsight 分析报告</span><br></pre></td></tr></table></figure>
+
+
+<hr>
+<h2 id="项目二：Mini-vLLM-nano-vLLM-Optimization"><a href="#项目二：Mini-vLLM-nano-vLLM-Optimization" class="headerlink" title="项目二：Mini-vLLM &#x2F; nano-vLLM Optimization"></a>项目二：Mini-vLLM &#x2F; nano-vLLM Optimization</h2><p>目标：</p>
+<figure class="highlight lasso"><table><tr><td class="code"><pre><span class="line">基于 nano<span class="params">-vLLM</span> 实现高吞吐推理调度和 KV <span class="keyword">Cache</span> 管理优化</span><br></pre></td></tr></table></figure>
+
+<p>模块：</p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="bullet">1.</span> vLLM 基础机制</span><br><span class="line"><span class="bullet">   -</span> PagedAttention</span><br><span class="line"><span class="bullet">   -</span> Block Manager</span><br><span class="line"><span class="bullet">   -</span> KV Cache Block</span><br><span class="line"><span class="bullet">   -</span> Sequence / Request / Batch</span><br><span class="line"></span><br><span class="line"><span class="bullet">2.</span> 调度系统</span><br><span class="line"><span class="bullet">   -</span> waiting queue</span><br><span class="line"><span class="bullet">   -</span> running queue</span><br><span class="line"><span class="bullet">   -</span> prefill / decode 分离</span><br><span class="line"><span class="bullet">   -</span> continuous batching</span><br><span class="line"><span class="bullet">   -</span> chunked prefill</span><br><span class="line"></span><br><span class="line"><span class="bullet">3.</span> Cache 优化</span><br><span class="line"><span class="bullet">   -</span> prefix cache</span><br><span class="line"><span class="bullet">   -</span> block reuse</span><br><span class="line"><span class="bullet">   -</span> cache eviction</span><br><span class="line"><span class="bullet">   -</span> cache hit rate 统计</span><br><span class="line"></span><br><span class="line"><span class="bullet">4.</span> 性能评测</span><br><span class="line"><span class="bullet">   -</span> TTFT</span><br><span class="line"><span class="bullet">   -</span> TPOT</span><br><span class="line"><span class="bullet">   -</span> Throughput</span><br><span class="line"><span class="bullet">   -</span> KV Cache 使用率</span><br><span class="line"><span class="bullet">   -</span> 显存占用</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AI-Infra/" rel="tag"># AI Infra</a>
+              <a href="/tags/CUDA/" rel="tag"># CUDA</a>
+              <a href="/tags/GTest/" rel="tag"># GTest</a>
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/LLaMA/" rel="tag"># LLaMA</a>
+              <a href="/tags/CMake/" rel="tag"># CMake</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/" rel="prev" title="infra 面经">
+                  <i class="fa fa-angle-left"></i> infra 面经
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/" rel="next" title="infra 现代c++学习">
+                  infra 现代c++学习 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>infra 基于cuda自制llama大模型推理框架</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">SDK中repo,git 笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="围绕类型推导、auto、智能指针、右值引用与现代 C++ 特性，配合 nanovllm 重构记录工程实践。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="infra 现代c++学习">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="ji的博客">
+<meta property="og:description" content="围绕类型推导、auto、智能指针、右值引用与现代 C++ 特性，配合 nanovllm 重构记录工程实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518095537.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518095655.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518102206.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518102837.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518103601.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518103554.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518104329.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518104642.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518104836.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518105106.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518105124.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518105619.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518105840.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518105925.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518110305.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518111919.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518112601.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518112616.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518112806.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518112851.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518113050.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518113136.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518132715.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518133849.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518133940.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518134046.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518141516.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518141607.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518141904.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518142133.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518142225.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518142320.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518144242.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518145012.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518145518.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518145332.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518150114.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518150340.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518150536.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518150352.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518151149.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518151205.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518151315.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518152202.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518152248.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518152353.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518152425.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518152934.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518161554.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518162302.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518162158.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518162522.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518163559.png">
+<meta property="article:published_time" content="2026-06-14T15:51:25.000Z">
+<meta property="article:modified_time" content="2026-10-03T10:34:31.629Z">
+<meta property="article:author" content="liangji">
+<meta property="article:tag" content="AI Infra">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/Pasted%20image%2020260518095537.png">
+
+
+<link rel="canonical" href="https://liangji-seu.github.io/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/","path":"2026/06/14/infra-现代c++学习/","title":"infra 现代c++学习"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>infra 现代c++学习 | ji的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.umd.js" integrity="sha256-a+H7FYzJv6oU2hfsfDGM2Ohw/cR9v+hPfxHCLdmCrE8=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+  <script src="/js/third-party/fancybox.js" defer></script>
+
+
+
+  
+
+
+
+
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link rel="alternate" href="/atom.xml" title="ji的博客" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ji的博客</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%B1%BB%E5%9E%8B%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.</span> <span class="nav-text">类型推导</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#c98%E5%92%8C%E7%8E%B0%E4%BB%A3c-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.1.</span> <span class="nav-text">c98和现代c++的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E7%B1%BB%E5%9E%8B%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.2.</span> <span class="nav-text">模板类型推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E7%94%A8%E5%92%8C%E6%8C%87%E9%92%88%E4%B8%8A%E7%9A%84%E7%B1%BB%E5%9E%8B%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.2.1.</span> <span class="nav-text">引用和指针上的类型推导</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ParamType-%E6%98%AF%E6%8C%87%E9%92%88-%EF%BC%88%E9%9D%9E%E9%80%9A%E7%94%A8%EF%BC%89%E5%BC%95%E7%94%A8"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">ParamType 是指针&#x2F;（非通用）引用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ParamType-%E6%98%AF-%EF%BC%88%E9%80%9A%E7%94%A8%EF%BC%89%E5%BC%95%E7%94%A8"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">ParamType 是 （通用）引用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ParamType-%E6%97%A2%E4%B8%8D%E6%98%AF%E6%8C%87%E9%92%88%E4%B9%9F%E4%B8%8D%E6%98%AF%E5%BC%95%E7%94%A8%EF%BC%88%E6%8C%89%E5%80%BC%E4%BC%A0%E9%80%92%EF%BC%89"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">ParamType 既不是指针也不是引用（按值传递）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E7%BB%84%E5%8F%82%E6%95%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">数组参数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%B9%E4%BE%8B"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">特例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0"><span class="nav-number">1.2.3.</span> <span class="nav-text">函数参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.2.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#auto%E7%B1%BB%E5%9E%8B%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.3.</span> <span class="nav-text">auto类型推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A6%E5%80%BC%E5%BC%95%E7%94%A8"><span class="nav-number">1.3.1.</span> <span class="nav-text">左值引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E5%BC%95%E7%94%A8"><span class="nav-number">1.3.2.</span> <span class="nav-text">通用引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%89%E5%80%BC%E4%BC%A0%E9%80%92"><span class="nav-number">1.3.3.</span> <span class="nav-text">按值传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E7%9A%84%E4%BE%8B%E5%A4%96"><span class="nav-number">1.3.4.</span> <span class="nav-text">唯一的例外</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%88%97%E8%A1%A8"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">初始化列表{}</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#decltype"><span class="nav-number">1.4.</span> <span class="nav-text">decltype</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EF%BC%88c-11%EF%BC%89%E6%A0%B8%E5%BF%83%E7%9A%84%E7%94%A8%E9%80%94%EF%BC%9A%E5%B0%BE%E7%BD%AE%E8%BF%94%E5%9B%9E%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.4.1.</span> <span class="nav-text">（c++11）核心的用途：尾置返回类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#c-14%E7%9A%84%E7%94%A8%E6%B3%95%EF%BC%9A%E8%87%AA%E5%8A%A8%E7%94%A8decltype%E8%A7%84%E5%88%99%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.4.2.</span> <span class="nav-text">c++14的用法：自动用decltype规则推导</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#decltype%E7%9A%84%E5%9D%91%EF%BC%9A%EF%BC%88%EF%BC%89%E4%BC%9A%E6%94%B9%E5%8F%98%E7%BB%93%E6%9E%9C"><span class="nav-number">1.4.3.</span> <span class="nav-text">decltype的坑：（）会改变结果</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-1"><span class="nav-number">1.4.4.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#auto%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">1.5.</span> <span class="nav-text">auto关键字</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8auto%EF%BC%8C%E4%B8%8D%E6%98%AF%E6%98%BE%E5%BC%8F%E7%B1%BB%E5%9E%8B%E5%A3%B0%E6%98%8E"><span class="nav-number">1.5.1.</span> <span class="nav-text">优先使用auto，不是显式类型声明</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#auto%E5%8F%AF%E4%BB%A5%E6%8C%81%E6%9C%89%E7%BC%96%E8%AF%91%E5%99%A8%E6%89%8D%E7%9F%A5%E9%81%93%E7%9A%84%E7%B1%BB%E5%9E%8B%EF%BC%88Lambda%EF%BC%89"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">auto可以持有编译器才知道的类型（Lambda）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#auto-%E8%83%BD%E9%81%BF%E5%85%8D-%E2%80%9C%E7%B1%BB%E5%9E%8B%E6%88%AA%E6%96%AD-%E4%B8%8D%E5%8C%B9%E9%85%8D%E2%80%9D-%E7%9A%84%E9%9A%90%E6%80%A7%E9%94%99%E8%AF%AF"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">auto 能避免 “类型截断 &#x2F; 不匹配” 的隐性错误</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8D%E6%9E%84%E4%BB%A3%E7%A0%81%E6%9B%B4%E7%AE%80%E5%8D%95"><span class="nav-number">1.5.1.3.</span> <span class="nav-text">重构代码更简单</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#auto%E4%B8%8D%E8%83%BD%E7%94%A8%E7%9A%84%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5"><span class="nav-number">1.5.2.</span> <span class="nav-text">auto不能用的特殊情况</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95"><span class="nav-number">1.5.2.1.</span> <span class="nav-text">解决办法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%98%BE%E7%A4%BA%E7%B1%BB%E5%9E%8B%E5%88%9D%E5%A7%8B%E5%8C%96%E5%8E%9F%E5%88%99"><span class="nav-number">1.5.2.1.1.</span> <span class="nav-text">显示类型初始化原则</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E7%8E%B0%E4%BB%A3C"><span class="nav-number">1.6.</span> <span class="nav-text">使用现代C++</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%9F%E4%B8%80%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.6.1.</span> <span class="nav-text">统一初始化{}</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E6%83%85%E5%86%B5"><span class="nav-number">1.6.1.1.</span> <span class="nav-text">特殊情况</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E4%B8%8E%E7%A9%BA"><span class="nav-number">1.6.1.2.</span> <span class="nav-text">默认构造函数与空{}</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#nullptr"><span class="nav-number">1.6.2.</span> <span class="nav-text">nullptr</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%9B%E5%BC%830%EF%BC%8CNULL%E7%9A%84%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.6.2.1.</span> <span class="nav-text">抛弃0，NULL的原因</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E5%88%AB%E5%90%8Dusing"><span class="nav-number">1.6.3.</span> <span class="nav-text">声明别名using</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#typedef%E7%9A%84%E7%BC%BA%E9%99%B7"><span class="nav-number">1.6.3.1.</span> <span class="nav-text">typedef的缺陷</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="liangji"
+      src="/images/headpic.png">
+  <p class="site-author-name" itemprop="name">liangji</p>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">69</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">72</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/liangji-seu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;liangji-seu" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:15262272286@163.com" title="E-Mail → mailto:15262272286@163.com" rel="noopener me" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/15262272286" title="Wechat → 15262272286" rel="noopener me"><i class="fab fa-wechat fa-fw"></i>Wechat</a>
+      </span>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/headpic.png">
+      <meta itemprop="name" content="liangji">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ji的博客">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="infra 现代c++学习 | ji的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          infra 现代c++学习
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-06-14 23:51:25" itemprop="dateCreated datePublished" datetime="2026-06-14T23:51:25+08:00">2026-06-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-03 18:34:31" itemprop="dateModified" datetime="2026-10-03T18:34:31+08:00">2026-10-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">大模型算法</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E7%AE%97%E6%B3%95/%E5%B7%A5%E7%A8%8B%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">工程基础</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>这个文档，主要用来记录学习现代c++的笔记，主要学习前4章的内容：</p>
+<ul>
+<li>类型推导</li>
+<li>auto关键字</li>
+<li>智能指针</li>
+<li>右值引用<br>这几个章节，然后用c++重构nanovllm的引擎部分作为项目来练手</li>
+</ul>
+<h1 id="类型推导"><a href="#类型推导" class="headerlink" title="类型推导"></a>类型推导</h1><p>类型推导，就是<strong>编译器</strong>自动帮你<strong>推断变量是什么类型</strong>，<strong>不用你手动写类型</strong>。</p>
+<p><img src="/images/Pasted%20image%2020260518095537.png" alt="237"></p>
+<h2 id="c98和现代c-的区别"><a href="#c98和现代c-的区别" class="headerlink" title="c98和现代c++的区别"></a>c98和现代c++的区别</h2><p><img src="/images/Pasted%20image%2020260518095655.png" alt="258"></p>
+<p>C++98只有一种类型推导规则：<strong>函数模板</strong></p>
+<p>在c11中，增加了两条规则：</p>
+<ul>
+<li><mark style="background:#fff88f">auto</mark></li>
+<li><mark style="background:#fff88f">decltype</mark></li>
+</ul>
+<p>C++14<strong>继续扩展</strong>了 auto 和 decltype 的使用情况</p>
+<h2 id="模板类型推导"><a href="#模板类型推导" class="headerlink" title="模板类型推导"></a>模板类型推导</h2><h3 id="引用和指针上的类型推导"><a href="#引用和指针上的类型推导" class="headerlink" title="引用和指针上的类型推导"></a>引用和指针上的类型推导</h3><p>对于这样一个模板的类型推导</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(ParamType param)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="built_in">f</span>(expr);</span><br></pre></td></tr></table></figure>
+
+<p>我们在给定表达式expr时，可以获得ParamType的类型，然后<strong>基于ParamType来推导T的类型</strong>。这就是类型推导。</p>
+<p>但是这个有3种情况</p>
+<h4 id="ParamType-是指针-（非通用）引用"><a href="#ParamType-是指针-（非通用）引用" class="headerlink" title="ParamType 是指针&#x2F;（非通用）引用"></a>ParamType 是指针&#x2F;（非通用）引用</h4><p>对于下面这三种情况</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T&amp; param)</span></span>; <span class="comment">// param是一个引用类型</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// x是一个int， ParamType 是 int</span></span><br><span class="line"><span class="type">int</span> x = <span class="number">27</span>; </span><br><span class="line"><span class="built_in">f</span>(x) <span class="comment">// param = x</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// cx是一个const int, ParamType 是 const int&amp;</span></span><br><span class="line"><span class="comment">// T 推导为const int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> cx = x; </span><br><span class="line"><span class="built_in">f</span>(cx) <span class="comment">// param = cx </span></span><br><span class="line"></span><br><span class="line"><span class="comment">// rx是const int的引用, ParamType 是 const int&amp;</span></span><br><span class="line"><span class="comment">// T 推到为const int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span>&amp; rx = x; </span><br><span class="line"><span class="built_in">f</span>(rx) <span class="comment">// param = rx</span></span><br></pre></td></tr></table></figure>
+
+<p>解析如下：<br><img src="/images/Pasted%20image%2020260518102206.png" alt="383"></p>
+<p>规则总结：</p>
+<ul>
+<li><strong><code>const</code> 会被保留，并且 “吃掉” 到 <code>T</code> 里</strong><ul>
+<li>传 <code>const int</code> &#x2F; <code>const int&amp;</code> → <code>T</code> 推为 <code>const int</code>，<code>param</code> 为 <code>const int&amp;</code></li>
+<li>这样 <code>param</code> 不能被修改，保证了常量安全。</li>
+</ul>
+</li>
+<li><strong>引用本身的 <code>&amp;</code> 会被忽略</strong><ul>
+<li>传 <code>int&amp;</code> &#x2F; <code>const int&amp;</code> → 推导时 <code>&amp;</code> 消失，<code>T</code> 只看被引用对象的类型。</li>
+<li>所以 <code>T</code> <strong>永远不会被推成引用类型</strong>，只会推成普通类型（带不带 <code>const</code> 看情况）。</li>
+</ul>
+</li>
+</ul>
+<h4 id="ParamType-是-（通用）引用"><a href="#ParamType-是-（通用）引用" class="headerlink" title="ParamType 是 （通用）引用"></a>ParamType 是 （通用）引用</h4><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T&amp;&amp; param)</span></span>; <span class="comment">// param现在是一个通用的引用</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> x = <span class="number">27</span>; <span class="comment">// 和之前一样</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span> cx = x; <span class="comment">// 和之前一样</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span>&amp; rx = x; <span class="comment">// 和之前一样</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="built_in">f</span>(x); <span class="comment">// x是左值，所以T是int&amp;</span></span><br><span class="line">		<span class="comment">// param的类型也是int&amp;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">f</span>(cx); <span class="comment">// cx是左值，所以T是const int&amp;</span></span><br><span class="line">		<span class="comment">// param的类型也是const int&amp;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">f</span>(rx); <span class="comment">// rx是左值，所以T是const int&amp;</span></span><br><span class="line">		<span class="comment">// param的类型也是const int&amp;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">f</span>(<span class="number">27</span>); <span class="comment">// 27是右值，所以T是int</span></span><br><span class="line">		<span class="comment">// 所以param的类型是int&amp;&amp;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><strong>如果 expr 是一个左值</strong>， T 和 ParamType(T&amp;&amp;) 都会<strong>被推导成左值引用</strong>。这有些不同寻常。</p>
+<ul>
+<li>第一，这是<strong>模板类型 T</strong> 被<strong>推导成一个引用的唯一情况</strong>。</li>
+<li>第二，尽管 ParamType 利用右值引用的语法来进行推导，但是他最终推导出来的类型是左值引用。</li>
+</ul>
+</li>
+<li><p><strong>如果 expr 是一个右值</strong>，那么就执行“普通”的法则（第一种情况）</p>
+</li>
+</ul>
+<p><mark style="background:#fff88f">简单总结来说就是</mark>：<br><img src="/images/Pasted%20image%2020260518102837.png"></p>
+<blockquote>
+<p><strong>引用</strong>的本质，是别名，就是两个符号，对应同一块内存</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">引用（<code>int&amp;</code>）</th>
+<th align="left">指针（<code>int*</code>）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>本质</strong></td>
+<td align="left">别名</td>
+<td align="left">存储地址的变量</td>
+</tr>
+<tr>
+<td align="left"><mark style="background:#fff88f"><strong>必须初始化吗？</strong></td>
+<td align="left">✅ 必须，且只能绑定到一个对象</td>
+<td align="left">❌ 可以先声明后赋值    </mark></td>
+</tr>
+<tr>
+<td align="left"><mark style="background:#fff88f"><strong>能重新绑定吗？</strong></td>
+<td align="left">❌ 绑定</mark>后不能改，只能改绑定对象的值</td>
+<td align="left">✅ 可以随时指向别的地址</td>
+</tr>
+<tr>
+<td align="left"><mark style="background:#fff88f"><strong>是否可能为空？</strong></mark></td>
+<td align="left">❌ 不存在空引用（UB 除外）</td>
+<td align="left">✅ 可以是 <code>nullptr</code></td>
+</tr>
+<tr>
+<td align="left"><strong>语法</strong></td>
+<td align="left">直接用 <code>.</code> 访问成员</td>
+<td align="left">要用 <code>-&gt;</code> 访问成员</td>
+</tr>
+<tr>
+<td align="left"><strong>底层实现</strong></td>
+<td align="left"><mark style="background:#fff88f">通常用指针实现</mark>，但编译器帮你隐藏了解引用</td>
+<td align="left">直接操作地址</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>什么是左值，右值<br><strong>左值</strong>：有名字、能取地址、可以出现在赋值号左边的值<br>	比如变量 <code>x</code>、<code>cx</code>、<code>rx</code>，都有名字，能 <code>&amp;x</code> 取地址，是左值<br>	<br><strong>右值</strong>：临时的、没有名字、用完就消失的值，只能出现在赋值号右边<br>	比如字面量 <code>27</code>、表达式返回的临时对象 <code>x+1</code>，都没有名字，不能取地址，是右值</p>
+<p>一个简单判断方法：<strong>能对它取 <code>&amp;</code> 的，就是左值；不能的就是右值。</strong></p>
+</blockquote>
+<p>所以x, cx, rx 都是左值，但是27是临时对象，所以是右值</p>
+<blockquote>
+<p><strong>左值引用</strong>：Type&amp; , 绑定到左值上<br>	<img src="/images/Pasted%20image%2020260518103601.png"><br><strong>右值引用</strong>：Type&amp;&amp;, 只能绑定到右值，目的是为了支持移动语义（<code>std::move</code>）<br>	<img src="/images/Pasted%20image%2020260518103554.png"></p>
+</blockquote>
+<p><mark style="background:#fff88f">总结</mark></p>
+<blockquote>
+<p><mark style="background:#fff88f">通用引用</mark> T&amp;&amp;<br>只有在模板参数推导的场景下，才叫通用引用，能同时绑定左值和右值<br><strong>传递左值</strong>给通用引用：<br>	<code>T</code> 被推导成 <code>Type&amp;</code>，<code>ParamType</code> 变成 <code>Type&amp; &amp;&amp;</code> 这里触发了引用折叠规则：<strong><code>&amp; + &amp;&amp; → &amp;</code></strong>，所以最终 <code>ParamType</code> 是 <code>Type&amp;</code>（左值引用）<br><strong>传递右值</strong>给通用引用：<code>T</code> 被推导成 <code>Type</code>，<code>ParamType</code> 变成 <code>Type&amp;&amp;</code>（右值引用）</p>
+</blockquote>
+<h4 id="ParamType-既不是指针也不是引用（按值传递）"><a href="#ParamType-既不是指针也不是引用（按值传递）" class="headerlink" title="ParamType 既不是指针也不是引用（按值传递）"></a>ParamType 既不是指针也不是引用（按值传递）</h4><p>当ParamType既不是指针，也不是引用，我们把他处理成pass-by-value</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T param)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>这就意味着 param 就是完全传给他的参数的<strong>一份拷贝</strong>,一个完全新的对象</p>
+<p>规则如下：</p>
+<ul>
+<li><strong>忽略引用特性</strong>：如果传入的 <code>expr</code> 是个引用，推导时会直接把 <code>&amp;</code> 去掉，只看底层的类型。</li>
+<li><strong>忽略顶层 <code>const</code>&#x2F;<code>volatile</code></strong>：如果去掉引用后，类型带有 <code>const</code>&#x2F;<code>volatile</code>（顶层），也会被忽略。</li>
+</ul>
+<p>因为本质上就是形参拷贝了，所以不关心这些原本的性质了。</p>
+<p>举例(特殊)：<br><img src="/images/Pasted%20image%2020260518104329.png" alt="396"></p>
+<ul>
+<li><code>const char*</code>：修饰的是<strong>指针指向的内容</strong>，表示 <code>ptr</code> 指向的 <code>char</code> 是不可修改的（底层 const）。</li>
+<li><code>* const ptr</code>：修饰的是<strong>指针本身</strong>，表示 <code>ptr</code> 这个变量本身的值（地址）不可修改（顶层 const）。</li>
+</ul>
+<p>会<strong>忽略顶层的 <code>const</code>&#x2F;<code>volatile</code></strong>，但会保留底层的 <code>const</code>&#x2F;<code>volatile</code>。</p>
+<p>因为 <code>param</code> 是原对象的拷贝，原对象 “本身不可修改” 的特性（顶层 const）对拷贝出来的新对象没有约束，所以会被去掉；但 “指向的对象不可修改” 的特性（底层 const）是类型的一部分，必须保留</p>
+<p><em><em>所以，T被推导成 const char</em>, 表示这块内存不可修改，但是指针本身是可以重定向的</em>*。</p>
+<h3 id="数组参数"><a href="#数组参数" class="headerlink" title="数组参数"></a>数组参数</h3><p>一般我们用的时候，我们把数组当作指向第一个元素的指针。<br><img src="/images/Pasted%20image%2020260518104642.png"></p>
+<p>实际上，<code>name</code>的类型是 <code>const char[13]</code>, 而不是<code>const char*</code>,  但是因为数组到指针的退化规则，代码会被正常编译。</p>
+<p>但是如果数组类型，被传递给一个模板参数，类型推导会怎么样呢？<br><img src="/images/Pasted%20image%2020260518104836.png"></p>
+<p>因为数组参数声明会被当做指针参数，传递给模板函数的按值传递的<strong>数组参数</strong>会被<strong>退化成指针类型</strong>。这就意味着在模板 f 的调用中，模板参数 T 被推导成 <code>const char*</code> ：<br><img src="/images/Pasted%20image%2020260518105106.png"></p>
+<h4 id="特例"><a href="#特例" class="headerlink" title="特例"></a>特例</h4><p><img src="/images/Pasted%20image%2020260518105124.png"></p>
+<p><strong>T最后推导出来的实际的类型就是数组</strong> <code>const char [13]</code></p>
+<p>函数 f 的参数（数组的引用）被推导成了 <code>const char(&amp;)[13]</code></p>
+<p>这个特例的使用</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//在编译的时候返回数组的长度（数组参数没有名字，</span></span><br><span class="line"><span class="comment">//因为只关心数组包含的元素的个数）</span></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="type">size_t</span> N&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">constexpr</span> <span class="type">size_t</span> <span class="title">arraySize</span><span class="params">(T (&amp;)[N])</span> <span class="keyword">noexcept</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> N;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>声明数组的引用可以使的创造出一个推导出一个<strong>数组包含的元素长度</strong>的模板<img src="/images/Pasted%20image%2020260518105619.png"></p>
+<p>定义为 <code>constexpr</code> 说明函数<strong>可以在编译的时候得到其返回值</strong><br><img src="/images/Pasted%20image%2020260518105840.png"></p>
+<h3 id="函数参数"><a href="#函数参数" class="headerlink" title="函数参数"></a>函数参数</h3><p>数组不是唯一可以退化成指针的东西，函数类型也可以被退化成函数指针。<br><img src="/images/Pasted%20image%2020260518105925.png"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><img src="/images/Pasted%20image%2020260518110305.png"></p>
+<h2 id="auto类型推导"><a href="#auto类型推导" class="headerlink" title="auto类型推导"></a>auto类型推导</h2><p>了解了模板类型推导，auto的类型推导基本所有的内容。</p>
+<p><strong>因为除了第一个例外，auto类型推导就是模板类型推导</strong></p>
+<p>模板类型推导和 auto 类型推导是有<mark style="background:#fff88f">一个直接的映射</mark></p>
+<p>他们的对应关系是：</p>
+<table>
+<thead>
+<tr>
+<th align="left">auto 写法</th>
+<th align="left">对应的模板形式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>auto x = expr;</code></td>
+<td align="left"><code>template&lt;typename T&gt; void f(T param); f(expr);</code></td>
+</tr>
+<tr>
+<td align="left"><code>const auto cx = expr;</code></td>
+<td align="left"><code>template&lt;typename T&gt; void f(const T param); f(expr);</code></td>
+</tr>
+<tr>
+<td align="left"><code>auto&amp; rx = expr;</code></td>
+<td align="left"><code>template&lt;typename T&gt; void f(T&amp; param); f(expr);</code></td>
+</tr>
+<tr>
+<td align="left"><code>auto&amp;&amp; urx = expr;</code></td>
+<td align="left"><code>template&lt;typename T&gt; void f(T&amp;&amp; param); f(expr);</code></td>
+</tr>
+<tr>
+<td align="left">也就是说：</td>
+<td align="left"></td>
+</tr>
+</tbody></table>
+<ul>
+<li><code>auto</code> 就相当于模板里的 <code>T</code></li>
+<li><code>auto</code> 前面 &#x2F; 后面的 <code>const</code>&#x2F;<code>&amp;</code>&#x2F;<code>&amp;&amp;</code>，就相当于模板里的 <code>ParamType</code></li>
+</ul>
+<h3 id="左值引用"><a href="#左值引用" class="headerlink" title="左值引用"></a>左值引用</h3><p><mark style="background:#fff88f">（auto&amp; a &#x3D; xxx， const保留，&amp;丢）</mark><br>T&amp; x &#x3D; expr<br>和模板类型推导规则一样：</p>
+<ul>
+<li>保留 <code>expr</code> 的 <code>const</code> 特性</li>
+<li>忽略 <code>expr</code> 本身的引用特性&amp;</li>
+</ul>
+<h3 id="通用引用"><a href="#通用引用" class="headerlink" title="通用引用"></a>通用引用</h3><p>T&amp;&amp; x &#x3D; expr<br>和模板类型推导规则一样：</p>
+<ul>
+<li><code>expr</code> 是左值 → auto 推成左值引用（<strong>引用折叠</strong>）</li>
+<li><code>expr</code> 是右值 → auto 推成普通类型，最终是右值引用</li>
+</ul>
+<h3 id="按值传递"><a href="#按值传递" class="headerlink" title="按值传递"></a>按值传递</h3><p><mark style="background:#fff88f">（auto a &#x3D; xxx， const，&amp;全丢）</mark><br>T x &#x3D;expr<br>&#96;auto x &#x3D; expr;</p>
+<ul>
+<li>忽略 <code>expr</code> 的引用特性</li>
+<li>忽略顶层 <code>const</code>&#x2F;<code>volatile</code>(因为拷贝出来的对象，没有约束)</li>
+<li>底层 <code>const</code> 会保留</li>
+</ul>
+<h3 id="唯一的例外"><a href="#唯一的例外" class="headerlink" title="唯一的例外"></a>唯一的例外</h3><p>这是 auto 和模板推导唯一不一样的地方：</p>
+<ul>
+<li>模板推导不支持<strong>初始化列表</strong> <code>{}</code></li>
+<li>auto 支持，并且会把 <code>auto x = {expr};</code> 推成 <code>std::initializer_list&lt;T&gt;</code></li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260518111919.png"></p>
+<h5 id="初始化列表"><a href="#初始化列表" class="headerlink" title="初始化列表{}"></a>初始化列表{}</h5><p>这个是c++11的新特性</p>
+<p><strong>用{} 给变量赋值，就是初始化列表</strong></p>
+<p>c98的写法：<br><img src="/images/Pasted%20image%2020260518112601.png"></p>
+<p>c11之后<br><img src="/images/Pasted%20image%2020260518112616.png"><br>这种 <code>{}</code> 形式，就叫 <strong>初始化列表</strong>。</p>
+<p>对于<code>auto x = {1,2,3}</code><br><code>auto</code>推导出来的类型是：<code>std::initializer_list&lt;int&gt;</code></p>
+<p>它是一个<strong>C++11 新增的模板类型</strong>，用来表示 “一堆值的集合”。</p>
+<p>总结，auto对{}的推导为：<br><img src="/images/Pasted%20image%2020260518112806.png"><br><img src="/images/Pasted%20image%2020260518112851.png"><br>而模板是不能推导{}的，这就是auto和模板推导唯一的区别了</p>
+<p>而<mark style="background:#fff88f">初始化列表这个类型，是c++11专门给容器，函数传参涉及的，统一批量传值工具</mark>， 其本质，就是一个临时，只读，轻量的值列表，目的仅仅用来初始化和传参</p>
+<p><img src="/images/Pasted%20image%2020260518113050.png" alt="251"></p>
+<p>还有一个好处，<mark style="background:#fff88f">就是让传参的形式统一：</mark></p>
+<p><img src="/images/Pasted%20image%2020260518113136.png" alt="206"></p>
+<h2 id="decltype"><a href="#decltype" class="headerlink" title="decltype"></a>decltype</h2><p>给定一个变量名或者表达式， <code>decltype</code> 会告诉你这个<strong>变量名或表达式</strong>的<strong>类型</strong>，不会做任何模板 &#x2F;auto 那样的推导修改</p>
+<p>和 <code>auto</code> 对比一下：</p>
+<ul>
+<li><code>auto</code>：会做推导，忽略引用、顶层 const（按值传递时）</li>
+<li><code>decltype</code>：<strong>不推导、不修改</strong>，表达式是什么类型，就返回什么类型。</li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260518132715.png" alt="447"></p>
+<blockquote>
+<p>注意，[]操作符的返回值是引用</p>
+</blockquote>
+<h3 id="（c-11）核心的用途：尾置返回类型"><a href="#（c-11）核心的用途：尾置返回类型" class="headerlink" title="（c++11）核心的用途：尾置返回类型"></a>（c++11）核心的用途：尾置返回类型</h3><p>在c++11之前，我写一个函数，接受一个容器，返回索引i的引用</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">？？？ <span class="built_in">authAndAccess</span>(Container&amp; c, Index i)&#123;</span><br><span class="line">	<span class="keyword">return</span> c[i];<span class="comment">//返回一个引用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以发现，如果我想返回一个引用，肯定函数的类型是<code>ParamType&amp; </code></p>
+<p>这就带来一个问题，我这是模板函数，<strong>我还不知道输入的容器的类型呢</strong>。这就没办法</p>
+<p><strong>c++11里面，用<code>decltype</code> + <code>尾置返回类型</code>解决</strong></p>
+<p>C++11 引入了 <code>-&gt; decltype(...)</code> 语法，把返回类型写在函数参数后面：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Container, <span class="keyword">typename</span> Index&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">authandaccess</span><span class="params">(Container&amp; c, Index i)</span> -&gt; <span class="title">decltype</span><span class="params">(c[i])</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> c[i]; <span class="comment">//容器c用[]运算符获得的c[i]，是引用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>auto</code> 只是占位符，真正的返回类型由 <code>decltype(c[i])</code> 决定</li>
+<li><code>decltype(c[i])</code> 会原封不动地返回 <code>c[i]</code> 的类型（比如 <code>int&amp;</code>）</li>
+</ul>
+<h3 id="c-14的用法：自动用decltype规则推导"><a href="#c-14的用法：自动用decltype规则推导" class="headerlink" title="c++14的用法：自动用decltype规则推导"></a>c++14的用法：自动用decltype规则推导</h3><p>c++14进一步简化了上面的写法，引入<code>decltype(auto)</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Container, <span class="keyword">typename</span> Index&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">decltype</span>(<span class="keyword">auto</span>) <span class="title">authandaccess</span><span class="params">(Container&amp; c, Index i)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> c[i]; <span class="comment">//容器c用[]运算符获得的c[i]，是引用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>像 <code>auto</code> 一样自动推导返回类型</li>
+<li>但<strong>使用 <code>decltype</code> 的推导规则</strong>（不忽略引用、const）</li>
+</ul>
+<blockquote>
+<p>疑问：既然都是推导类型，那为什么直接用auto不行？</p>
+<p>因为c[i]返回的是xxx类型的引用，比如int&amp;, 如果用auto进行模板规则的推导，会走左值推导，得出int的结果</p>
+<p>而 <code>decltype(auto)</code> 会保留 <code>int&amp;</code>，完美解决这个问题。</p>
+</blockquote>
+<h3 id="decltype的坑：（）会改变结果"><a href="#decltype的坑：（）会改变结果" class="headerlink" title="decltype的坑：（）会改变结果"></a>decltype的坑：（）会改变结果</h3><p><img src="/images/Pasted%20image%2020260518133849.png" alt="449"></p>
+<ul>
+<li>对变量名直接用 <code>decltype</code>，返回它的声明类型</li>
+<li>对变量加括号，就变成了 “左值表达式”，<code>decltype</code> 会返回 <code>T&amp;</code></li>
+</ul>
+<p><img src="/images/Pasted%20image%2020260518133940.png"><br>所以，如果是返回局部变量的值，就不能加（）, 否则会返回引用。</p>
+<h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p><img src="/images/Pasted%20image%2020260518134046.png"></p>
+<h2 id="auto关键字"><a href="#auto关键字" class="headerlink" title="auto关键字"></a>auto关键字</h2><p>一些 auto 类型的推导结果虽然完成符合规定的算法，但是从程序员的角度来看是错误的</p>
+<p>如何引导 auto 得到正确的结果是很重要</p>
+<p>这里包含了所有 auto 的输入和输出</p>
+<h3 id="优先使用auto，不是显式类型声明"><a href="#优先使用auto，不是显式类型声明" class="headerlink" title="优先使用auto，不是显式类型声明"></a>优先使用auto，不是显式类型声明</h3><p>这里说明的是auto解决了<strong>老式c++里面变量声明</strong>的两大痛点：</p>
+<ul>
+<li>复杂类型写起来麻烦</li>
+<li>容易忘记初始化<br><img src="/images/Pasted%20image%2020260518141516.png" alt="469"></li>
+</ul>
+<p>auto的解决办法是：</p>
+<ul>
+<li>自动推导类型，不用写复杂名字</li>
+<li>强制初始化，从根源上避免未定义行为<br><img src="/images/Pasted%20image%2020260518141607.png"></li>
+</ul>
+<h4 id="auto可以持有编译器才知道的类型（Lambda）"><a href="#auto可以持有编译器才知道的类型（Lambda）" class="headerlink" title="auto可以持有编译器才知道的类型（Lambda）"></a>auto可以持有编译器才知道的类型（Lambda）</h4><p>Lambda 表达式的类型是编译器内部生成的匿名类型<br><img src="/images/Pasted%20image%2020260518141904.png" alt="381"></p>
+<ul>
+<li><code>auto</code> 会直接推导为 Lambda 的原生类型，<strong>没有额外开销，调用更快</strong></li>
+<li><code>std::function</code> 是一个类型擦除的包装器，会有额外的内存开销和调用成本，而且代码写起来更繁琐</li>
+</ul>
+<h4 id="auto-能避免-“类型截断-不匹配”-的隐性错误"><a href="#auto-能避免-“类型截断-不匹配”-的隐性错误" class="headerlink" title="auto 能避免 “类型截断 &#x2F; 不匹配” 的隐性错误"></a><code>auto</code> 能避免 “类型截断 &#x2F; 不匹配” 的隐性错误</h4><p><img src="/images/Pasted%20image%2020260518142133.png"></p>
+<p><img src="/images/Pasted%20image%2020260518142225.png"></p>
+<h4 id="重构代码更简单"><a href="#重构代码更简单" class="headerlink" title="重构代码更简单"></a>重构代码更简单</h4><p><img src="/images/Pasted%20image%2020260518142320.png"></p>
+<h3 id="auto不能用的特殊情况"><a href="#auto不能用的特殊情况" class="headerlink" title="auto不能用的特殊情况"></a>auto不能用的特殊情况</h3><p><mark style="background:#fff88f"><strong>代理类</strong></mark></p>
+<p><strong>auto 不是万能的，遇到「代理类」这类特殊场景，它会推导出错误类型，这时候需要用<code>static_cast</code>手动修正</strong></p>
+<p><img src="/images/Pasted%20image%2020260518144242.png"></p>
+<p>除了这个，还有其他情况，也有有代理类来做优化<br><img src="/images/Pasted%20image%2020260518145012.png" alt="397"><br><img src="/images/Pasted%20image%2020260518145518.png" alt="389"></p>
+<h4 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h4><h5 id="显示类型初始化原则"><a href="#显示类型初始化原则" class="headerlink" title="显示类型初始化原则"></a>显示类型初始化原则</h5><p>用 <code>static_cast</code> 强制把表达式转换成你想要的类型，再给 <code>auto</code> 推导：<img src="/images/Pasted%20image%2020260518145332.png"></p>
+<ul>
+<li><code>static_cast&lt;bool&gt;</code> 会把代理类转换成真正的 <code>bool</code></li>
+<li><code>auto</code> 再推导出 <code>bool</code>，彻底避免持有代理类</li>
+</ul>
+<p><strong>总结</strong>：<br><code>auto</code> 会推导出表达式的真实类型，而不是你 “期望” 的类型。当遇到代理类这类特殊场景时，需要用 <code>static_cast</code> 显式转换，把它变成你想要的类型，再交给 <code>auto</code>。</p>
+<h2 id="使用现代C"><a href="#使用现代C" class="headerlink" title="使用现代C++"></a>使用现代C++</h2><h3 id="统一初始化"><a href="#统一初始化" class="headerlink" title="统一初始化{}"></a>统一初始化{}</h3><p>这里就是统一用{}来初始化。</p>
+<p>C++11之前，初始化语法比较混乱。</p>
+<p><mark style="background:#affad1">为什么需要{}来统一初始化</mark><br>原来的初始化是这样子的：</p>
+<p><img src="/images/Pasted%20image%2020260518150114.png"><br>很乱。</p>
+<p>我们用{}，被称为统一初始化，因为<strong>它可以用于任何地方</strong>：</p>
+<ul>
+<li>非静态数据成员指定默认值</li>
+<li>初始化不可复制的对象（如 <code>std::atomic</code>）等</li>
+</ul>
+<p><mark style="background:#fff88f">优势 1：阻止“变窄转换”（Narrowing Conversions）</mark><br><img src="/images/Pasted%20image%2020260518150340.png" alt="491"><br><img src="/images/Pasted%20image%2020260518150536.png" alt="409"></p>
+<p><mark style="background:#fff88f">优势 2：免疫 C++ 史上最令人头疼的解析（Most Vexing Parse）</mark><br>在 C++ 中有一条让无数新手掉坑的规则：“<strong>任何可以解析为函数声明的东西，都会被解析为函数声明</strong>”。<br><img src="/images/Pasted%20image%2020260518150352.png" alt="531"></p>
+<h5 id="特殊情况"><a href="#特殊情况" class="headerlink" title="特殊情况"></a>特殊情况</h5><p>不是所有情况的初始化，都可以使用{}来初始化的。</p>
+<p>因为{1，2，3}这种，本质上就是一个初始化列表的对象。</p>
+<p>但是，如果你的类初始化的参数里面，有一个接收初始化列表的，这样在调用构造函数的时候，编译器就会优先匹配它。</p>
+<p><img src="/images/Pasted%20image%2020260518151149.png" alt="396"></p>
+<p><img src="/images/Pasted%20image%2020260518151205.png" alt="469"></p>
+<h5 id="默认构造函数与空"><a href="#默认构造函数与空" class="headerlink" title="默认构造函数与空{}"></a>默认构造函数与空{}</h5><p>如果一个类既有默认构造函数，又有 <code>std::initializer_list</code> 构造函数，那么<strong>空的 <code>{}</code> 意味着调用默认构造函数，而不是传入一个空的<code>initializer_list</code></strong>。<br><img src="/images/Pasted%20image%2020260518151315.png" alt="474"></p>
+<h3 id="nullptr"><a href="#nullptr" class="headerlink" title="nullptr"></a>nullptr</h3><p>现代c++, 如果想要表示空指针，永远只用nullptr</p>
+<p>抛弃了0, NULL </p>
+<h4 id="抛弃0，NULL的原因"><a href="#抛弃0，NULL的原因" class="headerlink" title="抛弃0，NULL的原因"></a>抛弃0，NULL的原因</h4><p><mark style="background:#affad1">根本原因：类型冲突</mark><br>c++里面，0，NULL， 本质上都是int，都不是指针类型。所以在函数重载的时候引发灾难<br><img src="/images/Pasted%20image%2020260518152202.png" alt="492"></p>
+<p>当你写下 <code>f(NULL)</code> 时，你的本意是想调用指针版本的函数，但编译器却把它当成整数传给了 <code>f(int)</code>。这不仅违背直觉，还可能导致难以察觉的 Bug。</p>
+<p>而 <code>nullptr</code> 的优势：<br><code>nullptr</code> 的类型是 <code>std::nullptr_t</code>，它可以隐式转换为<strong>任何</strong>指针类型（如 <code>int*</code>, <code>Widget*</code> 等），但它<strong>绝对不会</strong>被视为一个整数</p>
+<p><img src="/images/Pasted%20image%2020260518152248.png" alt="461"></p>
+<p><mark style="background:#affad1">模板类型推导失效</mark><br><img src="/images/Pasted%20image%2020260518152353.png" alt="459"></p>
+<p><mark style="background:#affad1">代码可读性</mark><br>使用 <code>nullptr</code> 能让代码意图瞬间清晰。<br><img src="/images/Pasted%20image%2020260518152425.png"></p>
+<h3 id="声明别名using"><a href="#声明别名using" class="headerlink" title="声明别名using"></a>声明别名using</h3><p>在原来的c98里面，我们使用typedef来给类型起别名</p>
+<p>但是在现代c++中，使用using 别名声明</p>
+<p>因为 <code>typedef</code> 在泛型编程（模板）中存在着致命的设计缺陷</p>
+<h4 id="typedef的缺陷"><a href="#typedef的缺陷" class="headerlink" title="typedef的缺陷"></a>typedef的缺陷</h4><p><mark style="background:#affad1">可读性：尤其是处理函数指针的时候</mark></p>
+<p>在底层开发或系统级编程中，我们经常需要<strong>处理回调函数</strong>或<strong>中断处理函数</strong></p>
+<ul>
+<li>用 <code>typedef</code> 定义函数指针的语法非常反人类，名字被“埋”在了中间；</li>
+<li>而 <code>using</code> 则保持了清晰的“左边是名字，右边是值”的直觉逻辑。<br><img src="/images/Pasted%20image%2020260518152934.png" alt="465"></li>
+</ul>
+<p>正常回调的使用案例, 写起来更加简洁</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;vector&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span><span class="string">&lt;string&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Button</span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="comment">//typedef void (*ClickCallback)(int, int);</span></span><br><span class="line">	<span class="keyword">using</span> ClickCallback = <span class="built_in">void</span>(*)(<span class="type">int</span>, <span class="type">int</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">//绑定回调函数</span></span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">setClick</span><span class="params">(ClickCallback cb)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>-&gt;cb = cb;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//触发回调</span></span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">click</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (cb)</span><br><span class="line">			<span class="built_in">cb</span>(<span class="number">100</span>, <span class="number">200</span>);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	ClickCallback cb;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">onClick</span><span class="params">(<span class="type">int</span> x, <span class="type">int</span> y)</span> </span>&#123;</span><br><span class="line">	cout &lt;&lt; <span class="string">&quot;click callback&quot;</span> &lt;&lt; endl;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	Button btn;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//绑定回到</span></span><br><span class="line">	btn.<span class="built_in">setClick</span>(onClick);</span><br><span class="line">	btn.<span class="built_in">click</span>();</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p><mark style="background:#affad1">模板别名的使用</mark><br>这是 <code>using</code> 碾压 <code>typedef</code> 的根本原因。</p>
+<p>当你在实现<strong>自定义的容器</strong>（比如某种基于智能指针的链表、或者自定义的 HashMap）时，你通常<strong>希望给一个带有自定义分配器的模板类</strong>起个<strong>简短的</strong>名字。</p>
+<p><img src="/images/Pasted%20image%2020260518161554.png" alt="433"></p>
+<p><strong>但是typedef却不支持直接模板化</strong></p>
+<p>所以，你不能写成：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">templete&lt;<span class="keyword">typename</span> T&gt; </span><br><span class="line"><span class="keyword">typedef</span> sdt::list&lt;T, std::allocator&lt;T&gt;&gt; MyCustomList;</span><br></pre></td></tr></table></figure>
+<p>根本原因 ——<strong><code>typedef</code> 不支持模板别名, C98就不支持，而 <code>using</code> 支持</strong>，</p>
+<p>C++11 引入的 <code>using</code> 别名声明，天然支持模板化，也就是我们常说的<strong>模板别名（Alias Templates）</strong></p>
+<hr>
+<p><mark style="background:#affad1">终结 <code>typename</code> 和 <code>::type</code> 的噩梦</mark></p>
+<p><img src="/images/Pasted%20image%2020260518162302.png" alt="389"><br><img src="/images/Pasted%20image%2020260518162158.png" alt="392"></p>
+<blockquote>
+<p>注意这里，使用这个类型的时候，必须要typename xxx，编译器才能通过，直到这是你的模板。</p>
+</blockquote>
+<p>你在模板里写 <code>MyCustomList_C98&lt;T&gt;::type</code> 时，编译器会一脸懵</p>
+<ul>
+<li><code>MyCustomList_C98&lt;T&gt;</code> 是个模板，编译器不知道它里面的 <code>::type</code> 是<strong>类型</strong>，还是<strong>静态成员变量</strong></li>
+<li>比如它可能是 <code>int</code>，也可能是一个静态的 <code>int</code> 变量名，编译器没法判断</li>
+</ul>
+<p>这种 “依赖于模板参数 <code>T</code>，编译器无法直接判断的名字”，就叫<strong>依赖类型（Dependent Type）</strong></p>
+<blockquote>
+<p>是因为T未知，编译阶段还没有实例，自然也就没有类型。</p>
+</blockquote>
+<p>而使用<code>using</code> 支持直接定义模板别名，编译器<strong>100% 确定它就是个类型</strong></p>
+<p><img src="/images/Pasted%20image%2020260518162522.png" alt="393"></p>
+<table>
+<thead>
+<tr>
+<th align="left">写法</th>
+<th align="left">模板里使用时</th>
+<th align="left">可读性</th>
+<th align="left">编译器理解成本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>typedef + 结构体</code></td>
+<td align="left"><code>typename MyCustomList_C98&lt;T&gt;::type</code></td>
+<td align="left">差</td>
+<td align="left">高，必须你加 <code>typename</code> 提示</td>
+</tr>
+<tr>
+<td align="left"><code>using</code> 模板别名</td>
+<td align="left"><code>MyCustomList&lt;T&gt;</code></td>
+<td align="left">好</td>
+<td align="left">低，编译器直接知道是类型</td>
+</tr>
+</tbody></table>
+<p><mark style="background:#affad1">C++14 里全面引入 <code>using</code> 模板别名</mark></p>
+<p><strong>C++ 标准库为了解决 <code>typedef</code> 和 <code>typename</code>&#x2F;<code>::type</code> 的麻烦，在 C++14 里全面引入 <code>using</code> 模板别名</strong>，把类型特征（Type Traits）的写法彻底简化了</p>
+<p>C++11 引入了 <code>&lt;type_traits&gt;</code> 头文件，用来操作类型（比如移除引用、移除 const、判断是否是指针等），但它的实现是基于 <code>typedef</code> 的老路子，导致使用起来非常麻烦</p>
+<p><img src="/images/Pasted%20image%2020260518163559.png"></p>
+<p>相当于给你省略了创建别名的方法，</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AI-Infra/" rel="tag"># AI Infra</a>
+              <a href="/tags/C/" rel="tag"># C++</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/" rel="prev" title="infra 基于cuda自制llama大模型推理框架">
+                  <i class="fa fa-angle-left"></i> infra 基于cuda自制llama大模型推理框架
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/" rel="next" title="infra nano-vllm 源码解读">
+                  infra nano-vllm 源码解读 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+
+        
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>infra 现代c++学习</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">SDK中repo,git 笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">liangji</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

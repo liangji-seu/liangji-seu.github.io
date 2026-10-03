@@ -19,25 +19,28 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="welcome to my blog">
+    <meta name="description" content="记录 CPU cache、内存访问与操作系统相关的零散学习笔记。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="cache 学习笔记">
-<meta property="og:url" content="http://example.com/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/index.html">
 <meta property="og:site_name" content="ji的博客">
-<meta property="og:description" content="welcome to my blog">
+<meta property="og:description" content="记录 CPU cache、内存访问与操作系统相关的零散学习笔记。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-03-24T15:06:12.000Z">
-<meta property="article:modified_time" content="2026-03-24T15:06:12.315Z">
+<meta property="article:modified_time" content="2026-10-03T10:34:31.630Z">
 <meta property="article:author" content="liangji">
+<meta property="article:tag" content="Cache">
+<meta property="article:tag" content="OS">
+<meta property="article:tag" content="内存">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+<link rel="canonical" href="https://liangji-seu.github.io/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/","path":"2026/03/24/cache-学习笔记/","title":"cache 学习笔记"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/","path":"2026/03/24/cache-学习笔记/","title":"cache 学习笔记"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>cache 学习笔记 | ji的博客</title>
@@ -68,6 +71,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -107,7 +114,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -140,24 +147,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -195,7 +202,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -204,7 +211,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -226,6 +233,30 @@
 
       <time title="创建时间：2026-03-24 23:06:12" itemprop="dateCreated datePublished" datetime="2026-03-24T23:06:12+08:00">2026-03-24</time>
     </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-03 18:34:31" itemprop="dateModified" datetime="2026-10-03T18:34:31+08:00">2026-10-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">嵌入式</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E5%B5%8C%E5%85%A5%E5%BC%8F/OS/" itemprop="url" rel="index"><span itemprop="name">OS</span></a>
+        </span>
+    </span>
 
   
 </div>
@@ -244,6 +275,11 @@
     
 
     <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Cache/" rel="tag"># Cache</a>
+              <a href="/tags/%E5%86%85%E5%AD%98/" rel="tag"># 内存</a>
+              <a href="/tags/OS/" rel="tag"># OS</a>
+          </div>
 
         
 
@@ -261,6 +297,215 @@
           </div>
 
         
+  <div class="post-category-nav">
+    <div class="category-nav-section">
+      <h3 class="category-nav-title">
+        <i class="far fa-folder-open"></i>
+        <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a>
+      </h3>
+      <ol class="category-nav-list">
+            <li class="category-nav-item">
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item current">
+              <span>cache 学习笔记</span>
+            </li>
+          
+            <li class="category-nav-item">
+              <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/SDK%E4%B8%ADrepo-git-%E7%AC%94%E8%AE%B0/">SDK中repo,git 笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/10/imx6ull-linux%E5%86%85%E6%A0%B8%E7%9A%84misc%E9%A9%B1%E5%8A%A8/">imx6ull-linux内核的misc驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/09/platform%E8%AE%BE%E5%A4%87%EF%BC%8C%E9%A9%B1%E5%8A%A8%E6%A2%B3%E7%90%86/">platform设备，驱动梳理</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-platform%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A1%86%E6%9E%B6/">imx6ull-platform设备驱动框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/07/imx6ull-%E5%BC%82%E6%AD%A5%E9%80%9A%E7%9F%A5/">imx6ull-异步通知*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/06/imx6ull-linux-%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E/">imx6ull linux 阻塞与非阻塞*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-linux%E4%B8%AD%E6%96%AD/">imx6ull linux中断*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8/">imx6ull 内核定时器</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/05/imx6ull-%E6%8C%89%E9%94%AE%E8%BE%93%E5%85%A5%E5%AE%9E%E9%AA%8C/">imx6ull 按键输入实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E5%B9%B6%E5%8F%91%E4%B8%8E%E7%AB%9E%E4%BA%89/">imx6ull 并发与竞争*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/04/imx6ull-%E8%9C%82%E9%B8%A3%E5%99%A8%E9%A9%B1%E5%8A%A8%E7%BC%96%E5%86%99%E5%AE%9E%E9%AA%8C/">imx6ull 蜂鸣器驱动编写实验</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-pinctrl%E5%92%8Cgpio%E5%AD%90%E7%B3%BB%E7%BB%9F/">imx6ull pinctrl和gpio子系统</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/03/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91-led%E9%A9%B1%E5%8A%A8/">imx6ull 设备树-led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E8%AE%BE%E5%A4%87%E6%A0%91/">imx6ull 设备树</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/02/imx6ull-%E6%96%B0%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull-新字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/01/imx6ull-led%E9%A9%B1%E5%8A%A8/">imx6ull led驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/28/imx6ull-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">imx6ull 字符设备驱动</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-rootfs/">imx6ull rootfs</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/27/imx6ull-linux%E5%86%85%E6%A0%B8/">imx6ull linux内核</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/26/imx6ull-uboot-%E5%90%AF%E5%8A%A8%E5%88%86%E6%9E%90/">imx6ull uboot 启动分析*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/23/cpp-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">cpp 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/21/stm32-esp32s3-imx-%E5%AD%98%E5%82%A8%E6%9E%B6%E6%9E%84%E8%AE%A8%E8%AE%BA/">stm32-esp32s3-imx 存储架构讨论</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/18/imx6ull-%E5%9F%BA%E7%A1%80%E5%A4%8D%E7%9B%98/">imx6ull 基础复盘*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/15/stm32-i2c/">stm32 i2c</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/13/stm32-dma/">stm32 dma</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-gpio/">stm32 gpio*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/12/stm32-sys%E5%B1%82%E5%AE%9E%E7%8E%B0/">stm32 sys层实现*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/08/freertos-1/">freertos 基础实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/02/03/xv6-lab5/">xv6 lab5</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/31/xv6-lab4/">xv6 lab4</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/27/xv6-lab3/">xv6 lab3</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/23/xv6-lab2/">xv6 lab2</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/01/21/xv6-lab1/">xv6 lab1</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-printf%E5%AE%9E%E7%8E%B0/">stm32 printf实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-delay%E5%AE%9E%E7%8E%B0/">stm32 delay实现</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E4%B8%AD%E6%96%AD%E4%B8%8E%E4%BA%8B%E4%BB%B6/">stm32 中断与事件*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E6%97%B6%E9%92%9F/">stm32 时钟*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">stm32 启动流程*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E7%9C%8B%E9%97%A8%E7%8B%97/">stm32 看门狗</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AE%9A%E6%97%B6%E5%99%A8/">stm32 定时器*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-hal%E5%BA%93/">stm32 hal库</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-project%E7%BB%93%E6%9E%84/">stm32 project结构</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/24/stm32-%E5%AD%A6%E4%B9%A0/">stm32 架构与定位</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/21/imx6ull-uboot-%E5%AD%A6%E4%B9%A0/">imx6ull uboot 使用*</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-SPI-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull SPI 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-I2C-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull I2C 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/19/imx6ull-rtc-%E9%A9%B1%E5%8A%A8%E5%AD%A6%E4%B9%A0/">imx6ull rtc 驱动学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/12/IMX6U-RGBLCD-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">IMX6U RGBLCD 学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2025/12/03/stm32-uart/">stm32-uart*</a>
+            </li>
+      </ol>
+    </div>
+  </div>
 
     </footer>
   </article>

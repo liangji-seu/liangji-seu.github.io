@@ -19,42 +19,42 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancyapps-ui/5.0.31/fancybox/fancybox.css" integrity="sha256-gkQVf8UKZgQ0HyuxL/VnacadJ+D2Kox2TCEBuNQg5+w=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"liangji-seu.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="数据通信的基本概念 按通信方式分类： 按数据传输方向分类 按数据同步方式分类 通信速率   串口通信 串口通信的协议层 波特率 数据帧格式   stm32 uart 串口资源 框图 第一部分 USART 信号引脚 第二部分 数据寄存器 第三部分 控制器 第四部分 时钟与波特率    寄存器 CR DR SR   实验 1. uart发送数据。 直接发送 发送本地内存中的数据   2. uart">
 <meta property="og:type" content="article">
 <meta property="og:title" content="stm32-uart*">
-<meta property="og:url" content="http://example.com/2025/12/03/stm32-uart/index.html">
+<meta property="og:url" content="https://liangji-seu.github.io/2025/12/03/stm32-uart/index.html">
 <meta property="og:site_name" content="ji的博客">
 <meta property="og:description" content="数据通信的基本概念 按通信方式分类： 按数据传输方向分类 按数据同步方式分类 通信速率   串口通信 串口通信的协议层 波特率 数据帧格式   stm32 uart 串口资源 框图 第一部分 USART 信号引脚 第二部分 数据寄存器 第三部分 控制器 第四部分 时钟与波特率    寄存器 CR DR SR   实验 1. uart发送数据。 直接发送 发送本地内存中的数据   2. uart">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/images/27.1.png">
-<meta property="og:image" content="http://example.com/images/27.2.png">
-<meta property="og:image" content="http://example.com/images/27.3.png">
-<meta property="og:image" content="http://example.com/images/27.4.png">
-<meta property="og:image" content="http://example.com/images/27.5.png">
-<meta property="og:image" content="http://example.com/images/27.6.png">
-<meta property="og:image" content="http://example.com/images/27.7.png">
-<meta property="og:image" content="http://example.com/images/27.8.png">
-<meta property="og:image" content="http://example.com/images/27.9.png">
-<meta property="og:image" content="http://example.com/images/27.10.png">
-<meta property="og:image" content="http://example.com/images/27.11.png">
-<meta property="og:image" content="http://example.com/images/27.12.png">
-<meta property="og:image" content="http://example.com/images/27.13.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.1.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.2.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.3.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.4.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.5.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.6.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.7.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.8.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.9.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.10.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.11.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.12.png">
+<meta property="og:image" content="https://liangji-seu.github.io/images/27.13.png">
 <meta property="article:published_time" content="2025-12-03T06:56:32.000Z">
-<meta property="article:modified_time" content="2026-04-28T06:49:35.177Z">
+<meta property="article:modified_time" content="2026-06-14T15:43:50.975Z">
 <meta property="article:author" content="liangji">
 <meta property="article:tag" content="mcu">
 <meta property="article:tag" content="stm32">
 <meta property="article:tag" content="嵌入式">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/images/27.1.png">
+<meta name="twitter:image" content="https://liangji-seu.github.io/images/27.1.png">
 
 
-<link rel="canonical" href="http://example.com/2025/12/03/stm32-uart/">
+<link rel="canonical" href="https://liangji-seu.github.io/2025/12/03/stm32-uart/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/12/03/stm32-uart/","path":"2025/12/03/stm32-uart/","title":"stm32-uart*"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://liangji-seu.github.io/2025/12/03/stm32-uart/","path":"2025/12/03/stm32-uart/","title":"stm32-uart*"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>stm32-uart* | ji的博客</title>
@@ -85,6 +85,10 @@
 
 
 
+
+<meta name="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:site_name" content="ji的博客">
 
   <noscript>
     <link rel="stylesheet" href="/css/noscript.css">
@@ -124,7 +128,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-notes"><a href="/notes/" rel="section"><i class="fa fa-book fa-fw"></i>笔记导航</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-opensource"><a href="/software/" rel="section"><i class="fa fa-cube fa-fw"></i>开源软件</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li>
   </ul>
 </nav>
 
@@ -158,24 +162,24 @@
     <img class="site-author-image" itemprop="image" alt="liangji"
       src="/images/headpic.png">
   <p class="site-author-name" itemprop="name">liangji</p>
-  <div class="site-description" itemprop="description">welcome to my blog</div>
+  <div class="site-description" itemprop="description">liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。</div>
 </div>
 <div class="site-state-wrap animated">
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">58</span>
+          <span class="site-state-item-count">69</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">41</span>
+        <span class="site-state-item-count">72</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -213,7 +217,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/12/03/stm32-uart/">
+    <link itemprop="mainEntityOfPage" href="https://liangji-seu.github.io/2025/12/03/stm32-uart/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/headpic.png">
@@ -222,7 +226,7 @@
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="ji的博客">
-      <meta itemprop="description" content="welcome to my blog">
+      <meta itemprop="description" content="liangji 的研究与工程笔记，记录系统、机器学习、嵌入式与科研工具实践。">
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
@@ -249,7 +253,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-28 14:49:35" itemprop="dateModified" datetime="2026-04-28T14:49:35+08:00">2026-04-28</time>
+      <time title="修改时间：2026-06-14 23:43:50" itemprop="dateModified" datetime="2026-06-14T23:43:50+08:00">2026-06-14</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -340,7 +344,7 @@
 <li>传输速率高</li>
 <li><strong>成本高</strong>，<code>抗干扰能力差</code>因而适用于<code>短距离、高速率</code>的通信</li>
 </ul>
-<p><img src="/../images/27.1.png" alt="alt text"></p>
+<p><img src="/images/27.1.png" alt="alt text"></p>
 <h2 id="按数据传输方向分类"><a href="#按数据传输方向分类" class="headerlink" title="按数据传输方向分类"></a>按数据传输方向分类</h2><ol>
 <li><strong>全双工</strong></li>
 </ol>
@@ -359,7 +363,7 @@
 <ul>
 <li>指数据传输<code>仅能沿一个方向</code>，不能实现反方向传输，如校园广播</li>
 </ul>
-<p><img src="/../images/27.2.png" alt="alt text"></p>
+<p><img src="/images/27.2.png" alt="alt text"></p>
 <h2 id="按数据同步方式分类"><a href="#按数据同步方式分类" class="headerlink" title="按数据同步方式分类"></a>按数据同步方式分类</h2><ol>
 <li><strong>同步通信</strong></li>
 </ol>
@@ -375,7 +379,7 @@
 <li>无需时钟信号</li>
 <li>而是<strong>在数据信号中</strong>加入开始位和停止位等一些<strong>同步信号</strong>，以便使接收端能够正确地将每一个字符接收下来，某些通信中<strong>还需要双方约定传输速率</strong></li>
 <li><strong>优点</strong>：没有时钟信号硬件简单，双方时钟可允许一定误差。</li>
-<li><strong>缺点</strong>：通信速率较低，只适用点对点传输<br><img src="/../images/27.3.png" alt="alt text"></li>
+<li><strong>缺点</strong>：通信速率较低，只适用点对点传输<br><img src="/images/27.3.png" alt="alt text"></li>
 </ul>
 <h2 id="通信速率"><a href="#通信速率" class="headerlink" title="通信速率"></a>通信速率</h2><p>通信速率（<strong>传输速率</strong>）指数据在信道中传输的速度，它分为两种：</p>
 <ol>
@@ -413,7 +417,7 @@
 </ol>
 <h1 id="串口通信的协议层"><a href="#串口通信的协议层" class="headerlink" title="串口通信的协议层"></a>串口通信的协议层</h1><p>串口通信的<code>数据包</code>由<code>发送设备的 TXD</code> 接口传输到<code>接收设备的 RXD</code> 接口。</p>
 <p>在串口通信的协议层中，<strong>规定了数据包的内容</strong>，它由<code>起始位</code>、<code>主体数据</code>、<code>校验位</code>以及<code>停止位</code>组成，通讯双方的数据包格式要约定一致才能正常收发数据</p>
-<p><img src="/../images/27.4.png" alt="alt text"></p>
+<p><img src="/images/27.4.png" alt="alt text"></p>
 <p>串口通信协议数据包组成可以分为<code>波特率</code>和<code>数据帧格式</code>两部分</p>
 <h2 id="波特率"><a href="#波特率" class="headerlink" title="波特率"></a>波特率</h2><p>串口异步通信，异步通信是不需要时钟信号的。</p>
 <p><code>波特率</code>表示<code>每秒</code>钟传送的<code>码元符号的个数</code>，所以它决定了数据帧里面每<br><code>一个位</code>的<code>时间长度</code>。两个要通信的设备的波特率一定要<code>设置相同</code>，我们常见的波特率是 4800、9600、115200 等</p>
@@ -458,7 +462,7 @@
 <blockquote>
 <p>STM32 的串口输出的是 TTL 电平信号</p>
 </blockquote>
-<h2 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h2><p><img src="/../images/27.5.png" alt="alt text"></p>
+<h2 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h2><p><img src="/images/27.5.png" alt="alt text"></p>
 <h3 id="第一部分-USART-信号引脚"><a href="#第一部分-USART-信号引脚" class="headerlink" title="第一部分 USART 信号引脚"></a>第一部分 USART 信号引脚</h3><ol>
 <li><code>TX</code>：发送数据输出引脚</li>
 <li><code>RX</code>：接收数据输入引脚</li>
@@ -480,13 +484,13 @@
 <h3 id="第四部分-时钟与波特率"><a href="#第四部分-时钟与波特率" class="headerlink" title="第四部分 时钟与波特率"></a>第四部分 时钟与波特率</h3><p>这部分的主要功能就是为 USART 提供时钟以及配置波特率</p>
 <p>（由此可见，即便他不依赖CLK线同步，但是工作肯定也是需要时钟的）</p>
 <p>二进制系统中，波特率与波特率的数值相等，所以我们今后在把串口波特率理解为<strong>每秒钟</strong>传输的<strong>二进制位数</strong></p>
-<h2 id=""><a href="#" class="headerlink" title=""></a><img src="/../images/27.6.png" alt="alt text"></h2><p><strong>fck</strong> 是给<strong>串口的时钟</strong></p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img src="/images/27.6.png" alt="alt text"></h2><p><strong>fck</strong> 是给<strong>串口的时钟</strong></p>
 <ul>
 <li>USART2\3\3\4\5 的时钟源为 PCLK1</li>
 <li>USART1 的时钟源为 PCLK2</li>
 </ul>
 <hr>
-<p><img src="/../images/27.7.png" alt="alt text"></p>
+<p><img src="/images/27.7.png" alt="alt text"></p>
 <blockquote>
 <p>因此，这样就可以计算如何设置串口的波特率所需的参数了</p>
 </blockquote>
@@ -513,8 +517,8 @@
 </li>
 </ol>
 <h3 id="CR"><a href="#CR" class="headerlink" title="CR"></a>CR</h3><p>很有意思的是，串口复位的控制寄存器，居然是定义在RCC的寄存器里面的。</p>
-<p><img src="/../images/27.8.png" alt="alt text"><br><img src="/../images/27.9.png" alt="alt text"></p>
-<p><img src="/../images/27.10.png" alt="alt text"></p>
+<p><img src="/images/27.8.png" alt="alt text"><br><img src="/images/27.9.png" alt="alt text"></p>
+<p><img src="/images/27.10.png" alt="alt text"></p>
 <blockquote>
 <p>TE 为<strong>发送使能位</strong>，设置为 1，将开启串口的发送功能。</p>
 <p>RE 为<strong>接收使能位</strong>，用法同 TE</p>
@@ -526,12 +530,12 @@
 </blockquote>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">TXIE 触发的核心是 “发送缓冲区空，可写新数据”，用于持续发送；</span><br><span class="line">TCIE 触发的核心是 “发送完全结束”，用于确认发送完成；</span><br><span class="line">RXNEIE 触发的核心是 “接收有数据可读” 或 “接收溢出错误”，是接收数据的核心中断。</span><br><span class="line"></span><br><span class="line">持续发送：</span><br><span class="line">利用 TXE 中断（发送缓冲区空）不断填充下一个字节，直到数据发完。关于 “发完后如何停止中断”，在中断服务函数中主动关闭 TXIE 是行业内的标准做法，也是最稳妥、最高效的方式</span><br></pre></td></tr></table></figure>
 
-<h3 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h3><p><img src="/../images/27.11.png" alt="alt text"></p>
+<h3 id="DR"><a href="#DR" class="headerlink" title="DR"></a>DR</h3><p><img src="/images/27.11.png" alt="alt text"></p>
 <blockquote>
 <p>当向该寄存器写数据的时候，串口就会自动发送，</p>
 <p>当收到数据的时候，也是存在该寄存器内</p>
 </blockquote>
-<h3 id="SR"><a href="#SR" class="headerlink" title="SR"></a>SR</h3><p><img src="/../images/27.12.png" alt="alt text"><br><img src="/../images/27.13.png" alt="alt text"></p>
+<h3 id="SR"><a href="#SR" class="headerlink" title="SR"></a>SR</h3><p><img src="/images/27.12.png" alt="alt text"><br><img src="/images/27.13.png" alt="alt text"></p>
 <blockquote>
 <p><strong>RXNE（读数据寄存器非空）</strong>，当该位被置 1 的时候，就是提示已经有数据被接收到了，并且<strong>可以读出来了</strong>。这时候我们要做的就是(<strong>尽快去读取 USART_DR</strong>)（接收中断的标志），通过读 USART_DR 可以将该位清零，也可以向该位写 0，直接清除</p>
 </blockquote>
@@ -650,16 +654,52 @@
       </h3>
       <ol class="category-nav-list">
             <li class="category-nav-item">
-              <a href="/2026/04/28/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+              <a href="/2026/08/25/infra-FlashAttention%E5%AD%A6%E4%B9%A0/">infra FlashAttention学习</a>
             </li>
             <li class="category-nav-item">
-              <a href="/2026/04/14/ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
+              <a href="/2026/08/11/infra-%E6%B5%81%E7%95%85%E7%9A%84python-%E5%AD%A6%E4%B9%A0/">infra 流畅的python 学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/08/11/infra-%E5%9F%BA%E4%BA%8Evllm%E7%9A%84my-vllm%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6%E4%BA%8C%E6%AC%A1%E4%BC%98%E5%8C%96/">infra 基于vllm的my-vllm大模型推理框架二次优化</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-Nsight%20Compute%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">infra Nsight Compute学习笔记</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/07/04/infra-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E5%BA%93GTest+glog/">infra 单元测试库GTest+glog</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-Transformer%20%E6%8E%A8%E7%90%86%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90/">infra Transformer 推理性能分析</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-CUDA%E7%BC%96%E7%A8%8B/">infra CUDA编程</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-nano-vllm%20%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/">infra nano-vllm 源码解读</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E7%8E%B0%E4%BB%A3c++%E5%AD%A6%E4%B9%A0/">infra 现代c++学习</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/06/14/infra-%E5%9F%BA%E4%BA%8Ecuda%E8%87%AA%E5%88%B6llama%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A8%E7%90%86%E6%A1%86%E6%9E%B6/">infra 基于cuda自制llama大模型推理框架</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/05/12/infra-%E9%9D%A2%E7%BB%8F%E6%95%B4%E7%90%86/">infra 面经</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/28/infra-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80-pytorch+python/">深度学习基础-pytorch+python</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/04/14/leecode-ACM%E6%A8%A1%E5%BC%8F%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA/">ACM模式输入输出</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/04/12/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AD%A6%E4%B9%A0%E9%A1%B9%E7%9B%AE1-7B%E6%A8%A1%E5%9E%8BQLoRA%E6%8C%87%E4%BB%A4%E5%BE%AE%E8%B0%83-SFT/">大模型学习项目1: 7B模型QLoRA指令微调(SFT)</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/25/ROS2-%E5%AE%8C%E6%95%B4%E5%AD%A6%E4%B9%A0%E6%8C%87%E5%8D%97/">ROS2 完整学习指南</a>
+            </li>
+            <li class="category-nav-item">
+              <a href="/2026/03/24/cache-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">cache 学习笔记</a>
             </li>
             <li class="category-nav-item">
               <a href="/2026/03/24/vfs-%E7%A3%81%E7%9B%98-%E8%AE%A8%E8%AE%BA%E7%AC%94%E8%AE%B0/">vfs, 磁盘 讨论笔记</a>
