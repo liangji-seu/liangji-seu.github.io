@@ -1173,6 +1173,8 @@ Python 回收内存不是靠一个统一机制，而是两层：
 | **引用计数**           | 普通对象，引用数归 0 立即释放            | 自动、即时                   |
 | **循环 GC（`gc` 模块）** | **循环引用**的对象（A 指向 B、B 又指向 A） | 周期触发，或手动 `gc.collect()` |
 |                    |                             |                         |
+|                    |                             |                         |
+|                    |                             |                         |
 
 关键点：**循环引用**这种对象，因为互相引用、引用计数永远不为 0，靠引用计数根本释放不掉。所以 Python 另外搞了一个「三色标记」的循环检测器，就是 `gc` 模块干的事。
 
@@ -7263,6 +7265,384 @@ Scheduler throttle 和 PPHandler FIFO 是严格配套的：
 <mark style="background:#fff88f">所以这里还是有阻塞等待的，但是不是像v1里面，每个batch 的 foward都在阻塞等待当前的batch的结果。
 这里是阻塞等待pp_size步前的batch的采样结果，这样的好处就是把等待采样结果的实际和实际推进前向的时间重叠了pp_size步</mark>
 
+
+
+
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### EP
+终于开始专家并行了。
+
+#### MoE架构
+
+
+一个典型 MoE 的 FFN/MLP 层可以理解成：
+
+x→Router(Wgate)→Softmax→TopK→Experts→加权合并x \rightarrow Router(W_{gate}) \rightarrow Softmax \rightarrow TopK \rightarrow Experts \rightarrow 加权合并
+
+具体来说：
+
+1. 输入 token hidden state：
+    
+    x∈Rdmodelx\in \mathbb{R}^{d_{model}}
+2. Router 做一次 Linear：
+    
+    logits=xWgatelogits = xW_{gate}
+    
+    如果有 NN 个专家，那么输出就是 NN 个分数。
+    
+3. 对这些专家分数做 softmax，得到 routing probability：
+    
+    p=softmax(logits)p=\text{softmax}(logits)
+4. 选出 Top-K 专家。比如 `top_k=2`，那么一个 token 会选择两个专家，同时得到：
+    - 专家 ID，例如 `[Expert 3, Expert 7]`
+    - 对应权重，例如 `[0.7, 0.3]`
+5. 把这个 token 的 hidden state xx 交给选中的专家：
+    
+    y3=Expert3(x),y7=Expert7(x)y_3=Expert_3(x),\quad y_7=Expert_7(x)
+6. 最后根据 router 权重加权求和：
+    
+    y=0.7y3+0.3y7y = 0.7y_3+0.3y_7
+
+> <mark style="background:#d2cbff">MoE 一般只是把原来 Transformer block 里的 **MLP/FFN 子层替换成 MoE FFN**，并不会把 RMSNorm 和残差结构去掉</mark>
+
+至于每个专家，是双层MLP，还是SwiGLU + MLP。具体结构取决于模型
+
+![[Pasted image 20260831204538.png]]
+
+
+所以你可以理解成：
+
+- Router 的 `W_gate`：是用来**选专家**的。
+- Expert 里面的 `gate_proj`：是 **SwiGLU 本身的一部分**。
+
+这两个虽然名字里都有 `gate`，但完全不是一个东西。
+
+![[Pasted image 20260831204600.png|328]]
+![[Pasted image 20260831205013.png]]
+#### EP 专家并行概述
+
+![[Pasted image 20260831204828.png]]
+
+
+EP并行的挑战：
+- 跨节点通信开销
+	- 因为一个rank负责一部分专家
+- 负载均衡挑战
+	- EP和DP， TP一起使用，不同分布导致命中专家数量不均衡
+
+> vllm里面的**EPLB**，用于在使用EP的MoE模型中维护专家负载状态，并配合冗余物理专家等机制缓解热点专家问题。
+
+> 在MoE模型的推理中，DP + EP 是比 纯TP，或者DP + TP + EP更加经典且高效的策略
+
+![[Pasted image 20260831205744.png]]
+
+![[Pasted image 20260831205821.png]]
+
+**所以专家层，不再继续TP切分，即便你在vllm里面启用了TP切分**。
+
+![[Pasted image 20260831205919.png]]
+
+
+<mark style="background:#affad1">那vllm里面具体是如何设计EP来处理MoE架构的并行的呢?</mark>
+
+![[Pasted image 20260831210000.png]]
+
+
+- <mark style="background:#fff88f">分发：dispatch</mark>
+	- 每个EP rank, 除了各自负责的专家，还持有相同的ROUTER， 每个EP rank收到token 向量（这里每个EP rank收到的是不同的输入token。 也就是说，Router是复制的，但是输入token不一定相同）后，会计算出一个统一的结果（每个EP rank都计算出相同的处理分发结果：token向量+专家选择+专家打分权重），然后做一次All-to-All, 之后，每个EP rank就获得了各自需要计算的token向量+权重打分
+![[Pasted image 20260831210805.png|227]]![[Pasted image 20260831210822.png|141]]![[Pasted image 20260831210844.png|320]]
+
+**下面看一下All-to-All**
+
+![[Pasted image 20260831210919.png|392]]
+
+![[Pasted image 20260831211016.png|412]]
+
+
+---
+总结一下，EP + MoE下，每个EP rank的工作流程：
+![[Pasted image 20260831211824.png]]
+
+![[Pasted image 20260831211832.png]]
+
+
+
+#### Qwen3-30B-A3B的moe模型参数预览
+![[Pasted image 20260831212540.png]]
+
+<mark style="background:#fff88f">hidden_states 是 2048维度，但是每个专家的up向量是仅有768维度</mark>。
+
+![[Pasted image 20260831212653.png|573]]
+
+![[Pasted image 20260831212741.png|526]]
+
+
+![[Pasted image 20260831212757.png]]
+
+---
+<mark style="background:#ff4d4f">当Moe架构的模型，开启EP后，有这样几个注意点</mark>：
+- EP = TP x DP
+- EP 启用后，MoE不分，不再支持TP切分，也不支持DP复制独立模型副本，整个模型的MoE部分，仅仅是公有的一块独立权重。
+	- 前面的注意力部分，仍然按照DP，TP 划分。
+	- 所以当DP = 2， TP = 4， 所以EP = 8的时候
+		- 每个rank持有，DP副本内的除开MoE部分的TP切分的一块权重，加上自己负责的MoE专家部分。
+
+![[Pasted image 20260831214413.png|632]]
+
+
+#### DP=2，TP=4， EP使能的情况下，每个rank的工作流程
+
+```txt
+分组如下：
+	  TP0    TP1     TP2    TP3
+DP0: rank0, rank1, rank2, rank3
+DP1: rank4, rank5, rank6, rank7
+
+所以，一个batch（batch0 + batch1）过来，
+	DP0里面的4个rank，输入共同的batch0
+	DP1里面的4个rank, 输入共同的batch1
+	
+rank0,rank1,rank2,rank3, 输入相同，计算出各自切分的结果（列切分+行切分），然后tp组内all-reduce
+rank0,rank1,rank2,rank3 拥有相同的注意力部分的完整输出local_tokens（属于batch0）。
+同理，
+rank4, rank5, rank6, rank7 拥有相同的注意力部分的完整输出 local_tokens (属于batch1)
+
+此时开始，8张卡做各自的Router,
+（注意，因为rank 0,1,2,3都是同样的local_tokens，所以经过router后，也是同样的路由token，所以没必要都算router，而是选择让tp组内的各个rank，各自负责算一部分，然后dispatch各自负责的部分）
+
+然后all-to-all,
+
+每张rank获得了各自专家的hidden_states. 各自进行expert()前向。
+
+再次all-to-all, 拿回各rank原本的local_tokens中自己负责的专家路由的输出。进行专家权重加权求和。
+
+>>> 到此时，一个tp组内的各个rank，持有自己负责路由token的专家加权输出（tp组内，每个rank持有的是token维度的切片）。
+
+所以接下来还需要一个all-gather的拼接操作，
+	DP0的4个rank,拼出batch0的完整输出
+	DP1的4个rank,拼出batch1的完整输出
+>>> 
+
+```
+
+0. 当前layer开始计算。
+1. 每个rank，获取当前DP副本的一部分batch输入（组内4个tp rank处理同样的输入）
+2. 每个rank，使用自己持有的tp切分后的权重，输入tp组内同样的输入。 
+3. 每个rank， 执行一次all-reduce, tp组内，每个rank，都有了同样的完整的输出。
+4. 每个rank, 把注意力的输出（local_token），独立根据自己持有的部分专家路由（<mark style="background:#fff88f">tp组内的各个rank，各自负责算一部分</mark>），进行计算
+5. 所有的rank，进行<mark style="background:#fff88f">dispatch all-to-all</mark>, 然后expert前向。
+6. 所有的rank, 进行<mark style="background:#fff88f">combine all-to-all</mark>, 然后<mark style="background:#d3f8b6">每个 rank 会拿回“原本由自己负责的那些 token”的 expert 输出</mark>, 计算加权。输出结果。(此时tp组内，每个rank持有的是token维度的切片)
+7. tp组内的rank，进行all-gather的拼接操作，拼出batch0的完整输出
+	1. ![[Pasted image 20260831221430.png|271]]
+8. 开始下一层layer。
+
+
+
+#### all-to-all通信
+
+下面理解几个通信集合原语
+##### Scatter /  ReduceScatter
+
+首先说明一下
+<mark style="background:#b1ffff">1. all-to-all:</mark>
+
+**all-to-all是一个独立的通信集合**：<mark style="background:#d3f8b6">每个rank都会向所有rank发送一份数据，同时，也从所有rank接受数据</mark>
+
+
+
+
+<mark style="background:#b1ffff">2. Scatter</mark> 分发
+这个可以看做是Gather方向相反的通信，他需要在**源rank上，准备一个scatter_list**,  表示要发给各个目标rank的数据。
+
+接收端，只需要准备目标张量即可
+
+scatter_list的长度，必须和world_size一致，第i个元素张量，会发给local rank i
+
+而<mark style="background:#fdbfff">ReduceScatter</mark>, <mark style="background:#fdbfff">AllReduce</mark>， 都会对所有rank上对应位置，做某种规约操作，比如求和，但是不同的是：
+- AllReduce里面，每个rank都会得到完整的规约结果
+- ReduceScatter里面，规约完成后，还会按切片分发，每个rank只拿到结果的一部分
+
+
+![[Pasted image 20260831223127.png]]
+
+
+![[Pasted image 20260831223431.png|665]]
+
+
+##### ReduceScatter
+
+我们前面讲了Scatter，分发，这种通信集合方式。
+
+现在开始ReduceScatter, 这个其实就是先看成Reduce, 在做Scatter分发。
+
+- Reduce
+	- 各rank同一位置分片累加
+- Scatter
+	- 按分片分发给不同rank
+
+
+以上说的是接口语义，而底层实现，有很多种方式，比较常见的是ring实现，但ring并非唯一实现方案
+
+![[Pasted image 20260831224039.png|479]]
+
+![[Pasted image 20260831224049.png|481]]
+
+三次更新之后，每块 `GPU` 上都有一块数据拥有了对应位置完整的累加聚合（上图中红色块）
+> 至此，是3次Reduce, 此时，`ReduceScatter` 通信阶段结束
+> $$Rank\;i$$最终收到了所有节点上第 i 个数据块的求和结果。例如，Rank 0 汇总了所有节点的第一个 chunk（切片/部分）块张量求和结果，更多节点也是依此类推
+
+
+
+##### all-to-all
+![[Pasted image 20260831224427.png]]
+
+![[Pasted image 20260831224511.png]]
+
+![[Pasted image 20260831224602.png]]
+
+![[Pasted image 20260831224609.png]]![[Pasted image 20260831224619.png]]
+
+
+
+
+
+
+
+## 投机解码
+
+投机解码还是很好理解的。直接看图
+sits 是当前的草稿模型输入，产生的on my knee是草稿token
+
+之后，大模型的输入就是4个（b + draft_tokens） = sits + on my knee, 然后并行计算这4个token的验证输出
+
+在经过多层大模型后，大模型的因果计算，就是prefill，得到：
+sits : on（草稿on预测对了）
+on : a （草稿my预测错了）(a作为最后的产出)
+my : xx
+knee : xx
+
+所以，整体来看，对整个系统，你输入一个sits, 然后额外接受了草稿token: on, 然后得到输出token id 是a
+
+> 因此整体感受来说，投机解码，<mark style="background:#b1ffff">就是输入一个token, 输出下一个token</mark>， <mark style="background:#b1ffff">中间再额外选择几个草稿token</mark>.
+
+因此，<mark style="background:#fff88f">一次前向，输出的token长度是 = 接受的草稿token + 最后一个草稿token预测出来的token</mark>.
+
+
+
+![[Pasted image 20260901201758.png]]
+
+![[Pasted image 20260901203830.png]]
+
+
+![[Pasted image 20260901203957.png]]
+
+
+
+### 性能分析
+
+![[Pasted image 20260901204147.png|403]]
+
+
+
+
+### Medusa 
+
+Medusa是无草稿小模型 的 多头并行解码
+
+![[Pasted image 20260901204251.png|533]]
+
+
+![[Pasted image 20260901204318.png]]
+
+> 简单说就是，在大模型的最后一个layer后，lm_head之前，加入一个层（多个medusa头，每个头预测未来的一步），这个Medusa层，根据输出token(也就是后面的输入)，<mark style="background:#fff88f">多预测几个draft token</mark>
+
+![[Pasted image 20260901204542.png|628]]
+
+> 所以medusa的结构，相比于普通的草稿模型，用更高效的预测结构，一次给出多步候选，并统一验证
+
+
+#### 模型架构
+常规的 decoding 过程称为 Next-Token 预测，Medusa 这种多 token 并行解码称为 <mark style="background:#fff88f">Next-Next-Tokens 预测</mark>
+
+<mark style="background:#fff88f">其通过增加多个 `Medusa Head`，与原模型上的`LM Head`一同做预测</mark>
+
+
+
+### Eagle 投机解码
+
+前面的叫做预测解码，这边，Eagle，翻译过来就是投机解码
+
+Eagle (Extrapolation Algorithm for Greater Language-model Efficiency) 及其后续版本 Eagle-3 是目前投机解码（Speculative Decoding）领域中最先进（SOTA）的技术之一
+
+![[Pasted image 20260901212311.png]]
+
+<mark style="background:#fff88f">Eagle 的结构非常简单</mark>：通常只是**一层 Transformer Decoder Layer**（加上一些 Projection 层）。它的参数量极小（通常 < 1B，甚至几百 MB）。
+
+![[Pasted image 20260901213155.png]]
+
+![[Pasted image 20260901213210.png]]
+
+
+
+### DFlash
+![[Pasted image 20260901214108.png]]
+
+原本我们的草稿token的生成，是需要草稿模型的自回归的。
+
+
+
+
+
+
+### DSpark
 
 
 
