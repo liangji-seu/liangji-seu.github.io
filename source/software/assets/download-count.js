@@ -6,6 +6,7 @@
   const MAX_PAGES = 100;
   const CACHE_KEY = 'paper2zh-download-count-v1';
   const CACHE_TTL_MS = 15 * 60 * 1000;
+  const SNAPSHOT_URL = '/software/assets/download-count.json';
   const INSTALLER_NAME = /^paper2zh-Setup-.+-win64\.exe$/;
 
   function headerValue(headers, name) {
@@ -99,6 +100,31 @@
     }
   }
 
+  function validateSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object' || !Number.isSafeInteger(snapshot.count) || snapshot.count < 0 || typeof snapshot.updatedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(snapshot.updatedAt) || !Number.isFinite(Date.parse(snapshot.updatedAt))) {
+      throw new Error('Malformed download count snapshot');
+    }
+    return { count: snapshot.count, updatedAt: snapshot.updatedAt };
+  }
+
+  async function fetchSnapshot(fetchImpl, signal) {
+    if (typeof fetchImpl !== 'function') throw new Error('Fetch unavailable');
+    const response = await fetchImpl(SNAPSHOT_URL, { cache: 'no-store', signal });
+    if (!response || response.ok !== true || typeof response.json !== 'function') {
+      throw new Error('Download count snapshot request failed');
+    }
+    return validateSnapshot(await response.json());
+  }
+
+  async function resolveWithSnapshot(cache, now, fetcher, snapshotFetcher) {
+    try {
+      return await resolveCount(cache, now, fetcher);
+    } catch (error) {
+      const snapshot = await snapshotFetcher();
+      return { count: snapshot.count, source: 'snapshot', updatedAt: snapshot.updatedAt };
+    }
+  }
+
   function readCache() {
     try {
       const raw = root && root.localStorage ? root.localStorage.getItem(CACHE_KEY) : null;
@@ -128,6 +154,13 @@
     root.document.querySelectorAll('[data-download-meter]').forEach((meter) => { meter.dataset.state = result.source; });
   }
 
+  function renderSnapshot(snapshot) {
+    const formatted = snapshot.count.toLocaleString('zh-CN');
+    const date = snapshot.updatedAt.slice(0, 10);
+    root.document.querySelectorAll('[data-download-count]').forEach((node) => { node.textContent = `Windows 安装包累计下载 ${formatted} 次（截至 ${date}，快照）`; });
+    root.document.querySelectorAll('[data-download-meter]').forEach((meter) => { meter.dataset.state = 'snapshot'; });
+  }
+
   function renderUnavailable() {
     root.document.querySelectorAll('[data-download-count]').forEach((node) => { node.textContent = '下载量暂不可用'; });
     root.document.querySelectorAll('[data-download-meter]').forEach((meter) => { meter.dataset.state = 'unavailable'; });
@@ -144,18 +177,30 @@
     }
   }
 
+  async function requestSnapshot() {
+    const Controller = root.AbortController || (typeof AbortController !== 'undefined' ? AbortController : null);
+    const controller = Controller ? new Controller() : null;
+    const timer = root.setTimeout(() => { if (controller) controller.abort(); }, 2000);
+    try {
+      return await fetchSnapshot(root.fetch.bind(root), controller ? controller.signal : undefined);
+    } finally {
+      root.clearTimeout(timer);
+    }
+  }
+
   function init() {
     if (!root || !root.document || !root.document.querySelector('[data-download-count]')) return;
     const cache = readCache();
-    resolveCount(cache, Date.now(), requestTotal).then((result) => {
+    resolveWithSnapshot(cache, Date.now(), requestTotal, requestSnapshot).then((result) => {
       if (result.source === 'live') writeCache(result.count);
-      renderCount(result);
+      if (result.source === 'snapshot') renderSnapshot(result);
+      else renderCount(result);
     }).catch(() => {
       renderUnavailable();
     });
   }
 
-  const api = { aggregateReleases, fetchTotal, parseNextLink, resolveCount };
+  const api = { aggregateReleases, fetchTotal, parseNextLink, resolveCount, resolveWithSnapshot, validateSnapshot, fetchSnapshot };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) init();
 }(typeof window !== 'undefined' ? window : null));
