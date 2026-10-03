@@ -1,0 +1,84 @@
+.software-catalog-page {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  color: #192638;
+  background: #f5f7fa;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.software-catalog-page *, .software-catalog-page *::before, .software-catalog-page *::after { box-sizing: border-box; }
+.software-catalog-page a { color: inherit; text-decoration: none; }
+.software-catalog-page button, .software-catalog-page input { font: inherit; }
+.software-catalog-page [hidden] { display: none !important; }
+.catalog-shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+.catalog-nav { border-bottom: 1px solid #e5e9ef; background: rgba(255, 255, 255, .84); }
+.catalog-nav-inner { display: flex; align-items: center; justify-content: space-between; min-height: 64px; gap: 24px; }
+.catalog-brand { display: inline-flex; align-items: center; gap: 10px; color: #172438; font-size: 13px; font-weight: 650; white-space: nowrap; }
+.catalog-brand-mark { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #ccd8e7; border-radius: 8px; color: #365d8d; background: #edf3fa; font-size: 11px; font-weight: 750; letter-spacing: -.06em; }
+.catalog-nav-links { display: flex; align-items: center; gap: 22px; color: #718096; font-size: 12px; }
+.catalog-nav-links a:hover, .catalog-nav-links .catalog-nav-active { color: #2d5688; }
+.catalog-heading { display: flex; align-items: end; justify-content: space-between; gap: 40px; padding: 57px 0 38px; }
+.catalog-eyebrow { color: #6f87a5; font-size: 10px; font-weight: 750; letter-spacing: .18em; }
+.catalog-heading h1 { margin: 12px 0 10px; color: #142236; font-size: clamp(34px, 4vw, 46px); font-weight: 650; letter-spacing: -.06em; }
+.catalog-heading p { max-width: 570px; color: #738196; font-size: 14px; line-height: 1.75; }
+.catalog-search { display: flex; align-items: center; flex: 0 1 310px; height: 42px; padding: 0 13px; border: 1px solid #dfe5ec; border-radius: 10px; color: #9aa7b5; background: #fff; box-shadow: 0 5px 18px rgba(54, 78, 106, .05); }
+.catalog-search:focus-within { border-color: #91add0; box-shadow: 0 0 0 3px rgba(122, 158, 204, .14); }
+.catalog-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #1c2b3d; background: transparent; font-size: 12px; }
+.catalog-search input::placeholder { color: #a2adba; }
+.catalog-search > span:last-child { font-size: 20px; line-height: 1; transform: rotate(-20deg); }
+.catalog-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.catalog-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 15px 0; border-top: 1px solid #e2e7ed; border-bottom: 1px solid #e2e7ed; }
+.catalog-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.catalog-filter { padding: 7px 11px; border: 1px solid transparent; border-radius: 8px; cursor: pointer; color: #748196; background: transparent; font-size: 11px; }
+.catalog-filter span { margin-left: 4px; color: #a4afbd; }
+.catalog-filter:hover { color: #3c5f8e; background: #edf3fa; }
+.catalog-filter.is-active { border-color: #d5e1f0; color: #315a8c; background: #eaf1fa; font-weight: 650; }
+.catalog-filter.is-active span { color: #587ca7; }
+.catalog-result-count { flex: 0 0 auto; color: #8491a1; font-size: 11px; }
+.catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 22px 0 100px; }
+.software-card { display: flex; min-width: 0; flex-direction: column; min-height: 250px; padding: 22px; border: 1px solid #e1e7ee; border-radius: 13px; background: #fff; box-shadow: 0 8px 26px rgba(49, 74, 101, .055); }
+.software-card-main { flex: 1 1 auto; }
+.software-card-title { display: flex; align-items: flex-start; gap: 13px; min-width: 0; }
+.software-card-title img { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 11px; box-shadow: 0 5px 13px rgba(64, 98, 139, .12); }
+.software-card-title h2 { min-width: 0; margin: 1px 0 5px; overflow-wrap: anywhere; color: #17263a; font-size: 20px; font-weight: 680; letter-spacing: -.035em; }
+.software-card-title p { color: #66778b; font-size: 12px; line-height: 1.5; }
+.software-card-summary { max-width: 470px; margin-top: 19px; color: #718094; font-size: 12px; line-height: 1.75; }
+.software-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 21px; }
+.software-card-meta span { padding: 5px 8px; border-radius: 6px; color: #63758a; background: #f1f5f9; font-size: 10px; }
+.software-card-footer { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-top: 24px; padding-top: 15px; border-top: 1px solid #edf0f4; }
+.software-card-links { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 11px; font-weight: 650; }
+.software-card-detail { color: #346293 !important; }
+.software-card-detail:hover, .software-card-release:hover { text-decoration: underline; text-underline-offset: 3px; }
+.software-card-release { color: #6f7d8d !important; }
+.catalog-download-meter { display: flex; flex-direction: column; align-items: end; gap: 3px; min-width: 0; color: #54759e; font-size: 10px; text-align: right; }
+.catalog-download-meter [data-download-count] { white-space: nowrap; }
+.catalog-download-meter small { color: #9aa6b4; font-size: 9px; }
+.catalog-empty { padding: 63px 0 108px; text-align: center; }
+.catalog-empty h2 { margin: 0 0 8px; color: #2b3c50; font-size: 22px; font-weight: 650; }
+.catalog-empty p { color: #7a899a; font-size: 13px; }
+.catalog-empty button { margin-top: 17px; padding: 8px 13px; border: 1px solid #d3dfed; border-radius: 8px; cursor: pointer; color: #365f90; background: #edf3fa; font-size: 11px; }
+.catalog-empty button:hover { background: #e3edf8; }
+.catalog-footer { display: flex; justify-content: space-between; gap: 20px; padding: 23px 0 29px; border-top: 1px solid #e2e7ed; color: #94a0ad; font-size: 10px; }
+.catalog-footer a { color: #587ba3; }
+@media (max-width: 760px) {
+  .catalog-shell { width: min(100% - 32px, 1120px); }
+  .catalog-heading { align-items: stretch; flex-direction: column; gap: 24px; padding-top: 42px; }
+  .catalog-search { flex-basis: auto; width: 100%; }
+  .catalog-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .catalog-shell { width: calc(100% - 28px); }
+  .catalog-nav-inner { min-height: 58px; }
+  .catalog-nav-links { gap: 12px; }
+  .catalog-nav-links a:first-child { display: none; }
+  .catalog-heading h1 { font-size: 34px; }
+  .catalog-toolbar { align-items: flex-start; flex-direction: column; gap: 11px; }
+  .catalog-grid { padding-top: 15px; }
+  .software-card { padding: 18px; }
+  .software-card-footer { align-items: flex-start; flex-direction: column; gap: 13px; }
+  .catalog-download-meter { align-items: flex-start; text-align: left; }
+  .catalog-footer { display: block; line-height: 1.8; }
+  .catalog-footer a { display: block; margin-top: 5px; }
+}

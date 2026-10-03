@@ -7,6 +7,8 @@
   const CACHE_KEY = 'paper2zh-download-count-v1';
   const CACHE_TTL_MS = 15 * 60 * 1000;
   const SNAPSHOT_URL = '/software/assets/download-count.json';
+  const COUNT_SELECTOR = '[data-download-count="paper2zh"]';
+  const METER_SELECTOR = '[data-download-meter="paper2zh"]';
   const INSTALLER_NAME = /^paper2zh-Setup-.+-win64\.exe$/;
 
   function headerValue(headers, name) {
@@ -149,21 +151,21 @@
   function renderCount(result) {
     const formatted = result.count.toLocaleString('zh-CN');
     const suffix = result.source === 'cache' ? '（缓存数据）' : '';
-    const nodes = root.document.querySelectorAll('[data-download-count]');
+    const nodes = root.document.querySelectorAll(COUNT_SELECTOR);
     nodes.forEach((node) => { node.textContent = `Windows 安装包累计下载 ${formatted} 次${suffix}`; });
-    root.document.querySelectorAll('[data-download-meter]').forEach((meter) => { meter.dataset.state = result.source; });
+    root.document.querySelectorAll(METER_SELECTOR).forEach((meter) => { meter.dataset.state = result.source; });
   }
 
   function renderSnapshot(snapshot) {
     const formatted = snapshot.count.toLocaleString('zh-CN');
     const date = snapshot.updatedAt.slice(0, 10);
-    root.document.querySelectorAll('[data-download-count]').forEach((node) => { node.textContent = `Windows 安装包累计下载 ${formatted} 次（截至 ${date}，快照）`; });
-    root.document.querySelectorAll('[data-download-meter]').forEach((meter) => { meter.dataset.state = 'snapshot'; });
+    root.document.querySelectorAll(COUNT_SELECTOR).forEach((node) => { node.textContent = `Windows 安装包累计下载 ${formatted} 次（截至 ${date}，快照）`; });
+    root.document.querySelectorAll(METER_SELECTOR).forEach((meter) => { meter.dataset.state = 'snapshot'; });
   }
 
   function renderUnavailable() {
-    root.document.querySelectorAll('[data-download-count]').forEach((node) => { node.textContent = '下载量暂不可用'; });
-    root.document.querySelectorAll('[data-download-meter]').forEach((meter) => { meter.dataset.state = 'unavailable'; });
+    root.document.querySelectorAll(COUNT_SELECTOR).forEach((node) => { node.textContent = '下载量暂不可用'; });
+    root.document.querySelectorAll(METER_SELECTOR).forEach((meter) => { meter.dataset.state = 'unavailable'; });
   }
 
   async function requestTotal() {
@@ -189,7 +191,7 @@
   }
 
   function init() {
-    if (!root || !root.document || !root.document.querySelector('[data-download-count]')) return;
+    if (!root || !root.document || !root.document.querySelector(COUNT_SELECTOR)) return;
     const cache = readCache();
     resolveWithSnapshot(cache, Date.now(), requestTotal, requestSnapshot).then((result) => {
       if (result.source === 'live') writeCache(result.count);
